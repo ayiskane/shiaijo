@@ -18,7 +18,7 @@ import {
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   ChevronLeft, ChevronRight, Menu, Swords, UserPlus, FileSpreadsheet,
-  Circle, AlertCircle, CheckCircle2, Flag, Table
+  Circle, AlertCircle, CheckCircle2, Flag, Table, History, RefreshCw
 } from 'lucide-react'
 
 // Types
@@ -60,6 +60,25 @@ interface Tournament {
   groups: string[]
 }
 
+interface TournamentHistory {
+  id: string
+  name: string
+  date: string
+  results: {
+    groupId: string
+    groupName: string
+    isNonBogu: boolean
+    standings: {
+      rank: number
+      playerName: string
+      points: number
+      wins: number
+      losses: number
+      draws: number
+    }[]
+  }[]
+}
+
 interface PlayerStanding {
   playerId: string
   playerName: string
@@ -81,6 +100,7 @@ interface AppState {
   timerSeconds: number
   timerRunning: boolean
   timerTarget: number
+  history: TournamentHistory[]
 }
 
 // Utility functions
@@ -290,6 +310,7 @@ const defaultState: AppState = {
   timerSeconds: 0,
   timerRunning: false,
   timerTarget: 180, // 3 minutes default
+  history: [],
 }
 
 // Device detection hook
@@ -668,6 +689,46 @@ function AdminPortal({
     toast.success(`Tournament generated with ${allMatches.length} matches across ${participantsByGroup.size} groups`)
   }
 
+  const archiveTournament = () => {
+    if (!state.currentTournament) return
+    
+    const results = state.currentTournament.groups.map(groupId => {
+      const group = getGroupById(groupId)
+      const standings = calculateStandings(groupId, state.currentTournament!.matches, state.members)
+      return {
+        groupId,
+        groupName: group?.name || groupId,
+        isNonBogu: group?.isNonBogu || false,
+        standings: standings.map((s, idx) => ({
+          rank: idx + 1,
+          playerName: s.playerName,
+          points: s.points,
+          wins: s.wins,
+          losses: s.losses,
+          draws: s.draws,
+        }))
+      }
+    })
+    
+    const historyEntry: TournamentHistory = {
+      id: generateId(),
+      name: state.currentTournament.name,
+      date: state.currentTournament.date,
+      results,
+    }
+    
+    setState(prev => ({
+      ...prev,
+      history: [...prev.history, historyEntry],
+      currentTournament: null,
+      currentMatchIndex: 0,
+      timerSeconds: 0,
+      timerRunning: false,
+    }))
+    
+    toast.success('Tournament archived to history')
+  }
+
   const MobileNav = () => (
     <Sheet>
       <SheetTrigger asChild>
@@ -680,7 +741,7 @@ function AdminPortal({
           <SheetTitle className="text-white">Navigation</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col gap-2 mt-6">
-          {['members', 'groups', 'tournament', 'standings', 'guests'].map(tab => (
+          {['members', 'groups', 'tournament', 'standings', 'guests', 'history'].map(tab => (
             <Button
               key={tab}
               variant={activeTab === tab ? 'default' : 'ghost'}
@@ -692,6 +753,7 @@ function AdminPortal({
               {tab === 'tournament' && <Trophy className="w-4 h-4 mr-2" />}
               {tab === 'standings' && <Table className="w-4 h-4 mr-2" />}
               {tab === 'guests' && <UserPlus className="w-4 h-4 mr-2" />}
+              {tab === 'history' && <History className="w-4 h-4 mr-2" />}
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </Button>
           ))}
@@ -741,6 +803,10 @@ function AdminPortal({
             <TabsTrigger value="guests" className="data-[state=active]:bg-amber-600">
               <UserPlus className="w-4 h-4 mr-2" />
               Guests
+            </TabsTrigger>
+            <TabsTrigger value="history" className="data-[state=active]:bg-amber-600">
+              <History className="w-4 h-4 mr-2" />
+              History
             </TabsTrigger>
           </TabsList>
         </Tabs>
@@ -851,7 +917,8 @@ function AdminPortal({
               </div>
 
               <Button variant="ghost" size="sm" onClick={deselectAll}>
-                Deselect All
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Reset All
               </Button>
             </div>
 
@@ -861,48 +928,48 @@ function AdminPortal({
                 <ScrollArea className="h-[60vh]">
                   <div className="divide-y divide-slate-800">
                     {filteredMembers.map(member => {
-                      const group = getGroupById(member.group)
-                      return (
-                        <div 
-                          key={member.id}
-                          className="flex items-center gap-4 p-4 hover:bg-slate-800/50"
-                        >
-                          <Checkbox
-                            checked={member.isParticipating}
-                            onCheckedChange={() => toggleParticipation(member.id)}
-                          />
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2">
-                              <span className="text-white font-medium truncate">
-                                {member.lastName}, {member.firstName}
-                              </span>
-                              {member.isGuest && (
-                                <Badge variant="secondary" className="bg-purple-900 text-purple-200">
-                                  Guest
-                                </Badge>
-                              )}
-                            </div>
-                            {member.guestDojo && (
-                              <span className="text-sm text-slate-500">{member.guestDojo}</span>
-                            )}
-                          </div>
-                          <Badge 
-                            variant="outline" 
-                            className={`${group?.isNonBogu ? 'border-orange-500 text-orange-400' : 'border-slate-600 text-slate-400'}`}
-                          >
-                            {group?.name || member.group}
-                          </Badge>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => deleteMember(member.id)}
-                            className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      )
-                    })}
+                       const group = getGroupById(member.group)
+                       return (
+                         <div 
+                           key={member.id}
+                           className="flex items-center gap-4 p-4 hover:bg-slate-800/50"
+                         >
+                           <Checkbox
+                             checked={member.isParticipating}
+                             onCheckedChange={() => toggleParticipation(member.id)}
+                           />
+                           <div className="flex-1 min-w-0">
+                             <div className="flex items-center gap-2">
+                               <span className="text-white font-medium truncate">
+                                 {member.lastName}, {member.firstName}
+                               </span>
+                               {member.isGuest && (
+                                 <Badge variant="secondary" className="bg-purple-900 text-purple-200">
+                                   Guest
+                                 </Badge>
+                               )}
+                             </div>
+                             {member.guestDojo && (
+                               <span className="text-sm text-slate-500">{member.guestDojo}</span>
+                             )}
+                           </div>
+                           <Badge 
+                             variant="outline" 
+                             className={`${group?.isNonBogu ? 'border-orange-500 text-orange-400' : 'border-slate-600 text-slate-400'}`}
+                           >
+                             {group?.name || member.group}
+                           </Badge>
+                           <Button
+                             variant="ghost"
+                             size="icon"
+                             onClick={() => deleteMember(member.id)}
+                             className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                           >
+                             <Trash2 className="w-4 h-4" />
+                           </Button>
+                         </div>
+                       )
+                     })}
                     {filteredMembers.length === 0 && (
                       <div className="p-8 text-center text-slate-500">
                         No members found
@@ -929,6 +996,7 @@ function AdminPortal({
             getMemberById={getMemberById}
             getGroupById={getGroupById}
             generateTournament={generateTournament}
+            archiveTournament={archiveTournament}
           />
         )}
 
@@ -945,6 +1013,13 @@ function AdminPortal({
             state={state}
             onAddGuest={addGuestMember}
             groups={state.groups}
+          />
+        )}
+
+        {activeTab === 'history' && (
+          <HistoryView
+            state={state}
+            setState={setState}
           />
         )}
       </main>
@@ -1001,7 +1076,7 @@ function GroupsManager({
         <CardHeader>
           <CardTitle className="text-white">Group Settings</CardTitle>
           <CardDescription className="text-slate-400">
-            Configure groups and their tournament rules. Non-bogu groups use hantei judging.
+            Configure groups and their tournament rules. Non-bogu groups use hantei judging (no draws - 3 shinpan = always a winner).
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1127,8 +1202,8 @@ function GroupsManager({
                 <li>Judge decision (hantei) determines winner</li>
                 <li>3 minute match time</li>
                 <li>No ippon scoring</li>
-                <li>Red or White wins based on judge flags</li>
-                <li>Can also result in a draw</li>
+                <li>3 shinpan (judges) - always a winner</li>
+                <li className="text-orange-300 font-medium">No draws possible</li>
               </ul>
             </div>
           </div>
@@ -1136,7 +1211,7 @@ function GroupsManager({
             <h4 className="font-semibold text-white mb-2">Point System</h4>
             <ul className="list-disc list-inside space-y-1 text-sm">
               <li>Win = 2 points</li>
-              <li>Draw = 1 point</li>
+              <li>Draw = 1 point (bogu only)</li>
               <li>Loss = 0 points</li>
               <li>Tiebreaker 1: Most wins</li>
               <li>Tiebreaker 2: Most ippons scored</li>
@@ -1231,7 +1306,9 @@ function StandingsView({
                       <th className="text-left text-slate-400 p-2 font-medium">Name</th>
                       <th className="text-center text-slate-400 p-2 font-medium">Pts</th>
                       <th className="text-center text-slate-400 p-2 font-medium">W</th>
-                      <th className="text-center text-slate-400 p-2 font-medium">D</th>
+                      {!group?.isNonBogu && (
+                        <th className="text-center text-slate-400 p-2 font-medium">D</th>
+                      )}
                       <th className="text-center text-slate-400 p-2 font-medium">L</th>
                       {!group?.isNonBogu && (
                         <th className="text-center text-slate-400 p-2 font-medium">Ippons</th>
@@ -1251,7 +1328,9 @@ function StandingsView({
                         <td className="p-2 text-white font-medium">{standing.playerName}</td>
                         <td className="p-2 text-center text-amber-400 font-bold">{standing.points}</td>
                         <td className="p-2 text-center text-green-400">{standing.wins}</td>
-                        <td className="p-2 text-center text-slate-400">{standing.draws}</td>
+                        {!group?.isNonBogu && (
+                          <td className="p-2 text-center text-slate-400">{standing.draws}</td>
+                        )}
                         <td className="p-2 text-center text-red-400">{standing.losses}</td>
                         {!group?.isNonBogu && (
                           <td className="p-2 text-center text-slate-300">
@@ -1295,12 +1374,14 @@ function TournamentManager({
   getMemberById,
   getGroupById,
   generateTournament,
+  archiveTournament,
 }: {
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
   getMemberById: (id: string) => Member | undefined
   getGroupById: (id: string) => Group | undefined
   generateTournament: () => void
+  archiveTournament: () => void
 }) {
   const tournament = state.currentTournament
 
@@ -1406,6 +1487,7 @@ function TournamentManager({
 
   const completedMatches = tournament.matches.filter(m => m.status === 'completed').length
   const totalMatches = tournament.matches.length
+  const isComplete = completedMatches === totalMatches
 
   return (
     <div className="space-y-4">
@@ -1435,11 +1517,17 @@ function TournamentManager({
             </span>
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
             {tournament.status === 'setup' && (
               <Button onClick={startTournament} className="bg-emerald-600 hover:bg-emerald-700">
                 <Play className="w-4 h-4 mr-2" />
                 Start Tournament
+              </Button>
+            )}
+            {isComplete && (
+              <Button onClick={archiveTournament} className="bg-amber-600 hover:bg-amber-700">
+                <History className="w-4 h-4 mr-2" />
+                Archive & Complete
               </Button>
             )}
             <Button variant="outline" onClick={clearTournament} className="border-red-800 text-red-400 hover:bg-red-900/20">
@@ -1515,6 +1603,89 @@ function TournamentManager({
           </Card>
         )
       })}
+    </div>
+  )
+}
+
+// History View Component
+function HistoryView({
+  state,
+  setState,
+}: {
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+}) {
+  const deleteHistoryEntry = (id: string) => {
+    setState(prev => ({
+      ...prev,
+      history: prev.history.filter(h => h.id !== id)
+    }))
+    toast.success('History entry deleted')
+  }
+
+  if (state.history.length === 0) {
+    return (
+      <Card className="bg-slate-900 border-slate-800">
+        <CardContent className="p-8 text-center text-slate-500">
+          <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
+          <p>No tournament history</p>
+          <p className="text-sm mt-2">Completed tournaments will appear here</p>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  return (
+    <div className="space-y-4">
+      {state.history.map(entry => (
+        <Card key={entry.id} className="bg-slate-900 border-slate-800">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-white">{entry.name}</CardTitle>
+                <CardDescription className="text-slate-400">{entry.date}</CardDescription>
+              </div>
+              <Button
+                size="icon"
+                variant="ghost"
+                onClick={() => deleteHistoryEntry(entry.id)}
+                className="text-red-400 hover:text-red-300"
+              >
+                <Trash2 className="w-4 h-4" />
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {entry.results.map(result => (
+                <div key={result.groupId} className="bg-slate-800/50 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <h4 className="text-white font-medium">{result.groupName}</h4>
+                    {result.isNonBogu && (
+                      <Badge className="bg-orange-900 text-orange-200 text-xs">Hantei</Badge>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {result.standings.slice(0, 3).map((s, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <span className={`w-6 text-center font-bold ${
+                          idx === 0 ? 'text-amber-400' :
+                          idx === 1 ? 'text-slate-300' :
+                          'text-amber-700'
+                        }`}>
+                          {idx + 1}
+                        </span>
+                        <span className="text-white flex-1">{s.playerName}</span>
+                        <span className="text-amber-400">{s.points}pts</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      ))}
     </div>
   )
 }
@@ -2243,15 +2414,6 @@ function CourtkeeperPortal({
                       White Wins
                     </Button>
                   </div>
-                )}
-                {isHantei && (
-                  <Button
-                    onClick={() => completeMatch('draw')}
-                    variant="outline"
-                    className="w-full border-slate-600"
-                  >
-                    Draw (Hikiwake)
-                  </Button>
                 )}
                 <div className="flex gap-2">
                   <Button
