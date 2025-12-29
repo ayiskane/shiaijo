@@ -343,7 +343,16 @@ export default function App() {
     const load = async () => {
       const saved = await loadFromStorage()
       if (saved) {
-        setState(saved)
+        // Merge with defaults to ensure all fields exist
+        setState({
+          ...defaultState,
+          ...saved,
+          // Ensure arrays are always arrays
+          members: saved.members || [],
+          groups: saved.groups || defaultGroups,
+          guestRegistry: saved.guestRegistry || [],
+          history: saved.history || [],
+        })
       }
       setLoading(false)
     }
@@ -719,7 +728,7 @@ function AdminPortal({
     
     setState(prev => ({
       ...prev,
-      history: [...prev.history, historyEntry],
+      history: [...(prev.history || []), historyEntry],
       currentTournament: null,
       currentMatchIndex: 0,
       timerSeconds: 0,
@@ -1615,15 +1624,17 @@ function HistoryView({
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
 }) {
+  const history = state.history || []
+  
   const deleteHistoryEntry = (id: string) => {
     setState(prev => ({
       ...prev,
-      history: prev.history.filter(h => h.id !== id)
+      history: (prev.history || []).filter(h => h.id !== id)
     }))
     toast.success('History entry deleted')
   }
 
-  if (state.history.length === 0) {
+  if (history.length === 0) {
     return (
       <Card className="bg-slate-900 border-slate-800">
         <CardContent className="p-8 text-center text-slate-500">
@@ -1637,7 +1648,7 @@ function HistoryView({
 
   return (
     <div className="space-y-4">
-      {state.history.map(entry => (
+      {history.map(entry => (
         <Card key={entry.id} className="bg-slate-900 border-slate-800">
           <CardHeader>
             <div className="flex items-center justify-between">
