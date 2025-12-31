@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -18,7 +18,8 @@ import {
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   ChevronLeft, ChevronRight, Menu, Swords, UserPlus, FileSpreadsheet,
-  Circle, AlertCircle, CheckCircle2, Flag, Table, History, RefreshCw
+  Circle, AlertCircle, CheckCircle2, Flag, Table, History, RefreshCw,
+  ArrowUpDown, ArrowLeftRight, Calendar, Download, Timer, Award
 } from 'lucide-react'
 
 // Types
@@ -35,7 +36,7 @@ interface Member {
 interface Group {
   id: string
   name: string
-  isNonBogu: boolean // Non-bogu uses hantei instead of first-to-2-ippons
+  isNonBogu: boolean
 }
 
 interface Match {
@@ -43,27 +44,33 @@ interface Match {
   groupId: string
   player1Id: string
   player2Id: string
-  player1Score: number[] // For regular: ippon types. For non-bogu: just [1] if they won hantei
+  player1Score: number[]
   player2Score: number[]
-  winner: string | null // 'player1', 'player2', 'draw', or null
+  winner: string | null
   status: 'pending' | 'in_progress' | 'completed'
-  courtNumber: number
-  isHantei: boolean // Whether this match uses hantei scoring
+  court: 'A' | 'B'
+  isHantei: boolean
+  orderIndex: number
 }
 
 interface Tournament {
   id: string
   name: string
   date: string
+  month: string
+  year: number
   status: 'setup' | 'in_progress' | 'completed'
   matches: Match[]
   groups: string[]
+  groupOrder: string[]
 }
 
 interface TournamentHistory {
   id: string
   name: string
   date: string
+  month: string
+  year: number
   results: {
     groupId: string
     groupName: string
@@ -82,13 +89,13 @@ interface TournamentHistory {
 interface PlayerStanding {
   playerId: string
   playerName: string
-  points: number // 2 per win, 1 per draw
+  points: number
   wins: number
   draws: number
   losses: number
   ipponsScored: number
   ipponsAgainst: number
-  results: Map<string, 'W' | 'L' | 'D' | null> // opponent ID -> result
+  results: Map<string, 'W' | 'L' | 'D' | null>
 }
 
 interface AppState {
@@ -96,15 +103,24 @@ interface AppState {
   groups: Group[]
   guestRegistry: Member[]
   currentTournament: Tournament | null
-  currentMatchIndex: number
-  timerSeconds: number
-  timerRunning: boolean
+  currentMatchIndexA: number
+  currentMatchIndexB: number
+  activeCourt: 'A' | 'B'
+  timerSecondsA: number
+  timerSecondsB: number
+  timerRunningA: boolean
+  timerRunningB: boolean
   timerTarget: number
   history: TournamentHistory[]
 }
 
 // Utility functions
 const generateId = () => Math.random().toString(36).substr(2, 9)
+
+const MONTHS = [
+  'January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'
+]
 
 // Generate round robin with rest optimization
 const generateRoundRobinWithRest = (playerIds: string[]): [string, string][] => {
@@ -128,16 +144,12 @@ const generateRoundRobinWithRest = (playerIds: string[]): [string, string][] => 
       }
     }
     rounds.push(roundMatches)
-    
-    // Rotate players (keep first fixed)
     const last = players.pop()!
     players.splice(1, 0, last)
   }
   
-  // Interleave matches to maximize rest
   const allMatches: [string, string][] = []
   const lastPlayed: Map<string, number> = new Map()
-  
   const flatMatches = rounds.flat()
   const used = new Set<number>()
   
@@ -147,14 +159,10 @@ const generateRoundRobinWithRest = (playerIds: string[]): [string, string][] => 
     
     for (let i = 0; i < flatMatches.length; i++) {
       if (used.has(i)) continue
-      
       const [p1, p2] = flatMatches[i]
       const p1Last = lastPlayed.get(p1) ?? -10
       const p2Last = lastPlayed.get(p2) ?? -10
-      const minRest = Math.min(
-        allMatches.length - p1Last,
-        allMatches.length - p2Last
-      )
+      const minRest = Math.min(allMatches.length - p1Last, allMatches.length - p2Last)
       
       if (minRest > bestScore) {
         bestScore = minRest
@@ -185,7 +193,6 @@ const calculateStandings = (
   
   const standings: Map<string, PlayerStanding> = new Map()
   
-  // Initialize standings for all group members
   groupMembers.forEach(member => {
     standings.set(member.id, {
       playerId: member.id,
@@ -200,7 +207,6 @@ const calculateStandings = (
     })
   })
   
-  // Process completed matches
   groupMatches.forEach(match => {
     const p1Standing = standings.get(match.player1Id)
     const p2Standing = standings.get(match.player2Id)
@@ -237,7 +243,6 @@ const calculateStandings = (
     }
   })
   
-  // Sort by points, then wins, then ippons scored
   return Array.from(standings.values()).sort((a, b) => {
     if (b.points !== a.points) return b.points - a.points
     if (b.wins !== a.wins) return b.wins - a.wins
@@ -246,7 +251,7 @@ const calculateStandings = (
 }
 
 // Storage helpers
-const STORAGE_KEY = 'renbu-shiai-data'
+const STORAGE_KEY = 'renbu-shiai-data-v2'
 
 const hasClaudeStorage = typeof window !== 'undefined' && 
   'storage' in window && 
@@ -254,10 +259,14 @@ const hasClaudeStorage = typeof window !== 'undefined' &&
 
 const saveToStorage = async (state: AppState) => {
   try {
+    const serializable = {
+      ...state,
+      // No need to serialize Maps anymore as standings are calculated on the fly
+    }
     if (hasClaudeStorage) {
-      await (window as any).storage.set(STORAGE_KEY, JSON.stringify(state), true)
+      await (window as any).storage.set(STORAGE_KEY, JSON.stringify(serializable), true)
     } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable))
     }
   } catch (e) {
     console.error('Storage save error:', e)
@@ -273,9 +282,7 @@ const loadFromStorage = async (): Promise<AppState | null> => {
   try {
     if (hasClaudeStorage) {
       const result = await (window as any).storage.get(STORAGE_KEY, true)
-      if (result?.value) {
-        return JSON.parse(result.value)
-      }
+      if (result?.value) return JSON.parse(result.value)
     } else {
       const local = localStorage.getItem(STORAGE_KEY)
       if (local) return JSON.parse(local)
@@ -306,10 +313,14 @@ const defaultState: AppState = {
   groups: defaultGroups,
   guestRegistry: [],
   currentTournament: null,
-  currentMatchIndex: 0,
-  timerSeconds: 0,
-  timerRunning: false,
-  timerTarget: 180, // 3 minutes default
+  currentMatchIndexA: 0,
+  currentMatchIndexB: 0,
+  activeCourt: 'A',
+  timerSecondsA: 0,
+  timerSecondsB: 0,
+  timerRunningA: false,
+  timerRunningB: false,
+  timerTarget: 180,
   history: [],
 }
 
@@ -335,23 +346,28 @@ export default function App() {
   const [state, setState] = useState<AppState>(defaultState)
   const [loading, setLoading] = useState(true)
   const isMobile = useDeviceDetection()
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timerRefA = useRef<ReturnType<typeof setInterval> | null>(null)
+  const timerRefB = useRef<ReturnType<typeof setInterval> | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  // Load state on mount
   useEffect(() => {
     const load = async () => {
       const saved = await loadFromStorage()
       if (saved) {
-        // Merge with defaults to ensure all fields exist
         setState({
           ...defaultState,
           ...saved,
-          // Ensure arrays are always arrays
           members: saved.members || [],
           groups: saved.groups || defaultGroups,
           guestRegistry: saved.guestRegistry || [],
           history: saved.history || [],
+          currentMatchIndexA: saved.currentMatchIndexA ?? 0,
+          currentMatchIndexB: saved.currentMatchIndexB ?? 0,
+          activeCourt: saved.activeCourt || 'A',
+          timerSecondsA: saved.timerSecondsA ?? 0,
+          timerSecondsB: saved.timerSecondsB ?? 0,
+          timerRunningA: saved.timerRunningA ?? false,
+          timerRunningB: saved.timerRunningB ?? false,
         })
       }
       setLoading(false)
@@ -359,14 +375,10 @@ export default function App() {
     load()
   }, [])
 
-  // Save state on change
   useEffect(() => {
-    if (!loading) {
-      saveToStorage(state)
-    }
+    if (!loading) saveToStorage(state)
   }, [state, loading])
 
-  // Poll for updates (real-time sync)
   useEffect(() => {
     if (portal !== 'select') {
       pollRef.current = setInterval(async () => {
@@ -375,37 +387,51 @@ export default function App() {
           setState(prev => ({
             ...prev,
             currentTournament: saved.currentTournament,
-            currentMatchIndex: saved.currentMatchIndex,
-            timerSeconds: saved.timerSeconds,
-            timerRunning: saved.timerRunning,
+            currentMatchIndexA: saved.currentMatchIndexA ?? prev.currentMatchIndexA,
+            currentMatchIndexB: saved.currentMatchIndexB ?? prev.currentMatchIndexB,
+            timerSecondsA: saved.timerSecondsA ?? prev.timerSecondsA,
+            timerSecondsB: saved.timerSecondsB ?? prev.timerSecondsB,
+            timerRunningA: saved.timerRunningA ?? prev.timerRunningA,
+            timerRunningB: saved.timerRunningB ?? prev.timerRunningB,
           }))
         }
       }, 1000)
     }
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current)
-    }
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [portal])
 
-  // Timer logic
+  // Timer logic for Court A
   useEffect(() => {
-    if (state.timerRunning) {
-      timerRef.current = setInterval(() => {
+    if (state.timerRunningA) {
+      timerRefA.current = setInterval(() => {
         setState(prev => ({
           ...prev,
-          timerSeconds: Math.min(prev.timerSeconds + 1, prev.timerTarget)
+          timerSecondsA: Math.min(prev.timerSecondsA + 1, prev.timerTarget)
         }))
       }, 1000)
     } else {
-      if (timerRef.current) clearInterval(timerRef.current)
+      if (timerRefA.current) clearInterval(timerRefA.current)
     }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-    }
-  }, [state.timerRunning, state.timerTarget])
+    return () => { if (timerRefA.current) clearInterval(timerRefA.current) }
+  }, [state.timerRunningA, state.timerTarget])
 
-  const getMemberById = (id: string) => state.members.find(m => m.id === id)
-  const getGroupById = (id: string) => state.groups.find(g => g.id === id)
+  // Timer logic for Court B
+  useEffect(() => {
+    if (state.timerRunningB) {
+      timerRefB.current = setInterval(() => {
+        setState(prev => ({
+          ...prev,
+          timerSecondsB: Math.min(prev.timerSecondsB + 1, prev.timerTarget)
+        }))
+      }, 1000)
+    } else {
+      if (timerRefB.current) clearInterval(timerRefB.current)
+    }
+    return () => { if (timerRefB.current) clearInterval(timerRefB.current) }
+  }, [state.timerRunningB, state.timerTarget])
+
+  const getMemberById = useCallback((id: string) => state.members.find(m => m.id === id), [state.members])
+  const getGroupById = useCallback((id: string) => state.groups.find(g => g.id === id), [state.groups])
 
   if (loading) {
     return (
@@ -415,7 +441,6 @@ export default function App() {
     )
   }
 
-  // Portal Selection Screen
   if (portal === 'select') {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
@@ -460,7 +485,6 @@ export default function App() {
     )
   }
 
-  // Admin Portal
   if (portal === 'admin') {
     return (
       <AdminPortal 
@@ -474,7 +498,6 @@ export default function App() {
     )
   }
 
-  // Courtkeeper Portal
   return (
     <CourtkeeperPortal 
       state={state} 
@@ -508,6 +531,7 @@ function AdminPortal({
   const [sortBy, setSortBy] = useState<'name' | 'group'>('name')
   const [showAddMember, setShowAddMember] = useState(false)
   const [showBulkAdd, setShowBulkAdd] = useState(false)
+  const [showClearConfirm, setShowClearConfirm] = useState(false)
 
   const filteredMembers = state.members
     .filter(m => {
@@ -516,9 +540,7 @@ function AdminPortal({
       return matchesSearch && matchesGroup
     })
     .sort((a, b) => {
-      if (sortBy === 'name') {
-        return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
-      }
+      if (sortBy === 'name') return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
       return a.group.localeCompare(b.group)
     })
 
@@ -527,7 +549,6 @@ function AdminPortal({
       toast.error('Please fill all fields')
       return
     }
-    
     const newMember: Member = {
       id: generateId(),
       firstName: firstName.trim(),
@@ -536,7 +557,6 @@ function AdminPortal({
       isGuest: false,
       isParticipating: false,
     }
-    
     setState(prev => ({ ...prev, members: [...prev.members, newMember] }))
     toast.success(`${firstName} ${lastName} added`)
   }
@@ -551,18 +571,14 @@ function AdminPortal({
       guestDojo,
       isParticipating: false,
     }
-    
-    // Add to registry if not exists
     const existsInRegistry = state.guestRegistry.some(
       g => g.firstName === firstName && g.lastName === lastName
     )
-    
     setState(prev => ({
       ...prev,
       members: [...prev.members, newMember],
       guestRegistry: existsInRegistry ? prev.guestRegistry : [...prev.guestRegistry, { ...newMember, isParticipating: false }]
     }))
-    
     toast.success(`Guest ${firstName} ${lastName} added`)
   }
 
@@ -570,21 +586,23 @@ function AdminPortal({
     setState(prev => ({ ...prev, members: prev.members.filter(m => m.id !== id) }))
   }
 
+  const clearAllMembers = () => {
+    setState(prev => ({ ...prev, members: [] }))
+    setShowClearConfirm(false)
+    toast.success('All members cleared')
+  }
+
   const toggleParticipation = (id: string) => {
     setState(prev => ({
       ...prev,
-      members: prev.members.map(m => 
-        m.id === id ? { ...m, isParticipating: !m.isParticipating } : m
-      )
+      members: prev.members.map(m => m.id === id ? { ...m, isParticipating: !m.isParticipating } : m)
     }))
   }
 
   const selectByGroup = (groupId: string) => {
     setState(prev => ({
       ...prev,
-      members: prev.members.map(m => 
-        m.group === groupId ? { ...m, isParticipating: true } : m
-      )
+      members: prev.members.map(m => m.group === groupId ? { ...m, isParticipating: true } : m)
     }))
   }
 
@@ -598,8 +616,6 @@ function AdminPortal({
   const handleCSVImport = (csvText: string) => {
     const lines = csvText.trim().split('\n')
     const newMembers: Member[] = []
-    
-    // Skip header if present
     const startIdx = lines[0].toLowerCase().includes('firstname') || lines[0].toLowerCase().includes('first') ? 1 : 0
     
     for (let i = startIdx; i < lines.length; i++) {
@@ -607,9 +623,7 @@ function AdminPortal({
       if (parts.length >= 3) {
         const [firstName, lastName, group] = parts
         if (firstName && lastName && group) {
-          // Find matching group or use first group as fallback
           const groupId = state.groups.find(g => g.id === group || g.name === group)?.id || state.groups[0]?.id
-          
           newMembers.push({
             id: generateId(),
             firstName,
@@ -626,12 +640,11 @@ function AdminPortal({
       toast.error('No valid members found. Format: FirstName,LastName,Group')
       return
     }
-    
     setState(prev => ({ ...prev, members: [...prev.members, ...newMembers] }))
     toast.success(`${newMembers.length} members imported`)
   }
 
-  const generateTournament = () => {
+  const generateTournament = (selectedMonth: string, selectedYear: number) => {
     const participants = state.members.filter(m => m.isParticipating)
     
     if (participants.length < 2) {
@@ -639,7 +652,6 @@ function AdminPortal({
       return
     }
     
-    // Group participants by their group
     const participantsByGroup = new Map<string, Member[]>()
     participants.forEach(p => {
       const existing = participantsByGroup.get(p.group) || []
@@ -647,17 +659,19 @@ function AdminPortal({
     })
     
     const allMatches: Match[] = []
+    let globalOrderIndex = 0
+    const groupOrder = state.groups.filter(g => participantsByGroup.has(g.id)).map(g => g.id)
     
-    // Generate round-robin for each group
-    participantsByGroup.forEach((groupParticipants, groupId) => {
-      if (groupParticipants.length < 2) return
+    // Process groups in order
+    groupOrder.forEach((groupId) => {
+      const groupParticipants = participantsByGroup.get(groupId)
+      if (!groupParticipants || groupParticipants.length < 2) return
       
       const group = getGroupById(groupId)
       const isHantei = group?.isNonBogu || false
-      
       const matchPairs = generateRoundRobinWithRest(groupParticipants.map(p => p.id))
       
-      matchPairs.forEach(pair => {
+      matchPairs.forEach((pair, idx) => {
         allMatches.push({
           id: generateId(),
           groupId,
@@ -667,8 +681,9 @@ function AdminPortal({
           player2Score: [],
           winner: null,
           status: 'pending',
-          courtNumber: 1,
+          court: idx % 2 === 0 ? 'A' : 'B', // Auto-assign courts alternating
           isHantei,
+          orderIndex: globalOrderIndex++,
         })
       })
     })
@@ -680,22 +695,82 @@ function AdminPortal({
     
     const tournament: Tournament = {
       id: generateId(),
-      name: 'Renbu Monthly Shiai',
+      name: `Renbu Monthly Shiai - ${selectedMonth} ${selectedYear}`,
       date: new Date().toISOString().split('T')[0],
+      month: selectedMonth,
+      year: selectedYear,
       status: 'setup',
       matches: allMatches,
       groups: [...participantsByGroup.keys()],
+      groupOrder,
     }
     
     setState(prev => ({ 
       ...prev, 
       currentTournament: tournament,
-      currentMatchIndex: 0,
-      timerSeconds: 0,
-      timerRunning: false,
+      currentMatchIndexA: 0,
+      currentMatchIndexB: 0,
+      timerSecondsA: 0,
+      timerSecondsB: 0,
+      timerRunningA: false,
+      timerRunningB: false,
     }))
     
     toast.success(`Tournament generated with ${allMatches.length} matches across ${participantsByGroup.size} groups`)
+  }
+
+  const refreshTournamentParticipants = () => {
+    if (!state.currentTournament) return
+    
+    const participants = state.members.filter(m => m.isParticipating)
+    const participantsByGroup = new Map<string, Member[]>()
+    participants.forEach(p => {
+      const existing = participantsByGroup.get(p.group) || []
+      participantsByGroup.set(p.group, [...existing, p])
+    })
+    
+    const allMatches: Match[] = []
+    let globalOrderIndex = 0
+    const groupOrder = state.groups.filter(g => participantsByGroup.has(g.id)).map(g => g.id)
+    
+    groupOrder.forEach((groupId) => {
+      const groupParticipants = participantsByGroup.get(groupId)
+      if (!groupParticipants || groupParticipants.length < 2) return
+      
+      const group = getGroupById(groupId)
+      const isHantei = group?.isNonBogu || false
+      const matchPairs = generateRoundRobinWithRest(groupParticipants.map(p => p.id))
+      
+      matchPairs.forEach((pair, idx) => {
+        allMatches.push({
+          id: generateId(),
+          groupId,
+          player1Id: pair[0],
+          player2Id: pair[1],
+          player1Score: [],
+          player2Score: [],
+          winner: null,
+          status: 'pending',
+          court: idx % 2 === 0 ? 'A' : 'B',
+          isHantei,
+          orderIndex: globalOrderIndex++,
+        })
+      })
+    })
+    
+    setState(prev => ({
+      ...prev,
+      currentTournament: {
+        ...prev.currentTournament!,
+        matches: allMatches,
+        groups: [...participantsByGroup.keys()],
+        groupOrder,
+      },
+      currentMatchIndexA: 0,
+      currentMatchIndexB: 0,
+    }))
+    
+    toast.success(`Tournament refreshed with ${allMatches.length} matches`)
   }
 
   const archiveTournament = () => {
@@ -723,6 +798,8 @@ function AdminPortal({
       id: generateId(),
       name: state.currentTournament.name,
       date: state.currentTournament.date,
+      month: state.currentTournament.month,
+      year: state.currentTournament.year,
       results,
     }
     
@@ -730,9 +807,12 @@ function AdminPortal({
       ...prev,
       history: [...(prev.history || []), historyEntry],
       currentTournament: null,
-      currentMatchIndex: 0,
-      timerSeconds: 0,
-      timerRunning: false,
+      currentMatchIndexA: 0,
+      currentMatchIndexB: 0,
+      timerSecondsA: 0,
+      timerSecondsB: 0,
+      timerRunningA: false,
+      timerRunningB: false,
     }))
     
     toast.success('Tournament archived to history')
@@ -750,7 +830,7 @@ function AdminPortal({
           <SheetTitle className="text-white">Navigation</SheetTitle>
         </SheetHeader>
         <div className="flex flex-col gap-2 mt-6">
-          {['members', 'groups', 'tournament', 'standings', 'guests', 'history'].map(tab => (
+          {['members', 'guests', 'groups', 'tournament', 'standings', 'history'].map(tab => (
             <Button
               key={tab}
               variant={activeTab === tab ? 'default' : 'ghost'}
@@ -758,10 +838,10 @@ function AdminPortal({
               onClick={() => setActiveTab(tab)}
             >
               {tab === 'members' && <Users className="w-4 h-4 mr-2" />}
+              {tab === 'guests' && <UserPlus className="w-4 h-4 mr-2" />}
               {tab === 'groups' && <Filter className="w-4 h-4 mr-2" />}
               {tab === 'tournament' && <Trophy className="w-4 h-4 mr-2" />}
               {tab === 'standings' && <Table className="w-4 h-4 mr-2" />}
-              {tab === 'guests' && <UserPlus className="w-4 h-4 mr-2" />}
               {tab === 'history' && <History className="w-4 h-4 mr-2" />}
               {tab.charAt(0).toUpperCase() + tab.slice(1)}
             </Button>
@@ -775,7 +855,6 @@ function AdminPortal({
     <div className="min-h-screen bg-slate-950">
       <Toaster theme="dark" position="top-center" />
       
-      {/* Header */}
       <header className="bg-slate-900 border-b border-slate-800 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -790,12 +869,16 @@ function AdminPortal({
           </Button>
         </div>
         
-        {/* Desktop Tabs */}
+        {/* Desktop Tabs - Guests moved next to Members */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 hidden md:block">
           <TabsList className="bg-slate-800">
             <TabsTrigger value="members" className="data-[state=active]:bg-amber-600">
               <Users className="w-4 h-4 mr-2" />
               Members
+            </TabsTrigger>
+            <TabsTrigger value="guests" className="data-[state=active]:bg-amber-600">
+              <UserPlus className="w-4 h-4 mr-2" />
+              Guests
             </TabsTrigger>
             <TabsTrigger value="groups" className="data-[state=active]:bg-amber-600">
               <Filter className="w-4 h-4 mr-2" />
@@ -809,10 +892,6 @@ function AdminPortal({
               <Table className="w-4 h-4 mr-2" />
               Standings
             </TabsTrigger>
-            <TabsTrigger value="guests" className="data-[state=active]:bg-amber-600">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Guests
-            </TabsTrigger>
             <TabsTrigger value="history" className="data-[state=active]:bg-amber-600">
               <History className="w-4 h-4 mr-2" />
               History
@@ -821,11 +900,9 @@ function AdminPortal({
         </Tabs>
       </header>
 
-      {/* Content */}
       <main className="p-4 max-w-7xl mx-auto">
         {activeTab === 'members' && (
           <div className="space-y-4">
-            {/* Search and Filters */}
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-4">
                 <div className="flex flex-col md:flex-row gap-4">
@@ -862,7 +939,6 @@ function AdminPortal({
               </CardContent>
             </Card>
 
-            {/* Actions */}
             <div className="flex flex-wrap gap-2">
               <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
                 <DialogTrigger asChild>
@@ -874,9 +950,7 @@ function AdminPortal({
                 <DialogContent className="bg-slate-900 border-slate-800">
                   <DialogHeader>
                     <DialogTitle className="text-white">Add Member</DialogTitle>
-                    <DialogDescription className="text-slate-400">
-                      Add a new member to the roster
-                    </DialogDescription>
+                    <DialogDescription className="text-slate-400">Add a new member to the roster</DialogDescription>
                   </DialogHeader>
                   <AddMemberForm 
                     groups={state.groups} 
@@ -929,9 +1003,29 @@ function AdminPortal({
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset All
               </Button>
+
+              <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="sm" className="border-red-800 text-red-400 hover:bg-red-900/20">
+                    <Trash2 className="w-4 h-4 mr-2" />
+                    Clear All Members
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="bg-slate-900 border-slate-800">
+                  <DialogHeader>
+                    <DialogTitle className="text-white">Clear All Members?</DialogTitle>
+                    <DialogDescription className="text-slate-400">
+                      This will permanently delete all {state.members.length} members from the roster. This action cannot be undone.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setShowClearConfirm(false)}>Cancel</Button>
+                    <Button variant="destructive" onClick={clearAllMembers}>Clear All</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </div>
 
-            {/* Members List */}
             <Card className="bg-slate-900 border-slate-800">
               <CardContent className="p-0">
                 <ScrollArea className="h-[60vh]">
@@ -953,9 +1047,7 @@ function AdminPortal({
                                  {member.lastName}, {member.firstName}
                                </span>
                                {member.isGuest && (
-                                 <Badge variant="secondary" className="bg-purple-900 text-purple-200">
-                                   Guest
-                                 </Badge>
+                                 <Badge variant="secondary" className="bg-purple-900 text-purple-200">Guest</Badge>
                                )}
                              </div>
                              {member.guestDojo && (
@@ -980,41 +1072,13 @@ function AdminPortal({
                        )
                      })}
                     {filteredMembers.length === 0 && (
-                      <div className="p-8 text-center text-slate-500">
-                        No members found
-                      </div>
+                      <div className="p-8 text-center text-slate-500">No members found</div>
                     )}
                   </div>
                 </ScrollArea>
               </CardContent>
             </Card>
           </div>
-        )}
-
-        {activeTab === 'groups' && (
-          <GroupsManager
-            state={state}
-            setState={setState}
-          />
-        )}
-
-        {activeTab === 'tournament' && (
-          <TournamentManager
-            state={state}
-            setState={setState}
-            getMemberById={getMemberById}
-            getGroupById={getGroupById}
-            generateTournament={generateTournament}
-            archiveTournament={archiveTournament}
-          />
-        )}
-
-        {activeTab === 'standings' && (
-          <StandingsView
-            state={state}
-            getMemberById={getMemberById}
-            getGroupById={getGroupById}
-          />
         )}
 
         {activeTab === 'guests' && (
@@ -1025,11 +1089,28 @@ function AdminPortal({
           />
         )}
 
-        {activeTab === 'history' && (
-          <HistoryView
+        {activeTab === 'groups' && (
+          <GroupsManager state={state} setState={setState} />
+        )}
+
+        {activeTab === 'tournament' && (
+          <TournamentManager
             state={state}
             setState={setState}
+            getMemberById={getMemberById}
+            getGroupById={getGroupById}
+            generateTournament={generateTournament}
+            refreshTournamentParticipants={refreshTournamentParticipants}
+            archiveTournament={archiveTournament}
           />
+        )}
+
+        {activeTab === 'standings' && (
+          <StandingsView state={state} getMemberById={getMemberById} getGroupById={getGroupById} />
+        )}
+
+        {activeTab === 'history' && (
+          <HistoryView state={state} setState={setState} />
         )}
       </main>
     </div>
@@ -1089,7 +1170,6 @@ function GroupsManager({
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          {/* Add new group */}
           <div className="flex gap-2">
             <Input
               placeholder="New group name..."
@@ -1105,7 +1185,6 @@ function GroupsManager({
 
           <Separator className="bg-slate-800" />
 
-          {/* Groups list */}
           <div className="space-y-3">
             {state.groups.map(group => {
               const memberCount = state.members.filter(m => m.group === group.id).length
@@ -1216,18 +1295,334 @@ function GroupsManager({
               </ul>
             </div>
           </div>
-          <div className="p-4 bg-slate-800/50 rounded-lg">
-            <h4 className="font-semibold text-white mb-2">Point System</h4>
-            <ul className="list-disc list-inside space-y-1 text-sm">
-              <li>Win = 2 points</li>
-              <li>Draw = 1 point (bogu only)</li>
-              <li>Loss = 0 points</li>
-              <li>Tiebreaker 1: Most wins</li>
-              <li>Tiebreaker 2: Most ippons scored</li>
-            </ul>
+        </CardContent>
+      </Card>
+    </div>
+  )
+}
+
+// Tournament Manager Component
+function TournamentManager({
+  state,
+  setState,
+  getMemberById,
+  getGroupById,
+  generateTournament,
+  refreshTournamentParticipants,
+  archiveTournament,
+}: {
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+  getMemberById: (id: string) => Member | undefined
+  getGroupById: (id: string) => Group | undefined
+  generateTournament: (month: string, year: number) => void
+  refreshTournamentParticipants: () => void
+  archiveTournament: () => void
+}) {
+  const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()])
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const tournament = state.currentTournament
+
+  const startTournament = () => {
+    if (!tournament) return
+    setState(prev => ({
+      ...prev,
+      currentTournament: { ...tournament, status: 'in_progress' }
+    }))
+    toast.success('Tournament started!')
+  }
+
+  const clearTournament = () => {
+    setState(prev => ({
+      ...prev,
+      currentTournament: null,
+      currentMatchIndexA: 0,
+      currentMatchIndexB: 0,
+      timerSecondsA: 0,
+      timerSecondsB: 0,
+      timerRunningA: false,
+      timerRunningB: false,
+    }))
+    toast.success('Tournament cleared')
+  }
+
+  const swapMatchCourt = (matchId: string) => {
+    if (!tournament) return
+    setState(prev => ({
+      ...prev,
+      currentTournament: {
+        ...tournament,
+        matches: tournament.matches.map(m => 
+          m.id === matchId ? { ...m, court: m.court === 'A' ? 'B' : 'A' } : m
+        )
+      }
+    }))
+  }
+
+  const moveMatchInQueue = (matchId: string, direction: 'up' | 'down') => {
+    if (!tournament) return
+    const matches = [...tournament.matches]
+    const idx = matches.findIndex(m => m.id === matchId)
+    if (idx === -1) return
+    
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= matches.length) return
+    
+    [matches[idx], matches[newIdx]] = [matches[newIdx], matches[idx]]
+    matches.forEach((m, i) => m.orderIndex = i)
+    
+    setState(prev => ({
+      ...prev,
+      currentTournament: { ...tournament, matches }
+    }))
+  }
+
+  if (!tournament) {
+    return (
+      <Card className="bg-slate-900 border-slate-800">
+        <CardHeader>
+          <CardTitle className="text-white">Tournament Setup</CardTitle>
+          <CardDescription className="text-slate-400">
+            Generate a round-robin tournament. You can generate before selecting participants, then refresh to add them.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label className="text-slate-300">Month</Label>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="bg-slate-800 border-slate-700">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  {MONTHS.map(m => (
+                    <SelectItem key={m} value={m}>{m}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-slate-300">Year</Label>
+              <Select value={selectedYear.toString()} onValueChange={v => setSelectedYear(parseInt(v))}>
+                <SelectTrigger className="bg-slate-800 border-slate-700">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  {[2024, 2025, 2026].map(y => (
+                    <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-slate-800 rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-white">{state.members.length}</div>
+              <div className="text-sm text-slate-400">Total Members</div>
+            </div>
+            <div className="bg-slate-800 rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-amber-400">
+                {state.members.filter(m => m.isParticipating).length}
+              </div>
+              <div className="text-sm text-slate-400">Participating</div>
+            </div>
+            <div className="bg-slate-800 rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-white">{state.groups.length}</div>
+              <div className="text-sm text-slate-400">Groups</div>
+            </div>
+            <div className="bg-slate-800 rounded-lg p-4 text-center">
+              <div className="text-3xl font-bold text-emerald-400">
+                {(() => {
+                  const participants = state.members.filter(m => m.isParticipating)
+                  const byGroup = new Map<string, number>()
+                  participants.forEach(p => byGroup.set(p.group, (byGroup.get(p.group) || 0) + 1))
+                  let total = 0
+                  byGroup.forEach(count => total += (count * (count - 1)) / 2)
+                  return total
+                })()}
+              </div>
+              <div className="text-sm text-slate-400">Est. Matches</div>
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <h4 className="text-white font-medium">Participants by Group:</h4>
+            <div className="flex flex-wrap gap-2">
+              {state.groups.map(g => {
+                const count = state.members.filter(m => m.group === g.id && m.isParticipating).length
+                return (
+                  <Badge 
+                    key={g.id} 
+                    variant="outline" 
+                    className={`${g.isNonBogu ? 'border-orange-500 text-orange-400' : 'border-slate-600 text-slate-300'}`}
+                  >
+                    {g.name}: {count}
+                  </Badge>
+                )
+              })}
+            </div>
+          </div>
+
+          <Button 
+            onClick={() => generateTournament(selectedMonth, selectedYear)}
+            className="w-full bg-amber-600 hover:bg-amber-700"
+            disabled={state.members.filter(m => m.isParticipating).length < 2}
+          >
+            <Trophy className="w-4 h-4 mr-2" />
+            Generate Tournament
+          </Button>
+        </CardContent>
+      </Card>
+    )
+  }
+
+  const completedMatches = tournament.matches.filter(m => m.status === 'completed').length
+  const totalMatches = tournament.matches.length
+  const isComplete = completedMatches === totalMatches
+  const courtAMatches = tournament.matches.filter(m => m.court === 'A')
+  const courtBMatches = tournament.matches.filter(m => m.court === 'B')
+
+  return (
+    <div className="space-y-4">
+      <Card className="bg-slate-900 border-slate-800">
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="text-white">{tournament.name}</CardTitle>
+              <CardDescription className="text-slate-400">
+                {tournament.month} {tournament.year} • {tournament.status}
+              </CardDescription>
+            </div>
+            <Badge className={
+              tournament.status === 'setup' ? 'bg-yellow-600' :
+              tournament.status === 'in_progress' ? 'bg-green-600' :
+              'bg-slate-600'
+            }>
+              {tournament.status.replace('_', ' ')}
+            </Badge>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center gap-4">
+            <Progress value={(completedMatches / totalMatches) * 100} className="flex-1" />
+            <span className="text-slate-400 text-sm">{completedMatches}/{totalMatches} matches</span>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 text-center">
+            <div className="bg-red-900/20 border border-red-800 rounded-lg p-3">
+              <div className="text-2xl font-bold text-red-400">{courtAMatches.length}</div>
+              <div className="text-sm text-slate-400">Court A Matches</div>
+            </div>
+            <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
+              <div className="text-2xl font-bold text-blue-400">{courtBMatches.length}</div>
+              <div className="text-sm text-slate-400">Court B Matches</div>
+            </div>
+          </div>
+
+          <div className="flex gap-2 flex-wrap">
+            {tournament.status === 'setup' && (
+              <>
+                <Button onClick={startTournament} className="bg-emerald-600 hover:bg-emerald-700">
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Tournament
+                </Button>
+                <Button onClick={refreshTournamentParticipants} variant="outline" className="border-slate-700">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Refresh Participants
+                </Button>
+              </>
+            )}
+            {isComplete && (
+              <Button onClick={archiveTournament} className="bg-amber-600 hover:bg-amber-700">
+                <History className="w-4 h-4 mr-2" />
+                Archive & Complete
+              </Button>
+            )}
+            <Button variant="outline" onClick={clearTournament} className="border-red-800 text-red-400 hover:bg-red-900/20">
+              <Trash2 className="w-4 h-4 mr-2" />
+              Clear Tournament
+            </Button>
           </div>
         </CardContent>
       </Card>
+
+      {/* Match Schedule by Group with Court Assignment */}
+      {tournament.groupOrder.map(groupId => {
+        const group = getGroupById(groupId)
+        const groupMatches = tournament.matches.filter(m => m.groupId === groupId)
+        
+        return (
+          <Card key={groupId} className="bg-slate-900 border-slate-800">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                {group?.name || groupId}
+                {group?.isNonBogu && <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>}
+                <Badge variant="outline" className="border-slate-600 text-slate-400 ml-auto">
+                  {groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}
+                </Badge>
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-64">
+                <div className="space-y-2">
+                  {groupMatches.map((match, idx) => {
+                    const p1 = getMemberById(match.player1Id)
+                    const p2 = getMemberById(match.player2Id)
+                    return (
+                      <div 
+                        key={match.id}
+                        className={`flex items-center gap-3 p-3 rounded-lg ${
+                          match.status === 'completed' ? 'bg-slate-800/30' :
+                          match.status === 'in_progress' ? 'bg-emerald-900/20 border border-emerald-800' :
+                          'bg-slate-800/50'
+                        }`}
+                      >
+                        <span className="text-slate-500 w-6">#{idx + 1}</span>
+                        <Badge className={match.court === 'A' ? 'bg-red-900 text-red-200' : 'bg-blue-900 text-blue-200'}>
+                          {match.court}
+                        </Badge>
+                        <div className="flex-1 flex items-center justify-between">
+                          <span className={`${match.winner === 'player1' ? 'text-green-400 font-semibold' : 'text-white'}`}>
+                            {p1?.firstName} {p1?.lastName}
+                          </span>
+                          <span className="text-slate-500 text-sm mx-2">vs</span>
+                          <span className={`${match.winner === 'player2' ? 'text-green-400 font-semibold' : 'text-white'}`}>
+                            {p2?.firstName} {p2?.lastName}
+                          </span>
+                        </div>
+                        {tournament.status === 'setup' && (
+                          <div className="flex gap-1">
+                            <Button size="icon" variant="ghost" onClick={() => swapMatchCourt(match.id)} className="h-8 w-8">
+                              <ArrowLeftRight className="w-3 h-3" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => moveMatchInQueue(match.id, 'up')} className="h-8 w-8">
+                              <ChevronLeft className="w-3 h-3 rotate-90" />
+                            </Button>
+                            <Button size="icon" variant="ghost" onClick={() => moveMatchInQueue(match.id, 'down')} className="h-8 w-8">
+                              <ChevronRight className="w-3 h-3 rotate-90" />
+                            </Button>
+                          </div>
+                        )}
+                        {match.status === 'completed' && (
+                          <Badge variant="outline" className="border-slate-600">
+                            {match.winner === 'draw' ? 'Draw' : 
+                             match.isHantei ? 'Hantei' :
+                             `${match.player1Score.length}-${match.player2Score.length}`}
+                          </Badge>
+                        )}
+                        {match.status === 'in_progress' && (
+                          <Badge className="bg-emerald-600 animate-pulse">Live</Badge>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   )
 }
@@ -1256,13 +1651,10 @@ function StandingsView({
   }
 
   const tournamentGroups = state.currentTournament.groups
-  const groupsToShow = selectedGroup === 'all' 
-    ? tournamentGroups 
-    : [selectedGroup]
+  const groupsToShow = selectedGroup === 'all' ? tournamentGroups : [selectedGroup]
 
   return (
     <div className="space-y-4">
-      {/* Group Filter */}
       <div className="flex gap-2 flex-wrap">
         <Button
           variant={selectedGroup === 'all' ? 'default' : 'outline'}
@@ -1288,7 +1680,6 @@ function StandingsView({
         })}
       </div>
 
-      {/* Standings Tables */}
       {groupsToShow.map(groupId => {
         const group = getGroupById(groupId)
         const standings = calculateStandings(groupId, state.currentTournament!.matches, state.members)
@@ -1301,9 +1692,7 @@ function StandingsView({
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 {group?.name || groupId}
-                {group?.isNonBogu && (
-                  <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>
-                )}
+                {group?.isNonBogu && <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -1315,14 +1704,9 @@ function StandingsView({
                       <th className="text-left text-slate-400 p-2 font-medium">Name</th>
                       <th className="text-center text-slate-400 p-2 font-medium">Pts</th>
                       <th className="text-center text-slate-400 p-2 font-medium">W</th>
-                      {!group?.isNonBogu && (
-                        <th className="text-center text-slate-400 p-2 font-medium">D</th>
-                      )}
+                      {!group?.isNonBogu && <th className="text-center text-slate-400 p-2 font-medium">D</th>}
                       <th className="text-center text-slate-400 p-2 font-medium">L</th>
-                      {!group?.isNonBogu && (
-                        <th className="text-center text-slate-400 p-2 font-medium">Ippons</th>
-                      )}
-                      {/* Head-to-head results */}
+                      {!group?.isNonBogu && <th className="text-center text-slate-400 p-2 font-medium">Ippons</th>}
                       {groupMembers.map(m => (
                         <th key={m.id} className="text-center text-slate-400 p-2 font-medium text-xs">
                           {m.firstName.charAt(0)}{m.lastName.charAt(0)}
@@ -1337,16 +1721,13 @@ function StandingsView({
                         <td className="p-2 text-white font-medium">{standing.playerName}</td>
                         <td className="p-2 text-center text-amber-400 font-bold">{standing.points}</td>
                         <td className="p-2 text-center text-green-400">{standing.wins}</td>
-                        {!group?.isNonBogu && (
-                          <td className="p-2 text-center text-slate-400">{standing.draws}</td>
-                        )}
+                        {!group?.isNonBogu && <td className="p-2 text-center text-slate-400">{standing.draws}</td>}
                         <td className="p-2 text-center text-red-400">{standing.losses}</td>
                         {!group?.isNonBogu && (
                           <td className="p-2 text-center text-slate-300">
                             {standing.ipponsScored}-{standing.ipponsAgainst}
                           </td>
                         )}
-                        {/* Head-to-head results */}
                         {groupMembers.map(m => {
                           if (m.id === standing.playerId) {
                             return <td key={m.id} className="p-2 text-center text-slate-600">-</td>
@@ -1357,11 +1738,7 @@ function StandingsView({
                           else if (result === 'L') className += 'text-red-400 bg-red-900/20'
                           else if (result === 'D') className += 'text-slate-400 bg-slate-800'
                           else className += 'text-slate-600'
-                          return (
-                            <td key={m.id} className={className}>
-                              {result || '-'}
-                            </td>
-                          )
+                          return <td key={m.id} className={className}>{result || '-'}</td>
                         })}
                       </tr>
                     ))}
@@ -1376,247 +1753,7 @@ function StandingsView({
   )
 }
 
-// Tournament Manager Component
-function TournamentManager({
-  state,
-  setState,
-  getMemberById,
-  getGroupById,
-  generateTournament,
-  archiveTournament,
-}: {
-  state: AppState
-  setState: React.Dispatch<React.SetStateAction<AppState>>
-  getMemberById: (id: string) => Member | undefined
-  getGroupById: (id: string) => Group | undefined
-  generateTournament: () => void
-  archiveTournament: () => void
-}) {
-  const tournament = state.currentTournament
-
-  const startTournament = () => {
-    if (!tournament) return
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, status: 'in_progress' }
-    }))
-    toast.success('Tournament started!')
-  }
-
-  const clearTournament = () => {
-    setState(prev => ({
-      ...prev,
-      currentTournament: null,
-      currentMatchIndex: 0,
-      timerSeconds: 0,
-      timerRunning: false,
-    }))
-    toast.success('Tournament cleared')
-  }
-
-  if (!tournament) {
-    return (
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader>
-          <CardTitle className="text-white">Tournament Setup</CardTitle>
-          <CardDescription className="text-slate-400">
-            Generate a round-robin tournament for participating members
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-slate-800 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-white">
-                {state.members.length}
-              </div>
-              <div className="text-sm text-slate-400">Total Members</div>
-            </div>
-            <div className="bg-slate-800 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-amber-400">
-                {state.members.filter(m => m.isParticipating).length}
-              </div>
-              <div className="text-sm text-slate-400">Participating</div>
-            </div>
-            <div className="bg-slate-800 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-white">
-                {state.groups.length}
-              </div>
-              <div className="text-sm text-slate-400">Groups</div>
-            </div>
-            <div className="bg-slate-800 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-emerald-400">
-                {(() => {
-                  const participants = state.members.filter(m => m.isParticipating)
-                  const byGroup = new Map<string, number>()
-                  participants.forEach(p => {
-                    byGroup.set(p.group, (byGroup.get(p.group) || 0) + 1)
-                  })
-                  let total = 0
-                  byGroup.forEach(count => {
-                    total += (count * (count - 1)) / 2
-                  })
-                  return total
-                })()}
-              </div>
-              <div className="text-sm text-slate-400">Est. Matches</div>
-            </div>
-          </div>
-
-          {/* Participants by group */}
-          <div className="space-y-2">
-            <h4 className="text-white font-medium">Participants by Group:</h4>
-            <div className="flex flex-wrap gap-2">
-              {state.groups.map(g => {
-                const count = state.members.filter(m => m.group === g.id && m.isParticipating).length
-                return (
-                  <Badge 
-                    key={g.id} 
-                    variant="outline" 
-                    className={`${g.isNonBogu ? 'border-orange-500 text-orange-400' : 'border-slate-600 text-slate-300'}`}
-                  >
-                    {g.name}: {count}
-                  </Badge>
-                )
-              })}
-            </div>
-          </div>
-
-          <Button 
-            onClick={generateTournament}
-            className="w-full bg-amber-600 hover:bg-amber-700"
-            disabled={state.members.filter(m => m.isParticipating).length < 2}
-          >
-            <Trophy className="w-4 h-4 mr-2" />
-            Generate Tournament
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  const completedMatches = tournament.matches.filter(m => m.status === 'completed').length
-  const totalMatches = tournament.matches.length
-  const isComplete = completedMatches === totalMatches
-
-  return (
-    <div className="space-y-4">
-      <Card className="bg-slate-900 border-slate-800">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle className="text-white">{tournament.name}</CardTitle>
-              <CardDescription className="text-slate-400">
-                {tournament.date} • {tournament.status}
-              </CardDescription>
-            </div>
-            <Badge className={
-              tournament.status === 'setup' ? 'bg-yellow-600' :
-              tournament.status === 'in_progress' ? 'bg-green-600' :
-              'bg-slate-600'
-            }>
-              {tournament.status.replace('_', ' ')}
-            </Badge>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Progress value={(completedMatches / totalMatches) * 100} className="flex-1" />
-            <span className="text-slate-400 text-sm">
-              {completedMatches}/{totalMatches} matches
-            </span>
-          </div>
-
-          <div className="flex gap-2 flex-wrap">
-            {tournament.status === 'setup' && (
-              <Button onClick={startTournament} className="bg-emerald-600 hover:bg-emerald-700">
-                <Play className="w-4 h-4 mr-2" />
-                Start Tournament
-              </Button>
-            )}
-            {isComplete && (
-              <Button onClick={archiveTournament} className="bg-amber-600 hover:bg-amber-700">
-                <History className="w-4 h-4 mr-2" />
-                Archive & Complete
-              </Button>
-            )}
-            <Button variant="outline" onClick={clearTournament} className="border-red-800 text-red-400 hover:bg-red-900/20">
-              <Trash2 className="w-4 h-4 mr-2" />
-              Clear Tournament
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      {/* Match Schedule by Group */}
-      {tournament.groups.map(groupId => {
-        const group = getGroupById(groupId)
-        const groupMatches = tournament.matches.filter(m => m.groupId === groupId)
-        
-        return (
-          <Card key={groupId} className="bg-slate-900 border-slate-800">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                {group?.name || groupId}
-                {group?.isNonBogu && (
-                  <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>
-                )}
-                <Badge variant="outline" className="border-slate-600 text-slate-400 ml-auto">
-                  {groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-64">
-                <div className="space-y-2">
-                  {groupMatches.map((match, idx) => {
-                    const p1 = getMemberById(match.player1Id)
-                    const p2 = getMemberById(match.player2Id)
-                    return (
-                      <div 
-                        key={match.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg ${
-                          match.status === 'completed' ? 'bg-slate-800/30' :
-                          match.status === 'in_progress' ? 'bg-emerald-900/20 border border-emerald-800' :
-                          'bg-slate-800/50'
-                        }`}
-                      >
-                        <span className="text-slate-500 w-6">#{idx + 1}</span>
-                        <div className="flex-1 flex items-center justify-between">
-                          <span className={`${match.winner === 'player1' ? 'text-green-400 font-semibold' : 'text-white'}`}>
-                            {p1?.firstName} {p1?.lastName}
-                          </span>
-                          <span className="text-slate-500 text-sm mx-2">vs</span>
-                          <span className={`${match.winner === 'player2' ? 'text-green-400 font-semibold' : 'text-white'}`}>
-                            {p2?.firstName} {p2?.lastName}
-                          </span>
-                        </div>
-                        {match.status === 'completed' && (
-                          <Badge variant="outline" className="border-slate-600">
-                            {match.winner === 'draw' ? 'Draw' : 
-                             match.isHantei ? 'Hantei' :
-                             `${match.player1Score.length}-${match.player2Score.length}`}
-                          </Badge>
-                        )}
-                        {match.status === 'in_progress' && (
-                          <Badge className="bg-emerald-600 animate-pulse">Live</Badge>
-                        )}
-                        {match.status === 'pending' && (
-                          <Circle className="w-4 h-4 text-slate-600" />
-                        )}
-                      </div>
-                    )
-                  })}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
-        )
-      })}
-    </div>
-  )
-}
-
-// History View Component
+// History View Component with Excel Import
 function HistoryView({
   state,
   setState,
@@ -1624,6 +1761,7 @@ function HistoryView({
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
 }) {
+  const [showImport, setShowImport] = useState(false)
   const history = state.history || []
   
   const deleteHistoryEntry = (id: string) => {
@@ -1634,13 +1772,79 @@ function HistoryView({
     toast.success('History entry deleted')
   }
 
-  if (history.length === 0) {
+  const handleExcelImport = (data: string) => {
+    try {
+      // Parse CSV/Excel data
+      // Expected format: Month,Year,GroupName,Rank,PlayerName,Points,Wins,Losses,Draws
+      const lines = data.trim().split('\n')
+      const startIdx = lines[0].toLowerCase().includes('month') ? 1 : 0
+      
+      const entries: Map<string, TournamentHistory> = new Map()
+      
+      for (let i = startIdx; i < lines.length; i++) {
+        const parts = lines[i].split(',').map(p => p.trim().replace(/"/g, ''))
+        if (parts.length >= 7) {
+          const [month, yearStr, groupName, rankStr, playerName, pointsStr, winsStr, lossesStr, drawsStr] = parts
+          const year = parseInt(yearStr)
+          const key = `${month}-${year}`
+          
+          if (!entries.has(key)) {
+            entries.set(key, {
+              id: generateId(),
+              name: `Renbu Monthly Shiai - ${month} ${year}`,
+              date: new Date(year, MONTHS.indexOf(month), 1).toISOString().split('T')[0],
+              month,
+              year,
+              results: []
+            })
+          }
+          
+          const entry = entries.get(key)!
+          let groupResult = entry.results.find(r => r.groupName === groupName)
+          if (!groupResult) {
+            groupResult = {
+              groupId: generateId(),
+              groupName,
+              isNonBogu: groupName.toLowerCase().includes('non-bogu'),
+              standings: []
+            }
+            entry.results.push(groupResult)
+          }
+          
+          groupResult.standings.push({
+            rank: parseInt(rankStr) || groupResult.standings.length + 1,
+            playerName,
+            points: parseInt(pointsStr) || 0,
+            wins: parseInt(winsStr) || 0,
+            losses: parseInt(lossesStr) || 0,
+            draws: parseInt(drawsStr || '0') || 0,
+          })
+        }
+      }
+      
+      setState(prev => ({
+        ...prev,
+        history: [...(prev.history || []), ...entries.values()]
+      }))
+      
+      toast.success(`Imported ${entries.size} tournament(s)`)
+      setShowImport(false)
+    } catch (e) {
+      toast.error('Failed to parse import data')
+    }
+  }
+
+  if (history.length === 0 && !showImport) {
     return (
       <Card className="bg-slate-900 border-slate-800">
         <CardContent className="p-8 text-center text-slate-500">
           <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No tournament history</p>
           <p className="text-sm mt-2">Completed tournaments will appear here</p>
+          <Button className="mt-4" variant="outline" onClick={() => setShowImport(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Import Past History
+          </Button>
         </CardContent>
       </Card>
     )
@@ -1648,6 +1852,26 @@ function HistoryView({
 
   return (
     <div className="space-y-4">
+      <div className="flex justify-end">
+        <Dialog open={showImport} onOpenChange={setShowImport}>
+          <DialogTrigger asChild>
+            <Button variant="outline" className="border-slate-700">
+              <Upload className="w-4 h-4 mr-2" />
+              Import Past History
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-slate-900 border-slate-800 max-w-2xl">
+            <DialogHeader>
+              <DialogTitle className="text-white">Import Tournament History</DialogTitle>
+              <DialogDescription className="text-slate-400">
+                Import past tournament data from CSV/Excel. Format: Month,Year,GroupName,Rank,PlayerName,Points,Wins,Losses,Draws
+              </DialogDescription>
+            </DialogHeader>
+            <HistoryImportForm onImport={handleExcelImport} />
+          </DialogContent>
+        </Dialog>
+      </div>
+
       {history.map(entry => (
         <Card key={entry.id} className="bg-slate-900 border-slate-800">
           <CardHeader>
@@ -1672,9 +1896,7 @@ function HistoryView({
                 <div key={result.groupId} className="bg-slate-800/50 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <h4 className="text-white font-medium">{result.groupName}</h4>
-                    {result.isNonBogu && (
-                      <Badge className="bg-orange-900 text-orange-200 text-xs">Hantei</Badge>
-                    )}
+                    {result.isNonBogu && <Badge className="bg-orange-900 text-orange-200 text-xs">Hantei</Badge>}
                   </div>
                   <div className="space-y-2">
                     {result.standings.slice(0, 3).map((s, idx) => (
@@ -1697,6 +1919,57 @@ function HistoryView({
           </CardContent>
         </Card>
       ))}
+    </div>
+  )
+}
+
+// History Import Form
+function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
+  const [importText, setImportText] = useState('')
+  const fileInputRef = useRef<HTMLInputElement>(null)
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      const reader = new FileReader()
+      reader.onload = (event) => {
+        setImportText(event.target?.result as string)
+      }
+      reader.readAsText(file)
+    }
+  }
+
+  return (
+    <div className="space-y-4 pt-4">
+      <div className="space-y-2">
+        <Label>Upload CSV/Excel File</Label>
+        <Input
+          type="file"
+          accept=".csv,.xlsx,.xls"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          className="bg-slate-800 border-slate-700"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label>Or paste data</Label>
+        <textarea
+          value={importText}
+          onChange={(e) => setImportText(e.target.value)}
+          className="w-full h-40 bg-slate-800 border border-slate-700 rounded-md p-3 text-white text-sm font-mono"
+          placeholder="Month,Year,GroupName,Rank,PlayerName,Points,Wins,Losses,Draws&#10;January,2025,Group A,1,John Doe,6,3,0,0&#10;January,2025,Group A,2,Jane Smith,4,2,1,0"
+        />
+      </div>
+      <DialogFooter>
+        <Button 
+          onClick={() => onImport(importText)}
+          className="bg-amber-600 hover:bg-amber-700"
+          disabled={!importText.trim()}
+        >
+          <Upload className="w-4 h-4 mr-2" />
+          Import
+        </Button>
+      </DialogFooter>
     </div>
   )
 }
@@ -1780,15 +2053,13 @@ function CSVImportForm({ onImport }: { onImport: (csv: string) => void }) {
     <div className="space-y-4 pt-4">
       <div className="space-y-2">
         <Label>Upload CSV File</Label>
-        <div className="flex gap-2">
-          <Input
-            type="file"
-            accept=".csv"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            className="bg-slate-800 border-slate-700"
-          />
-        </div>
+        <Input
+          type="file"
+          accept=".csv"
+          ref={fileInputRef}
+          onChange={handleFileUpload}
+          className="bg-slate-800 border-slate-700"
+        />
       </div>
       <div className="space-y-2">
         <Label>Or paste CSV content</Label>
@@ -1866,9 +2137,7 @@ function GuestsManager({
               <DialogContent className="bg-slate-900 border-slate-800">
                 <DialogHeader>
                   <DialogTitle className="text-white">Add Guest</DialogTitle>
-                  <DialogDescription className="text-slate-400">
-                    Add a guest from another dojo
-                  </DialogDescription>
+                  <DialogDescription className="text-slate-400">Add a guest from another dojo</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 pt-4">
                   <div className="grid grid-cols-2 gap-4">
@@ -1926,9 +2195,7 @@ function GuestsManager({
           <ScrollArea className="h-64">
             <div className="space-y-2">
               {state.guestRegistry.length === 0 ? (
-                <div className="text-center text-slate-500 py-8">
-                  No guests in registry
-                </div>
+                <div className="text-center text-slate-500 py-8">No guests in registry</div>
               ) : (
                 state.guestRegistry.map(guest => {
                   const alreadyAdded = state.members.some(
@@ -1966,7 +2233,7 @@ function GuestsManager({
   )
 }
 
-// Courtkeeper Portal Component
+// Courtkeeper Portal Component - Significantly Enhanced
 function CourtkeeperPortal({ 
   state, 
   setState, 
@@ -1982,9 +2249,25 @@ function CourtkeeperPortal({
   getMemberById: (id: string) => Member | undefined
   getGroupById: (id: string) => Group | undefined
 }) {
+  const [selectedCourt, setSelectedCourt] = useState<'A' | 'B'>('A')
+  const [showWinnerPrompt, setShowWinnerPrompt] = useState<{show: boolean, winner: 'player1' | 'player2' | null}>({show: false, winner: null})
+  
   const tournament = state.currentTournament
-  const currentMatch = tournament?.matches[state.currentMatchIndex]
+  
+  const courtAMatches = tournament?.matches.filter(m => m.court === 'A') || []
+  const courtBMatches = tournament?.matches.filter(m => m.court === 'B') || []
+  
+  const currentMatchA = courtAMatches.find(m => m.status !== 'completed') || courtAMatches[0]
+  const currentMatchB = courtBMatches.find(m => m.status !== 'completed') || courtBMatches[0]
+  
+  const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
+  const currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
+  
+  const timerSeconds = selectedCourt === 'A' ? state.timerSecondsA : state.timerSecondsB
+  const timerRunning = selectedCourt === 'A' ? state.timerRunningA : state.timerRunningB
+  
   const group = currentMatch ? getGroupById(currentMatch.groupId) : null
+  const isHantei = currentMatch?.isHantei || false
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -1993,15 +2276,19 @@ function CourtkeeperPortal({
   }
 
   const toggleTimer = () => {
-    setState(prev => ({ ...prev, timerRunning: !prev.timerRunning }))
+    if (selectedCourt === 'A') {
+      setState(prev => ({ ...prev, timerRunningA: !prev.timerRunningA }))
+    } else {
+      setState(prev => ({ ...prev, timerRunningB: !prev.timerRunningB }))
+    }
   }
 
   const resetTimer = () => {
-    setState(prev => ({ ...prev, timerSeconds: 0, timerRunning: false }))
-  }
-
-  const setTimerDuration = (minutes: number) => {
-    setState(prev => ({ ...prev, timerTarget: minutes * 60, timerSeconds: 0 }))
+    if (selectedCourt === 'A') {
+      setState(prev => ({ ...prev, timerSecondsA: 0, timerRunningA: false }))
+    } else {
+      setState(prev => ({ ...prev, timerSecondsB: 0, timerRunningB: false }))
+    }
   }
 
   const addScore = (player: 'player1' | 'player2', scoreType: number) => {
@@ -2027,17 +2314,33 @@ function CourtkeeperPortal({
       ...prev,
       currentTournament: { ...tournament, matches: updatedMatches }
     }))
+    
+    // Check for winner after scoring
+    const updatedMatch = updatedMatches.find(m => m.id === currentMatch.id)
+    if (updatedMatch) {
+      const p1Score = updatedMatch.player1Score.length
+      const p2Score = updatedMatch.player2Score.length
+      if (p1Score >= 2) {
+        setShowWinnerPrompt({ show: true, winner: 'player1' })
+      } else if (p2Score >= 2) {
+        setShowWinnerPrompt({ show: true, winner: 'player2' })
+      }
+    }
   }
 
-  const undoScore = (player: 'player1' | 'player2') => {
+  const removeScore = (player: 'player1' | 'player2', index: number) => {
     if (!tournament || !currentMatch) return
 
     const updatedMatches = tournament.matches.map(m => {
       if (m.id === currentMatch.id) {
         return {
           ...m,
-          player1Score: player === 'player1' ? m.player1Score.slice(0, -1) : m.player1Score,
-          player2Score: player === 'player2' ? m.player2Score.slice(0, -1) : m.player2Score,
+          player1Score: player === 'player1' 
+            ? m.player1Score.filter((_, i) => i !== index) 
+            : m.player1Score,
+          player2Score: player === 'player2' 
+            ? m.player2Score.filter((_, i) => i !== index) 
+            : m.player2Score,
         }
       }
       return m
@@ -2049,46 +2352,72 @@ function CourtkeeperPortal({
     }))
   }
 
+  const undoScore = (player: 'player1' | 'player2') => {
+    if (!tournament || !currentMatch) return
+    const scores = player === 'player1' ? currentMatch.player1Score : currentMatch.player2Score
+    if (scores.length > 0) {
+      removeScore(player, scores.length - 1)
+    }
+  }
+
   const completeMatch = (winner: 'player1' | 'player2' | 'draw') => {
     if (!tournament || !currentMatch) return
 
     const updatedMatches = tournament.matches.map(m => {
       if (m.id === currentMatch.id) {
-        return {
-          ...m,
-          status: 'completed' as const,
-          winner,
-        }
+        return { ...m, status: 'completed' as const, winner }
       }
       return m
     })
 
-    // Find next pending match
-    let nextIndex = state.currentMatchIndex
-    for (let i = state.currentMatchIndex + 1; i < updatedMatches.length; i++) {
-      if (updatedMatches[i].status === 'pending') {
-        nextIndex = i
-        break
-      }
-    }
-
     setState(prev => ({
       ...prev,
       currentTournament: { ...tournament, matches: updatedMatches },
-      currentMatchIndex: nextIndex,
-      timerSeconds: 0,
-      timerRunning: false,
+      timerSecondsA: selectedCourt === 'A' ? 0 : prev.timerSecondsA,
+      timerSecondsB: selectedCourt === 'B' ? 0 : prev.timerSecondsB,
+      timerRunningA: selectedCourt === 'A' ? false : prev.timerRunningA,
+      timerRunningB: selectedCourt === 'B' ? false : prev.timerRunningB,
     }))
 
+    setShowWinnerPrompt({ show: false, winner: null })
     toast.success('Match completed!')
   }
 
-  const goToMatch = (index: number) => {
+  const swapMatchToCourt = (matchId: string, newCourt: 'A' | 'B') => {
+    if (!tournament) return
     setState(prev => ({
       ...prev,
-      currentMatchIndex: index,
-      timerSeconds: 0,
-      timerRunning: false,
+      currentTournament: {
+        ...tournament,
+        matches: tournament.matches.map(m => 
+          m.id === matchId ? { ...m, court: newCourt } : m
+        )
+      }
+    }))
+    toast.success(`Match moved to Court ${newCourt}`)
+  }
+
+  const moveInQueue = (matchId: string, direction: 'up' | 'down') => {
+    if (!tournament) return
+    const courtMatches = currentMatches.filter(m => m.status === 'pending')
+    const idx = courtMatches.findIndex(m => m.id === matchId)
+    if (idx === -1) return
+    
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= courtMatches.length) return
+    
+    // Swap order indices
+    const allMatches = [...tournament.matches]
+    const match1 = allMatches.find(m => m.id === matchId)!
+    const match2 = courtMatches[newIdx]
+    
+    const tempOrder = match1.orderIndex
+    match1.orderIndex = match2.orderIndex
+    match2.orderIndex = tempOrder
+    
+    setState(prev => ({
+      ...prev,
+      currentTournament: { ...tournament, matches: allMatches }
     }))
   }
 
@@ -2105,381 +2434,449 @@ function CourtkeeperPortal({
             <p className="text-slate-400">
               {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament has been generated yet'}
             </p>
-            <Button onClick={onSwitchPortal} variant="outline">
-              Go to Admin Portal
-            </Button>
+            <Button onClick={onSwitchPortal} variant="outline">Go to Admin Portal</Button>
           </CardContent>
         </Card>
       </div>
     )
   }
 
-  if (!currentMatch) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
-        <Toaster theme="dark" position="top-center" />
-        <Card className="bg-slate-900 border-slate-800 max-w-md w-full">
-          <CardHeader>
-            <CardTitle className="text-white text-center">Tournament Complete!</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <Trophy className="w-16 h-16 text-amber-500 mx-auto" />
-            <p className="text-slate-400">All matches have been completed</p>
-            <Button onClick={onSwitchPortal} variant="outline">
-              View Results
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
-  const player1 = getMemberById(currentMatch.player1Id)
-  const player2 = getMemberById(currentMatch.player2Id)
-  const isHantei = currentMatch.isHantei
+  const player1 = currentMatch ? getMemberById(currentMatch.player1Id) : null
+  const player2 = currentMatch ? getMemberById(currentMatch.player2Id) : null
 
   const scoreTypes = [
-    { id: 1, name: 'Men', short: 'M' },
-    { id: 2, name: 'Kote', short: 'K' },
-    { id: 3, name: 'Do', short: 'D' },
-    { id: 4, name: 'Tsuki', short: 'T' },
-    { id: 5, name: 'Hansoku', short: 'H' },
+    { id: 1, name: 'Men', short: 'M', color: 'bg-blue-600' },
+    { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600' },
+    { id: 3, name: 'Do', short: 'D', color: 'bg-purple-600' },
+    { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600' },
+    { id: 5, name: 'Hansoku', short: 'H', color: 'bg-yellow-600' },
   ]
 
-  const MatchQueue = () => (
-    <ScrollArea className="h-full">
-      <div className="space-y-2 p-2">
-        {tournament.matches.map((match, idx) => {
-          const p1 = getMemberById(match.player1Id)
-          const p2 = getMemberById(match.player2Id)
-          const matchGroup = getGroupById(match.groupId)
-          const isCurrent = idx === state.currentMatchIndex
-          return (
-            <button
-              key={match.id}
-              onClick={() => goToMatch(idx)}
-              className={`w-full text-left p-3 rounded-lg transition-colors ${
-                isCurrent ? 'bg-emerald-900/30 border border-emerald-700' :
-                match.status === 'completed' ? 'bg-slate-800/30 opacity-60' :
-                'bg-slate-800/50 hover:bg-slate-800'
-              }`}
-            >
-              <div className="flex items-center gap-2 mb-1">
-                <span className="text-slate-500 text-xs">#{idx + 1}</span>
-                <Badge variant="outline" className="text-xs border-slate-600">
-                  {matchGroup?.name}
-                </Badge>
-                {match.status === 'completed' && (
-                  <CheckCircle2 className="w-3 h-3 text-green-500 ml-auto" />
-                )}
-                {isCurrent && (
-                  <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />
-                )}
-              </div>
-              <div className="text-sm">
-                <span className={match.winner === 'player1' ? 'text-green-400' : 'text-white'}>
-                  {p1?.firstName} {p1?.lastName?.charAt(0)}.
-                </span>
-                <span className="text-slate-500 mx-1">vs</span>
-                <span className={match.winner === 'player2' ? 'text-green-400' : 'text-white'}>
-                  {p2?.firstName} {p2?.lastName?.charAt(0)}.
-                </span>
-              </div>
-            </button>
-          )
-        })}
+  const CourtQueue = ({ court, matches }: { court: 'A' | 'B', matches: Match[] }) => {
+    const pendingMatches = matches.filter(m => m.status !== 'completed').sort((a, b) => a.orderIndex - b.orderIndex)
+    const completedMatches = matches.filter(m => m.status === 'completed')
+    
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center justify-between mb-2">
+          <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-blue-400'}`}>
+            Court {court} Queue ({pendingMatches.length} pending)
+          </h3>
+        </div>
+        <ScrollArea className="h-[300px]">
+          <div className="space-y-2">
+            {pendingMatches.map((match, idx) => {
+              const p1 = getMemberById(match.player1Id)
+              const p2 = getMemberById(match.player2Id)
+              const matchGroup = getGroupById(match.groupId)
+              const isCurrent = match.status === 'in_progress' || idx === 0
+              
+              return (
+                <div
+                  key={match.id}
+                  className={`p-3 rounded-lg ${
+                    isCurrent ? 'bg-emerald-900/30 border border-emerald-700' : 'bg-slate-800/50'
+                  }`}
+                >
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-slate-500 text-xs">#{idx + 1}</span>
+                    <Badge variant="outline" className="text-xs border-slate-600">{matchGroup?.name}</Badge>
+                    {isCurrent && <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />}
+                  </div>
+                  <div className="text-sm text-white">
+                    {p1?.firstName} {p1?.lastName?.charAt(0)}. vs {p2?.firstName} {p2?.lastName?.charAt(0)}.
+                  </div>
+                  <div className="flex gap-1 mt-2">
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-7 text-xs"
+                      onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
+                    >
+                      <ArrowLeftRight className="w-3 h-3 mr-1" />
+                      To {court === 'A' ? 'B' : 'A'}
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-7 text-xs"
+                      onClick={() => moveInQueue(match.id, 'up')}
+                      disabled={idx === 0}
+                    >
+                      ↑
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      className="h-7 text-xs"
+                      onClick={() => moveInQueue(match.id, 'down')}
+                      disabled={idx === pendingMatches.length - 1}
+                    >
+                      ↓
+                    </Button>
+                  </div>
+                </div>
+              )
+            })}
+            {completedMatches.length > 0 && (
+              <>
+                <Separator className="my-2 bg-slate-700" />
+                <p className="text-xs text-slate-500">Completed ({completedMatches.length})</p>
+                {completedMatches.slice(0, 5).map(match => {
+                  const p1 = getMemberById(match.player1Id)
+                  const p2 = getMemberById(match.player2Id)
+                  return (
+                    <div key={match.id} className="p-2 bg-slate-800/30 rounded opacity-60 text-sm">
+                      <span className={match.winner === 'player1' ? 'text-green-400' : 'text-white'}>
+                        {p1?.firstName} {p1?.lastName?.charAt(0)}.
+                      </span>
+                      <span className="text-slate-500 mx-1">vs</span>
+                      <span className={match.winner === 'player2' ? 'text-green-400' : 'text-white'}>
+                        {p2?.firstName} {p2?.lastName?.charAt(0)}.
+                      </span>
+                    </div>
+                  )
+                })}
+              </>
+            )}
+          </div>
+        </ScrollArea>
       </div>
-    </ScrollArea>
-  )
+    )
+  }
+
+  // Winner Prompt Dialog
+  const WinnerPromptDialog = () => {
+    if (!showWinnerPrompt.show || !showWinnerPrompt.winner || !currentMatch) return null
+    
+    const winnerPlayer = showWinnerPrompt.winner === 'player1' ? player1 : player2
+    const winnerColor = showWinnerPrompt.winner === 'player1' ? 'red' : 'blue'
+    
+    return (
+      <Dialog open={showWinnerPrompt.show} onOpenChange={() => setShowWinnerPrompt({ show: false, winner: null })}>
+        <DialogContent className="bg-slate-900 border-slate-800">
+          <DialogHeader>
+            <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
+          </DialogHeader>
+          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-red-600' : 'bg-blue-900/30 border-2 border-blue-600'}`}>
+            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-400'}`} />
+            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+              {winnerPlayer?.firstName} {winnerPlayer?.lastName}
+            </p>
+            <p className="text-slate-400 mt-2">{winnerColor === 'red' ? 'Red (Aka)' : 'White (Shiro)'} Wins!</p>
+          </div>
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowWinnerPrompt({ show: false, winner: null })}>
+              Continue Match
+            </Button>
+            <Button 
+              onClick={() => completeMatch(showWinnerPrompt.winner!)}
+              className={winnerColor === 'red' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}
+            >
+              Complete Match
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-slate-950">
       <Toaster theme="dark" position="top-center" />
+      <WinnerPromptDialog />
       
       {/* Header */}
       <header className="bg-slate-900 border-b border-slate-800 px-4 py-2">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h1 className="text-lg font-bold text-white">Court {currentMatch.courtNumber}</h1>
-            <Badge variant="outline" className={`${group?.isNonBogu ? 'border-orange-500 text-orange-400' : 'border-emerald-500 text-emerald-400'}`}>
-              {group?.name} {isHantei && '• Hantei'}
+          <div className="flex items-center gap-3">
+            <h1 className="text-xl font-bold text-white">Courtkeeper</h1>
+            <Badge className={selectedCourt === 'A' ? 'bg-red-600' : 'bg-blue-600'}>
+              Court {selectedCourt}
             </Badge>
           </div>
           <div className="flex items-center gap-2">
-            <span className="text-slate-400 text-sm">
-              Match {state.currentMatchIndex + 1}/{tournament.matches.length}
-            </span>
-            <Button variant="ghost" size="sm" onClick={onSwitchPortal}>
-              Exit
+            <Button
+              size="sm"
+              variant={selectedCourt === 'A' ? 'default' : 'outline'}
+              onClick={() => setSelectedCourt('A')}
+              className={selectedCourt === 'A' ? 'bg-red-600' : ''}
+            >
+              Court A
             </Button>
+            <Button
+              size="sm"
+              variant={selectedCourt === 'B' ? 'default' : 'outline'}
+              onClick={() => setSelectedCourt('B')}
+              className={selectedCourt === 'B' ? 'bg-blue-600' : ''}
+            >
+              Court B
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onSwitchPortal}>Switch Portal</Button>
           </div>
         </div>
       </header>
 
-      <div className="flex">
-        {/* Main Content */}
-        <main className={`flex-1 p-4 ${isMobile ? '' : 'pr-80'}`}>
-          {/* Timer */}
-          <Card className="bg-slate-900 border-slate-800 mb-4">
-            <CardContent className="p-4">
-              <div className="text-center mb-4">
-                <div className={`font-mono font-bold ${isMobile ? 'text-6xl' : 'text-8xl'} ${
-                  state.timerSeconds >= state.timerTarget ? 'text-red-500' : 'text-white'
-                }`}>
-                  {formatTime(state.timerSeconds)}
-                </div>
-                <Progress 
-                  value={(state.timerSeconds / state.timerTarget) * 100} 
-                  className="mt-2"
-                />
-              </div>
-              <div className="flex justify-center gap-2 flex-wrap">
-                <Button
-                  size="lg"
-                  onClick={toggleTimer}
-                  className={state.timerRunning ? 'bg-yellow-600 hover:bg-yellow-700' : 'bg-emerald-600 hover:bg-emerald-700'}
-                >
-                  {state.timerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
-                </Button>
-                <Button size="lg" variant="outline" onClick={resetTimer}>
-                  <RotateCcw className="w-5 h-5" />
-                </Button>
-                <Separator orientation="vertical" className="h-10 bg-slate-700" />
-                {[1, 2, 3, 4, 5].map(min => (
-                  <Button
-                    key={min}
-                    size="sm"
-                    variant={state.timerTarget === min * 60 ? 'default' : 'outline'}
-                    onClick={() => setTimerDuration(min)}
-                    className={state.timerTarget === min * 60 ? 'bg-slate-700' : 'border-slate-700'}
-                  >
-                    {min}m
-                  </Button>
-                ))}
-              </div>
+      <main className={`p-4 ${!isMobile ? 'mr-80' : ''}`}>
+        {!currentMatch ? (
+          <Card className="bg-slate-900 border-slate-800">
+            <CardContent className="p-8 text-center">
+              <Trophy className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+              <p className="text-white text-xl">All Court {selectedCourt} matches complete!</p>
+              <p className="text-slate-400 mt-2">Switch to the other court or view results</p>
             </CardContent>
           </Card>
+        ) : (
+          <>
+            {/* Timer Section - 3 mins for non-bogu */}
+            <Card className={`bg-slate-900 border-2 mb-4 ${
+              timerSeconds >= state.timerTarget ? 'border-red-600 animate-pulse' : 'border-slate-800'
+            }`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <Timer className="w-5 h-5 text-slate-400" />
+                    <span className="text-slate-400">
+                      {isHantei ? 'Hantei Match (3 min)' : 'Regular Match (3 min)'}
+                    </span>
+                  </div>
+                  <Badge variant="outline" className="border-slate-600">
+                    {group?.name}
+                  </Badge>
+                </div>
+                <div className="text-center my-4">
+                  <div className={`text-7xl font-mono font-bold ${
+                    timerSeconds >= state.timerTarget ? 'text-red-500' : 'text-white'
+                  }`}>
+                    {formatTime(timerSeconds)}
+                  </div>
+                  <Progress 
+                    value={(timerSeconds / state.timerTarget) * 100} 
+                    className="mt-3"
+                  />
+                </div>
+                <div className="flex justify-center gap-4">
+                  <Button
+                    size="lg"
+                    onClick={toggleTimer}
+                    className={timerRunning ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'}
+                  >
+                    {timerRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+                    {timerRunning ? 'Pause' : 'Start'}
+                  </Button>
+                  <Button size="lg" variant="outline" onClick={resetTimer}>
+                    <RotateCcw className="w-5 h-5 mr-2" />
+                    Reset
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
 
-          {/* Scoreboard */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            {/* Player 1 (Red/Aka) */}
-            <Card className="bg-slate-900 border-2 border-red-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-red-400 text-center">
-                  <Flag className="w-5 h-5 inline mr-2" />
-                  Red (Aka)
-                </CardTitle>
-                <CardDescription className="text-center text-white text-lg">
-                  {player1?.firstName} {player1?.lastName}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isHantei ? (
-                  <div className="text-center">
+            {/* Scoring Section */}
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              {/* Player 1 (Red/Aka) */}
+              <Card className="bg-slate-900 border-2 border-red-800">
+                <CardHeader className="pb-2 bg-red-900/30">
+                  <CardTitle className="text-red-400 text-center">
+                    <Flag className="w-5 h-5 inline mr-2" />
+                    Red (Aka)
+                  </CardTitle>
+                  <CardDescription className="text-center text-white text-lg">
+                    {player1?.firstName} {player1?.lastName}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  {isHantei ? (
                     <Button
                       size="lg"
-                      className="w-full h-20 text-2xl bg-red-700 hover:bg-red-600"
+                      className="w-full h-24 text-2xl bg-red-700 hover:bg-red-600"
                       onClick={() => completeMatch('player1')}
                     >
+                      <Award className="w-8 h-8 mr-2" />
                       Red Wins (Hantei)
                     </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-center mb-4">
-                      <div className="text-5xl font-bold text-white">
-                        {currentMatch.player1Score.length}
+                  ) : (
+                    <>
+                      <div className="text-center mb-4">
+                        <div className="text-6xl font-bold text-white">{currentMatch.player1Score.length}</div>
+                        <div className="flex justify-center gap-1 mt-2 min-h-[32px] flex-wrap">
+                          {currentMatch.player1Score.map((s, i) => {
+                            const scoreType = scoreTypes.find(t => t.id === s)
+                            return (
+                              <Badge 
+                                key={i} 
+                                className={`${scoreType?.color} cursor-pointer hover:opacity-70`}
+                                onClick={() => removeScore('player1', i)}
+                              >
+                                {scoreType?.short}
+                                <X className="w-3 h-3 ml-1" />
+                              </Badge>
+                            )
+                          })}
+                        </div>
                       </div>
-                      <div className="text-sm text-slate-400 mt-1">
-                        {currentMatch.player1Score.map(s => scoreTypes.find(t => t.id === s)?.short).join(' ')}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {scoreTypes.slice(0, 4).map(type => (
+                      <div className="grid grid-cols-3 gap-2">
+                        {scoreTypes.map(type => (
+                          <Button
+                            key={type.id}
+                            size="lg"
+                            className={`${type.color} hover:opacity-80 h-16 text-lg font-bold`}
+                            onClick={() => addScore('player1', type.id)}
+                          >
+                            {type.short}
+                          </Button>
+                        ))}
                         <Button
-                          key={type.id}
-                          size="sm"
+                          size="lg"
                           variant="outline"
-                          className="border-red-800 text-red-400 hover:bg-red-900/30"
-                          onClick={() => addScore('player1', type.id)}
+                          className="border-slate-600 h-16"
+                          onClick={() => undoScore('player1')}
+                          disabled={currentMatch.player1Score.length === 0}
                         >
-                          {type.short}
+                          Undo
                         </Button>
-                      ))}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-yellow-800 text-yellow-400 hover:bg-yellow-900/30"
-                        onClick={() => addScore('player1', 5)}
-                      >
-                        H
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-slate-400"
-                        onClick={() => undoScore('player1')}
-                        disabled={currentMatch.player1Score.length === 0}
-                      >
-                        Undo
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
 
-            {/* Player 2 (White/Shiro) */}
-            <Card className="bg-slate-900 border-2 border-blue-800">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-blue-400 text-center">
-                  <Flag className="w-5 h-5 inline mr-2" />
-                  White (Shiro)
-                </CardTitle>
-                <CardDescription className="text-center text-white text-lg">
-                  {player2?.firstName} {player2?.lastName}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {isHantei ? (
-                  <div className="text-center">
+              {/* Player 2 (White/Shiro) */}
+              <Card className="bg-slate-900 border-2 border-blue-800">
+                <CardHeader className="pb-2 bg-blue-900/30">
+                  <CardTitle className="text-blue-400 text-center">
+                    <Flag className="w-5 h-5 inline mr-2" />
+                    White (Shiro)
+                  </CardTitle>
+                  <CardDescription className="text-center text-white text-lg">
+                    {player2?.firstName} {player2?.lastName}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  {isHantei ? (
                     <Button
                       size="lg"
-                      className="w-full h-20 text-2xl bg-blue-700 hover:bg-blue-600"
+                      className="w-full h-24 text-2xl bg-blue-700 hover:bg-blue-600"
                       onClick={() => completeMatch('player2')}
                     >
+                      <Award className="w-8 h-8 mr-2" />
                       White Wins (Hantei)
                     </Button>
-                  </div>
-                ) : (
-                  <>
-                    <div className="text-center mb-4">
-                      <div className="text-5xl font-bold text-white">
-                        {currentMatch.player2Score.length}
+                  ) : (
+                    <>
+                      <div className="text-center mb-4">
+                        <div className="text-6xl font-bold text-white">{currentMatch.player2Score.length}</div>
+                        <div className="flex justify-center gap-1 mt-2 min-h-[32px] flex-wrap">
+                          {currentMatch.player2Score.map((s, i) => {
+                            const scoreType = scoreTypes.find(t => t.id === s)
+                            return (
+                              <Badge 
+                                key={i} 
+                                className={`${scoreType?.color} cursor-pointer hover:opacity-70`}
+                                onClick={() => removeScore('player2', i)}
+                              >
+                                {scoreType?.short}
+                                <X className="w-3 h-3 ml-1" />
+                              </Badge>
+                            )
+                          })}
+                        </div>
                       </div>
-                      <div className="text-sm text-slate-400 mt-1">
-                        {currentMatch.player2Score.map(s => scoreTypes.find(t => t.id === s)?.short).join(' ')}
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2">
-                      {scoreTypes.slice(0, 4).map(type => (
+                      <div className="grid grid-cols-3 gap-2">
+                        {scoreTypes.map(type => (
+                          <Button
+                            key={type.id}
+                            size="lg"
+                            className={`${type.color} hover:opacity-80 h-16 text-lg font-bold`}
+                            onClick={() => addScore('player2', type.id)}
+                          >
+                            {type.short}
+                          </Button>
+                        ))}
                         <Button
-                          key={type.id}
-                          size="sm"
+                          size="lg"
                           variant="outline"
-                          className="border-blue-800 text-blue-400 hover:bg-blue-900/30"
-                          onClick={() => addScore('player2', type.id)}
+                          className="border-slate-600 h-16"
+                          onClick={() => undoScore('player2')}
+                          disabled={currentMatch.player2Score.length === 0}
                         >
-                          {type.short}
+                          Undo
                         </Button>
-                      ))}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="border-yellow-800 text-yellow-400 hover:bg-yellow-900/30"
-                        onClick={() => addScore('player2', 5)}
-                      >
-                        H
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-slate-400"
-                        onClick={() => undoScore('player2')}
-                        disabled={currentMatch.player2Score.length === 0}
-                      >
-                        Undo
-                      </Button>
-                    </div>
-                  </>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                      </div>
+                    </>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
 
-          {/* Match Actions */}
-          <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-4">
-              <div className="flex flex-col gap-2">
+            {/* Match Actions */}
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-4">
                 {!isHantei && (
-                  <div className="grid grid-cols-3 gap-2">
+                  <div className="grid grid-cols-3 gap-2 mb-4">
                     <Button
+                      size="lg"
                       onClick={() => completeMatch('player1')}
-                      className="bg-red-700 hover:bg-red-600"
-                      disabled={currentMatch.player1Score.length < 2 && currentMatch.player2Score.length < 2}
+                      className="bg-red-700 hover:bg-red-600 h-14"
                     >
                       Red Wins
                     </Button>
                     <Button
+                      size="lg"
                       onClick={() => completeMatch('draw')}
                       variant="outline"
-                      className="border-slate-600"
+                      className="border-slate-600 h-14"
                     >
                       Draw
                     </Button>
                     <Button
+                      size="lg"
                       onClick={() => completeMatch('player2')}
-                      className="bg-blue-700 hover:bg-blue-600"
-                      disabled={currentMatch.player1Score.length < 2 && currentMatch.player2Score.length < 2}
+                      className="bg-blue-700 hover:bg-blue-600 h-14"
                     >
                       White Wins
                     </Button>
                   </div>
                 )}
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-slate-700"
-                    onClick={() => goToMatch(Math.max(0, state.currentMatchIndex - 1))}
-                    disabled={state.currentMatchIndex === 0}
-                  >
-                    <ChevronLeft className="w-4 h-4 mr-1" />
-                    Previous
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="flex-1 border-slate-700"
-                    onClick={() => goToMatch(Math.min(tournament.matches.length - 1, state.currentMatchIndex + 1))}
-                    disabled={state.currentMatchIndex === tournament.matches.length - 1}
-                  >
-                    Next
-                    <ChevronRight className="w-4 h-4 ml-1" />
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </main>
+              </CardContent>
+            </Card>
+          </>
+        )}
+      </main>
 
-        {/* Match Queue Sidebar (Desktop) */}
-        {!isMobile && (
-          <aside className="fixed right-0 top-0 w-80 h-screen bg-slate-900 border-l border-slate-800 pt-14">
-            <div className="p-4 border-b border-slate-800">
-              <h2 className="text-white font-semibold">Match Queue</h2>
+      {/* Court Queue Sidebar (Desktop) */}
+      {!isMobile && (
+        <aside className="fixed right-0 top-0 w-80 h-screen bg-slate-900 border-l border-slate-800 pt-14 overflow-y-auto">
+          <div className="p-4 space-y-6">
+            <CourtQueue court="A" matches={courtAMatches} />
+            <Separator className="bg-slate-700" />
+            <CourtQueue court="B" matches={courtBMatches} />
+          </div>
+        </aside>
+      )}
+
+      {/* Court Queue Sheet (Mobile) */}
+      {isMobile && (
+        <Sheet>
+          <SheetTrigger asChild>
+            <Button 
+              className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-emerald-600 hover:bg-emerald-700 shadow-lg"
+            >
+              <Menu className="w-6 h-6" />
+            </Button>
+          </SheetTrigger>
+          <SheetContent side="bottom" className="bg-slate-900 border-slate-800 h-[70vh]">
+            <SheetHeader>
+              <SheetTitle className="text-white">Match Queues</SheetTitle>
+            </SheetHeader>
+            <div className="mt-4 space-y-4">
+              <CourtQueue court="A" matches={courtAMatches} />
+              <Separator className="bg-slate-700" />
+              <CourtQueue court="B" matches={courtBMatches} />
             </div>
-            <MatchQueue />
-          </aside>
-        )}
-
-        {/* Match Queue Sheet (Mobile) */}
-        {isMobile && (
-          <Sheet>
-            <SheetTrigger asChild>
-              <Button 
-                className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-emerald-600 hover:bg-emerald-700 shadow-lg"
-              >
-                <Menu className="w-6 h-6" />
-              </Button>
-            </SheetTrigger>
-            <SheetContent side="bottom" className="bg-slate-900 border-slate-800 h-[70vh]">
-              <SheetHeader>
-                <SheetTitle className="text-white">Match Queue</SheetTitle>
-              </SheetHeader>
-              <MatchQueue />
-            </SheetContent>
-          </Sheet>
-        )}
-      </div>
+          </SheetContent>
+        </Sheet>
+      )}
     </div>
   )
 }
