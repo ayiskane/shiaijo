@@ -1527,6 +1527,11 @@ function TournamentManager({
                 </Button>
               </>
             )}
+            {tournament.status === 'in_progress' && !isComplete && (
+              <Badge variant="outline" className="border-emerald-500 text-emerald-400 px-4 py-2">
+                Tournament In Progress
+              </Badge>
+            )}
             {isComplete && (
               <Button onClick={archiveTournament} className="bg-amber-600 hover:bg-amber-700">
                 <History className="w-4 h-4 mr-2" />
