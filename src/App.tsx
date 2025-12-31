@@ -2617,12 +2617,28 @@ function CourtkeeperPortal({
       </header>
 
       <main className={`p-4 ${!isMobile ? 'mr-80' : ''}`}>
-        {!currentMatch ? (
+        {!currentMatch || currentMatches.length === 0 ? (
           <Card className="bg-slate-900 border-slate-800">
             <CardContent className="p-8 text-center">
               <Trophy className="w-16 h-16 text-amber-500 mx-auto mb-4" />
-              <p className="text-white text-xl">All Court {selectedCourt} matches complete!</p>
-              <p className="text-slate-400 mt-2">Switch to the other court or view results</p>
+              <p className="text-white text-xl">
+                {currentMatches.length === 0 
+                  ? `No matches assigned to Court ${selectedCourt}`
+                  : `All Court ${selectedCourt} matches complete!`}
+              </p>
+              <p className="text-slate-400 mt-2">
+                {currentMatches.length === 0 
+                  ? "Matches may be assigned to the other court"
+                  : "Switch to the other court or view results"}
+              </p>
+              <div className="flex justify-center gap-4 mt-4">
+                <Button
+                  onClick={() => setSelectedCourt(selectedCourt === 'A' ? 'B' : 'A')}
+                  className={selectedCourt === 'A' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'}
+                >
+                  Switch to Court {selectedCourt === 'A' ? 'B' : 'A'}
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (
