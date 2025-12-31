@@ -647,11 +647,6 @@ function AdminPortal({
   const generateTournament = (selectedMonth: string, selectedYear: number) => {
     const participants = state.members.filter(m => m.isParticipating)
     
-    if (participants.length < 2) {
-      toast.error('Need at least 2 participants')
-      return
-    }
-    
     const participantsByGroup = new Map<string, Member[]>()
     participants.forEach(p => {
       const existing = participantsByGroup.get(p.group) || []
@@ -681,18 +676,14 @@ function AdminPortal({
           player2Score: [],
           winner: null,
           status: 'pending',
-          court: idx % 2 === 0 ? 'A' : 'B', // Auto-assign courts alternating
+          court: idx % 2 === 0 ? 'A' : 'B',
           isHantei,
           orderIndex: globalOrderIndex++,
         })
       })
     })
     
-    if (allMatches.length === 0) {
-      toast.error('Need at least 2 participants in a group')
-      return
-    }
-    
+    // Allow empty tournament - can be refreshed later with participants
     const tournament: Tournament = {
       id: generateId(),
       name: `Renbu Monthly Shiai - ${selectedMonth} ${selectedYear}`,
@@ -716,7 +707,11 @@ function AdminPortal({
       timerRunningB: false,
     }))
     
-    toast.success(`Tournament generated with ${allMatches.length} matches across ${participantsByGroup.size} groups`)
+    if (allMatches.length === 0) {
+      toast.success(`Empty tournament created for ${selectedMonth} ${selectedYear}. Add participants and refresh to generate matches.`)
+    } else {
+      toast.success(`Tournament generated with ${allMatches.length} matches across ${participantsByGroup.size} groups`)
+    }
   }
 
   const refreshTournamentParticipants = () => {
@@ -1467,7 +1462,6 @@ function TournamentManager({
           <Button 
             onClick={() => generateTournament(selectedMonth, selectedYear)}
             className="w-full bg-amber-600 hover:bg-amber-700"
-            disabled={state.members.filter(m => m.isParticipating).length < 2}
           >
             <Trophy className="w-4 h-4 mr-2" />
             Generate Tournament
