@@ -294,26 +294,25 @@ const calculateStandings = (
   })
 }
 
-// Storage helpers
+// Firebase Realtime Database configuration
+const FIREBASE_URL = 'https://renbu-shiai-default-rtdb.firebaseio.com'
 const STORAGE_KEY = 'renbu-shiai-data-v2'
 
-const hasClaudeStorage = typeof window !== 'undefined' && 
-  'storage' in window && 
-  typeof (window as any).storage?.get === 'function'
-
+// Save to Firebase (real-time sync across all devices)
 const saveToStorage = async (state: AppState) => {
   try {
-    const serializable = {
-      ...state,
-      // No need to serialize Maps anymore as standings are calculated on the fly
-    }
-    if (hasClaudeStorage) {
-      await (window as any).storage.set(STORAGE_KEY, JSON.stringify(serializable), true)
-    } else {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable))
-    }
+    const serializable = { ...state }
+    // Save to Firebase
+    await fetch(`${FIREBASE_URL}/tournament.json`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(serializable)
+    })
+    // Also save to localStorage as backup
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(serializable))
   } catch (e) {
-    console.error('Storage save error:', e)
+    console.error('Firebase save error:', e)
+    // Fallback to localStorage only
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
     } catch (e2) {
@@ -322,23 +321,23 @@ const saveToStorage = async (state: AppState) => {
   }
 }
 
+// Load from Firebase
 const loadFromStorage = async (): Promise<AppState | null> => {
   try {
-    if (hasClaudeStorage) {
-      const result = await (window as any).storage.get(STORAGE_KEY, true)
-      if (result?.value) return JSON.parse(result.value)
-    } else {
-      const local = localStorage.getItem(STORAGE_KEY)
-      if (local) return JSON.parse(local)
+    const response = await fetch(`${FIREBASE_URL}/tournament.json`)
+    if (response.ok) {
+      const data = await response.json()
+      if (data) return data as AppState
     }
   } catch (e) {
-    console.error('Storage load error:', e)
-    try {
-      const local = localStorage.getItem(STORAGE_KEY)
-      if (local) return JSON.parse(local)
-    } catch (e2) {
-      console.error('localStorage fallback failed:', e2)
-    }
+    console.error('Firebase load error:', e)
+  }
+  // Fallback to localStorage
+  try {
+    const local = localStorage.getItem(STORAGE_KEY)
+    if (local) return JSON.parse(local)
+  } catch (e) {
+    console.error('localStorage fallback failed:', e)
   }
   return null
 }
