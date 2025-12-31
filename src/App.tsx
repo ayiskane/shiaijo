@@ -117,6 +117,50 @@ interface AppState {
 // Utility functions
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
+// Test data generation
+const generateTestMembers = (): Member[] => {
+  const firstNames = [
+    'Kenji', 'Yuki', 'Takeshi', 'Haruto', 'Sota', 'Ren', 'Hiroshi', 'Daiki',
+    'Sakura', 'Aiko', 'Mei', 'Hana', 'Yui', 'Mika', 'Emi', 'Nana',
+    'James', 'Michael', 'David', 'Chris', 'Alex', 'Ryan', 'Kevin', 'Brian',
+    'Sarah', 'Emily', 'Jessica', 'Amanda', 'Nicole', 'Ashley', 'Rachel', 'Laura'
+  ]
+  const lastNames = [
+    'Tanaka', 'Yamamoto', 'Suzuki', 'Watanabe', 'Ito', 'Nakamura', 'Kobayashi', 'Kato',
+    'Yoshida', 'Yamada', 'Sasaki', 'Yamaguchi', 'Matsumoto', 'Inoue', 'Kimura', 'Hayashi',
+    'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson'
+  ]
+  const groups = ['A', 'B', 'C', 'D', 'NonBogu']
+  
+  const members: Member[] = []
+  const usedNames = new Set<string>()
+  
+  // Generate 4-6 members per group
+  groups.forEach(groupId => {
+    const count = Math.floor(Math.random() * 3) + 4 // 4-6 members
+    for (let i = 0; i < count; i++) {
+      let firstName, lastName, fullName
+      do {
+        firstName = firstNames[Math.floor(Math.random() * firstNames.length)]
+        lastName = lastNames[Math.floor(Math.random() * lastNames.length)]
+        fullName = `${firstName} ${lastName}`
+      } while (usedNames.has(fullName))
+      
+      usedNames.add(fullName)
+      members.push({
+        id: generateId(),
+        firstName,
+        lastName,
+        group: groupId,
+        isGuest: false,
+        isParticipating: true, // Auto-select for tournament
+      })
+    }
+  })
+  
+  return members
+}
+
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
   'July', 'August', 'September', 'October', 'November', 'December'
@@ -997,6 +1041,20 @@ function AdminPortal({
               <Button variant="ghost" size="sm" onClick={deselectAll}>
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset All
+              </Button>
+
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="border-emerald-700 text-emerald-400 hover:bg-emerald-900/20"
+                onClick={() => {
+                  const testMembers = generateTestMembers()
+                  setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
+                  toast.success(`Added ${testMembers.length} test members`)
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Load Test Data
               </Button>
 
               <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
