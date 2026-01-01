@@ -1284,6 +1284,76 @@ function AdminPortal({
   )
 }
 
+
+// Guests Tab Component
+function GuestsTab({ state, setState, onAddGuest, getGroupById }: {
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+  onAddGuest: (firstName: string, lastName: string, group: string, guestDojo?: string) => void
+  getGroupById: (id: string) => Group | undefined
+}) {
+  const [showAddGuest, setShowAddGuest] = useState(false)
+  const guests = state.members.filter(m => m.isGuest)
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+        <Dialog open={showAddGuest} onOpenChange={setShowAddGuest}>
+          <DialogTrigger asChild>
+            <Button className="bg-purple-600 hover:bg-purple-700">
+              <Plus className="w-4 h-4 mr-2" />Add Guest
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="bg-[#1e1e28] border-zinc-800">
+            <DialogHeader>
+              <DialogTitle className="text-white">Add Guest</DialogTitle>
+            </DialogHeader>
+            <AddGuestForm state={state} onAdd={onAddGuest} onClose={() => setShowAddGuest(false)} />
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      <div className="bg-[#1e1e28] border border-white/5 rounded-xl overflow-hidden">
+        <div className="px-4 py-3 border-b border-white/5">
+          <span className="font-medium">Guests ({guests.length})</span>
+        </div>
+        <div className="divide-y divide-white/5">
+          {guests.length === 0 ? (
+            <div className="p-8 text-center text-zinc-500">No guests added yet</div>
+          ) : (
+            guests.map(guest => {
+              const group = getGroupById(guest.group)
+              return (
+                <div key={guest.id} className="px-4 py-3 flex items-center gap-3">
+                  <div className="flex-1">
+                    <p className="font-medium">{guest.lastName}, {guest.firstName}</p>
+                    <p className="text-xs text-zinc-500">{guest.guestDojo || 'Guest'} • {group?.name}</p>
+                  </div>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </div>
+
+      {state.guestRegistry.length > 0 && (
+        <div className="bg-[#1e1e28] border border-white/5 rounded-xl overflow-hidden">
+          <div className="px-4 py-3 border-b border-white/5">
+            <span className="font-medium">Guest Registry ({state.guestRegistry.length})</span>
+          </div>
+          <div className="divide-y divide-white/5">
+            {state.guestRegistry.map(guest => (
+              <div key={guest.id} className="px-4 py-3 text-sm">
+                {guest.lastName}, {guest.firstName} {guest.guestDojo && `(${guest.guestDojo})`}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Groups Manager Component
 function GroupsManager({
   state,
