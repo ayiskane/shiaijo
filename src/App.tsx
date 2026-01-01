@@ -2263,7 +2263,9 @@ function TournamentManager({
                             </span>
                           )}
                           {match.status === 'in_progress' && (
-                            <span className="text-xs px-2 py-0.5 rounded bg-emerald-600 text-white animate-pulse">Live</span>
+                            <span className={`text-xs px-2 py-0.5 rounded text-white animate-pulse ${match.court === 'A' ? 'bg-amber-500' : 'bg-blue-500'}`}>
+                              Live {match.court}
+                            </span>
                           )}
                         </div>
                       </div>
@@ -3667,20 +3669,32 @@ function CourtkeeperPortal({
                       const mp2 = getMemberById(match.player2Id)
                       const isSelected = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
                       const isCurrentlyPlaying = match.id === currentMatch?.id
+                      const isSharedGroup = (state.sharedGroups || []).includes(groupId)
+                      const isLiveOnOtherCourt = match.status === 'in_progress' && !isCurrentlyPlaying
                       
                       return (
                         <button
                           key={match.id}
-                          onClick={() => { if (!isCurrentlyPlaying) { selectMatch(match.id); setShowQueue(false) } }}
+                          onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt) { selectMatch(match.id); setShowQueue(false) } }}
                           className={`w-full p-2 rounded-lg mb-1 text-xs transition-all ${
                             isCurrentlyPlaying ? 'bg-emerald-900/30 border border-emerald-600' 
+                            : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
                             : isSelected ? 'bg-amber-900/30 border border-amber-500'
                             : 'bg-slate-800/50 hover:bg-slate-800'
                           }`}
                         >
                           <div className="flex items-center">
-                            {isCurrentlyPlaying && <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold mr-2">LIVE</span>}
-                            {isSelected && !isCurrentlyPlaying && <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
+                            {isCurrentlyPlaying && (
+                              <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold mr-2">
+                                LIVE{isSharedGroup ? ` ${selectedCourt}` : ''}
+                              </span>
+                            )}
+                            {isLiveOnOtherCourt && (
+                              <span className={`text-[8px] px-1 py-0.5 rounded font-bold mr-2 ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+                                LIVE {match.court}
+                              </span>
+                            )}
+                            {isSelected && !isCurrentlyPlaying && !isLiveOnOtherCourt && <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
                             <span className="text-red-400 truncate flex-1 text-left">
                               {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
                             </span>
