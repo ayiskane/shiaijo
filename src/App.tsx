@@ -1968,6 +1968,10 @@ function TournamentManager({
               <div className="flex items-center justify-between">
                 {/* Left: Group info */}
                 <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-0.5">
+                    <button onClick={() => moveGroupOrder(groupId, 'up')} disabled={gIdx === 0} className="px-1.5 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▲</button>
+                    <button onClick={() => moveGroupOrder(groupId, 'down')} disabled={gIdx === totalGroups - 1} className="px-1.5 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▼</button>
+                  </div>
                   <span className={`px-2 py-1 rounded text-xs font-semibold ${groupMatches[0]?.court === 'A' ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30' : 'bg-[#1e3a5f]/30 text-[#7ab0e0] border border-[#1e3a5f]/50'}`}>
                     {groupMatches[0]?.court || 'A'}
                   </span>
