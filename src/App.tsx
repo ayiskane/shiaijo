@@ -1534,25 +1534,7 @@ function TournamentManager({
     toast.success(`All ${getGroupById(groupId)?.name || 'group'} matches moved to Court ${court}`)
   }
 
-    const moveMatchInQueue = (matchId: string, direction: 'up' | 'down') => {
-    if (!tournament) return
-    const matches = [...tournament.matches]
-    const idx = matches.findIndex(m => m.id === matchId)
-    if (idx === -1) return
-    
-    const newIdx = direction === 'up' ? idx - 1 : idx + 1
-    if (newIdx < 0 || newIdx >= matches.length) return
-    
-    [matches[idx], matches[newIdx]] = [matches[newIdx], matches[idx]]
-    matches.forEach((m, i) => m.orderIndex = i)
-    
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, matches }
-    }))
-  }
-
-  if (!tournament || !tournament.groupOrder) {
+    if (!tournament || !tournament.groupOrder) {
     return (
       <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
         <CardHeader>
