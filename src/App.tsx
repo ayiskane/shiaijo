@@ -1832,28 +1832,35 @@ function TournamentManager({
         const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
         
         return (
-          <Card key={groupId} className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
+          <Card key={groupId} className={`border-2 ${groupMatches[0]?.court === 'A' ? 'bg-red-950/10 border-red-800/40' : 'bg-blue-950/10 border-blue-800/40'}`}>
             <CardHeader className="pb-3">
               <div className="flex items-center gap-3">
+                {/* Large Court indicator */}
+                <div className={`w-14 h-14 rounded-lg flex flex-col items-center justify-center font-bold ${groupMatches[0]?.court === 'A' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
+                  <span className="text-xs">Court</span>
+                  <span className="text-2xl">{groupMatches[0]?.court || 'A'}</span>
+                </div>
+                
                 {/* Group reorder controls */}
                 <div className="flex flex-col gap-0.5">
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-5 w-5 text-slate-400 hover:text-white"
+                    className="h-6 w-6 text-slate-400 hover:text-white"
                     onClick={() => moveGroupOrder(groupId, 'up')}
                     disabled={(tournament.groupOrder || []).indexOf(groupId) === 0}
                   >
-                    <ChevronLeft className="w-3 h-3 rotate-90" />
+                    <ChevronLeft className="w-4 h-4 rotate-90" />
                   </Button>
+                  <span className="text-xs text-slate-500 text-center">#{(tournament.groupOrder || []).indexOf(groupId) + 1}</span>
                   <Button
                     size="icon"
                     variant="ghost"
-                    className="h-5 w-5 text-slate-400 hover:text-white"
+                    className="h-6 w-6 text-slate-400 hover:text-white"
                     onClick={() => moveGroupOrder(groupId, 'down')}
                     disabled={(tournament.groupOrder || []).indexOf(groupId) === (tournament.groupOrder || []).length - 1}
                   >
-                    <ChevronRight className="w-3 h-3 rotate-90" />
+                    <ChevronRight className="w-4 h-4 rotate-90" />
                   </Button>
                 </div>
                 
@@ -1862,27 +1869,24 @@ function TournamentManager({
                   {group?.isNonBogu && <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>}
                 </CardTitle>
                 
-                {/* Court assignment for entire group */}
-                <div className="flex items-center gap-2">
-                  <span className="text-xs text-slate-400">Court:</span>
-                  <div className="flex gap-1">
-                    <Button
-                      size="sm"
-                      variant={groupMatches[0]?.court === 'A' ? 'default' : 'outline'}
-                      className={`h-7 px-3 ${groupMatches[0]?.court === 'A' ? 'bg-red-600 hover:bg-red-700' : 'border-red-600 text-red-400 hover:bg-red-900/30'}`}
-                      onClick={() => setGroupCourt(groupId, 'A')}
-                    >
-                      A
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant={groupMatches[0]?.court === 'B' ? 'default' : 'outline'}
-                      className={`h-7 px-3 ${groupMatches[0]?.court === 'B' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-600 text-blue-400 hover:bg-blue-900/30'}`}
-                      onClick={() => setGroupCourt(groupId, 'B')}
-                    >
-                      B
-                    </Button>
-                  </div>
+                {/* Court switch buttons */}
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant={groupMatches[0]?.court === 'A' ? 'default' : 'outline'}
+                    className={`h-9 px-4 font-bold ${groupMatches[0]?.court === 'A' ? 'bg-red-600 hover:bg-red-700' : 'border-red-600/50 text-red-400 hover:bg-red-900/30'}`}
+                    onClick={() => setGroupCourt(groupId, 'A')}
+                  >
+                    Court A
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={groupMatches[0]?.court === 'B' ? 'default' : 'outline'}
+                    className={`h-9 px-4 font-bold ${groupMatches[0]?.court === 'B' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-600/50 text-blue-400 hover:bg-blue-900/30'}`}
+                    onClick={() => setGroupCourt(groupId, 'B')}
+                  >
+                    Court B
+                  </Button>
                 </div>
                 
                 <Badge variant="outline" className="border-slate-600 text-slate-300">
