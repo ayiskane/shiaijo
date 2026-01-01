@@ -112,6 +112,7 @@ interface AppState {
   timerTarget: number
   history: TournamentHistory[]
   lastUpdated?: number
+  useFirstNamesOnly: boolean
 }
 
 // Utility functions
@@ -346,6 +347,7 @@ const defaultState: AppState = {
   timerRunningB: false,
   timerTarget: 180,
   history: [],
+  useFirstNamesOnly: true,
 }
 
 // Device detection hook
