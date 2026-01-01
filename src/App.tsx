@@ -521,11 +521,11 @@ export default function App() {
             
             <button 
               onClick={() => setPortal('courtkeeper')}
-              className="w-full bg-[#1e1e28] border border-white/5 rounded-2xl p-5 text-left hover:border-indigo-500/50 hover:bg-[#252530] transition-all group"
+              className="w-full bg-[#1e1e28] border border-white/5 rounded-2xl p-5 text-left hover:border-[#2a4a6f]/50 hover:bg-[#252530] transition-all group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 flex items-center justify-center group-hover:from-indigo-500/30 group-hover:to-indigo-600/20 transition-colors">
-                  <Swords className="w-6 h-6 text-indigo-500" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2a4a6f]/20 to-[#1e3a5f]/10 flex items-center justify-center group-hover:from-[#2a4a6f]/30 group-hover:to-[#1e3a5f]/20 transition-colors">
+                  <Swords className="w-6 h-6 text-[#2a4a6f]" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-white">Courtkeeper Portal</h2>
@@ -969,7 +969,7 @@ function AdminPortal({
         <div className="p-4 border-t border-white/5">
           <button 
             onClick={onSwitchPortal}
-            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 rounded-xl flex items-center justify-center gap-2 font-medium transition ${sidebarCollapsed ? 'px-0' : ''}`}
+            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] hover:from-[#2a4a6f] hover:to-[#1e3a5f] rounded-xl flex items-center justify-center gap-2 font-medium transition ${sidebarCollapsed ? 'px-0' : ''}`}
           >
             <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
             {!sidebarCollapsed && <span>Courtkeeper</span>}
@@ -1022,7 +1022,7 @@ function AdminPortal({
             <div className="p-4 border-t border-white/5">
               <button 
                 onClick={() => { setMobileNavOpen(false); onSwitchPortal(); }}
-                className="w-full py-3 px-4 text-sm bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center gap-2 font-medium text-white"
+                className="w-full py-3 px-4 text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] rounded-xl flex items-center justify-center gap-2 font-medium text-white"
               >
                 <ArrowLeftRight className="w-4 h-4" />
                 <span>Courtkeeper</span>
@@ -1205,7 +1205,7 @@ function AdminPortal({
                           <p className="font-medium truncate">{member.lastName}, {member.firstName}</p>
                           <p className="text-xs text-zinc-500">{group?.name || member.group}{member.isGuest && ' • Guest'}</p>
                         </div>
-                        <span className={`w-2 h-2 rounded-full ${member.isParticipating ? 'bg-green-500' : 'bg-zinc-600'}`}></span>
+                        <span className={`w-2 h-2 rounded-full ${member.isParticipating ? 'bg-green-500' : 'bg-[#1e3a5f]'}`}></span>
                         <button onClick={() => deleteMember(member.id)} className="p-1.5 text-zinc-500 hover:text-red-400 rounded">
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -1297,7 +1297,7 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
       <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
         <Dialog open={showAddGuest} onOpenChange={setShowAddGuest}>
           <DialogTrigger asChild>
-            <Button className="bg-indigo-600 hover:bg-indigo-700">
+            <Button className="bg-[#1e3a5f] hover:bg-[#162d4a]">
               <Plus className="w-4 h-4 mr-2" />Add Guest
             </Button>
           </DialogTrigger>
@@ -1334,7 +1334,7 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
                             const last = (document.getElementById('guest-last') as HTMLInputElement)?.value
                             const dojo = (document.getElementById('guest-dojo') as HTMLInputElement)?.value
                             if (first && last) { onAddGuest(first, last, state.groups[0]?.id || '', dojo); setShowAddGuest(false); }
-                          }} className="bg-indigo-600 hover:bg-indigo-700">Add Guest</Button>
+                          }} className="bg-[#1e3a5f] hover:bg-[#162d4a]">Add Guest</Button>
                         </div>
                       </div>
           </DialogContent>
@@ -1487,7 +1487,7 @@ function GroupsManager({
                     <Input
                       value={editingGroup.name}
                       onChange={e => setEditingGroup({ ...editingGroup, name: e.target.value })}
-                      className="bg-zinc-600/50 border-zinc-600 flex-1"
+                      className="bg-[#1e3a5f]/50 border-zinc-600 flex-1"
                       autoFocus
                     />
                   ) : (
@@ -1677,10 +1677,10 @@ function TournamentManager({
             <div className="space-y-2">
               <Label className="text-zinc-300">Month</Label>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+                <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+                <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                   {MONTHS.map(m => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
@@ -1690,10 +1690,10 @@ function TournamentManager({
             <div className="space-y-2">
               <Label className="text-zinc-300">Year</Label>
               <Select value={selectedYear.toString()} onValueChange={v => setSelectedYear(parseInt(v))}>
-                <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+                <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+                <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                   {[2024, 2025, 2026].map(y => (
                     <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                   ))}
@@ -1782,7 +1782,7 @@ function TournamentManager({
             <Badge className={`text-sm px-3 py-1 ${
               tournament.status === 'setup' ? 'bg-yellow-600' :
               tournament.status === 'in_progress' ? 'bg-emerald-600' :
-              'bg-zinc-600'
+              'bg-[#1e3a5f]'
             }`}>
               {tournament.status === 'setup' ? 'Setup' : tournament.status === 'in_progress' ? 'In Progress' : 'Completed'}
             </Badge>
@@ -1799,7 +1799,7 @@ function TournamentManager({
               <div className="text-xl sm:text-2xl font-bold text-amber-400">{courtAMatches.length}</div>
               <div className="text-xs sm:text-sm text-zinc-400">Court A</div>
             </div>
-            <div className="bg-zinc-700/30 border border-white/5 rounded-lg p-2 sm:p-3 text-center">
+            <div className="bg-[#1e3a5f]/30 border border-white/5 rounded-lg p-2 sm:p-3 text-center">
               <div className="text-xl sm:text-2xl font-bold text-zinc-300">{courtBMatches.length}</div>
               <div className="text-xs sm:text-sm text-zinc-400">Court B</div>
             </div>
@@ -1812,14 +1812,14 @@ function TournamentManager({
                   <Play className="w-4 h-4 mr-2" />
                   Start Tournament
                 </Button>
-                <Button onClick={refreshTournamentParticipants} variant="outline" className="border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+                <Button onClick={refreshTournamentParticipants} variant="outline" className="border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Refresh Participants
                 </Button>
               </>
             )}
             {tournament.status === 'in_progress' && !isComplete && (
-              <Button onClick={refreshTournamentParticipants} variant="outline" size="sm" className="border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+              <Button onClick={refreshTournamentParticipants} variant="outline" size="sm" className="border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                 <RefreshCw className="w-4 h-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Update Participants</span>
                 <span className="sm:hidden">Refresh</span>
@@ -1909,7 +1909,7 @@ function TournamentManager({
                               </span>
                               <span className="text-zinc-500 mx-1">vs</span>
                               <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
-                              <span className={`truncate ${match.winner === 'player2' ? 'text-zinc-200 font-semibold' : 'text-white'}`}>
+                              <span className={`truncate ${match.winner === 'player2' ? 'text-blue-100 font-semibold' : 'text-white'}`}>
                                 {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}
                               </span>
                             </div>
@@ -2011,7 +2011,7 @@ function StandingsView({
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+                    <tr className="border-b border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                       <th className="text-left text-zinc-300 p-2 font-medium">#</th>
                       <th className="text-left text-zinc-300 p-2 font-medium">Name</th>
                       <th className="text-center text-zinc-300 p-2 font-medium">Pts</th>
@@ -2167,7 +2167,7 @@ function HistoryView({
       <div className="flex justify-end">
         <Dialog open={showImport} onOpenChange={setShowImport}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+            <Button variant="outline" className="border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
               <Upload className="w-4 h-4 mr-2" />
               Import Past History
             </Button>
@@ -2321,10 +2321,10 @@ function AddMemberForm({
       <div className="space-y-2">
         <Label>Group</Label>
         <Select value={group} onValueChange={setGroup}>
-          <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+          <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
             <SelectValue placeholder="Select group" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+          <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
             {groups.map(g => (
               <SelectItem key={g.id} value={g.id}>
                 {g.name} {g.isNonBogu && '(Hantei)'}
@@ -2563,7 +2563,7 @@ function CourtkeeperPortal({
   const scoreTypes = [
     { id: 1, name: 'Men', short: 'M', color: 'bg-zinc-600 hover:bg-zinc-700' },
     { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600 hover:bg-green-700' },
-    { id: 3, name: 'Do', short: 'D', color: 'bg-indigo-600 hover:bg-indigo-700' },
+    { id: 3, name: 'Do', short: 'D', color: 'bg-[#1e3a5f] hover:bg-[#162d4a]' },
     { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600 hover:bg-cyan-700' },
     { id: 5, name: 'Hansoku', short: 'H', color: 'bg-yellow-600 hover:bg-yellow-700' },
   ]
@@ -2576,7 +2576,7 @@ function CourtkeeperPortal({
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-2">
-          <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-zinc-200'}`}>
+          <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-blue-100'}`}>
             Court {court} ({pendingMatches.length} pending)
           </h3>
         </div>
@@ -2600,7 +2600,7 @@ function CourtkeeperPortal({
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-zinc-400 text-xs">#{idx + 1}</span>
-                    <Badge variant="outline" className="text-xs border-zinc-400 bg-[#1e1e28] hover:bg-zinc-600/50">{matchGroup?.name || '?'}</Badge>
+                    <Badge variant="outline" className="text-xs border-[#4a7ab0] bg-[#1e1e28] hover:bg-[#1e3a5f]/50">{matchGroup?.name || '?'}</Badge>
                     {isCurrent && <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />}
                   </div>
                   <div className="text-sm text-white text-center">
@@ -2641,7 +2641,7 @@ function CourtkeeperPortal({
             })}
             {completedMatches.length > 0 && (
               <>
-                <Separator className="my-2 bg-zinc-600/50" />
+                <Separator className="my-2 bg-[#1e3a5f]/50" />
                 <p className="text-xs text-zinc-400">Completed ({completedMatches.length})</p>
                 {completedMatches.slice(-5).reverse().map(match => {
                   const p1 = getMemberById(match.player1Id)
@@ -2680,13 +2680,13 @@ function CourtkeeperPortal({
     
     return (
       <Dialog open={showWinnerPrompt.show} onOpenChange={() => setShowWinnerPrompt({ show: false, winner: null })}>
-        <DialogContent className="bg-[#16161d] border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+        <DialogContent className="bg-[#16161d] border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
           <DialogHeader>
             <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
           </DialogHeader>
-          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-amber-600' : 'bg-zinc-600/30 border-2 border-zinc-400'}`}>
-            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-zinc-200'}`} />
-            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-zinc-200'}`}>
+          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-amber-600' : 'bg-zinc-600/30 border-2 border-[#4a7ab0]'}`}>
+            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-100'}`} />
+            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-100'}`}>
               {winnerPlayer ? formatDisplayName(winnerPlayer, state.members, state.useFirstNamesOnly) : '?'}
             </p>
             <p className="text-zinc-300 mt-2">{winnerColor === 'red' ? 'AKA' : 'SHIRO'} Wins!</p>
@@ -2697,7 +2697,7 @@ function CourtkeeperPortal({
             </Button>
             <Button 
               onClick={() => completeMatch(showWinnerPrompt.winner!)}
-              className={winnerColor === 'red' ? 'bg-amber-600 hover:bg-red-700' : 'bg-zinc-600/50 hover:bg-zinc-500'}
+              className={winnerColor === 'red' ? 'bg-amber-600 hover:bg-red-700' : 'bg-[#1e3a5f]/50 hover:bg-zinc-500'}
             >
               Complete Match
             </Button>
@@ -2718,7 +2718,7 @@ function CourtkeeperPortal({
           <div className="flex items-center gap-3">
             <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
             <h1 className="text-xl font-bold text-white">Courtkeeper</h1>
-            <Badge className={selectedCourt === 'A' ? 'bg-amber-600' : 'bg-zinc-600/50'}>
+            <Badge className={selectedCourt === 'A' ? 'bg-amber-600' : 'bg-[#1e3a5f]/50'}>
               Court {selectedCourt}
             </Badge>
           </div>
@@ -2735,7 +2735,7 @@ function CourtkeeperPortal({
               size="sm"
               variant={selectedCourt === 'B' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('B')}
-              className={selectedCourt === 'B' ? 'bg-zinc-600/50 hover:bg-zinc-500' : 'border-zinc-600'}
+              className={selectedCourt === 'B' ? 'bg-[#1e3a5f]/50 hover:bg-zinc-500' : 'border-zinc-600'}
             >
               Court B
             </Button>
@@ -2746,7 +2746,7 @@ function CourtkeeperPortal({
 
       <main className={`p-4 ${!isMobile ? 'mr-80' : ''}`}>
         {!currentMatch ? (
-          <Card className="bg-zinc-800 border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+          <Card className="bg-zinc-800 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
             <CardContent className="p-8 text-center">
               <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
               <p className="text-white text-xl">
@@ -2762,7 +2762,7 @@ function CourtkeeperPortal({
               <div className="flex justify-center gap-4 mt-4">
                 <Button
                   onClick={() => setSelectedCourt(selectedCourt === 'A' ? 'B' : 'A')}
-                  className={selectedCourt === 'A' ? 'bg-zinc-600/50 hover:bg-zinc-500' : 'bg-amber-600 hover:bg-red-700'}
+                  className={selectedCourt === 'A' ? 'bg-[#1e3a5f]/50 hover:bg-zinc-500' : 'bg-amber-600 hover:bg-red-700'}
                 >
                   Switch to Court {selectedCourt === 'A' ? 'B' : 'A'}
                 </Button>
@@ -2783,7 +2783,7 @@ function CourtkeeperPortal({
                       {isHantei ? 'Hantei Match (3 min)' : 'Regular Match (3 min)'}
                     </span>
                   </div>
-                  <Badge variant="outline" className="border-zinc-400/60 bg-zinc-800/50 border border-zinc-700/30 bg-[#1e1e28] hover:bg-zinc-600/50">
+                  <Badge variant="outline" className="border-[#4a7ab0]/60 bg-zinc-800/50 border border-zinc-700/30 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                     {group?.name || 'Unknown Group'}
                   </Badge>
                 </div>
@@ -2807,7 +2807,7 @@ function CourtkeeperPortal({
                     {timerRunning ? <Pause className="w-5 h-5 mr-2 w-5 h-5 mr-2" /> : <Play />}
                     {timerRunning ? 'Pause' : 'Start'}
                   </Button>
-                  <Button size="lg" variant="outline" onClick={resetTimer} className="border-zinc-400 bg-[#1e1e28] hover:bg-zinc-600/50">
+                  <Button size="lg" variant="outline" onClick={resetTimer} className="border-[#4a7ab0] bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                     <RotateCcw className="w-5 h-5 mr-2" />
                     Reset
                   </Button>
@@ -2848,7 +2848,7 @@ function CourtkeeperPortal({
                             return (
                               <Badge 
                                 key={i} 
-                                className={`${scoreType?.color || 'bg-zinc-600/50'} cursor-pointer`}
+                                className={`${scoreType?.color || 'bg-[#1e3a5f]/50'} cursor-pointer`}
                                 onClick={() => removeScore('player1', i)}
                               >
                                 {scoreType?.short || '?'}
@@ -2885,9 +2885,9 @@ function CourtkeeperPortal({
               </Card>
 
               {/* Player 2 (White/Shiro) */}
-              <Card className="bg-zinc-800 border-2 border-zinc-400">
-                <CardHeader className="pb-2 bg-zinc-700/30">
-                  <CardTitle className="text-zinc-200 text-center flex items-center justify-center gap-2">
+              <Card className="bg-zinc-800 border-2 border-[#4a7ab0]">
+                <CardHeader className="pb-2 bg-[#1e3a5f]/30">
+                  <CardTitle className="text-blue-100 text-center flex items-center justify-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-white inline-block"></span>
                     SHIRO
                   </CardTitle>
@@ -2899,7 +2899,7 @@ function CourtkeeperPortal({
                   {isHantei ? (
                     <Button
                       size="lg"
-                      className="w-full h-24 text-2xl bg-zinc-600/50 hover:bg-zinc-500"
+                      className="w-full h-24 text-2xl bg-[#1e3a5f]/50 hover:bg-zinc-500"
                       onClick={() => completeMatch('player2')}
                     >
                       <Award className="w-8 h-8 mr-2" />
@@ -2915,7 +2915,7 @@ function CourtkeeperPortal({
                             return (
                               <Badge 
                                 key={i} 
-                                className={`${scoreType?.color || 'bg-zinc-600/50'} cursor-pointer`}
+                                className={`${scoreType?.color || 'bg-[#1e3a5f]/50'} cursor-pointer`}
                                 onClick={() => removeScore('player2', i)}
                               >
                                 {scoreType?.short || '?'}
@@ -2954,7 +2954,7 @@ function CourtkeeperPortal({
 
             {/* Match Actions */}
             {!isHantei && (
-              <Card className="bg-zinc-800 border-zinc-600 bg-[#1e1e28] hover:bg-zinc-600/50">
+              <Card className="bg-zinc-800 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
                 <CardContent className="p-4">
                   <div className="grid grid-cols-3 gap-2">
                     <Button
@@ -2975,7 +2975,7 @@ function CourtkeeperPortal({
                     <Button
                       size="lg"
                       onClick={() => completeMatch('player2')}
-                      className="bg-zinc-600/50 hover:bg-zinc-500 h-14"
+                      className="bg-[#1e3a5f]/50 hover:bg-zinc-500 h-14"
                     >
                       SHIRO Wins
                     </Button>
@@ -2992,7 +2992,7 @@ function CourtkeeperPortal({
         <aside className="fixed right-0 top-0 w-80 h-screen bg-[#16161d] border-l border-zinc-700 pt-14 overflow-y-auto">
           <div className="p-4 space-y-6">
             {renderCourtQueue('A', courtAMatches)}
-            <Separator className="bg-zinc-600/50" />
+            <Separator className="bg-[#1e3a5f]/50" />
             {renderCourtQueue('B', courtBMatches)}
           </div>
         </aside>
@@ -3014,7 +3014,7 @@ function CourtkeeperPortal({
             </SheetHeader>
             <div className="mt-4 space-y-4 overflow-y-auto">
               {renderCourtQueue('A', courtAMatches)}
-              <Separator className="bg-zinc-600/50" />
+              <Separator className="bg-[#1e3a5f]/50" />
               {renderCourtQueue('B', courtBMatches)}
             </div>
           </SheetContent>
