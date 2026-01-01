@@ -524,11 +524,11 @@ export default function App() {
             
             <button 
               onClick={() => setPortal('courtkeeper')}
-              className="w-full bg-[#142130] border border-white/5 rounded-2xl p-5 text-left hover:border-indigo-500/50 hover:bg-[#252530] transition-all group"
+              className="w-full bg-[#142130] border border-white/5 rounded-2xl p-5 text-left hover:border-[#2a4a6f]/50 hover:bg-[#252530] transition-all group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 flex items-center justify-center group-hover:from-indigo-500/30 group-hover:to-indigo-600/20 transition-colors">
-                  <Swords className="w-6 h-6 text-indigo-500" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2a4a6f]/20 to-[#1e3a5f]/10 flex items-center justify-center group-hover:from-[#2a4a6f]/30 group-hover:to-[#1e3a5f]/20 transition-colors">
+                  <Swords className="w-6 h-6 text-[#2a4a6f]" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-white">Courtkeeper Portal</h2>
@@ -973,7 +973,7 @@ function AdminPortal({
         <div className="p-4 border-t border-white/5">
           <button 
             onClick={onSwitchPortal}
-            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 rounded-xl flex items-center justify-center gap-2 font-medium transition ${sidebarCollapsed ? 'px-0' : ''}`}
+            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] hover:from-[#2a4a6f] hover:to-[#1e3a5f] rounded-xl flex items-center justify-center gap-2 font-medium transition ${sidebarCollapsed ? 'px-0' : ''}`}
           >
             <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
             {!sidebarCollapsed && <span>Courtkeeper</span>}
@@ -1027,7 +1027,7 @@ function AdminPortal({
             <div className="p-4 border-t border-white/5">
               <button 
                 onClick={() => { setMobileNavOpen(false); onSwitchPortal(); }}
-                className="w-full py-3 px-4 text-sm bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center gap-2 font-medium text-white"
+                className="w-full py-3 px-4 text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] rounded-xl flex items-center justify-center gap-2 font-medium text-white"
               >
                 <ArrowLeftRight className="w-4 h-4" />
                 <span>Courtkeeper</span>
@@ -1303,7 +1303,7 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
       <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
         <Dialog open={showAddGuest} onOpenChange={setShowAddGuest}>
           <DialogTrigger asChild>
-            <Button className="bg-indigo-600 hover:bg-indigo-700">
+            <Button className="bg-[#1e3a5f] hover:bg-[#162d4a]">
               <Plus className="w-4 h-4 mr-2" />Add Guest
             </Button>
           </DialogTrigger>
@@ -1340,7 +1340,7 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
                             const last = (document.getElementById('guest-last') as HTMLInputElement)?.value
                             const dojo = (document.getElementById('guest-dojo') as HTMLInputElement)?.value
                             if (first && last) { onAddGuest(first, last, state.groups[0]?.id || '', dojo); setShowAddGuest(false); }
-                          }} className="bg-indigo-600 hover:bg-indigo-700">Add Guest</Button>
+                          }} className="bg-[#1e3a5f] hover:bg-[#162d4a]">Add Guest</Button>
                         </div>
                       </div>
           </DialogContent>
@@ -2569,7 +2569,7 @@ function CourtkeeperPortal({
   const scoreTypes = [
     { id: 1, name: 'Men', short: 'M', color: 'bg-[#2e4a65] hover:bg-[#243a52]' },
     { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600 hover:bg-green-700' },
-    { id: 3, name: 'Do', short: 'D', color: 'bg-indigo-600 hover:bg-indigo-700' },
+    { id: 3, name: 'Do', short: 'D', color: 'bg-[#1e3a5f] hover:bg-[#162d4a]' },
     { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600 hover:bg-cyan-700' },
     { id: 5, name: 'Hansoku', short: 'H', color: 'bg-yellow-600 hover:bg-yellow-700' },
   ]
