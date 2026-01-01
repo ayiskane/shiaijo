@@ -602,6 +602,8 @@ function AdminPortal({
   getGroupById: (id: string) => Group | undefined
 }) {
   const [activeTab, setActiveTab] = useState('members')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'name' | 'group'>('name')
@@ -910,344 +912,286 @@ function AdminPortal({
   // MobileNav inlined to prevent re-mounting on every render
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-[#13131a] text-white">
       <Toaster theme="dark" position="top-center" />
       
-      <header className="bg-slate-900 border-b border-slate-800">
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-              <SheetTrigger asChild>
-                <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg md:hidden">
-                  <Menu className="w-5 h-5" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="bg-slate-900 border-slate-700 w-64">
-                <SheetHeader>
-                  <SheetTitle className="text-white text-left">Menu</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-1 mt-4">
-                  {['members', 'guests', 'groups', 'tournament', 'standings', 'history'].map(tab => (
-                    <button
-                      key={tab}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm ${activeTab === tab ? 'bg-orange-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-                      onClick={() => {
-                        setActiveTab(tab)
-                        setMobileNavOpen(false)
-                      }}
-                    >
-                      {tab === 'members' && <Users className="w-4 h-4" />}
-                      {tab === 'guests' && <UserPlus className="w-4 h-4" />}
-                      {tab === 'groups' && <Filter className="w-4 h-4" />}
-                      {tab === 'tournament' && <Trophy className="w-4 h-4" />}
-                      {tab === 'standings' && <Table className="w-4 h-4" />}
-                      {tab === 'history' && <History className="w-4 h-4" />}
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </button>
-                  ))}
-                </div>
-              </SheetContent>
-            </Sheet>
-            <img src="/renbu-logo.png" alt="Renbu" className="w-7 h-7 sm:w-8 sm:h-8" />
-            <span className="text-white font-semibold text-sm sm:text-base">Admin</span>
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 md:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Mobile Header */}
+      <header className="fixed top-0 left-0 right-0 h-14 bg-[#1a1a24] border-b border-white/5 flex items-center justify-between px-4 z-30 md:hidden">
+        <button onClick={() => setMobileMenuOpen(true)} className="p-2 text-zinc-400 hover:text-white">
+          <Menu className="w-6 h-6" />
+        </button>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+            <Layers className="w-4 h-4 text-white" />
           </div>
-          <div className="flex items-center gap-1">
-            <button 
-              className="p-2 text-slate-500 hover:text-white rounded-lg hover:bg-slate-800"
-              onClick={async () => {
-                const saved = await loadFromStorage()
-                if (saved) {
-                  let tournament = saved.currentTournament
-                  if (tournament) {
-                    tournament = {
-                      ...tournament,
-                      matches: tournament.matches || [],
-                      groups: tournament.groups || [],
-                      groupOrder: tournament.groupOrder || [],
-                    }
-                  }
-                  setState(prev => ({
-                    ...prev,
-                    members: saved.members || prev.members,
-                    groups: saved.groups || prev.groups,
-                    guestRegistry: saved.guestRegistry || prev.guestRegistry,
-                    currentTournament: tournament,
-                    history: saved.history || prev.history,
-                  }))
-                  toast.success('Synced')
-                }
-              }}
-              title="Sync data"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={onSwitchPortal}
-              className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
-            >
-              <span className="hidden sm:inline">Switch Portal</span>
-              <span className="sm:hidden">Switch</span>
-            </button>
-          </div>
+          <span className="font-semibold">Shiaijo</span>
         </div>
-        
-        {/* Desktop Tabs */}
-        <div className="hidden md:block px-4 pb-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-slate-800/50 p-1 gap-0.5">
-              <TabsTrigger value="members" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Members
-              </TabsTrigger>
-              <TabsTrigger value="guests" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Guests
-              </TabsTrigger>
-              <TabsTrigger value="groups" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Groups
-              </TabsTrigger>
-              <TabsTrigger value="tournament" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Tournament
-              </TabsTrigger>
-              <TabsTrigger value="standings" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Standings
-              </TabsTrigger>
-              <TabsTrigger value="history" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                History
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <button className="p-2 text-zinc-400 hover:text-white">
+          <Search className="w-5 h-5" />
+        </button>
       </header>
 
-      <main className="p-4 max-w-7xl mx-auto">
-        {activeTab === 'members' && (
-          <div className="space-y-3 sm:space-y-4">
-            {/* Participant count summary */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">{state.members.length} members</span>
-              <span className="text-orange-400 font-medium">{state.members.filter(m => m.isParticipating).length} participating</span>
+      {/* Mobile Sidebar */}
+      <aside className={`fixed top-0 left-0 h-full w-72 bg-[#1a1a24] z-50 md:hidden flex flex-col transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className="p-4 border-b border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
+              <Layers className="w-5 h-5 text-white" />
             </div>
-            
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <Input
-                className="pl-9 h-9 bg-slate-800/50 border-slate-700/50 text-white placeholder:text-slate-500 text-sm"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
+            <div>
+              <h1 className="font-bold">Shiaijo</h1>
+              <p className="text-xs text-zinc-500">Tournament Manager</p>
             </div>
-            
-            {/* Filters row */}
-            <div className="flex gap-2">
-              <Select value={filterGroup} onValueChange={setFilterGroup}>
-                <SelectTrigger className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm">
-                  <SelectValue placeholder="All Groups" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="all">All Groups</SelectItem>
-                  {state.groups.map(g => (
-                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={sortBy} onValueChange={(v: 'name' | 'group') => setSortBy(v)}>
-                <SelectTrigger className="w-28 h-9 bg-slate-800/50 border-slate-700/50 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="name">By Name</SelectItem>
-                  <SelectItem value="group">By Group</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          </div>
+          <button onClick={() => setMobileMenuOpen(false)} className="p-2 text-zinc-400 hover:text-white">
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
-            {/* Action Buttons - Compact for mobile */}
-            <div className="space-y-3">
-              {/* Primary row */}
-              <div className="flex gap-2">
-                <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-orange-600 hover:bg-orange-700 h-8 text-sm flex-1 sm:flex-none">
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-slate-900 border-slate-700">
-                    <DialogHeader>
-                      <DialogTitle className="text-white">Add Member</DialogTitle>
-                      <DialogDescription className="text-slate-400">Add a new member to the roster</DialogDescription>
-                    </DialogHeader>
-                    <AddMemberForm 
-                      groups={state.groups} 
-                      onAdd={(fn, ln, g) => {
-                        addMember(fn, ln, g)
-                        setShowAddMember(false)
-                      }} 
-                    />
-                  </DialogContent>
-                </Dialog>
+        <div className="p-4 border-b border-white/5">
+          <div className="bg-[#1e1e2a] border border-white/5 rounded-xl p-4">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-xs text-zinc-500 uppercase tracking-wider">Session</span>
+              <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <span className="text-2xl font-bold">{state.members.filter(m => m.isParticipating).length}</span>
+              <span className="text-zinc-500 text-sm">participating</span>
+            </div>
+          </div>
+        </div>
 
-                <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="border-slate-700 bg-slate-800/40 h-8 text-sm">
-                      <FileSpreadsheet className="w-4 h-4 sm:mr-1" />
-                      <span className="hidden sm:inline">Import</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-slate-900 border-slate-700">
-                    <DialogHeader>
-                      <DialogTitle className="text-white">Import from CSV</DialogTitle>
-                      <DialogDescription className="text-slate-400">
-                        Format: FirstName,LastName,GroupID (one per line)
-                      </DialogDescription>
-                    </DialogHeader>
-                    <CSVImportForm onImport={(csv) => {
-                      handleCSVImport(csv)
-                      setShowBulkAdd(false)
-                    }} />
-                  </DialogContent>
-                </Dialog>
-                
-                <button 
-                  onClick={deselectAll}
-                  className="px-2 h-8 text-slate-500 hover:text-white hover:bg-slate-800 rounded text-sm"
-                >
-                  Reset
-                </button>
+        <nav className="flex-1 py-4 overflow-y-auto">
+          <p className="px-4 mb-2 text-xs text-zinc-500 uppercase tracking-wider">Menu</p>
+          {[
+            { id: 'members', icon: Users, label: 'Members' },
+            { id: 'guests', icon: UserPlus, label: 'Guests' },
+            { id: 'groups', icon: Filter, label: 'Groups' },
+            { id: 'tournament', icon: Trophy, label: 'Tournament', badge: state.currentTournament?.status === 'in_progress' ? 'Live' : null },
+            { id: 'standings', icon: Table, label: 'Standings' },
+            { id: 'history', icon: History, label: 'History' },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => { setActiveTab(item.id); setMobileMenuOpen(false); }}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                activeTab === item.id 
+                  ? 'text-orange-400 bg-gradient-to-r from-orange-500/15 to-transparent border-l-[3px] border-orange-500' 
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${activeTab === item.id ? 'bg-orange-500/20' : 'bg-zinc-800'}`}>
+                <item.icon className="w-5 h-5" />
               </div>
-              
-              {/* Quick select row */}
-              <div className="flex flex-wrap gap-1.5">
-                {state.groups.map(g => (
-                  <button 
-                    key={g.id}
-                    className="px-2.5 py-1 text-xs rounded bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700/50"
-                    onClick={() => selectByGroup(g.id)}
-                  >
-                    {g.name}
-                  </button>
-                ))}
+              <span className="font-medium">{item.label}</span>
+              {item.badge && (
+                <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400 border border-green-500/30">{item.badge}</span>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-white/5">
+          <button 
+            onClick={() => { setMobileMenuOpen(false); onSwitchPortal(); }}
+            className="w-full py-3 px-4 text-sm bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center gap-2 font-medium shadow-lg shadow-purple-500/20"
+          >
+            <ArrowLeftRight className="w-4 h-4" />
+            Courtkeeper Mode
+          </button>
+        </div>
+      </aside>
+
+      {/* Desktop Sidebar */}
+      <aside className={`hidden md:flex flex-col fixed h-full bg-[#1a1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
+        <div className="p-4 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0 shadow-lg shadow-orange-500/20">
+              <Layers className="w-5 h-5 text-white" />
+            </div>
+            {!sidebarCollapsed && (
+              <div>
+                <h1 className="font-bold">Shiaijo</h1>
+                <p className="text-xs text-zinc-500">Tournament Manager</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <button 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="absolute -right-3 top-20 w-6 h-6 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-700 transition z-10"
+        >
+          <ChevronLeft className={`w-3 h-3 text-zinc-400 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+        </button>
+
+        {!sidebarCollapsed && (
+          <div className="p-4 border-b border-white/5">
+            <div className="bg-[#1e1e2a] border border-white/5 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-zinc-500 uppercase tracking-wider">Session</span>
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{state.members.filter(m => m.isParticipating).length}</span>
+                <span className="text-zinc-500 text-sm">participating</span>
+              </div>
+              <div className="flex gap-4 mt-2">
+                <div>
+                  <span className="text-green-400 text-sm font-semibold">{state.currentTournament?.matches?.filter(m => m.status === 'completed').length || 0}</span>
+                  <span className="text-zinc-500 text-xs ml-1">done</span>
+                </div>
+                <div>
+                  <span className="text-amber-400 text-sm font-semibold">{state.currentTournament?.matches?.filter(m => m.status !== 'completed').length || 0}</span>
+                  <span className="text-zinc-500 text-xs ml-1">left</span>
+                </div>
               </div>
             </div>
-
-            {/* Dev tools - hidden by default */}
-            <details className="text-sm">
-              <summary className="text-slate-500 cursor-pointer hover:text-slate-400">Dev tools</summary>
-              <div className="flex gap-2 mt-2">
-                <button 
-                  className="px-3 py-1.5 text-xs rounded bg-emerald-900/30 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-900/50"
-                  onClick={() => {
-                    const testMembers = generateTestMembers()
-                    setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
-                    toast.success(`Added ${testMembers.length} test members`)
-                  }}
-                >
-                  + Test Data
-                </button>
-                <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-                  <DialogTrigger asChild>
-                    <button className="px-3 py-1.5 text-xs rounded bg-red-900/30 text-red-400 border border-red-800/50 hover:bg-red-900/50">
-                      Clear All
-                    </button>
-                  </DialogTrigger>
-                <DialogContent className="bg-slate-900 border-slate-700">
-                  <DialogHeader>
-                    <DialogTitle className="text-white">Clear All Members?</DialogTitle>
-                    <DialogDescription className="text-slate-400">
-                      This will permanently delete all {state.members.length} members. This cannot be undone.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowClearConfirm(false)}>Cancel</Button>
-                    <Button variant="destructive" onClick={clearAllMembers}>Clear All</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              </div>
-            </details>
-
-            {/* Members List */}
-            <Card className="bg-slate-800/30 border-slate-700/50">
-              <CardContent className="p-0">
-                <ScrollArea className="h-[calc(100vh-320px)]">
-                  <div className="divide-y divide-slate-800">
-                    {filteredMembers.map(member => {
-                       const group = getGroupById(member.group)
-                       return (
-                         <div 
-                           key={member.id}
-                           className="flex items-center gap-2 sm:gap-3 px-3 py-2.5 hover:bg-slate-800/30"
-                         >
-                           <Checkbox
-                             checked={member.isParticipating}
-                             onCheckedChange={() => toggleParticipation(member.id)}
-                             className="border-slate-600 h-5 w-5"
-                           />
-                           <div className="flex-1 min-w-0">
-                             <span className="text-white text-sm">
-                               {member.lastName}, {member.firstName}
-                               {member.isGuest && <span className="text-purple-400 text-xs ml-1">•</span>}
-                             </span>
-                           </div>
-                           <span className={`text-xs px-2 py-0.5 rounded ${group?.isNonBogu ? 'bg-orange-900/40 text-orange-400' : 'bg-slate-800 text-slate-400'}`}>
-                             {group?.name || member.group}
-                           </span>
-                           <button
-                             onClick={() => deleteMember(member.id)}
-                             className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-950/30 rounded"
-                           >
-                             <Trash2 className="w-4 h-4" />
-                           </button>
-                         </div>
-                       )
-                     })}
-                    {filteredMembers.length === 0 && (
-                      <div className="p-12 text-center text-slate-500">
-                        <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                        <p>No members found</p>
-                        <p className="text-sm mt-1">Add members or load test data to get started</p>
-                      </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
           </div>
         )}
 
-        {activeTab === 'guests' && (
-          <GuestsManager
-            state={state}
-            onAddGuest={addGuestMember}
-            groups={state.groups}
-          />
-        )}
+        <nav className="flex-1 py-4 overflow-y-auto">
+          {!sidebarCollapsed && <p className="px-4 mb-2 text-xs text-zinc-500 uppercase tracking-wider">Menu</p>}
+          {[
+            { id: 'members', icon: Users, label: 'Members' },
+            { id: 'guests', icon: UserPlus, label: 'Guests' },
+            { id: 'groups', icon: Filter, label: 'Groups' },
+            { id: 'tournament', icon: Trophy, label: 'Tournament', badge: state.currentTournament?.status === 'in_progress' ? 'Live' : null },
+            { id: 'standings', icon: Table, label: 'Standings' },
+            { id: 'history', icon: History, label: 'History' },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              title={sidebarCollapsed ? item.label : undefined}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                activeTab === item.id 
+                  ? 'text-orange-400 bg-gradient-to-r from-orange-500/15 to-transparent border-l-[3px] border-orange-500' 
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === item.id ? 'bg-orange-500/20' : 'bg-zinc-800'}`}>
+                <item.icon className="w-5 h-5" />
+              </div>
+              {!sidebarCollapsed && (
+                <>
+                  <span className="font-medium">{item.label}</span>
+                  {item.badge && (
+                    <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400 border border-green-500/30">{item.badge}</span>
+                  )}
+                </>
+              )}
+            </button>
+          ))}
+        </nav>
 
-        {activeTab === 'groups' && (
-          <GroupsManager state={state} setState={setState} />
-        )}
+        <div className="p-4 border-t border-white/5">
+          <button 
+            onClick={onSwitchPortal}
+            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 rounded-xl flex items-center justify-center gap-2 font-medium transition shadow-lg shadow-purple-500/20 ${sidebarCollapsed ? 'px-0' : ''}`}
+          >
+            <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
+            {!sidebarCollapsed && <span>Courtkeeper</span>}
+          </button>
+        </div>
+      </aside>
 
-        {activeTab === 'tournament' && (
-          <TournamentManager
-            state={state}
-            setState={setState}
-            getMemberById={getMemberById}
-            getGroupById={getGroupById}
-            generateTournament={generateTournament}
-            refreshTournamentParticipants={refreshTournamentParticipants}
-            archiveTournament={archiveTournament}
-          />
-        )}
+      {/* Main Content */}
+      <main className={`pt-14 md:pt-0 transition-all duration-300 ${sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-64'}`}>
+        <div className="p-4 md:p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-zinc-500 text-sm mb-1 hidden md:block">Welcome back</p>
+              <h2 className="text-xl md:text-2xl font-bold capitalize">{activeTab}</h2>
+            </div>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input 
+                  type="text" 
+                  placeholder="Search..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-64 bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500/50"
+                />
+              </div>
+              <button 
+                onClick={async () => {
+                  const saved = await loadFromStorage()
+                  if (saved) {
+                    let tournament = saved.currentTournament
+                    if (tournament) {
+                      tournament = { ...tournament, matches: tournament.matches || [], groups: tournament.groups || [], groupOrder: tournament.groupOrder || [] }
+                    }
+                    setState(prev => ({ ...prev, members: saved.members || prev.members, groups: saved.groups || prev.groups, guestRegistry: saved.guestRegistry || prev.guestRegistry, currentTournament: tournament, history: saved.history || prev.history }))
+                    toast.success('Synced')
+                  }
+                }}
+                className="p-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
 
-        {activeTab === 'standings' && (
-          <StandingsView state={state} getMemberById={getMemberById} getGroupById={getGroupById} />
-        )}
-
-        {activeTab === 'history' && (
-          <HistoryView state={state} setState={setState} />
-        )}
+          {/* Tab Content */}
+          {activeTab === 'members' && (
+            <MembersTab
+              state={state}
+              setState={setState}
+              filteredMembers={filteredMembers}
+              searchQuery={searchQuery}
+              setSearchQuery={setSearchQuery}
+              filterGroup={filterGroup}
+              setFilterGroup={setFilterGroup}
+              sortBy={sortBy}
+              setSortBy={setSortBy}
+              showAddMember={showAddMember}
+              setShowAddMember={setShowAddMember}
+              showBulkAdd={showBulkAdd}
+              setShowBulkAdd={setShowBulkAdd}
+              showClearConfirm={showClearConfirm}
+              setShowClearConfirm={setShowClearConfirm}
+              addMember={addMember}
+              deleteMember={deleteMember}
+              clearAllMembers={clearAllMembers}
+              toggleParticipation={toggleParticipation}
+              selectByGroup={selectByGroup}
+              deselectAll={deselectAll}
+              handleCSVImport={handleCSVImport}
+              getGroupById={getGroupById}
+            />
+          )}
+          {activeTab === 'guests' && (
+            <GuestsTab
+              state={state}
+              setState={setState}
+              addGuestMember={addGuestMember}
+              getGroupById={getGroupById}
+            />
+          )}
+          {activeTab === 'groups' && (
+            <GroupsManager state={state} setState={setState} />
+          )}
+          {activeTab === 'tournament' && (
+            <TournamentManager state={state} setState={setState} getMemberById={getMemberById} getGroupById={getGroupById} />
+          )}
+          {activeTab === 'standings' && (
+            <StandingsView state={state} getMemberById={getMemberById} getGroupById={getGroupById} />
+          )}
+          {activeTab === 'history' && (
+            <HistoryView state={state} setState={setState} />
+          )}
+        </div>
       </main>
     </div>
   )
