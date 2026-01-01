@@ -1545,6 +1545,18 @@ function GroupsManager({
     }))
   }
 
+  const moveGroupPosition = (groupId: string, direction: 'up' | 'down') => {
+    setState(prev => {
+      const groups = [...prev.groups]
+      const idx = groups.findIndex(g => g.id === groupId)
+      if (idx === -1) return prev
+      const newIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (newIdx < 0 || newIdx >= groups.length) return prev
+      ;[groups[idx], groups[newIdx]] = [groups[newIdx], groups[idx]]
+      return { ...prev, groups }
+    })
+  }
+
   const addGroup = () => {
     if (!newGroupName.trim()) {
       toast.error('Enter a group name')
@@ -1619,6 +1631,19 @@ function GroupsManager({
                       : 'bg-blue-950/20 border-l-2 border-l-blue-500'
                   }`}
                 >
+                  {/* Reorder buttons */}
+                  <div className="flex flex-col gap-0.5">
+                    <button
+                      onClick={() => moveGroupPosition(group.id, 'up')}
+                      disabled={idx === 0}
+                      className="w-5 h-4 rounded text-[10px] bg-slate-800 text-slate-400 disabled:opacity-30 hover:bg-slate-700"
+                    >▲</button>
+                    <button
+                      onClick={() => moveGroupPosition(group.id, 'down')}
+                      disabled={idx === state.groups.length - 1}
+                      className="w-5 h-4 rounded text-[10px] bg-slate-800 text-slate-400 disabled:opacity-30 hover:bg-slate-700"
+                    >▼</button>
+                  </div>
                   {/* Court badge */}
                   <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
                     isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
@@ -2846,17 +2871,45 @@ function CourtkeeperPortal({
   const removeLastScore = (player: 'player1' | 'player2') => {
     const matchId = currentMatch?.id
     if (!matchId) return
-    const scores = player === 'player1' ? p1Score : p2Score
-    if (scores.length === 0) return
 
     setState(prev => {
       if (!prev.currentTournament) return prev
+      const match = prev.currentTournament.matches.find(m => m.id === matchId)
+      if (!match) return prev
+      const scores = player === 'player1' ? match.player1Score : match.player2Score
+      if (scores.length === 0) return prev
+      
       const updatedMatches = prev.currentTournament.matches.map(m => {
         if (m.id === matchId) {
           return {
             ...m,
             player1Score: player === 'player1' ? m.player1Score.slice(0, -1) : m.player1Score,
             player2Score: player === 'player2' ? m.player2Score.slice(0, -1) : m.player2Score,
+          }
+        }
+        return m
+      })
+      return { ...prev, currentTournament: { ...prev.currentTournament, matches: updatedMatches } }
+    })
+  }
+
+  const removeHansoku = (player: 'player1' | 'player2') => {
+    const matchId = currentMatch?.id
+    if (!matchId) return
+
+    setState(prev => {
+      if (!prev.currentTournament) return prev
+      const match = prev.currentTournament.matches.find(m => m.id === matchId)
+      if (!match) return prev
+      const hansoku = player === 'player1' ? match.player1Hansoku : match.player2Hansoku
+      if (hansoku === 0) return prev
+      
+      const updatedMatches = prev.currentTournament.matches.map(m => {
+        if (m.id === matchId) {
+          return {
+            ...m,
+            player1Hansoku: player === 'player1' ? Math.max(0, m.player1Hansoku - 1) : m.player1Hansoku,
+            player2Hansoku: player === 'player2' ? Math.max(0, m.player2Hansoku - 1) : m.player2Hansoku,
           }
         }
         return m
@@ -3133,6 +3186,12 @@ function CourtkeeperPortal({
               </div>
               <div className="flex gap-2 mt-2">
                 <button
+                  onClick={() => removeHansoku('player1')}
+                  className="w-9 h-9 rounded-lg text-[10px] border border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10 flex items-center justify-center"
+                >
+                  <Undo2 className="w-3 h-3" />
+                </button>
+                <button
                   onClick={() => addHansoku('player1')}
                   disabled={p1Hansoku >= p1MaxHansoku}
                   className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
@@ -3141,8 +3200,7 @@ function CourtkeeperPortal({
                 </button>
                 <button
                   onClick={() => removeLastScore('player1')}
-                  disabled={p1Score.length === 0}
-                  className="w-12 h-9 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 disabled:opacity-30 flex items-center justify-center"
+                  className="w-12 h-9 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 flex items-center justify-center"
                 >
                   <Undo2 className="w-4 h-4" />
                 </button>
@@ -3169,8 +3227,7 @@ function CourtkeeperPortal({
               <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => removeLastScore('player2')}
-                  disabled={p2Score.length === 0}
-                  className="w-12 h-9 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 disabled:opacity-30 flex items-center justify-center"
+                  className="w-12 h-9 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 flex items-center justify-center"
                 >
                   <Undo2 className="w-4 h-4" />
                 </button>
@@ -3180,6 +3237,12 @@ function CourtkeeperPortal({
                   className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
                 >
                   ▲
+                </button>
+                <button
+                  onClick={() => removeHansoku('player2')}
+                  className="w-9 h-9 rounded-lg text-[10px] border border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10 flex items-center justify-center"
+                >
+                  <Undo2 className="w-3 h-3" />
                 </button>
               </div>
             </div>
