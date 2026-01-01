@@ -766,10 +766,14 @@ function AdminPortal({
           player2Id: pair[1],
           player1Score: [],
           player2Score: [],
+          player1Hansoku: 0,
+          player2Hansoku: 0,
           winner: null,
           status: 'pending',
           court,
           isHantei,
+          matchType: isHantei ? 'ippon' : 'sanbon',
+          timerDuration: 180,
           orderIndex: globalOrderIndex++,
         })
       })
@@ -845,10 +849,14 @@ function AdminPortal({
           player2Id: pair[1],
           player1Score: [],
           player2Score: [],
+          player1Hansoku: 0,
+          player2Hansoku: 0,
           winner: null,
           status: 'pending',
           court,
           isHantei,
+          matchType: isHantei ? 'ippon' : 'sanbon',
+          timerDuration: 180,
           orderIndex: globalOrderIndex++,
         })
       })
