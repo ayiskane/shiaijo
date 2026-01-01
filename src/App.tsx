@@ -2620,7 +2620,7 @@ function CourtkeeperPortal({
                   <div className="flex gap-1 mt-2 justify-center">
                     <Button 
                       size="sm" 
-                      variant="ghost" className="h-8 w-8late-700 h-7 text-xs"
+                      variant="ghost" className="h-8 w-8 h-7 text-xs"
                       onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
                     >
                       <ArrowLeftRight className="w-3 h-3 mr-1" />
@@ -2628,7 +2628,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="ghost" className="h-8 w-8late-700 h-7 text-xs"
+                      variant="ghost" className="h-8 w-8 h-7 text-xs"
                       onClick={() => moveInQueue(match.id, 'up')}
                       disabled={idx === 0}
                     >
@@ -2636,7 +2636,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="ghost" className="h-8 w-8late-700 h-7 text-xs"
+                      variant="ghost" className="h-8 w-8 h-7 text-xs"
                       onClick={() => moveInQueue(match.id, 'down')}
                       disabled={idx === pendingMatches.length - 1}
                     >
