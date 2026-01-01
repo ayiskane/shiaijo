@@ -1709,6 +1709,35 @@ function TournamentManager({
     toast.success(`All ${getGroupById(groupId)?.name || 'group'} matches moved to Court ${court}`)
   }
 
+  // Update individual match settings (timer, match type)
+  const updateMatchSettings = (matchId: string, field: string, value: number | string) => {
+    if (!tournament) return
+    setState(prev => ({
+      ...prev,
+      currentTournament: {
+        ...tournament,
+        matches: (tournament.matches || []).map(m => 
+          m.id === matchId ? { ...m, [field]: value } : m
+        )
+      }
+    }))
+  }
+
+  // Update all matches in a group with same settings
+  const setGroupMatchSettings = (groupId: string, field: string, value: number | string) => {
+    if (!tournament) return
+    setState(prev => ({
+      ...prev,
+      currentTournament: {
+        ...tournament,
+        matches: (tournament.matches || []).map(m => 
+          m.groupId === groupId ? { ...m, [field]: value } : m
+        )
+      }
+    }))
+    toast.success(`Updated ${field} for all ${getGroupById(groupId)?.name || 'group'} matches`)
+  }
+
     if (!tournament || !tournament.groupOrder) {
     return (
       <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
