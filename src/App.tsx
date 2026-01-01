@@ -1144,7 +1144,7 @@ function AdminPortal({
                                  {member.lastName}, {member.firstName}
                                </span>
                                {member.isGuest && (
-                                 <Badge variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" className="bg-purple-900 text-purple-200">Guest</Badge>
+                                 <Badge variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700 bg-purple-900 text-purple-200">Guest</Badge>
                                )}
                              </div>
                              {member.guestDojo && (
