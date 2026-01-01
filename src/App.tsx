@@ -57,6 +57,12 @@ interface Match {
   orderIndex: number
 }
 
+// Track which match is manually selected to override queue
+interface CourtState {
+  selectedMatchId: string | null  // If set, this match plays next instead of queue order
+  groupOrder: string[]  // Order of groups for this court's queue
+}
+
 interface Tournament {
   id: string
   name: string
