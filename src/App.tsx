@@ -209,7 +209,8 @@ const generateRoundRobinWithRest = (playerIds: string[]): [string, string][] => 
 const calculateStandings = (
   groupId: string,
   matches: Match[],
-  members: Member[]
+  members: Member[],
+  useFirstNamesOnly: boolean = false
 ): PlayerStanding[] => {
   const groupMatches = matches.filter(m => m.groupId === groupId && m.status === 'completed')
   const groupMembers = members.filter(m => m.group === groupId && m.isParticipating)
@@ -219,7 +220,7 @@ const calculateStandings = (
   groupMembers.forEach(member => {
     standings.set(member.id, {
       playerId: member.id,
-      playerName: `${member.firstName} ${member.lastName}`,
+      playerName: formatDisplayName(member, groupMembers, useFirstNamesOnly),
       points: 0,
       wins: 0,
       draws: 0,
@@ -846,7 +847,7 @@ function AdminPortal({
     
     const results = state.currentTournament.groups.map(groupId => {
       const group = getGroupById(groupId)
-      const standings = calculateStandings(groupId, state.currentTournament!.matches, state.members)
+      const standings = calculateStandings(groupId, state.currentTournament!.matches, state.members, state.useFirstNamesOnly)
       return {
         groupId,
         groupName: group?.name || groupId,
@@ -1997,7 +1998,7 @@ function StandingsView({
 
       {groupsToShow.map(groupId => {
         const group = getGroupById(groupId)
-        const standings = calculateStandings(groupId, state.currentTournament!.matches, state.members)
+        const standings = calculateStandings(groupId, state.currentTournament!.matches, state.members, state.useFirstNamesOnly)
         const groupMembers = state.members.filter(m => m.group === groupId && m.isParticipating)
         
         if (standings.length === 0) return null
