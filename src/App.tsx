@@ -1361,7 +1361,7 @@ function GroupsManager({
         <CardHeader>
           <CardTitle className="text-white">Group Settings</CardTitle>
           <CardDescription className="text-slate-300">
-            Configure groups and their tournament rules. Non-bogu groups use hantei judging (no draws - 3 shinpan = always a winner).
+            Configure groups and their tournament order. Drag groups to reorder - odd positions (1, 3, 5) play on Court A, even positions (2, 4, 6) play on Court B. Non-bogu groups use hantei judging.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
