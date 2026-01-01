@@ -2391,6 +2391,10 @@ function CourtkeeperPortal({
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
   const currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
   
+  // Safe accessors for scores (handles undefined from storage)
+  const p1Score = currentMatch?.player1Score || []
+  const p2Score = currentMatch?.player2Score || []
+  
   const timerSeconds = selectedCourt === 'A' ? state.timerSecondsA : state.timerSecondsB
   const timerRunning = selectedCourt === 'A' ? state.timerRunningA : state.timerRunningB
   
@@ -2446,8 +2450,8 @@ function CourtkeeperPortal({
     // Check for winner after scoring
     const updatedMatch = updatedMatches.find(m => m.id === currentMatch.id)
     if (updatedMatch) {
-      const p1Score = updatedMatch.player1Score.length
-      const p2Score = updatedMatch.player2Score.length
+      const p1Score = (updatedMatch.player1Score || []).length
+      const p2Score = (updatedMatch.player2Score || []).length
       if (p1Score >= 2) {
         setShowWinnerPrompt({ show: true, winner: 'player1' })
       } else if (p2Score >= 2) {
@@ -2674,7 +2678,7 @@ function CourtkeeperPortal({
                         {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'} {p2?.lastName?.charAt(0) || ''}.
                       </span>
                       <span className="text-[#b8d4ec] ml-2">
-                        {match.isHantei ? '(判定)' : `${match.player1Score.length}-${match.player2Score.length}`}
+                        {match.isHantei ? '(判定)' : `${(match.player1Score || []).length}-${(match.player2Score || []).length}`}
                       </span>
                     </div>
                   )
@@ -2857,9 +2861,9 @@ function CourtkeeperPortal({
                   ) : (
                     <>
                       <div className="text-center mb-4">
-                        <div className="text-6xl font-bold text-white">{currentMatch.player1Score.length}</div>
+                        <div className="text-6xl font-bold text-white">{p1Score.length}</div>
                         <div className="flex justify-center gap-1 mt-2 min-h-[32px] flex-wrap">
-                          {currentMatch.player1Score.map((s, i) => {
+                          {p1Score.map((s, i) => {
                             const scoreType = scoreTypes.find(t => t.id === s)
                             return (
                               <Badge 
@@ -2890,7 +2894,7 @@ function CourtkeeperPortal({
                           variant="outline"
                           className="border-[#2a4a6f] h-14"
                           onClick={() => undoScore('player1')}
-                          disabled={currentMatch.player1Score.length === 0}
+                          disabled={p1Score.length === 0}
                         >
                           Undo
                         </Button>
@@ -2924,9 +2928,9 @@ function CourtkeeperPortal({
                   ) : (
                     <>
                       <div className="text-center mb-4">
-                        <div className="text-6xl font-bold text-white">{currentMatch.player2Score.length}</div>
+                        <div className="text-6xl font-bold text-white">{p2Score.length}</div>
                         <div className="flex justify-center gap-1 mt-2 min-h-[32px] flex-wrap">
-                          {currentMatch.player2Score.map((s, i) => {
+                          {p2Score.map((s, i) => {
                             const scoreType = scoreTypes.find(t => t.id === s)
                             return (
                               <Badge 
@@ -2957,7 +2961,7 @@ function CourtkeeperPortal({
                           variant="outline"
                           className="border-[#2a4a6f] h-14"
                           onClick={() => undoScore('player2')}
-                          disabled={currentMatch.player2Score.length === 0}
+                          disabled={p2Score.length === 0}
                         >
                           Undo
                         </Button>
