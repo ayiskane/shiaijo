@@ -497,8 +497,7 @@ export default function App() {
         <Toaster theme="dark" position="top-center" />
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <img src="/renbu-logo.png" alt="Renbu" className="w-12 h-12" />
+            <img src="/renbu-logo.png" alt="Renbu" className="w-20 h-20 mx-auto mb-6 rounded-2xl" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Shiaijo</h1>
             <p className="text-zinc-500">Tournament Manager</p>
@@ -899,8 +898,7 @@ function AdminPortal({
       <aside className={`hidden md:flex flex-col fixed h-full bg-[#16161d] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
-              <img src="/renbu-logo.png" alt="Renbu" className="w-6 h-6" />
+            <img src="/renbu-logo.png" alt="Renbu" className="w-10 h-10 rounded-xl" />
             </div>
             {!sidebarCollapsed && (
               <div>
@@ -990,8 +988,7 @@ function AdminPortal({
           <SheetContent side="left" className="bg-[#16161d] border-zinc-800 w-72 p-0">
             <div className="p-4 border-b border-white/5">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                  <img src="/renbu-logo.png" alt="Renbu" className="w-6 h-6" />
+                <img src="/renbu-logo.png" alt="Renbu" className="w-10 h-10 rounded-xl" />
                 </div>
                 <div>
                   <h1 className="font-bold text-white">Shiaijo</h1>
@@ -1034,8 +1031,7 @@ function AdminPortal({
           </SheetContent>
         </Sheet>
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-            <img src="/renbu-logo.png" alt="Renbu" className="w-5 h-5" />
+          <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8 rounded-xl" />
           </div>
           <span className="font-semibold">Shiaijo</span>
         </div>
