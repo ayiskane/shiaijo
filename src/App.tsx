@@ -2875,12 +2875,6 @@ function CourtkeeperPortal({
     const matchId = currentMatch?.id
     if (!matchId) return
     
-    // Block scoring if game is already over (either player reached winTarget)
-    if (p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget) {
-      toast.error('Match is over - complete it first')
-      return
-    }
-
     setState(prev => {
       if (!prev.currentTournament) return prev
       const updatedMatches = prev.currentTournament.matches.map(m => {
@@ -2902,12 +2896,6 @@ function CourtkeeperPortal({
   const addHansoku = (player: 'player1' | 'player2') => {
     const matchId = currentMatch?.id
     if (!matchId) return
-    
-    // Block hansoku if game is already over (either player reached winTarget)
-    if (p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget) {
-      toast.error('Match is over - complete it first')
-      return
-    }
     
     const currentHansoku = player === 'player1' ? p1Hansoku : p2Hansoku
     const maxHansoku = player === 'player1' ? p1MaxHansoku : p2MaxHansoku
@@ -3137,6 +3125,80 @@ function CourtkeeperPortal({
 
   const [showQueue, setShowQueue] = useState(false)
   const [showGroupQueue, setShowGroupQueue] = useState(true)
+  const [showWinModal, setShowWinModal] = useState(false)
+  const [pendingWinner, setPendingWinner] = useState<'player1' | 'player2' | null>(null)
+  
+  // Detect when someone wins and show modal
+  useEffect(() => {
+    if (p1EffectiveScore >= winTarget && !showWinModal) {
+      setPendingWinner('player1')
+      setShowWinModal(true)
+    } else if (p2EffectiveScore >= winTarget && !showWinModal) {
+      setPendingWinner('player2')
+      setShowWinModal(true)
+    }
+  }, [p1EffectiveScore, p2EffectiveScore, winTarget, showWinModal])
+
+  // Undo the winning point
+  const undoWinningPoint = () => {
+    if (!currentMatch) return
+    const matchId = currentMatch.id
+    
+    // Figure out what caused the win - check hansoku first
+    const winner = pendingWinner
+    if (!winner) return
+    
+    // If winner got point from opponent's hansoku, undo hansoku
+    const opponentHansoku = winner === 'player1' ? p2Hansoku : p1Hansoku
+    const winnerDirectScore = winner === 'player1' ? p1Score : p2Score
+    
+    if (opponentHansoku >= 2 && opponentHansoku % 2 === 0) {
+      // Last point was from hansoku pair - remove opponent's last hansoku
+      const opponent = winner === 'player1' ? 'player2' : 'player1'
+      setState(prev => {
+        if (!prev.currentTournament) return prev
+        const updatedMatches = prev.currentTournament.matches.map(m => {
+          if (m.id === matchId) {
+            return {
+              ...m,
+              player1Hansoku: opponent === 'player1' ? Math.max(0, m.player1Hansoku - 1) : m.player1Hansoku,
+              player2Hansoku: opponent === 'player2' ? Math.max(0, m.player2Hansoku - 1) : m.player2Hansoku,
+            }
+          }
+          return m
+        })
+        return { ...prev, currentTournament: { ...prev.currentTournament, matches: updatedMatches } }
+      })
+    } else if (winnerDirectScore.length > 0) {
+      // Last point was direct score - remove it
+      setState(prev => {
+        if (!prev.currentTournament) return prev
+        const updatedMatches = prev.currentTournament.matches.map(m => {
+          if (m.id === matchId) {
+            return {
+              ...m,
+              player1Score: winner === 'player1' ? m.player1Score.slice(0, -1) : m.player1Score,
+              player2Score: winner === 'player2' ? m.player2Score.slice(0, -1) : m.player2Score,
+            }
+          }
+          return m
+        })
+        return { ...prev, currentTournament: { ...prev.currentTournament, matches: updatedMatches } }
+      })
+    }
+    
+    setShowWinModal(false)
+    setPendingWinner(null)
+  }
+
+  // Confirm the win
+  const confirmWin = () => {
+    if (pendingWinner) {
+      completeMatch(pendingWinner)
+    }
+    setShowWinModal(false)
+    setPendingWinner(null)
+  }
   
   // Get next pending match (after current)
   const getNextMatch = () => {
@@ -3379,7 +3441,7 @@ function CourtkeeperPortal({
 
         {/* Timer */}
         {!group?.isNonBogu && (
-          <div className={`rounded-xl p-3 flex items-center gap-3 ${timerSeconds >= timerDuration ? 'bg-red-950/30 border border-red-600' : 'bg-slate-800/30'}`}>
+          <div className={`rounded-xl p-3 flex items-center gap-3 ${timerSeconds >= timerDuration ? 'bg-amber-950/30 border border-amber-500' : 'bg-slate-800/30'}`}>
             <button
               onClick={toggleTimer}
               className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
@@ -3390,15 +3452,21 @@ function CourtkeeperPortal({
             </button>
             
             <div className="flex-1 text-center">
-              <div className={`text-3xl font-mono font-bold ${timerSeconds >= timerDuration ? 'text-red-400' : 'text-white'}`}>
+              <div className={`text-3xl font-mono font-bold ${timerSeconds >= timerDuration ? 'text-amber-400' : 'text-white'}`}>
                 {formatTime(timerSeconds)}
               </div>
-              <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden mt-1">
-                <div 
-                  className={`h-full transition-all ${timerSeconds >= timerDuration ? 'bg-red-500' : 'bg-emerald-500'}`}
-                  style={{ width: `${Math.min((timerSeconds / timerDuration) * 100, 100)}%` }}
-                />
-              </div>
+              {timerSeconds >= timerDuration ? (
+                <div className="w-full h-5 bg-amber-500 rounded-full mt-1 flex items-center justify-center">
+                  <span className="text-black font-bold text-xs">TIME!</span>
+                </div>
+              ) : (
+                <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden mt-1">
+                  <div 
+                    className="h-full transition-all bg-emerald-500"
+                    style={{ width: `${Math.min((timerSeconds / timerDuration) * 100, 100)}%` }}
+                  />
+                </div>
+              )}
             </div>
             
             <button
@@ -3451,6 +3519,36 @@ function CourtkeeperPortal({
           </div>
         )}
       </main>
+
+      {/* Win Confirmation Modal */}
+      {showWinModal && pendingWinner && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1a2535] rounded-2xl p-6 max-w-sm w-full text-center border border-slate-700">
+            <div className="text-5xl mb-4">🏆</div>
+            <h2 className="text-2xl font-bold text-white mb-2">
+              {pendingWinner === 'player1' 
+                ? (player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : 'AKA')
+                : (player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : 'SHIRO')
+              } wins!
+            </h2>
+            <p className="text-slate-400 mb-6">Complete match?</p>
+            <div className="space-y-2">
+              <button
+                onClick={confirmWin}
+                className="w-full py-3 rounded-xl font-bold text-lg bg-emerald-600 hover:bg-emerald-500 text-white"
+              >
+                Yes, Complete Match
+              </button>
+              <button
+                onClick={undoWinningPoint}
+                className="w-full py-3 rounded-xl font-bold text-lg bg-slate-700 hover:bg-slate-600 text-slate-300"
+              >
+                No, Undo Last Point
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Queue Slide Panel */}
       {showQueue && (
