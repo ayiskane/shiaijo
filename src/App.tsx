@@ -733,16 +733,18 @@ function AdminPortal({
     let globalOrderIndex = 0
     const groupOrder = state.groups.filter(g => participantsByGroup.has(g.id)).map(g => g.id)
     
-    // Process groups in order
-    groupOrder.forEach((groupId) => {
+    // Process groups in order - each group gets assigned to one court
+    // Odd groups (1st, 3rd, 5th) → Court A, Even groups (2nd, 4th, 6th) → Court B
+    groupOrder.forEach((groupId, groupIndex) => {
       const groupParticipants = participantsByGroup.get(groupId)
       if (!groupParticipants || groupParticipants.length < 2) return
       
       const group = getGroupById(groupId)
       const isHantei = group?.isNonBogu || false
       const matchPairs = generateRoundRobinWithRest(groupParticipants.map(p => p.id))
+      const court = groupIndex % 2 === 0 ? 'A' : 'B'
       
-      matchPairs.forEach((pair, idx) => {
+      matchPairs.forEach((pair) => {
         allMatches.push({
           id: generateId(),
           groupId,
@@ -752,7 +754,7 @@ function AdminPortal({
           player2Score: [],
           winner: null,
           status: 'pending',
-          court: idx % 2 === 0 ? 'A' : 'B',
+          court,
           isHantei,
           orderIndex: globalOrderIndex++,
         })
@@ -812,15 +814,16 @@ function AdminPortal({
     let globalOrderIndex = 0
     const groupOrder = state.groups.filter(g => participantsByGroup.has(g.id)).map(g => g.id)
     
-    groupOrder.forEach((groupId) => {
+    groupOrder.forEach((groupId, groupIndex) => {
       const groupParticipants = participantsByGroup.get(groupId)
       if (!groupParticipants || groupParticipants.length < 2) return
       
       const group = getGroupById(groupId)
       const isHantei = group?.isNonBogu || false
       const matchPairs = generateRoundRobinWithRest(groupParticipants.map(p => p.id))
+      const court = groupIndex % 2 === 0 ? 'A' : 'B'
       
-      matchPairs.forEach((pair, idx) => {
+      matchPairs.forEach((pair) => {
         allMatches.push({
           id: generateId(),
           groupId,
@@ -830,7 +833,7 @@ function AdminPortal({
           player2Score: [],
           winner: null,
           status: 'pending',
-          court: idx % 2 === 0 ? 'A' : 'B',
+          court,
           isHantei,
           orderIndex: globalOrderIndex++,
         })
