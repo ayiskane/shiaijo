@@ -1024,40 +1024,46 @@ function AdminPortal({
 
       <main className="p-4 max-w-7xl mx-auto">
         {activeTab === 'members' && (
-          <div className="space-y-6">
-            {/* Search and Filter Bar */}
-            <div className="flex flex-col lg:flex-row gap-4">
-              <div className="flex-1 relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 h-10"
-                  placeholder="Search members..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                />
-              </div>
-              <div className="flex gap-3">
-                <Select value={filterGroup} onValueChange={setFilterGroup}>
-                  <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 h-10">
-                    <SelectValue placeholder="All Groups" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="all">All Groups</SelectItem>
-                    {state.groups.map(g => (
-                      <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Select value={sortBy} onValueChange={(v: 'name' | 'group') => setSortBy(v)}>
-                  <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 h-10">
-                    <SelectValue placeholder="Sort by" />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    <SelectItem value="name">Sort by Name</SelectItem>
-                    <SelectItem value="group">Sort by Group</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
+          <div className="space-y-3 sm:space-y-4">
+            {/* Participant count summary */}
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-slate-400">{state.members.length} members</span>
+              <span className="text-orange-400 font-medium">{state.members.filter(m => m.isParticipating).length} participating</span>
+            </div>
+            
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Input
+                className="pl-9 h-9 bg-slate-800/50 border-slate-700/50 text-white placeholder:text-slate-500 text-sm"
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+              />
+            </div>
+            
+            {/* Filters row */}
+            <div className="flex gap-2">
+              <Select value={filterGroup} onValueChange={setFilterGroup}>
+                <SelectTrigger className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm">
+                  <SelectValue placeholder="All Groups" />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectItem value="all">All Groups</SelectItem>
+                  {state.groups.map(g => (
+                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={(v: 'name' | 'group') => setSortBy(v)}>
+                <SelectTrigger className="w-28 h-9 bg-slate-800/50 border-slate-700/50 text-sm">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectItem value="name">By Name</SelectItem>
+                  <SelectItem value="group">By Group</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Action Buttons - Organized in groups */}
