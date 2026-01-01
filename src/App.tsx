@@ -1828,15 +1828,7 @@ function TournamentManager({
                               </span>
                             </div>
                           </div>
-                        {(tournament.status === 'setup' || (tournament.status === 'in_progress' && match.status === 'pending')) && (
-                          <div className="flex gap-0.5">
-                            <button className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded" onClick={() => moveMatchInQueue(match.id, 'up')} title="Move up">
-                              <ChevronLeft className="w-4 h-4 rotate-90" />
-                            </button>
-                            <button className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded" onClick={() => moveMatchInQueue(match.id, 'down')} title="Move down">
-                              <ChevronRight className="w-4 h-4 rotate-90" />
-                            </button>
-                          </div>
+                        {/* Match reorder controls removed - use court badge to swap */}
                         )}
                         {match.status === 'completed' && (
                           <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-slate-700/50 text-slate-300' : 'bg-slate-700 text-slate-400'}`}>
