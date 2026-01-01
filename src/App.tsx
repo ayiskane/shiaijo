@@ -991,13 +991,16 @@ function AdminPortal({
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col fixed h-full bg-[#0f1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
         <div className="p-4 border-b border-white/5">
-          <div className="flex items-center">
+          <div className="flex items-center gap-3">
             {sidebarCollapsed ? (
               <div className="w-10 h-10 flex items-center justify-center">
                 <span className="text-xl" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試</span>
               </div>
             ) : (
-              <ShiaijoLogo size={45} glow />
+              <>
+                <ShiaijoLogo size={45} glow />
+                <span className="text-xl text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
+              </>
             )}
           </div>
         </div>
@@ -1111,8 +1114,9 @@ function AdminPortal({
           </SheetTrigger>
           <SheetContent side="left" className="bg-[#0f1a24] border-[#162d4a] w-72 p-0">
             <div className="p-4 border-b border-white/5">
-              <div className="flex items-center">
-                <ShiaijoLogo size={50} glow />
+              <div className="flex items-center gap-3">
+                <ShiaijoLogo size={45} glow />
+                <span className="text-xl text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
               </div>
               <p className="text-xs text-[#6b8fad] mt-2">Admin Portal</p>
             </div>
@@ -1151,8 +1155,9 @@ function AdminPortal({
             </div>
           </SheetContent>
         </Sheet>
-        <div className="flex items-center">
-          <ShiaijoLogo size={38} glow />
+        <div className="flex items-center gap-2">
+          <ShiaijoLogo size={32} glow />
+          <span className="text-lg text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
         </div>
         <button 
           onClick={async () => {
