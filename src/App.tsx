@@ -2817,7 +2817,7 @@ function CourtkeeperPortal({
     const newHansoku = currentHansoku + 1
     const opponent = player === 'player1' ? 'player2' : 'player1'
     
-    // Check if this hansoku gives opponent a point (every 2nd hansoku)
+    // Note: Points from hansoku are calculated in getEffectiveScore (2 hansoku = 1 point)
     const givesPoint = newHansoku % 2 === 0
 
     const updatedMatches = tournament.matches.map(m => {
@@ -2826,15 +2826,6 @@ function CourtkeeperPortal({
           status: 'in_progress' as const,
           player1Hansoku: player === 'player1' ? newHansoku : m.player1Hansoku,
           player2Hansoku: player === 'player2' ? newHansoku : m.player2Hansoku,
-        }
-        
-        // Add hansoku-derived point to opponent's score
-        if (givesPoint) {
-          if (opponent === 'player1') {
-            update.player1Score = [...m.player1Score, 5] // 5 = Hansoku point
-          } else {
-            update.player2Score = [...m.player2Score, 5]
-          }
         }
         
         return { ...m, ...update }
