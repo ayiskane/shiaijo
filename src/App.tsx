@@ -324,6 +324,26 @@ const loadFromStorage = async (): Promise<AppState | null> => {
   return null
 }
 
+
+// Helper to ensure match data is valid
+const sanitizeMatch = (match: Match): Match => ({
+  ...match,
+  player1Score: match.player1Score || [],
+  player2Score: match.player2Score || [],
+  status: match.status || 'pending',
+  winner: match.winner || null,
+})
+
+const sanitizeTournament = (tournament: Tournament | null): Tournament | null => {
+  if (!tournament) return null
+  return {
+    ...tournament,
+    matches: (tournament.matches || []).map(sanitizeMatch),
+    groups: tournament.groups || [],
+    groupOrder: tournament.groupOrder || [],
+  }
+}
+
 // Default state
 const defaultGroups: Group[] = [
   { id: 'A', name: 'Group A', isNonBogu: false },
@@ -394,6 +414,7 @@ export default function App() {
           groups: saved.groups || defaultGroups,
           guestRegistry: saved.guestRegistry || [],
           history: saved.history || [],
+          currentTournament: sanitizeTournament(saved.currentTournament),
           currentMatchIndexA: saved.currentMatchIndexA ?? 0,
           currentMatchIndexB: saved.currentMatchIndexB ?? 0,
           activeCourt: saved.activeCourt || 'A',
