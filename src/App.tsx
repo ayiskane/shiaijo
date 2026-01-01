@@ -2520,10 +2520,43 @@ function CourtkeeperPortal({
   const courtAMatches = tournament?.matches?.filter(m => m.court === 'A') || []
   const courtBMatches = tournament?.matches?.filter(m => m.court === 'B') || []
   
-  const currentMatchA = courtAMatches.find(m => m.status !== 'completed')
-  const currentMatchB = courtBMatches.find(m => m.status !== 'completed')
+  // Get group order for queue display (use tournament groups or custom order)
+  const courtAGroupOrder = state.courtAGroupOrder.length > 0 
+    ? state.courtAGroupOrder 
+    : (tournament?.groups || []).filter(gId => courtAMatches.some(m => m.groupId === gId))
+  const courtBGroupOrder = state.courtBGroupOrder.length > 0 
+    ? state.courtBGroupOrder 
+    : (tournament?.groups || []).filter(gId => courtBMatches.some(m => m.groupId === gId))
+  
+  // Get pending matches sorted by group order then match order
+  const getSortedPendingMatches = (matches: Match[], groupOrder: string[]) => {
+    return matches
+      .filter(m => m.status !== 'completed')
+      .sort((a, b) => {
+        const aGroupIdx = groupOrder.indexOf(a.groupId)
+        const bGroupIdx = groupOrder.indexOf(b.groupId)
+        if (aGroupIdx !== bGroupIdx) return aGroupIdx - bGroupIdx
+        return a.orderIndex - b.orderIndex
+      })
+  }
+  
+  const pendingMatchesA = getSortedPendingMatches(courtAMatches, courtAGroupOrder)
+  const pendingMatchesB = getSortedPendingMatches(courtBMatches, courtBGroupOrder)
+  
+  // If a match is manually selected, use it; otherwise use first pending match
+  const selectedMatchIdA = state.courtASelectedMatch
+  const selectedMatchIdB = state.courtBSelectedMatch
+  
+  const currentMatchA = selectedMatchIdA 
+    ? courtAMatches.find(m => m.id === selectedMatchIdA && m.status !== 'completed')
+    : pendingMatchesA[0]
+  const currentMatchB = selectedMatchIdB
+    ? courtBMatches.find(m => m.id === selectedMatchIdB && m.status !== 'completed')
+    : pendingMatchesB[0]
   
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
+  const pendingMatches = selectedCourt === 'A' ? pendingMatchesA : pendingMatchesB
+  const groupOrder = selectedCourt === 'A' ? courtAGroupOrder : courtBGroupOrder
   const currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
   
   const timerSeconds = selectedCourt === 'A' ? state.timerSecondsA : state.timerSecondsB
