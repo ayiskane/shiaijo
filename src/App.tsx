@@ -1754,20 +1754,20 @@ function TournamentManager({
   return (
     <div className="space-y-4">
       <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
-        <CardHeader>
-          <div className="flex items-center justify-between">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
-              <CardTitle className="text-white">{tournament.name}</CardTitle>
-              <CardDescription className="text-slate-300">
-                {tournament.month} {tournament.year} • {tournament.status}
+              <CardTitle className="text-white text-lg sm:text-xl">{tournament.name}</CardTitle>
+              <CardDescription className="text-slate-400 text-sm">
+                {tournament.month} {tournament.year}
               </CardDescription>
             </div>
-            <Badge className={
+            <Badge className={`text-sm px-3 py-1 ${
               tournament.status === 'setup' ? 'bg-yellow-600' :
-              tournament.status === 'in_progress' ? 'bg-green-600' :
-              'bg-slate-600/50'
-            }>
-              {tournament.status.replace('_', ' ')}
+              tournament.status === 'in_progress' ? 'bg-emerald-600' :
+              'bg-slate-600'
+            }`}>
+              {tournament.status === 'setup' ? 'Setup' : tournament.status === 'in_progress' ? 'In Progress' : 'Completed'}
             </Badge>
           </div>
         </CardHeader>
@@ -1777,14 +1777,14 @@ function TournamentManager({
             <span className="text-slate-300 text-sm">{completedMatches}/{totalMatches} matches</span>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 text-center">
-            <div className="bg-red-900/20 border border-red-800 rounded-lg p-3">
-              <div className="text-2xl font-bold text-red-400">{courtAMatches.length}</div>
-              <div className="text-sm text-slate-300">Court A Matches</div>
+          <div className="grid grid-cols-2 gap-2 sm:gap-4">
+            <div className="bg-red-900/30 border border-red-800/50 rounded-lg p-2 sm:p-3 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-red-400">{courtAMatches.length}</div>
+              <div className="text-xs sm:text-sm text-slate-400">Court A</div>
             </div>
-            <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
-              <div className="text-2xl font-bold text-slate-200">{courtBMatches.length}</div>
-              <div className="text-sm text-slate-300">Court B Matches</div>
+            <div className="bg-blue-900/30 border border-blue-800/50 rounded-lg p-2 sm:p-3 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-blue-400">{courtBMatches.length}</div>
+              <div className="text-xs sm:text-sm text-slate-400">Court B</div>
             </div>
           </div>
 
@@ -1802,15 +1802,11 @@ function TournamentManager({
               </>
             )}
             {tournament.status === 'in_progress' && !isComplete && (
-              <>
-                <Badge variant="outline" className="border-emerald-500/60 text-emerald-400 bg-emerald-900/20 px-4 py-2">
-                  Tournament In Progress
-                </Badge>
-                <Button onClick={refreshTournamentParticipants} variant="outline" className="border-slate-600 bg-slate-800/40 hover:bg-slate-600/50">
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Update Participants
-                </Button>
-              </>
+              <Button onClick={refreshTournamentParticipants} variant="outline" size="sm" className="border-slate-600 bg-slate-800/40 hover:bg-slate-600/50">
+                <RefreshCw className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Update Participants</span>
+                <span className="sm:hidden">Refresh</span>
+              </Button>
             )}
             {isComplete && (
               <Button onClick={archiveTournament} className="bg-orange-600 hover:bg-orange-700">
