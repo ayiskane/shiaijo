@@ -1346,10 +1346,10 @@ function GroupsManager({
               return (
                 <div 
                   key={group.id}
-                  className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border ${state.groups.indexOf(group) % 2 === 0 ? 'border-red-800/40' : 'border-blue-800/40'}`}
+                  className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border ${state.groups.indexOf(group) % 2 === 0 ? 'border-red-800/40' : 'border-slate-700/40'}`}
                 >
                   {/* Court indicator */}
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl ${state.groups.indexOf(group) % 2 === 0 ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
+                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl ${state.groups.indexOf(group) % 2 === 0 ? 'bg-red-600 text-white' : 'bg-slate-600 text-white'}`}>
                     {state.groups.indexOf(group) % 2 === 0 ? 'A' : 'B'}
                   </div>
                   
@@ -1706,8 +1706,8 @@ function TournamentManager({
               <div className="text-xl sm:text-2xl font-bold text-red-400">{courtAMatches.length}</div>
               <div className="text-xs sm:text-sm text-slate-400">Court A</div>
             </div>
-            <div className="bg-blue-900/30 border border-blue-800/50 rounded-lg p-2 sm:p-3 text-center">
-              <div className="text-xl sm:text-2xl font-bold text-blue-400">{courtBMatches.length}</div>
+            <div className="bg-slate-700/30 border border-slate-700/50 rounded-lg p-2 sm:p-3 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-slate-300">{courtBMatches.length}</div>
               <div className="text-xs sm:text-sm text-slate-400">Court B</div>
             </div>
           </div>
@@ -1752,11 +1752,11 @@ function TournamentManager({
         const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
         
         return (
-          <Card key={groupId} className={`border ${groupMatches[0]?.court === 'A' ? 'border-red-800/30' : 'border-blue-800/30'}`}>
+          <Card key={groupId} className={`border ${groupMatches[0]?.court === 'A' ? 'border-red-800/30' : 'border-slate-700/30'}`}>
             <CardHeader className="p-3 sm:p-4">
               <div className="flex items-center gap-2 sm:gap-3">
                 {/* Court badge - compact */}
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl ${groupMatches[0]?.court === 'A' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl ${groupMatches[0]?.court === 'A' ? 'bg-red-600 text-white' : 'bg-slate-600 text-white'}`}>
                   {groupMatches[0]?.court || 'A'}
                 </div>
                 
@@ -1780,7 +1780,7 @@ function TournamentManager({
                     A
                   </button>
                   <button
-                    className={`w-8 h-8 rounded text-xs font-bold ${groupMatches[0]?.court === 'B' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-blue-900/50'}`}
+                    className={`w-8 h-8 rounded text-xs font-bold ${groupMatches[0]?.court === 'B' ? 'bg-slate-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-700/50'}`}
                     onClick={() => setGroupCourt(groupId, 'B')}
                   >
                     B
@@ -1807,7 +1807,7 @@ function TournamentManager({
                           {/* Match number and court badge */}
                           <span className="text-slate-500 text-xs w-5">#{idx + 1}</span>
                           <button
-                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}
+                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-red-600 text-white' : 'bg-slate-600 text-white'}`}
                             onClick={() => swapMatchCourt(match.id)}
                           >
                             {match.court}
@@ -1838,7 +1838,7 @@ function TournamentManager({
                           </div>
                         )}
                         {match.status === 'completed' && (
-                          <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-blue-900/50 text-blue-300' : 'bg-slate-700 text-slate-400'}`}>
+                          <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-slate-700/50 text-slate-300' : 'bg-slate-700 text-slate-400'}`}>
                             {match.winner === 'draw' ? 'Draw' : 
                              match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}` :
                              `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}`}
@@ -2682,7 +2682,7 @@ function CourtkeeperPortal({
   const player2 = currentMatch ? getMemberById(currentMatch.player2Id) : null
 
   const scoreTypes = [
-    { id: 1, name: 'Men', short: 'M', color: 'bg-blue-600 hover:bg-blue-700' },
+    { id: 1, name: 'Men', short: 'M', color: 'bg-slate-600 hover:bg-slate-700' },
     { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600 hover:bg-green-700' },
     { id: 3, name: 'Do', short: 'D', color: 'bg-purple-600 hover:bg-purple-700' },
     { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600 hover:bg-cyan-700' },
