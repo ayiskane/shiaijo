@@ -14,6 +14,29 @@ import { Switch } from '@/components/ui/switch'
 import { Toaster, toast } from 'sonner'
 
 // Renbu Dojo Logo SVG Component - Orange fill with black strokes
+// Shiaijo Logo - Traditional Japanese style with hanko seal
+const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolean }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 48 48"
+    style={glow ? { filter: 'drop-shadow(0 0 8px rgba(196, 30, 58, 0.6))' } : {}}
+  >
+    {/* Dark background */}
+    <rect width="48" height="48" rx="8" fill="#0a0f1a"/>
+    
+    {/* Red Hanko Seal */}
+    <rect x="4" y="4" width="12" height="16" rx="1.5" fill="#c41e3a"/>
+    <text x="10" y="12" fontFamily="serif" fontSize="5" fill="#f5e6d3" textAnchor="middle" fontWeight="bold">剣</text>
+    <text x="10" y="18" fontFamily="serif" fontSize="5" fill="#f5e6d3" textAnchor="middle" fontWeight="bold">道</text>
+    
+    {/* Main characters 試合 */}
+    <text x="24" y="18" fontFamily="serif" fontSize="14" fill="#f5f0e6" textAnchor="middle">試</text>
+    <text x="24" y="34" fontFamily="serif" fontSize="14" fill="#f5f0e6" textAnchor="middle">合</text>
+    <text x="24" y="46" fontFamily="serif" fontSize="10" fill="#f5f0e6" textAnchor="middle" opacity="0.7">場</text>
+  </svg>
+)
+
 const RenbuLogo = ({ size = 48, glow = false, className = '' }: { size?: number; glow?: boolean; className?: string }) => (
   <svg 
     width={size} 
@@ -603,7 +626,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-[#0a1017] flex flex-col items-center justify-center">
         <div className="mb-6 animate-pulse">
-          <RenbuLogo size={96} glow />
+          <ShiaijoLogo size={96} glow />
         </div>
         <div className="text-white text-xl">Loading...</div>
       </div>
@@ -617,7 +640,7 @@ export default function App() {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-              <RenbuLogo size={80} glow />
+              <ShiaijoLogo size={80} glow />
             </div>
             <h1 className="text-4xl font-bold text-white mb-2" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</h1>
             <p className="text-[#6b8fad]">Tournament Manager</p>
@@ -1048,7 +1071,7 @@ function AdminPortal({
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
-              <RenbuLogo size={32} glow />
+              <ShiaijoLogo size={40} glow />
             </div>
             {!sidebarCollapsed && (
               <div>
@@ -1170,7 +1193,7 @@ function AdminPortal({
             <div className="p-4 border-b border-white/5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-                  <RenbuLogo size={32} glow />
+                  <ShiaijoLogo size={40} glow />
                 </div>
                 <div>
                   <h1 className="font-bold text-white text-lg" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</h1>
@@ -1215,7 +1238,7 @@ function AdminPortal({
         </Sheet>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl flex items-center justify-center">
-            <RenbuLogo size={28} glow />
+            <ShiaijoLogo size={32} glow />
           </div>
           <span className="font-semibold text-lg" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
         </div>
@@ -3305,7 +3328,7 @@ function CourtkeeperPortal({
             <CardTitle className="text-white text-center">No Active Tournament</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <RenbuLogo size={80} className="mx-auto opacity-50" />
+            <ShiaijoLogo size={80} />
             <p className="text-[#b8d4ec]">
               {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament generated yet'}
             </p>
@@ -3458,7 +3481,7 @@ function CourtkeeperPortal({
       <header className="bg-[#0f1419] border-b border-slate-800 px-3 py-2 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <RenbuLogo size={24} glow />
+            <ShiaijoLogo size={28} glow />
             <span className="font-bold text-sm">COURTKEEPER</span>
           </div>
           <button 
