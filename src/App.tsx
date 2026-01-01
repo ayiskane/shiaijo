@@ -491,7 +491,12 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 flex flex-col items-center justify-center">
+        <img 
+          src="/renbu-logo.png" 
+          alt="Renbu Kendo" 
+          className="w-24 h-24 mb-6 animate-pulse"
+        />
         <div className="text-white text-xl">Loading...</div>
       </div>
     )
