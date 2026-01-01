@@ -1909,12 +1909,12 @@ function TournamentManager({
                             <div className="flex items-center gap-1 text-sm">
                               <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
                               <span className={`truncate ${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'}`}>
-                                {p1?.firstName || '?'}
+                                {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}
                               </span>
                               <span className="text-zinc-500 mx-1">vs</span>
                               <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
                               <span className={`truncate ${match.winner === 'player2' ? 'text-zinc-200 font-semibold' : 'text-white'}`}>
-                                {p2?.firstName || '?'}
+                                {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}
                               </span>
                             </div>
                           </div>
@@ -2609,10 +2609,10 @@ function CourtkeeperPortal({
                   </div>
                   <div className="text-sm text-white text-center">
                     <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
-                    <span className="font-medium ml-1">{p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.</span>
+                    <span className="font-medium ml-1">{p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'} {p1?.lastName?.charAt(0) || ''}.</span>
                     <span className="text-zinc-400 mx-2">vs</span>
                     <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
-                    <span className="font-medium ml-1">{p2?.firstName || '?'} {p2?.lastName?.charAt(0) || ''}.</span>
+                    <span className="font-medium ml-1">{p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'} {p2?.lastName?.charAt(0) || ''}.</span>
                   </div>
                   <div className="flex gap-1 mt-2 justify-center">
                     <Button 
@@ -2654,12 +2654,12 @@ function CourtkeeperPortal({
                     <div key={match.id} className="p-2 bg-zinc-700/20 rounded text-sm text-center">
                       <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
                       <span className={match.winner === 'player1' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
-                        {p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.
+                        {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'} {p1?.lastName?.charAt(0) || ''}.
                       </span>
                       <span className="text-zinc-400 mx-2">vs</span>
                       <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
                       <span className={match.winner === 'player2' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
-                        {p2?.firstName || '?'} {p2?.lastName?.charAt(0) || ''}.
+                        {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'} {p2?.lastName?.charAt(0) || ''}.
                       </span>
                       <span className="text-zinc-300 ml-2">
                         {match.isHantei ? '(判定)' : `${match.player1Score.length}-${match.player2Score.length}`}
