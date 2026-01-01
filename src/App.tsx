@@ -2611,6 +2611,28 @@ function CourtkeeperPortal({
   ]
 
   // Render queue for a court
+  // Drag and drop for match reordering
+  const [draggedMatch, setDraggedMatch] = useState<string | null>(null)
+  
+  const handleDragStart = (matchId: string) => setDraggedMatch(matchId)
+  
+  const handleDrop = (targetIdx: number, court: 'A' | 'B') => {
+    if (!draggedMatch || !tournament) return
+    const courtMatches = court === 'A' ? courtAMatches : courtBMatches
+    const pendingMatches = courtMatches.filter(m => m.status !== 'completed').sort((a, b) => a.orderIndex - b.orderIndex)
+    const draggedIdx = pendingMatches.findIndex(m => m.id === draggedMatch)
+    if (draggedIdx === -1 || draggedIdx === targetIdx) { setDraggedMatch(null); return }
+    const newOrder = [...pendingMatches]
+    const [removed] = newOrder.splice(draggedIdx, 1)
+    newOrder.splice(targetIdx, 0, removed)
+    const updatedMatches = tournament.matches.map(m => {
+      const newIdx = newOrder.findIndex(nm => nm.id === m.id)
+      return newIdx !== -1 ? { ...m, orderIndex: newIdx } : m
+    })
+    setState(prev => ({ ...prev, currentTournament: { ...tournament, matches: updatedMatches } }))
+    setDraggedMatch(null)
+  }
+
   const renderCourtQueue = (court: 'A' | 'B', matches: Match[]) => {
     const pendingMatches = matches.filter(m => m.status !== 'completed').sort((a, b) => a.orderIndex - b.orderIndex)
     const completedMatches = matches.filter(m => m.status === 'completed')
