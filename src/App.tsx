@@ -15,89 +15,17 @@ import { Toaster, toast } from 'sonner'
 
 // Renbu Dojo Logo SVG Component - Orange fill with black strokes
 // Shiaijo Logo - Minimalist frame style with Renbu logo behind
-const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolean }) => {
-  const scale = size / 100
-  return (
-    <svg 
-      width={size * 1.8} 
-      height={size} 
-      viewBox="0 0 180 100"
-      style={glow ? { filter: 'drop-shadow(0 0 10px rgba(245, 240, 230, 0.3))' } : {}}
-    >
-      {/* Renbu logo behind - half visible on left, very subtle */}
-      <g transform="translate(-25, 5)" opacity="0.08">
-        <circle cx="50" cy="50" r="42" fill="#f5f0e6"/>
-        {/* Simplified Renbu spokes */}
-        <g fill="#0a0f1a">
-          <path d="M50,8 L53,45 L47,45 Z"/>
-          <path d="M50,92 L53,55 L47,55 Z"/>
-          <path d="M8,50 L45,47 L45,53 Z"/>
-          <path d="M92,50 L55,47 L55,53 Z"/>
-          <path d="M20,20 L48,46 L44,50 Z"/>
-          <path d="M80,80 L52,54 L56,50 Z"/>
-          <path d="M80,20 L54,46 L50,44 Z"/>
-          <path d="M20,80 L46,54 L50,56 Z"/>
-        </g>
-      </g>
-      
-      {/* Vertical English text "SHIAIJO" on left */}
-      <g transform="translate(35, 12)" fill="#f5f0e6" opacity="0.7">
-        <text x="0" y="0" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">S</text>
-        <text x="0" y="11" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">H</text>
-        <text x="0" y="22" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">I</text>
-        <text x="0" y="33" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">A</text>
-        <text x="0" y="44" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">I</text>
-        <text x="0" y="55" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">J</text>
-        <text x="0" y="66" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">O</text>
-      </g>
-      
-      {/* Main rectangle frame with rough edges */}
-      <g transform="translate(55, 5)">
-        {/* Outer frame - slightly imperfect rectangle */}
-        <path 
-          d="M2,0 L58,0.5 L59,1 L60,90 L58.5,91 L1,90.5 L0.5,89 L0,2 Z" 
-          fill="none" 
-          stroke="#f5f0e6" 
-          strokeWidth="1.5"
-          opacity="0.9"
-        />
-        
-        {/* Inner content area */}
-        <g transform="translate(30, 8)">
-          {/* 試 */}
-          <text 
-            x="0" 
-            y="0" 
-            fontFamily="ShiaijoCalligraphy, 'Yuji Syuku', serif" 
-            fontSize="24" 
-            fill="#f5f0e6" 
-            textAnchor="middle"
-          >試</text>
-          
-          {/* 合 */}
-          <text 
-            x="0" 
-            y="28" 
-            fontFamily="ShiaijoCalligraphy, 'Yuji Syuku', serif" 
-            fontSize="24" 
-            fill="#f5f0e6" 
-            textAnchor="middle"
-          >合</text>
-          
-          {/* 場 */}
-          <text 
-            x="0" 
-            y="56" 
-            fontFamily="ShiaijoCalligraphy, 'Yuji Syuku', serif" 
-            fontSize="24" 
-            fill="#f5f0e6" 
-            textAnchor="middle"
-          >場</text>
-        </g>
-      </g>
-    </svg>
-  )
-}
+const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolean }) => (
+  <img 
+    src="/shiaijo-logo.png" 
+    alt="試合場 Shiaijo"
+    style={{ 
+      height: size,
+      width: 'auto',
+      filter: glow ? 'drop-shadow(0 0 20px rgba(249, 115, 22, 0.3))' : undefined
+    }}
+  />
+)
 
 
 const RenbuLogo = ({ size = 48, glow = false, className = '' }: { size?: number; glow?: boolean; className?: string }) => (
