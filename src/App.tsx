@@ -1325,7 +1325,9 @@ function GroupsManager({
       const newIdx = direction === 'up' ? idx - 1 : idx + 1
       if (newIdx < 0 || newIdx >= groups.length) return prev
       
-      [groups[idx], groups[newIdx]] = [groups[newIdx], groups[idx]]
+      const temp = groups[idx]
+      groups[idx] = groups[newIdx]
+      groups[newIdx] = temp
       return { ...prev, groups }
     })
   }
