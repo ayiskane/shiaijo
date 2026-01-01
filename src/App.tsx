@@ -1340,37 +1340,38 @@ function GroupsManager({
 
           <Separator className="bg-slate-700/50" />
 
-          <div className="space-y-3">
-            {state.groups.map(group => {
+          <div className="space-y-2">
+            {state.groups.map((group, groupIndex) => {
               const memberCount = state.members.filter(m => m.group === group.id).length
               return (
                 <div 
                   key={group.id}
-                  className={`flex items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg border ${state.groups.indexOf(group) % 2 === 0 ? 'border-amber-700/40' : 'border-slate-700/40'}`}
+                  draggable
+                  onDragStart={(e) => e.dataTransfer.setData('groupId', group.id)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    const draggedId = e.dataTransfer.getData('groupId')
+                    if (draggedId === group.id) return
+                    setState(prev => {
+                      const groups = [...prev.groups]
+                      const fromIdx = groups.findIndex(g => g.id === draggedId)
+                      const toIdx = groups.findIndex(g => g.id === group.id)
+                      if (fromIdx === -1 || toIdx === -1) return prev
+                      const [moved] = groups.splice(fromIdx, 1)
+                      groups.splice(toIdx, 0, moved)
+                      return { ...prev, groups }
+                    })
+                  }}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-move hover:bg-slate-800/50 transition-colors border-l-4 ${groupIndex % 2 === 0 ? 'border-l-amber-500' : 'border-l-slate-500'}`}
                 >
-                  {/* Court indicator */}
-                  <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl ${state.groups.indexOf(group) % 2 === 0 ? 'bg-amber-600 text-white' : 'bg-slate-600 text-white'}`}>
-                    {state.groups.indexOf(group) % 2 === 0 ? 'A' : 'B'}
-                  </div>
+                  {/* Court indicator - small pill */}
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${groupIndex % 2 === 0 ? 'bg-amber-600/20 text-amber-400' : 'bg-slate-600/20 text-slate-400'}`}>
+                    {groupIndex % 2 === 0 ? 'A' : 'B'}
+                  </span>
                   
-                  {/* Order controls */}
-                  <div className="flex flex-col gap-0.5">
-                    <button
-                      className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"
-                      onClick={() => moveGroup(group.id, 'up')}
-                      disabled={state.groups.indexOf(group) === 0}
-                    >
-                      <ChevronLeft className="w-4 h-4 rotate-90" />
-                    </button>
-                    <span className="text-xs text-slate-500 text-center">#{state.groups.indexOf(group) + 1}</span>
-                    <button
-                      className="p-1 text-slate-400 hover:text-white hover:bg-slate-700 rounded disabled:opacity-30"
-                      onClick={() => moveGroup(group.id, 'down')}
-                      disabled={state.groups.indexOf(group) === state.groups.length - 1}
-                    >
-                      <ChevronRight className="w-4 h-4 rotate-90" />
-                    </button>
-                  </div>
+                  {/* Position */}
+                  <span className="text-xs text-slate-500 w-4">#{groupIndex + 1}</span>
                   
                   {editingGroup?.id === group.id ? (
                     <Input
