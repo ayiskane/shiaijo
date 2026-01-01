@@ -480,7 +480,7 @@ export default function App() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0f0f14] flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-[#0a1017] flex flex-col items-center justify-center">
         <img 
           src="/renbu-logo.png" 
           alt="Renbu Kendo" 
@@ -493,20 +493,20 @@ export default function App() {
 
   if (portal === 'select') {
     return (
-      <div className="min-h-screen bg-[#0f0f14] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#0a1017] flex items-center justify-center p-4">
         <Toaster theme="dark" position="top-center" />
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <img src="/renbu-logo.png" alt="Renbu" className="w-20 h-20 mx-auto mb-6 rounded-2xl" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Shiaijo</h1>
-            <p className="text-zinc-500">Tournament Manager</p>
+            <p className="text-[#6b8fad]">Tournament Manager</p>
           </div>
           
           <div className="space-y-4">
             <button 
               onClick={() => setPortal('admin')}
-              className="w-full bg-[#1e1e28] border border-white/5 rounded-2xl p-5 text-left hover:border-orange-500/50 hover:bg-[#252530] transition-all group"
+              className="w-full bg-[#142130] border border-white/5 rounded-2xl p-5 text-left hover:border-orange-500/50 hover:bg-[#252530] transition-all group"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center group-hover:from-orange-500/30 group-hover:to-orange-600/20 transition-colors">
@@ -514,14 +514,14 @@ export default function App() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-white">Admin Portal</h2>
-                  <p className="text-sm text-zinc-500">Manage members, groups & tournament</p>
+                  <p className="text-sm text-[#6b8fad]">Manage members, groups & tournament</p>
                 </div>
               </div>
             </button>
             
             <button 
               onClick={() => setPortal('courtkeeper')}
-              className="w-full bg-[#1e1e28] border border-white/5 rounded-2xl p-5 text-left hover:border-[#2a4a6f]/50 hover:bg-[#252530] transition-all group"
+              className="w-full bg-[#142130] border border-white/5 rounded-2xl p-5 text-left hover:border-[#2a4a6f]/50 hover:bg-[#252530] transition-all group"
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2a4a6f]/20 to-[#1e3a5f]/10 flex items-center justify-center group-hover:from-[#2a4a6f]/30 group-hover:to-[#1e3a5f]/20 transition-colors">
@@ -529,7 +529,7 @@ export default function App() {
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-white">Courtkeeper Portal</h2>
-                  <p className="text-sm text-zinc-500">Run matches & keep score</p>
+                  <p className="text-sm text-[#6b8fad]">Run matches & keep score</p>
                 </div>
               </div>
             </button>
@@ -891,11 +891,11 @@ function AdminPortal({
   // MobileNav inlined to prevent re-mounting on every render
 
   return (
-    <div className="min-h-screen bg-[#0f0f14] text-white">
+    <div className="min-h-screen bg-[#0a1017] text-white">
       <Toaster theme="dark" position="top-center" />
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col fixed h-full bg-[#16161d] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
+      <aside className={`hidden md:flex flex-col fixed h-full bg-[#0f1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             <img src="/renbu-logo.png" alt="Renbu" className="w-10 h-10 rounded-xl" />
@@ -903,7 +903,7 @@ function AdminPortal({
             {!sidebarCollapsed && (
               <div>
                 <h1 className="font-bold">Shiaijo</h1>
-                <p className="text-xs text-zinc-500">Admin Portal</p>
+                <p className="text-xs text-[#6b8fad]">Admin Portal</p>
               </div>
             )}
           </div>
@@ -911,28 +911,28 @@ function AdminPortal({
 
         <button 
           onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-700 transition z-10"
+          className="absolute -right-3 top-20 w-6 h-6 bg-[#1a2d42] border border-[#1e3a5f] rounded-full flex items-center justify-center hover:bg-[#243a52] transition z-10"
         >
-          <ChevronLeft className={`w-3 h-3 text-zinc-400 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+          <ChevronLeft className={`w-3 h-3 text-[#8fb3d1] transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
         </button>
 
         {!sidebarCollapsed && (
           <div className="p-4 border-b border-white/5">
-            <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+            <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-zinc-500 uppercase tracking-wider">Session</span>
+                <span className="text-xs text-[#6b8fad] uppercase tracking-wider">Session</span>
                 <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
               </div>
               <div className="flex items-baseline gap-2">
                 <span className="text-2xl font-bold">{state.members.filter(m => m.isParticipating).length}</span>
-                <span className="text-zinc-500 text-sm">participating</span>
+                <span className="text-[#6b8fad] text-sm">participating</span>
               </div>
             </div>
           </div>
         )}
 
         <nav className="flex-1 py-4 overflow-y-auto">
-          {!sidebarCollapsed && <p className="px-4 mb-2 text-xs text-zinc-500 uppercase tracking-wider">Menu</p>}
+          {!sidebarCollapsed && <p className="px-4 mb-2 text-xs text-[#6b8fad] uppercase tracking-wider">Menu</p>}
           {[
             { id: 'members', icon: Users, label: 'Members' },
             { id: 'guests', icon: UserPlus, label: 'Guests' },
@@ -948,10 +948,10 @@ function AdminPortal({
               className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
                 activeTab === item.id 
                   ? 'text-orange-400 bg-gradient-to-r from-orange-500/10 to-transparent border-l-2 border-orange-500' 
-                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
+                  : 'text-[#8fb3d1] hover:text-white hover:bg-white/5'
               }`}
             >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === item.id ? 'bg-orange-500/20' : 'bg-zinc-800'}`}>
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === item.id ? 'bg-orange-500/20' : 'bg-[#1a2d42]'}`}>
                 <item.icon className="w-5 h-5" />
               </div>
               {!sidebarCollapsed && (
@@ -978,21 +978,21 @@ function AdminPortal({
       </aside>
 
       {/* Mobile Header */}
-      <header className="fixed top-0 left-0 right-0 h-14 bg-[#16161d] border-b border-white/5 flex items-center justify-between px-4 z-30 md:hidden">
+      <header className="fixed top-0 left-0 right-0 h-14 bg-[#0f1a24] border-b border-white/5 flex items-center justify-between px-4 z-30 md:hidden">
         <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
           <SheetTrigger asChild>
-            <button className="p-2 text-zinc-400 hover:text-white">
+            <button className="p-2 text-[#8fb3d1] hover:text-white">
               <Menu className="w-6 h-6" />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="bg-[#16161d] border-zinc-800 w-72 p-0">
+          <SheetContent side="left" className="bg-[#0f1a24] border-[#162d4a] w-72 p-0">
             <div className="p-4 border-b border-white/5">
               <div className="flex items-center gap-3">
                 <img src="/renbu-logo.png" alt="Renbu" className="w-10 h-10 rounded-xl" />
                 </div>
                 <div>
                   <h1 className="font-bold text-white">Shiaijo</h1>
-                  <p className="text-xs text-zinc-500">Admin Portal</p>
+                  <p className="text-xs text-[#6b8fad]">Admin Portal</p>
                 </div>
               </div>
             </div>
@@ -1011,7 +1011,7 @@ function AdminPortal({
                   className={`w-full flex items-center gap-3 px-4 py-3 ${
                     activeTab === item.id 
                       ? 'text-orange-400 bg-orange-500/10 border-l-2 border-orange-500' 
-                      : 'text-zinc-400 hover:text-white'
+                      : 'text-[#8fb3d1] hover:text-white'
                   }`}
                 >
                   <item.icon className="w-5 h-5" />
@@ -1043,7 +1043,7 @@ function AdminPortal({
               toast.success('Synced')
             }
           }}
-          className="p-2 text-zinc-400 hover:text-white"
+          className="p-2 text-[#8fb3d1] hover:text-white"
         >
           <RefreshCw className="w-5 h-5" />
         </button>
@@ -1055,22 +1055,22 @@ function AdminPortal({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-zinc-500 text-sm mb-1 hidden md:block">Welcome back</p>
+              <p className="text-[#6b8fad] text-sm mb-1 hidden md:block">Welcome back</p>
               <h2 className="text-xl md:text-2xl font-bold capitalize">{activeTab}</h2>
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -tranzinc-y-1/2 text-zinc-500" />
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -tranzinc-y-1/2 text-[#6b8fad]" />
                 <input 
                   type="text" 
                   placeholder="Search..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500/50"
+                  className="w-64 bg-[#1e3a5f]/30 border border-[#1e3a5f]/50 rounded-xl pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500/50"
                 />
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800/50 rounded-lg">
-                <span className="text-xs text-zinc-500">First names</span>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1e3a5f]/30 rounded-lg">
+                <span className="text-xs text-[#6b8fad]">First names</span>
                 <Switch 
                   checked={state.useFirstNamesOnly}
                   onCheckedChange={(checked) => setState(prev => ({ ...prev, useFirstNamesOnly: checked }))}
@@ -1089,7 +1089,7 @@ function AdminPortal({
                     toast.success('Synced')
                   }
                 }}
-                className="p-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition"
+                className="p-2.5 text-[#8fb3d1] hover:text-white hover:bg-[#1a2d42] rounded-xl transition"
               >
                 <RefreshCw className="w-5 h-5" />
               </button>
@@ -1101,26 +1101,26 @@ function AdminPortal({
             <div className="space-y-4">
               {/* Stats */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
-                  <p className="text-zinc-500 text-xs mb-1">Total Members</p>
+                <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
+                  <p className="text-[#6b8fad] text-xs mb-1">Total Members</p>
                   <p className="text-2xl font-bold">{state.members.length}</p>
                 </div>
-                <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
-                  <p className="text-zinc-500 text-xs mb-1">Participating</p>
+                <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
+                  <p className="text-[#6b8fad] text-xs mb-1">Participating</p>
                   <p className="text-2xl font-bold text-green-400">{state.members.filter(m => m.isParticipating).length}</p>
                 </div>
-                <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
-                  <p className="text-zinc-500 text-xs mb-1">Matches</p>
+                <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
+                  <p className="text-[#6b8fad] text-xs mb-1">Matches</p>
                   <p className="text-2xl font-bold">{state.currentTournament?.matches?.length || 0}</p>
                 </div>
-                <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
-                  <p className="text-zinc-500 text-xs mb-1">Completed</p>
+                <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
+                  <p className="text-[#6b8fad] text-xs mb-1">Completed</p>
                   <p className="text-2xl font-bold text-orange-400">{state.currentTournament?.matches?.filter(m => m.status === 'completed').length || 0}</p>
                 </div>
               </div>
 
               {/* Actions */}
-              <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+              <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
                 <div className="flex flex-wrap gap-2">
                   <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
                     <DialogTrigger asChild>
@@ -1128,7 +1128,7 @@ function AdminPortal({
                         <Plus className="w-4 h-4 mr-2" />Add Member
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-[#1e1e28] border-zinc-800">
+                    <DialogContent className="bg-[#142130] border-[#162d4a]">
                       <DialogHeader>
                         <DialogTitle className="text-white">Add Member</DialogTitle>
                       </DialogHeader>
@@ -1137,23 +1137,23 @@ function AdminPortal({
                   </Dialog>
                   <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
                     <DialogTrigger asChild>
-                      <Button variant="outline" className="border-zinc-700 text-zinc-300">
+                      <Button variant="outline" className="border-[#1e3a5f] text-[#b8d4ec]">
                         <Upload className="w-4 h-4 mr-2" />Import CSV
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="bg-[#1e1e28] border-zinc-800">
+                    <DialogContent className="bg-[#142130] border-[#162d4a]">
                       <DialogHeader>
                         <DialogTitle className="text-white">Import Members</DialogTitle>
-                        <DialogDescription className="text-zinc-400">Paste CSV: FirstName,LastName,Group</DialogDescription>
+                        <DialogDescription className="text-[#8fb3d1]">Paste CSV: FirstName,LastName,Group</DialogDescription>
                       </DialogHeader>
                       <div className="space-y-4">
                         <textarea 
-                          className="w-full h-32 bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-sm"
+                          className="w-full h-32 bg-[#1a2d42] border border-[#1e3a5f] rounded-lg p-3 text-sm"
                           placeholder="FirstName,LastName,Group&#10;John,Doe,Group A"
                           id="csv-input"
                         />
                         <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setShowBulkAdd(false)} className="border-zinc-700">Cancel</Button>
+                          <Button variant="outline" onClick={() => setShowBulkAdd(false)} className="border-[#1e3a5f]">Cancel</Button>
                           <Button onClick={() => { 
                             const textarea = document.getElementById('csv-input') as HTMLTextAreaElement
                             if (textarea) { handleCSVImport(textarea.value); setShowBulkAdd(false); }
@@ -1164,13 +1164,13 @@ function AdminPortal({
                   </Dialog>
                 </div>
                 <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/5">
-                  <span className="text-xs text-zinc-500 self-center">Quick select:</span>
+                  <span className="text-xs text-[#6b8fad] self-center">Quick select:</span>
                   {state.groups.map(g => (
-                    <button key={g.id} onClick={() => selectByGroup(g.id)} className="px-3 py-1 text-xs rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700">
+                    <button key={g.id} onClick={() => selectByGroup(g.id)} className="px-3 py-1 text-xs rounded-lg bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]">
                       +{g.name}
                     </button>
                   ))}
-                  <button onClick={deselectAll} className="px-3 py-1 text-xs rounded-lg text-zinc-500 hover:text-zinc-300">Clear</button>
+                  <button onClick={deselectAll} className="px-3 py-1 text-xs rounded-lg text-[#6b8fad] hover:text-[#b8d4ec]">Clear</button>
                 </div>
               </div>
 
@@ -1178,19 +1178,19 @@ function AdminPortal({
               <div className="flex gap-2 overflow-x-auto pb-1">
                 <button 
                   onClick={() => setFilterGroup('all')}
-                  className={`px-4 py-2 text-sm rounded-lg whitespace-nowrap ${filterGroup === 'all' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-zinc-800 text-zinc-400'}`}
+                  className={`px-4 py-2 text-sm rounded-lg whitespace-nowrap ${filterGroup === 'all' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                 >All</button>
                 {state.groups.map(g => (
                   <button 
                     key={g.id}
                     onClick={() => setFilterGroup(g.id)}
-                    className={`px-4 py-2 text-sm rounded-lg whitespace-nowrap ${filterGroup === g.id ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-zinc-800 text-zinc-400'}`}
+                    className={`px-4 py-2 text-sm rounded-lg whitespace-nowrap ${filterGroup === g.id ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                   >{g.name}</button>
                 ))}
               </div>
 
               {/* Members List */}
-              <div className="bg-[#1e1e28] border border-white/5 rounded-xl overflow-hidden">
+              <div className="bg-[#142130] border border-white/5 rounded-xl overflow-hidden">
                 <div className="divide-y divide-white/5">
                   {filteredMembers.map(member => {
                     const group = getGroupById(member.group)
@@ -1203,17 +1203,17 @@ function AdminPortal({
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium truncate">{member.lastName}, {member.firstName}</p>
-                          <p className="text-xs text-zinc-500">{group?.name || member.group}{member.isGuest && ' • Guest'}</p>
+                          <p className="text-xs text-[#6b8fad]">{group?.name || member.group}{member.isGuest && ' • Guest'}</p>
                         </div>
                         <span className={`w-2 h-2 rounded-full ${member.isParticipating ? 'bg-green-500' : 'bg-[#1e3a5f]'}`}></span>
-                        <button onClick={() => deleteMember(member.id)} className="p-1.5 text-zinc-500 hover:text-red-400 rounded">
+                        <button onClick={() => deleteMember(member.id)} className="p-1.5 text-[#6b8fad] hover:text-red-400 rounded">
                           <Trash2 className="w-4 h-4" />
                         </button>
                       </div>
                     )
                   })}
                 </div>
-                <div className="px-4 py-3 border-t border-white/5 flex justify-between text-sm text-zinc-500">
+                <div className="px-4 py-3 border-t border-white/5 flex justify-between text-sm text-[#6b8fad]">
                   <span>{filteredMembers.length} members</span>
                   <span className="text-orange-400">{state.members.filter(m => m.isParticipating).length} participating</span>
                 </div>
@@ -1221,7 +1221,7 @@ function AdminPortal({
 
               {/* Dev tools */}
               <details className="text-sm">
-                <summary className="text-zinc-500 cursor-pointer">Dev tools</summary>
+                <summary className="text-[#6b8fad] cursor-pointer">Dev tools</summary>
                 <div className="flex gap-2 mt-2">
                   <button onClick={() => {
                     const testMembers: Member[] = []
@@ -1267,13 +1267,13 @@ function AdminPortal({
 
       {/* Clear Confirm Dialog */}
       <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-        <DialogContent className="bg-[#1e1e28] border-zinc-800">
+        <DialogContent className="bg-[#142130] border-[#162d4a]">
           <DialogHeader>
             <DialogTitle className="text-white">Clear All Members?</DialogTitle>
-            <DialogDescription className="text-zinc-400">This will remove all {state.members.length} members.</DialogDescription>
+            <DialogDescription className="text-[#8fb3d1]">This will remove all {state.members.length} members.</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowClearConfirm(false)} className="border-zinc-700">Cancel</Button>
+            <Button variant="outline" onClick={() => setShowClearConfirm(false)} className="border-[#1e3a5f]">Cancel</Button>
             <Button variant="destructive" onClick={clearAllMembers}>Clear All</Button>
           </DialogFooter>
         </DialogContent>
@@ -1294,41 +1294,41 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+      <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
         <Dialog open={showAddGuest} onOpenChange={setShowAddGuest}>
           <DialogTrigger asChild>
             <Button className="bg-[#1e3a5f] hover:bg-[#162d4a]">
               <Plus className="w-4 h-4 mr-2" />Add Guest
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#1e1e28] border-zinc-800">
+          <DialogContent className="bg-[#142130] border-[#162d4a]">
             <DialogHeader>
               <DialogTitle className="text-white">Add Guest</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
                         <div className="space-y-2">
-                          <Label className="text-zinc-300">First Name</Label>
-                          <Input id="guest-first" className="bg-zinc-800 border-zinc-700" />
+                          <Label className="text-[#b8d4ec]">First Name</Label>
+                          <Input id="guest-first" className="bg-[#1a2d42] border-[#1e3a5f]" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-zinc-300">Last Name</Label>
-                          <Input id="guest-last" className="bg-zinc-800 border-zinc-700" />
+                          <Label className="text-[#b8d4ec]">Last Name</Label>
+                          <Input id="guest-last" className="bg-[#1a2d42] border-[#1e3a5f]" />
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-zinc-300">Group</Label>
+                          <Label className="text-[#b8d4ec]">Group</Label>
                           <Select defaultValue={state.groups[0]?.id}>
-                            <SelectTrigger className="bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
-                            <SelectContent className="bg-zinc-800 border-zinc-700">
+                            <SelectTrigger className="bg-[#1a2d42] border-[#1e3a5f]"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-[#1a2d42] border-[#1e3a5f]">
                               {state.groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
                             </SelectContent>
                           </Select>
                         </div>
                         <div className="space-y-2">
-                          <Label className="text-zinc-300">Dojo (optional)</Label>
-                          <Input id="guest-dojo" className="bg-zinc-800 border-zinc-700" placeholder="Guest's home dojo" />
+                          <Label className="text-[#b8d4ec]">Dojo (optional)</Label>
+                          <Input id="guest-dojo" className="bg-[#1a2d42] border-[#1e3a5f]" placeholder="Guest's home dojo" />
                         </div>
                         <div className="flex justify-end gap-2 pt-2">
-                          <Button variant="outline" onClick={() => setShowAddGuest(false)} className="border-zinc-700">Cancel</Button>
+                          <Button variant="outline" onClick={() => setShowAddGuest(false)} className="border-[#1e3a5f]">Cancel</Button>
                           <Button onClick={() => {
                             const first = (document.getElementById('guest-first') as HTMLInputElement)?.value
                             const last = (document.getElementById('guest-last') as HTMLInputElement)?.value
@@ -1341,13 +1341,13 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
         </Dialog>
       </div>
 
-      <div className="bg-[#1e1e28] border border-white/5 rounded-xl overflow-hidden">
+      <div className="bg-[#142130] border border-white/5 rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-white/5">
           <span className="font-medium">Guests ({guests.length})</span>
         </div>
         <div className="divide-y divide-white/5">
           {guests.length === 0 ? (
-            <div className="p-8 text-center text-zinc-500">No guests added yet</div>
+            <div className="p-8 text-center text-[#6b8fad]">No guests added yet</div>
           ) : (
             guests.map(guest => {
               const group = getGroupById(guest.group)
@@ -1355,7 +1355,7 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
                 <div key={guest.id} className="px-4 py-3 flex items-center gap-3">
                   <div className="flex-1">
                     <p className="font-medium">{guest.lastName}, {guest.firstName}</p>
-                    <p className="text-xs text-zinc-500">{guest.guestDojo || 'Guest'} • {group?.name}</p>
+                    <p className="text-xs text-[#6b8fad]">{guest.guestDojo || 'Guest'} • {group?.name}</p>
                   </div>
                 </div>
               )
@@ -1365,7 +1365,7 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
       </div>
 
       {state.guestRegistry.length > 0 && (
-        <div className="bg-[#1e1e28] border border-white/5 rounded-xl overflow-hidden">
+        <div className="bg-[#142130] border border-white/5 rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-white/5">
             <span className="font-medium">Guest Registry ({state.guestRegistry.length})</span>
           </div>
@@ -1427,10 +1427,10 @@ function GroupsManager({
 
   return (
     <div className="space-y-4">
-      <Card className="bg-[#1e1e28] border-white/5 backdrop-blur-sm">
+      <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-white">Group Settings</CardTitle>
-          <CardDescription className="text-zinc-400 text-sm">
+          <CardDescription className="text-[#8fb3d1] text-sm">
             Reorder groups to set court assignments. Position 1,3,5 → Court A | Position 2,4,6 → Court B
           </CardDescription>
         </CardHeader>
@@ -1440,7 +1440,7 @@ function GroupsManager({
               placeholder="New group name..."
               value={newGroupName}
               onChange={e => setNewGroupName(e.target.value)}
-              className="bg-zinc-800 border-zinc-600 focus:border-orange-500"
+              className="bg-[#1a2d42] border-[#2a4a6f] focus:border-orange-500"
             />
             <Button onClick={addGroup} className="bg-orange-600 hover:bg-orange-700">
               <Plus className="w-4 h-4 mr-2" />
@@ -1448,7 +1448,7 @@ function GroupsManager({
             </Button>
           </div>
 
-          <Separator className="bg-zinc-700/50" />
+          <Separator className="bg-[#243a52]/50" />
 
           <div className="space-y-2">
             {state.groups.map((group, groupIndex) => {
@@ -1473,32 +1473,32 @@ function GroupsManager({
                       return { ...prev, groups }
                     })
                   }}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-move hover:bg-zinc-800/50 transition-colors border-l-4 ${groupIndex % 2 === 0 ? 'border-l-amber-500' : 'border-l-zinc-500'}`}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-move hover:bg-[#1e3a5f]/30 transition-colors border-l-4 ${groupIndex % 2 === 0 ? 'border-l-amber-500' : 'border-l-zinc-500'}`}
                 >
                   {/* Court indicator - small pill */}
-                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${groupIndex % 2 === 0 ? 'bg-amber-600/20 text-amber-400' : 'bg-zinc-600/20 text-zinc-400'}`}>
+                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${groupIndex % 2 === 0 ? 'bg-amber-600/20 text-amber-400' : 'bg-[#2e4a65]/20 text-[#8fb3d1]'}`}>
                     {groupIndex % 2 === 0 ? 'A' : 'B'}
                   </span>
                   
                   {/* Position */}
-                  <span className="text-xs text-zinc-500 w-4">#{groupIndex + 1}</span>
+                  <span className="text-xs text-[#6b8fad] w-4">#{groupIndex + 1}</span>
                   
                   {editingGroup?.id === group.id ? (
                     <Input
                       value={editingGroup.name}
                       onChange={e => setEditingGroup({ ...editingGroup, name: e.target.value })}
-                      className="bg-[#1e3a5f]/50 border-zinc-600 flex-1"
+                      className="bg-[#1e3a5f]/50 border-[#2a4a6f] flex-1"
                       autoFocus
                     />
                   ) : (
                     <div className="flex-1">
                       <span className="text-white font-medium">{group.name}</span>
-                      <span className="text-zinc-400 ml-2 text-sm">({memberCount} members)</span>
+                      <span className="text-[#8fb3d1] ml-2 text-sm">({memberCount} members)</span>
                     </div>
                   )}
 
                   <div className="flex items-center gap-2">
-                    <Label className="text-zinc-300 text-sm">Non-Bogu</Label>
+                    <Label className="text-[#b8d4ec] text-sm">Non-Bogu</Label>
                     <Switch
                       checked={group.isNonBogu}
                       onCheckedChange={(checked) => updateGroup(group.id, { isNonBogu: checked })}
@@ -1526,7 +1526,7 @@ function GroupsManager({
                         size="icon"
                         variant="ghost"
                         onClick={() => setEditingGroup(null)}
-                        className="h-8 w-8 text-zinc-300"
+                        className="h-8 w-8 text-[#b8d4ec]"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -1537,7 +1537,7 @@ function GroupsManager({
                         size="icon"
                         variant="ghost"
                         onClick={() => setEditingGroup(group)}
-                        className="h-8 w-8 text-zinc-300 hover:text-white"
+                        className="h-8 w-8 text-[#b8d4ec] hover:text-white"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
@@ -1558,13 +1558,13 @@ function GroupsManager({
         </CardContent>
       </Card>
 
-      <Card className="bg-[#1e1e28] border-white/5 backdrop-blur-sm">
+      <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-white text-lg">Tournament Rules</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-zinc-300">
+        <CardContent className="space-y-4 text-[#b8d4ec]">
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-4 bg-[#1e1e28] rounded-lg">
+            <div className="p-4 bg-[#142130] rounded-lg">
               <h4 className="font-semibold text-white mb-2">Regular Groups (Bogu)</h4>
               <ul className="list-disc list-inside space-y-1 text-sm">
                 <li>First to 2 ippons wins</li>
@@ -1665,22 +1665,22 @@ function TournamentManager({
 
     if (!tournament || !tournament.groupOrder) {
     return (
-      <Card className="bg-[#1e1e28] border-white/5 backdrop-blur-sm">
+      <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-white">Tournament Setup</CardTitle>
-          <CardDescription className="text-zinc-300">
+          <CardDescription className="text-[#b8d4ec]">
             Generate a round-robin tournament. You can generate before selecting participants, then refresh to add them.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label className="text-zinc-300">Month</Label>
+              <Label className="text-[#b8d4ec]">Month</Label>
               <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+                <SelectTrigger className="bg-[#243a52]/50 border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+                <SelectContent className="bg-[#243a52]/50 border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
                   {MONTHS.map(m => (
                     <SelectItem key={m} value={m}>{m}</SelectItem>
                   ))}
@@ -1688,12 +1688,12 @@ function TournamentManager({
               </Select>
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">Year</Label>
+              <Label className="text-[#b8d4ec]">Year</Label>
               <Select value={selectedYear.toString()} onValueChange={v => setSelectedYear(parseInt(v))}>
-                <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+                <SelectTrigger className="bg-[#243a52]/50 border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+                <SelectContent className="bg-[#243a52]/50 border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
                   {[2024, 2025, 2026].map(y => (
                     <SelectItem key={y} value={y.toString()}>{y}</SelectItem>
                   ))}
@@ -1703,21 +1703,21 @@ function TournamentManager({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-zinc-800/50 rounded-xl p-4 text-center border border-white/5">
+            <div className="bg-[#1e3a5f]/30 rounded-xl p-4 text-center border border-white/5">
               <div className="text-3xl font-bold text-white">{state.members.length}</div>
-              <div className="text-sm text-zinc-300">Total Members</div>
+              <div className="text-sm text-[#b8d4ec]">Total Members</div>
             </div>
-            <div className="bg-zinc-800/50 rounded-xl p-4 text-center border border-white/5">
+            <div className="bg-[#1e3a5f]/30 rounded-xl p-4 text-center border border-white/5">
               <div className="text-3xl font-bold text-orange-400">
                 {state.members.filter(m => m.isParticipating).length}
               </div>
-              <div className="text-sm text-zinc-300">Participating</div>
+              <div className="text-sm text-[#b8d4ec]">Participating</div>
             </div>
-            <div className="bg-zinc-800/50 rounded-xl p-4 text-center border border-white/5">
+            <div className="bg-[#1e3a5f]/30 rounded-xl p-4 text-center border border-white/5">
               <div className="text-3xl font-bold text-white">{state.groups.length}</div>
-              <div className="text-sm text-zinc-300">Groups</div>
+              <div className="text-sm text-[#b8d4ec]">Groups</div>
             </div>
-            <div className="bg-zinc-800/50 rounded-xl p-4 text-center border border-white/5">
+            <div className="bg-[#1e3a5f]/30 rounded-xl p-4 text-center border border-white/5">
               <div className="text-3xl font-bold text-emerald-400">
                 {(() => {
                   const participants = state.members.filter(m => m.isParticipating)
@@ -1728,7 +1728,7 @@ function TournamentManager({
                   return total
                 })()}
               </div>
-              <div className="text-sm text-zinc-300">Est. Matches</div>
+              <div className="text-sm text-[#b8d4ec]">Est. Matches</div>
             </div>
           </div>
 
@@ -1741,7 +1741,7 @@ function TournamentManager({
                   <Badge 
                     key={g.id} 
                     variant="outline" 
-                    className={`${g.isNonBogu ? 'border-orange-500 text-orange-400' : 'border-zinc-600 text-zinc-300'}`}
+                    className={`${g.isNonBogu ? 'border-orange-500 text-orange-400' : 'border-[#2a4a6f] text-[#b8d4ec]'}`}
                   >
                     {g.name}: {count}
                   </Badge>
@@ -1770,12 +1770,12 @@ function TournamentManager({
 
   return (
     <div className="space-y-4">
-      <Card className="bg-[#1e1e28] border-white/5 backdrop-blur-sm">
+      <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <CardTitle className="text-white text-lg sm:text-xl">{tournament.name}</CardTitle>
-              <CardDescription className="text-zinc-400 text-sm">
+              <CardDescription className="text-[#8fb3d1] text-sm">
                 {tournament.month} {tournament.year}
               </CardDescription>
             </div>
@@ -1791,17 +1791,17 @@ function TournamentManager({
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <Progress value={(completedMatches / totalMatches) * 100} className="flex-1" />
-            <span className="text-zinc-300 text-sm">{completedMatches}/{totalMatches} matches</span>
+            <span className="text-[#b8d4ec] text-sm">{completedMatches}/{totalMatches} matches</span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:gap-4">
             <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg p-2 sm:p-3 text-center">
               <div className="text-xl sm:text-2xl font-bold text-amber-400">{courtAMatches.length}</div>
-              <div className="text-xs sm:text-sm text-zinc-400">Court A</div>
+              <div className="text-xs sm:text-sm text-[#8fb3d1]">Court A</div>
             </div>
             <div className="bg-[#1e3a5f]/30 border border-white/5 rounded-lg p-2 sm:p-3 text-center">
-              <div className="text-xl sm:text-2xl font-bold text-zinc-300">{courtBMatches.length}</div>
-              <div className="text-xs sm:text-sm text-zinc-400">Court B</div>
+              <div className="text-xl sm:text-2xl font-bold text-[#b8d4ec]">{courtBMatches.length}</div>
+              <div className="text-xs sm:text-sm text-[#8fb3d1]">Court B</div>
             </div>
           </div>
 
@@ -1812,14 +1812,14 @@ function TournamentManager({
                   <Play className="w-4 h-4 mr-2" />
                   Start Tournament
                 </Button>
-                <Button onClick={refreshTournamentParticipants} variant="outline" className="border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+                <Button onClick={refreshTournamentParticipants} variant="outline" className="border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Refresh Participants
                 </Button>
               </>
             )}
             {tournament.status === 'in_progress' && !isComplete && (
-              <Button onClick={refreshTournamentParticipants} variant="outline" size="sm" className="border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+              <Button onClick={refreshTournamentParticipants} variant="outline" size="sm" className="border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
                 <RefreshCw className="w-4 h-4 mr-1 sm:mr-2" />
                 <span className="hidden sm:inline">Update Participants</span>
                 <span className="sm:hidden">Refresh</span>
@@ -1845,29 +1845,29 @@ function TournamentManager({
         const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
         
         return (
-          <Card key={groupId} className={`border ${groupMatches[0]?.court === 'A' ? 'border-red-800/30' : 'border-zinc-700/30'}`}>
+          <Card key={groupId} className={`border ${groupMatches[0]?.court === 'A' ? 'border-red-800/30' : 'border-[#1e3a5f]/30'}`}>
             <CardHeader className="p-3">
               <div className="flex items-center justify-between">
                 {/* Left: Group info */}
                 <div className="flex items-center gap-2">
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${groupMatches[0]?.court === 'A' ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30' : 'bg-zinc-600/20 text-zinc-400 border border-zinc-600/30'}`}>
+                  <span className={`px-2 py-1 rounded text-xs font-semibold ${groupMatches[0]?.court === 'A' ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30' : 'bg-[#2e4a65]/20 text-[#8fb3d1] border border-[#2a4a6f]/30'}`}>
                     {groupMatches[0]?.court || 'A'}
                   </span>
                   <span className="text-white font-medium">{group?.name || groupId}</span>
                   {group?.isNonBogu && <span className="text-[10px] px-1.5 py-0.5 bg-orange-900/40 text-orange-300 rounded">判定</span>}
-                  <span className="text-xs text-zinc-500">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
+                  <span className="text-xs text-[#6b8fad]">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
                 </div>
                 
                 {/* Right: Court toggle */}
-                <div className="flex rounded-lg overflow-hidden border border-zinc-700">
+                <div className="flex rounded-lg overflow-hidden border border-[#1e3a5f]">
                   <button
-                    className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'A' ? 'bg-amber-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+                    className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'A' ? 'bg-amber-600 text-white' : 'bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]'}`}
                     onClick={() => setGroupCourt(groupId, 'A')}
                   >
                     A
                   </button>
                   <button
-                    className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'B' ? 'bg-zinc-600 text-white' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700/50'}`}
+                    className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'B' ? 'bg-[#2e4a65] text-white' : 'bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]/50'}`}
                     onClick={() => setGroupCourt(groupId, 'B')}
                   >
                     B
@@ -1885,16 +1885,16 @@ function TournamentManager({
                       <div 
                         key={match.id}
                         className={`p-2 sm:p-3 rounded-lg ${
-                          match.status === 'completed' ? 'bg-zinc-700/20' :
+                          match.status === 'completed' ? 'bg-[#243a52]/20' :
                           match.status === 'in_progress' ? 'bg-emerald-900/20 border border-emerald-700' :
-                          'bg-[#1e1e28]'
+                          'bg-[#142130]'
                         }`}
                       >
                         <div className="flex items-center gap-2">
                           {/* Match number and court badge */}
-                          <span className="text-zinc-500 text-xs w-5">#{idx + 1}</span>
+                          <span className="text-[#6b8fad] text-xs w-5">#{idx + 1}</span>
                           <button
-                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-amber-600 text-white' : 'bg-zinc-600 text-white'}`}
+                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-amber-600 text-white' : 'bg-[#2e4a65] text-white'}`}
                             onClick={() => swapMatchCourt(match.id)}
                           >
                             {match.court}
@@ -1907,7 +1907,7 @@ function TournamentManager({
                               <span className={`truncate ${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'}`}>
                                 {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}
                               </span>
-                              <span className="text-zinc-500 mx-1">vs</span>
+                              <span className="text-[#6b8fad] mx-1">vs</span>
                               <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
                               <span className={`truncate ${match.winner === 'player2' ? 'text-blue-100 font-semibold' : 'text-white'}`}>
                                 {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}
@@ -1917,7 +1917,7 @@ function TournamentManager({
                         </div>
                         {/* Status indicators */}
                         {match.status === 'completed' && (
-                          <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-zinc-700/50 text-zinc-300' : 'bg-zinc-700 text-zinc-400'}`}>
+                          <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-[#243a52]/50 text-[#b8d4ec]' : 'bg-[#243a52] text-[#8fb3d1]'}`}>
                             {match.winner === 'draw' ? 'Draw' : 
                              match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}` :
                              `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}`}
@@ -1952,8 +1952,8 @@ function StandingsView({
 
   if (!state.currentTournament) {
     return (
-      <Card className="bg-[#1e1e28] border-white/5 backdrop-blur-sm">
-        <CardContent className="p-8 text-center text-zinc-400">
+      <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
+        <CardContent className="p-8 text-center text-[#8fb3d1]">
           <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No tournament in progress</p>
           <p className="text-sm mt-2">Generate a tournament to see standings</p>
@@ -1972,7 +1972,7 @@ function StandingsView({
           variant={selectedGroup === 'all' ? 'default' : 'outline'}
           size="sm"
           onClick={() => setSelectedGroup('all')}
-          className={selectedGroup === 'all' ? 'bg-amber-600' : 'border-zinc-700'}
+          className={selectedGroup === 'all' ? 'bg-amber-600' : 'border-[#1e3a5f]'}
         >
           All Groups
         </Button>
@@ -1984,7 +1984,7 @@ function StandingsView({
               variant={selectedGroup === gId ? 'default' : 'outline'}
               size="sm"
               onClick={() => setSelectedGroup(gId)}
-              className={selectedGroup === gId ? 'bg-amber-600' : 'border-zinc-700'}
+              className={selectedGroup === gId ? 'bg-amber-600' : 'border-[#1e3a5f]'}
             >
               {group?.name || gId}
             </Button>
@@ -2000,7 +2000,7 @@ function StandingsView({
         if (standings.length === 0) return null
 
         return (
-          <Card key={groupId} className="bg-[#1e1e28] border-white/5 backdrop-blur-sm">
+          <Card key={groupId} className="bg-[#142130] border-white/5 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 {group?.name || groupId}
@@ -2011,16 +2011,16 @@ function StandingsView({
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
-                      <th className="text-left text-zinc-300 p-2 font-medium">#</th>
-                      <th className="text-left text-zinc-300 p-2 font-medium">Name</th>
-                      <th className="text-center text-zinc-300 p-2 font-medium">Pts</th>
-                      <th className="text-center text-zinc-300 p-2 font-medium">W</th>
-                      {!group?.isNonBogu && <th className="text-center text-zinc-300 p-2 font-medium">D</th>}
-                      <th className="text-center text-zinc-300 p-2 font-medium">L</th>
-                      {!group?.isNonBogu && <th className="text-center text-zinc-300 p-2 font-medium">Ippons</th>}
+                    <tr className="border-b border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
+                      <th className="text-left text-[#b8d4ec] p-2 font-medium">#</th>
+                      <th className="text-left text-[#b8d4ec] p-2 font-medium">Name</th>
+                      <th className="text-center text-[#b8d4ec] p-2 font-medium">Pts</th>
+                      <th className="text-center text-[#b8d4ec] p-2 font-medium">W</th>
+                      {!group?.isNonBogu && <th className="text-center text-[#b8d4ec] p-2 font-medium">D</th>}
+                      <th className="text-center text-[#b8d4ec] p-2 font-medium">L</th>
+                      {!group?.isNonBogu && <th className="text-center text-[#b8d4ec] p-2 font-medium">Ippons</th>}
                       {groupMembers.map(m => (
-                        <th key={m.id} className="text-center text-zinc-300 p-2 font-medium text-xs">
+                        <th key={m.id} className="text-center text-[#b8d4ec] p-2 font-medium text-xs">
                           {m.firstName.charAt(0)}{m.lastName.charAt(0)}
                         </th>
                       ))}
@@ -2028,15 +2028,15 @@ function StandingsView({
                   </thead>
                   <tbody>
                     {standings.map((standing, idx) => (
-                      <tr key={standing.playerId} className="border-b border-white/5 hover:bg-[#1e1e28]">
-                        <td className="p-2 text-zinc-400">{idx + 1}</td>
+                      <tr key={standing.playerId} className="border-b border-white/5 hover:bg-[#142130]">
+                        <td className="p-2 text-[#8fb3d1]">{idx + 1}</td>
                         <td className="p-2 text-white font-medium">{standing.playerName}</td>
                         <td className="p-2 text-center text-orange-400 font-bold">{standing.points}</td>
                         <td className="p-2 text-center text-green-400">{standing.wins}</td>
-                        {!group?.isNonBogu && <td className="p-2 text-center text-zinc-300">{standing.draws}</td>}
+                        {!group?.isNonBogu && <td className="p-2 text-center text-[#b8d4ec]">{standing.draws}</td>}
                         <td className="p-2 text-center text-red-400">{standing.losses}</td>
                         {!group?.isNonBogu && (
-                          <td className="p-2 text-center text-zinc-300">
+                          <td className="p-2 text-center text-[#b8d4ec]">
                             {standing.ipponsScored}-{standing.ipponsAgainst}
                           </td>
                         )}
@@ -2048,7 +2048,7 @@ function StandingsView({
                           let className = 'p-2 text-center '
                           if (result === 'W') className += 'text-green-400 bg-green-900/20'
                           else if (result === 'L') className += 'text-red-400 bg-red-900/20'
-                          else if (result === 'D') className += 'text-zinc-300 bg-zinc-700/50'
+                          else if (result === 'D') className += 'text-[#b8d4ec] bg-[#243a52]/50'
                           else className += 'text-zinc-600'
                           return <td key={m.id} className={className}>{result || '-'}</td>
                         })}
@@ -2148,8 +2148,8 @@ function HistoryView({
 
   if (history.length === 0 && !showImport) {
     return (
-      <Card className="bg-[#1e1e28] border-white/5 backdrop-blur-sm">
-        <CardContent className="p-8 text-center text-zinc-400">
+      <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
+        <CardContent className="p-8 text-center text-[#8fb3d1]">
           <History className="w-12 h-12 mx-auto mb-4 opacity-50" />
           <p>No tournament history</p>
           <p className="text-sm mt-2">Completed tournaments will appear here</p>
@@ -2167,15 +2167,15 @@ function HistoryView({
       <div className="flex justify-end">
         <Dialog open={showImport} onOpenChange={setShowImport}>
           <DialogTrigger asChild>
-            <Button variant="outline" className="border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+            <Button variant="outline" className="border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
               <Upload className="w-4 h-4 mr-2" />
               Import Past History
             </Button>
           </DialogTrigger>
-          <DialogContent className="bg-[#1e1e28] border-white/5 backdrop-blur-sm max-w-2xl">
+          <DialogContent className="bg-[#142130] border-white/5 backdrop-blur-sm max-w-2xl">
             <DialogHeader>
               <DialogTitle className="text-white">Import Tournament History</DialogTitle>
-              <DialogDescription className="text-zinc-300">
+              <DialogDescription className="text-[#b8d4ec]">
                 Import past tournament data from CSV/Excel. Format: Month,Year,GroupName,Rank,PlayerName,Points,Wins,Losses,Draws
               </DialogDescription>
             </DialogHeader>
@@ -2185,12 +2185,12 @@ function HistoryView({
       </div>
 
       {history.map(entry => (
-        <Card key={entry.id} className="bg-[#1e1e28] border-white/5 backdrop-blur-sm">
+        <Card key={entry.id} className="bg-[#142130] border-white/5 backdrop-blur-sm">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-white">{entry.name}</CardTitle>
-                <CardDescription className="text-zinc-300">{entry.date}</CardDescription>
+                <CardDescription className="text-[#b8d4ec]">{entry.date}</CardDescription>
               </div>
               <Button
                 size="icon"
@@ -2205,7 +2205,7 @@ function HistoryView({
           <CardContent>
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
               {entry.results.map(result => (
-                <div key={result.groupId} className="bg-[#1e1e28] rounded-lg p-4">
+                <div key={result.groupId} className="bg-[#142130] rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
                     <h4 className="text-white font-medium">{result.groupName}</h4>
                     {result.isNonBogu && <Badge className="bg-orange-900 text-orange-200 text-xs">Hantei</Badge>}
@@ -2215,7 +2215,7 @@ function HistoryView({
                       <div key={idx} className="flex items-center gap-2">
                         <span className={`w-6 text-center font-bold ${
                           idx === 0 ? 'text-orange-400' :
-                          idx === 1 ? 'text-zinc-300' :
+                          idx === 1 ? 'text-[#b8d4ec]' :
                           'text-amber-700'
                         }`}>
                           {idx + 1}
@@ -2260,7 +2260,7 @@ function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
           accept=".csv,.xlsx,.xls"
           ref={fileInputRef}
           onChange={handleFileUpload}
-          className="bg-zinc-800 border-zinc-600 focus:border-orange-500"
+          className="bg-[#1a2d42] border-[#2a4a6f] focus:border-orange-500"
         />
       </div>
       <div className="space-y-2">
@@ -2268,7 +2268,7 @@ function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
         <textarea
           value={importText}
           onChange={(e) => setImportText(e.target.value)}
-          className="w-full h-40 bg-zinc-700/50 border border-zinc-700 rounded-md p-3 text-white text-sm font-mono"
+          className="w-full h-40 bg-[#243a52]/50 border border-[#1e3a5f] rounded-md p-3 text-white text-sm font-mono"
           placeholder="Month,Year,GroupName,Rank,PlayerName,Points,Wins,Losses,Draws&#10;January,2025,Group A,1,John Doe,6,3,0,0&#10;January,2025,Group A,2,Jane Smith,4,2,1,0"
         />
       </div>
@@ -2305,7 +2305,7 @@ function AddMemberForm({
         <Input 
           value={firstName} 
           onChange={(e) => setFirstName(e.target.value)}
-          className="bg-zinc-800 border-zinc-600 focus:border-orange-500"
+          className="bg-[#1a2d42] border-[#2a4a6f] focus:border-orange-500"
           placeholder="Enter first name"
         />
       </div>
@@ -2314,17 +2314,17 @@ function AddMemberForm({
         <Input 
           value={lastName} 
           onChange={(e) => setLastName(e.target.value)}
-          className="bg-zinc-800 border-zinc-600 focus:border-orange-500"
+          className="bg-[#1a2d42] border-[#2a4a6f] focus:border-orange-500"
           placeholder="Enter last name"
         />
       </div>
       <div className="space-y-2">
         <Label>Group</Label>
         <Select value={group} onValueChange={setGroup}>
-          <SelectTrigger className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+          <SelectTrigger className="bg-[#243a52]/50 border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
             <SelectValue placeholder="Select group" />
           </SelectTrigger>
-          <SelectContent className="bg-zinc-700/50 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+          <SelectContent className="bg-[#243a52]/50 border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
             {groups.map(g => (
               <SelectItem key={g.id} value={g.id}>
                 {g.name} {g.isNonBogu && '(Hantei)'}
@@ -2537,15 +2537,15 @@ function CourtkeeperPortal({
   // No tournament or not started
   if (!tournament || tournament.status !== 'in_progress') {
     return (
-      <div className="min-h-screen bg-[#0f0f14] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#0a1017] flex items-center justify-center p-4">
         <Toaster theme="dark" position="top-center" />
-        <Card className="bg-[#16161d] border-zinc-700 max-w-md w-full">
+        <Card className="bg-[#0f1a24] border-[#1e3a5f] max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-white text-center">No Active Tournament</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
             <img src="/renbu-logo.png" alt="Renbu" className="w-20 h-20 mx-auto opacity-50" />
-            <p className="text-zinc-300">
+            <p className="text-[#b8d4ec]">
               {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament has been generated yet'}
             </p>
             <Button onClick={onSwitchPortal} variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-500/10">
@@ -2561,7 +2561,7 @@ function CourtkeeperPortal({
   const player2 = currentMatch ? getMemberById(currentMatch.player2Id) : null
 
   const scoreTypes = [
-    { id: 1, name: 'Men', short: 'M', color: 'bg-zinc-600 hover:bg-zinc-700' },
+    { id: 1, name: 'Men', short: 'M', color: 'bg-[#2e4a65] hover:bg-[#243a52]' },
     { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600 hover:bg-green-700' },
     { id: 3, name: 'Do', short: 'D', color: 'bg-[#1e3a5f] hover:bg-[#162d4a]' },
     { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600 hover:bg-cyan-700' },
@@ -2583,7 +2583,7 @@ function CourtkeeperPortal({
         <ScrollArea className="h-[280px]">
           <div className="space-y-2 pr-2">
             {pendingMatches.length === 0 && (
-              <p className="text-zinc-400 text-sm text-center py-4">No pending matches</p>
+              <p className="text-[#8fb3d1] text-sm text-center py-4">No pending matches</p>
             )}
             {pendingMatches.map((match, idx) => {
               const p1 = getMemberById(match.player1Id)
@@ -2595,18 +2595,18 @@ function CourtkeeperPortal({
                 <div
                   key={match.id}
                   className={`p-3 rounded-lg ${
-                    isCurrent ? 'bg-emerald-900/30 border border-emerald-700' : 'bg-[#1e1e28]'
+                    isCurrent ? 'bg-emerald-900/30 border border-emerald-700' : 'bg-[#142130]'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="text-zinc-400 text-xs">#{idx + 1}</span>
-                    <Badge variant="outline" className="text-xs border-[#4a7ab0] bg-[#1e1e28] hover:bg-[#1e3a5f]/50">{matchGroup?.name || '?'}</Badge>
+                    <span className="text-[#8fb3d1] text-xs">#{idx + 1}</span>
+                    <Badge variant="outline" className="text-xs border-[#4a7ab0] bg-[#142130] hover:bg-[#1e3a5f]/50">{matchGroup?.name || '?'}</Badge>
                     {isCurrent && <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />}
                   </div>
                   <div className="text-sm text-white text-center">
                     <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
                     <span className="font-medium ml-1">{p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'} {p1?.lastName?.charAt(0) || ''}.</span>
-                    <span className="text-zinc-400 mx-2">vs</span>
+                    <span className="text-[#8fb3d1] mx-2">vs</span>
                     <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
                     <span className="font-medium ml-1">{p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'} {p2?.lastName?.charAt(0) || ''}.</span>
                   </div>
@@ -2642,22 +2642,22 @@ function CourtkeeperPortal({
             {completedMatches.length > 0 && (
               <>
                 <Separator className="my-2 bg-[#1e3a5f]/50" />
-                <p className="text-xs text-zinc-400">Completed ({completedMatches.length})</p>
+                <p className="text-xs text-[#8fb3d1]">Completed ({completedMatches.length})</p>
                 {completedMatches.slice(-5).reverse().map(match => {
                   const p1 = getMemberById(match.player1Id)
                   const p2 = getMemberById(match.player2Id)
                   return (
-                    <div key={match.id} className="p-2 bg-zinc-700/20 rounded text-sm text-center">
+                    <div key={match.id} className="p-2 bg-[#243a52]/20 rounded text-sm text-center">
                       <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
                       <span className={match.winner === 'player1' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
                         {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'} {p1?.lastName?.charAt(0) || ''}.
                       </span>
-                      <span className="text-zinc-400 mx-2">vs</span>
+                      <span className="text-[#8fb3d1] mx-2">vs</span>
                       <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
                       <span className={match.winner === 'player2' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
                         {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'} {p2?.lastName?.charAt(0) || ''}.
                       </span>
-                      <span className="text-zinc-300 ml-2">
+                      <span className="text-[#b8d4ec] ml-2">
                         {match.isHantei ? '(判定)' : `${match.player1Score.length}-${match.player2Score.length}`}
                       </span>
                     </div>
@@ -2680,16 +2680,16 @@ function CourtkeeperPortal({
     
     return (
       <Dialog open={showWinnerPrompt.show} onOpenChange={() => setShowWinnerPrompt({ show: false, winner: null })}>
-        <DialogContent className="bg-[#16161d] border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+        <DialogContent className="bg-[#0f1a24] border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
           <DialogHeader>
             <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
           </DialogHeader>
-          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-amber-600' : 'bg-zinc-600/30 border-2 border-[#4a7ab0]'}`}>
+          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-amber-600' : 'bg-[#2e4a65]/30 border-2 border-[#4a7ab0]'}`}>
             <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-100'}`} />
             <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-100'}`}>
               {winnerPlayer ? formatDisplayName(winnerPlayer, state.members, state.useFirstNamesOnly) : '?'}
             </p>
-            <p className="text-zinc-300 mt-2">{winnerColor === 'red' ? 'AKA' : 'SHIRO'} Wins!</p>
+            <p className="text-[#b8d4ec] mt-2">{winnerColor === 'red' ? 'AKA' : 'SHIRO'} Wins!</p>
           </div>
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setShowWinnerPrompt({ show: false, winner: null })}>
@@ -2708,12 +2708,12 @@ function CourtkeeperPortal({
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f14]">
+    <div className="min-h-screen bg-[#0a1017]">
       <Toaster theme="dark" position="top-center" />
       <WinnerPromptDialog />
       
       {/* Header */}
-      <header className="bg-[#16161d] border-b border-white/5 backdrop-blur-md px-4 py-2">
+      <header className="bg-[#0f1a24] border-b border-white/5 backdrop-blur-md px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
@@ -2727,7 +2727,7 @@ function CourtkeeperPortal({
               size="sm"
               variant={selectedCourt === 'A' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('A')}
-              className={selectedCourt === 'A' ? 'bg-amber-600 hover:bg-red-700' : 'border-zinc-600'}
+              className={selectedCourt === 'A' ? 'bg-amber-600 hover:bg-red-700' : 'border-[#2a4a6f]'}
             >
               Court A
             </Button>
@@ -2735,7 +2735,7 @@ function CourtkeeperPortal({
               size="sm"
               variant={selectedCourt === 'B' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('B')}
-              className={selectedCourt === 'B' ? 'bg-[#1e3a5f]/50 hover:bg-zinc-500' : 'border-zinc-600'}
+              className={selectedCourt === 'B' ? 'bg-[#1e3a5f]/50 hover:bg-zinc-500' : 'border-[#2a4a6f]'}
             >
               Court B
             </Button>
@@ -2746,7 +2746,7 @@ function CourtkeeperPortal({
 
       <main className={`p-4 ${!isMobile ? 'mr-80' : ''}`}>
         {!currentMatch ? (
-          <Card className="bg-zinc-800 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+          <Card className="bg-[#1a2d42] border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
             <CardContent className="p-8 text-center">
               <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
               <p className="text-white text-xl">
@@ -2754,7 +2754,7 @@ function CourtkeeperPortal({
                   ? `No matches assigned to Court ${selectedCourt}`
                   : `All Court ${selectedCourt} matches complete!`}
               </p>
-              <p className="text-zinc-300 mt-2">
+              <p className="text-[#b8d4ec] mt-2">
                 {currentMatches.length === 0 
                   ? "Matches may be assigned to the other court"
                   : "Switch to the other court or view results"}
@@ -2772,18 +2772,18 @@ function CourtkeeperPortal({
         ) : (
           <>
             {/* Timer Section */}
-            <Card className={`bg-zinc-800 border-2 mb-4 ${
-              timerSeconds >= state.timerTarget ? 'border-amber-600 animate-pulse' : 'border-zinc-700'
+            <Card className={`bg-[#1a2d42] border-2 mb-4 ${
+              timerSeconds >= state.timerTarget ? 'border-amber-600 animate-pulse' : 'border-[#1e3a5f]'
             }`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <Timer className="w-5 h-5 text-zinc-300" />
-                    <span className="text-zinc-300">
+                    <Timer className="w-5 h-5 text-[#b8d4ec]" />
+                    <span className="text-[#b8d4ec]">
                       {isHantei ? 'Hantei Match (3 min)' : 'Regular Match (3 min)'}
                     </span>
                   </div>
-                  <Badge variant="outline" className="border-[#4a7ab0]/60 bg-zinc-800/50 border border-zinc-700/30 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+                  <Badge variant="outline" className="border-[#4a7ab0]/60 bg-[#1e3a5f]/30 border border-[#1e3a5f]/30 bg-[#142130] hover:bg-[#1e3a5f]/50">
                     {group?.name || 'Unknown Group'}
                   </Badge>
                 </div>
@@ -2807,7 +2807,7 @@ function CourtkeeperPortal({
                     {timerRunning ? <Pause className="w-5 h-5 mr-2 w-5 h-5 mr-2" /> : <Play />}
                     {timerRunning ? 'Pause' : 'Start'}
                   </Button>
-                  <Button size="lg" variant="outline" onClick={resetTimer} className="border-[#4a7ab0] bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+                  <Button size="lg" variant="outline" onClick={resetTimer} className="border-[#4a7ab0] bg-[#142130] hover:bg-[#1e3a5f]/50">
                     <RotateCcw className="w-5 h-5 mr-2" />
                     Reset
                   </Button>
@@ -2818,7 +2818,7 @@ function CourtkeeperPortal({
             {/* Scoring Section */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               {/* Player 1 (Red/Aka) */}
-              <Card className="bg-zinc-800 border-2 border-red-800">
+              <Card className="bg-[#1a2d42] border-2 border-red-800">
                 <CardHeader className="pb-2 bg-red-900/30">
                   <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
@@ -2872,7 +2872,7 @@ function CourtkeeperPortal({
                         <Button
                           size="lg"
                           variant="outline"
-                          className="border-zinc-600 h-14"
+                          className="border-[#2a4a6f] h-14"
                           onClick={() => undoScore('player1')}
                           disabled={currentMatch.player1Score.length === 0}
                         >
@@ -2885,7 +2885,7 @@ function CourtkeeperPortal({
               </Card>
 
               {/* Player 2 (White/Shiro) */}
-              <Card className="bg-zinc-800 border-2 border-[#4a7ab0]">
+              <Card className="bg-[#1a2d42] border-2 border-[#4a7ab0]">
                 <CardHeader className="pb-2 bg-[#1e3a5f]/30">
                   <CardTitle className="text-blue-100 text-center flex items-center justify-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-white inline-block"></span>
@@ -2939,7 +2939,7 @@ function CourtkeeperPortal({
                         <Button
                           size="lg"
                           variant="outline"
-                          className="border-zinc-600 h-14"
+                          className="border-[#2a4a6f] h-14"
                           onClick={() => undoScore('player2')}
                           disabled={currentMatch.player2Score.length === 0}
                         >
@@ -2954,7 +2954,7 @@ function CourtkeeperPortal({
 
             {/* Match Actions */}
             {!isHantei && (
-              <Card className="bg-zinc-800 border-zinc-600 bg-[#1e1e28] hover:bg-[#1e3a5f]/50">
+              <Card className="bg-[#1a2d42] border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]/50">
                 <CardContent className="p-4">
                   <div className="grid grid-cols-3 gap-2">
                     <Button
@@ -2968,7 +2968,7 @@ function CourtkeeperPortal({
                       size="lg"
                       onClick={() => completeMatch('draw')}
                       variant="outline"
-                      className="border-zinc-600 h-14"
+                      className="border-[#2a4a6f] h-14"
                     >
                       Draw
                     </Button>
@@ -2989,7 +2989,7 @@ function CourtkeeperPortal({
 
       {/* Court Queue Sidebar (Desktop) */}
       {!isMobile && (
-        <aside className="fixed right-0 top-0 w-80 h-screen bg-[#16161d] border-l border-zinc-700 pt-14 overflow-y-auto">
+        <aside className="fixed right-0 top-0 w-80 h-screen bg-[#0f1a24] border-l border-[#1e3a5f] pt-14 overflow-y-auto">
           <div className="p-4 space-y-6">
             {renderCourtQueue('A', courtAMatches)}
             <Separator className="bg-[#1e3a5f]/50" />
@@ -3008,7 +3008,7 @@ function CourtkeeperPortal({
               <Menu className="w-6 h-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="bg-[#16161d] border-zinc-600 backdrop-blur-md h-[70vh]">
+          <SheetContent side="bottom" className="bg-[#0f1a24] border-[#2a4a6f] backdrop-blur-md h-[70vh]">
             <SheetHeader>
               <SheetTitle className="text-white">Match Queues</SheetTitle>
             </SheetHeader>
