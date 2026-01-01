@@ -43,12 +43,17 @@ interface Match {
   groupId: string
   player1Id: string
   player2Id: string
-  player1Score: number[]
+  player1Score: number[]  // Score IDs: 1=Men, 2=Kote, 3=Do, 4=Tsuki, 5=Hansoku (opponent got 2)
   player2Score: number[]
+  player1Hansoku: number  // Count of hansoku for player 1
+  player2Hansoku: number  // Count of hansoku for player 2
   winner: string | null
   status: 'pending' | 'in_progress' | 'completed'
   court: 'A' | 'B'
   isHantei: boolean
+  matchType: 'sanbon' | 'ippon'  // sanbon = first to 2, ippon = first to 1
+  timerDuration: number  // in seconds
+  actualDuration?: number  // recorded when match completes
   orderIndex: number
 }
 
