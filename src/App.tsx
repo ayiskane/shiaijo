@@ -926,7 +926,28 @@ function AdminPortal({
               {state.members.filter(m => m.isParticipating).length} participating
             </Badge>
           </div>
-          <Button variant="ghost" size="sm" onClick={onSwitchPortal}>
+          <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={async () => {
+                const saved = await loadFromStorage()
+                if (saved) {
+                  setState(prev => ({
+                    ...prev,
+                    members: saved.members || prev.members,
+                    groups: saved.groups || prev.groups,
+                    guestRegistry: saved.guestRegistry || prev.guestRegistry,
+                    currentTournament: saved.currentTournament,
+                    history: saved.history || prev.history,
+                  }))
+                  toast.success('Data synced from server')
+                }
+              }}
+              title="Sync data from server"
+            >
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" onClick={onSwitchPortal}>
             Switch Portal
           </Button>
         </div>
@@ -1609,9 +1630,15 @@ function TournamentManager({
               </>
             )}
             {tournament.status === 'in_progress' && !isComplete && (
-              <Badge variant="outline" className="border-emerald-500 text-emerald-400 px-4 py-2">
-                Tournament In Progress
-              </Badge>
+              <>
+                <Badge variant="outline" className="border-emerald-500 text-emerald-400 px-4 py-2">
+                  Tournament In Progress
+                </Badge>
+                <Button onClick={refreshTournamentParticipants} variant="outline" className="border-slate-700">
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Update Participants
+                </Button>
+              </>
             )}
             {isComplete && (
               <Button onClick={archiveTournament} className="bg-orange-600 hover:bg-orange-700">
