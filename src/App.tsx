@@ -2618,7 +2618,7 @@ function CourtkeeperPortal({
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-2">
-          <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-blue-100'}`}>
+          <h3 className={`font-semibold ${court === 'A' ? 'text-amber-400' : 'text-[#7ab0e0]'}`}>
             Court {court} ({pendingMatches.length} pending)
           </h3>
         </div>
@@ -2637,7 +2637,7 @@ function CourtkeeperPortal({
                 <div
                   key={match.id}
                   className={`p-3 rounded-lg ${
-                    isCurrent ? 'bg-emerald-900/30 border border-emerald-700' : 'bg-[#142130]'
+                    isCurrent ? 'bg-amber-900/20 border-l-4 border-amber-500' : 'bg-[#142130]'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
@@ -2655,7 +2655,7 @@ function CourtkeeperPortal({
                   <div className="flex gap-1 mt-2 justify-center">
                     <Button 
                       size="sm" 
-                      variant="ghost" className="h-8 w-8 h-7 text-xs"
+                      variant="ghost" className="h-7 w-auto px-2 text-xs"
                       onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
                     >
                       <ArrowLeftRight className="w-3 h-3 mr-1" />
@@ -2663,7 +2663,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="ghost" className="h-8 w-8 h-7 text-xs"
+                      variant="ghost" className="h-7 w-auto px-2 text-xs"
                       onClick={() => moveInQueue(match.id, 'up')}
                       disabled={idx === 0}
                     >
@@ -2671,7 +2671,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="ghost" className="h-8 w-8 h-7 text-xs"
+                      variant="ghost" className="h-7 w-auto px-2 text-xs"
                       onClick={() => moveInQueue(match.id, 'down')}
                       disabled={idx === pendingMatches.length - 1}
                     >
@@ -2727,8 +2727,8 @@ function CourtkeeperPortal({
             <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
           </DialogHeader>
           <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-amber-600' : 'bg-[#2e4a65]/30 border-2 border-[#4a7ab0]'}`}>
-            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-100'}`} />
-            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-100'}`}>
+            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-amber-400' : 'text-[#7ab0e0]'}`} />
+            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-amber-400' : 'text-[#7ab0e0]'}`}>
               {winnerPlayer ? formatDisplayName(winnerPlayer, state.members, state.useFirstNamesOnly) : '?'}
             </p>
             <p className="text-[#b8d4ec] mt-2">{winnerColor === 'red' ? 'AKA' : 'SHIRO'} Wins!</p>
