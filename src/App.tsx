@@ -437,9 +437,19 @@ export default function App() {
       pollRef.current = setInterval(async () => {
         const saved = await loadFromStorage()
         if (saved) {
+          // Ensure tournament has all required properties
+          let tournament = saved.currentTournament
+          if (tournament) {
+            tournament = {
+              ...tournament,
+              matches: tournament.matches || [],
+              groups: tournament.groups || [],
+              groupOrder: tournament.groupOrder || [],
+            }
+          }
           setState(prev => ({
             ...prev,
-            currentTournament: saved.currentTournament,
+            currentTournament: tournament,
             currentMatchIndexA: saved.currentMatchIndexA ?? prev.currentMatchIndexA,
             currentMatchIndexB: saved.currentMatchIndexB ?? prev.currentMatchIndexB,
             timerSecondsA: saved.timerSecondsA ?? prev.timerSecondsA,
