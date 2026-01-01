@@ -2035,16 +2035,21 @@ function TournamentManager({
             </div>
             <Badge className={`text-sm px-3 py-1 ${
               tournament.status === 'setup' ? 'bg-yellow-600' :
-              tournament.status === 'in_progress' ? 'bg-emerald-600' :
-              'bg-[#2e4a65]'
+              tournament.status === 'in_progress' ? (isComplete ? 'bg-emerald-600' : 'bg-amber-500') :
+              'bg-emerald-600'
             }`}>
-              {tournament.status === 'setup' ? 'Setup' : tournament.status === 'in_progress' ? 'In Progress' : 'Completed'}
+              {tournament.status === 'setup' ? 'Setup' : tournament.status === 'in_progress' ? (isComplete ? 'Complete!' : 'In Progress') : 'Completed'}
             </Badge>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
-            <Progress value={(completedMatches / totalMatches) * 100} className="flex-1" />
+            <div className="flex-1 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div 
+                className={`h-full transition-all ${isComplete ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                style={{ width: `${(completedMatches / totalMatches) * 100}%` }}
+              />
+            </div>
             <span className="text-[#b8d4ec] text-sm">{completedMatches}/{totalMatches} matches</span>
           </div>
 
