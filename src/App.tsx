@@ -440,7 +440,7 @@ export default function App() {
         const saved = await loadFromStorage()
         if (saved) {
           // Ensure tournament has all required properties
-          let tournament = saved.currentTournament
+          let tournament = sanitizeTournament(saved.currentTournament)
           if (tournament) {
             tournament = {
               ...tournament,
@@ -1066,7 +1066,11 @@ function AdminPortal({
           onClick={async () => {
             const saved = await loadFromStorage()
             if (saved) {
-              setState(prev => ({ ...prev, ...saved }))
+              setState(prev => ({ 
+                ...prev, 
+                ...saved,
+                currentTournament: sanitizeTournament(saved.currentTournament)
+              }))
               toast.success('Synced')
             }
           }}
@@ -1108,10 +1112,7 @@ function AdminPortal({
                 onClick={async () => {
                   const saved = await loadFromStorage()
                   if (saved) {
-                    let tournament = saved.currentTournament
-                    if (tournament) {
-                      tournament = { ...tournament, matches: tournament.matches || [], groups: tournament.groups || [], groupOrder: tournament.groupOrder || [] }
-                    }
+                    const tournament = sanitizeTournament(saved.currentTournament)
                     setState(prev => ({ ...prev, members: saved.members || prev.members, groups: saved.groups || prev.groups, guestRegistry: saved.guestRegistry || prev.guestRegistry, currentTournament: tournament, history: saved.history || prev.history }))
                     toast.success('Synced')
                   }
