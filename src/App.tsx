@@ -1168,7 +1168,8 @@ function AdminPortal({
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
-            </div>
+              </div>
+            </details>
 
             {/* Members List */}
             <Card className="bg-slate-800/30 border-slate-700/50">
