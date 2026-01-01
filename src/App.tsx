@@ -1362,8 +1362,8 @@ function GroupsManager({
       <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
         <CardHeader>
           <CardTitle className="text-white">Group Settings</CardTitle>
-          <CardDescription className="text-slate-300">
-            Configure groups and their tournament order. Drag groups to reorder - odd positions (1, 3, 5) play on Court A, even positions (2, 4, 6) play on Court B. Non-bogu groups use hantei judging.
+          <CardDescription className="text-slate-400 text-sm">
+            Reorder groups to set court assignments. Position 1,3,5 → Court A | Position 2,4,6 → Court B
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -1594,36 +1594,7 @@ function TournamentManager({
     toast.success(`All ${getGroupById(groupId)?.name || 'group'} matches moved to Court ${court}`)
   }
 
-  const moveGroupOrder = (groupId: string, direction: 'up' | 'down') => {
-    if (!tournament) return
-    const groupOrder = [...(tournament.groupOrder || [])]
-    const idx = groupOrder.indexOf(groupId)
-    if (idx === -1) return
-    
-    const newIdx = direction === 'up' ? idx - 1 : idx + 1
-    if (newIdx < 0 || newIdx >= groupOrder.length) return
-    
-    const temp = groupOrder[idx]
-    groupOrder[idx] = groupOrder[newIdx]
-    groupOrder[newIdx] = temp
-    
-    // Reassign courts based on new order
-    const updatedMatches = (tournament.matches || []).map(m => {
-      const newGroupIdx = groupOrder.indexOf(m.groupId)
-      return { ...m, court: newGroupIdx % 2 === 0 ? 'A' : 'B' as 'A' | 'B' }
-    })
-    
-    setState(prev => ({
-      ...prev,
-      currentTournament: {
-        ...tournament,
-        groupOrder,
-        matches: updatedMatches
-      }
-    }))
-  }
-
-  const moveMatchInQueue = (matchId: string, direction: 'up' | 'down') => {
+    const moveMatchInQueue = (matchId: string, direction: 'up' | 'down') => {
     if (!tournament) return
     const matches = [...tournament.matches]
     const idx = matches.findIndex(m => m.id === matchId)
