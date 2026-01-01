@@ -1072,6 +1072,14 @@ function AdminPortal({
                   className="w-64 bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500/50"
                 />
               </div>
+              <div className="flex items-center gap-2 px-3 py-1.5 bg-zinc-800/50 rounded-lg">
+                <span className="text-xs text-zinc-500">First names</span>
+                <Switch 
+                  checked={state.useFirstNamesOnly}
+                  onCheckedChange={(checked) => setState(prev => ({ ...prev, useFirstNamesOnly: checked }))}
+                  className="data-[state=checked]:bg-orange-500"
+                />
+              </div>
               <button 
                 onClick={async () => {
                   const saved = await loadFromStorage()
