@@ -2072,58 +2072,52 @@ function TournamentManager({
         const group = getGroupById(groupId)
         const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
         const totalGroups = (tournament.groupOrder || []).length
+        const isCourtA = groupMatches[0]?.court === 'A'
         
         return (
-          <Card key={groupId} className={`border ${groupMatches[0]?.court === 'A' ? 'border-red-800/30' : 'border-[#1e3a5f]/30'}`}>
-            <CardHeader className="p-3">
-              <div className="flex items-center justify-between">
-                {/* Left: Group info */}
-                <div className="flex items-center gap-2">
-                  <div className="flex flex-col gap-0.5">
-                    <button onClick={() => moveGroupOrder(groupId, 'up')} disabled={gIdx === 0} className="px-1.5 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▲</button>
-                    <button onClick={() => moveGroupOrder(groupId, 'down')} disabled={gIdx === totalGroups - 1} className="px-1.5 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▼</button>
-                  </div>
-                  <span className={`px-2 py-1 rounded text-xs font-semibold ${groupMatches[0]?.court === 'A' ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30' : 'bg-[#1e3a5f]/30 text-[#7ab0e0] border border-[#1e3a5f]/50'}`}>
-                    {groupMatches[0]?.court || 'A'}
-                  </span>
-                  <span className="text-white font-medium">{group?.name || groupId}</span>
-                  {group?.isNonBogu && <span className="text-[10px] px-1.5 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
-                  <span className="text-xs text-[#6b8fad]">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
+          <Card key={groupId} className={`border-l-2 ${isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'}`}>
+            <CardHeader className="p-2 pb-1">
+              {/* Row 1: Group name and progress */}
+              <div className="flex items-center gap-2">
+                <div className="flex gap-0.5">
+                  <button onClick={() => moveGroupOrder(groupId, 'up')} disabled={gIdx === 0} className="px-1 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▲</button>
+                  <button onClick={() => moveGroupOrder(groupId, 'down')} disabled={gIdx === totalGroups - 1} className="px-1 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▼</button>
                 </div>
-                
-                {/* Right: Group settings */}
-                <div className="flex items-center gap-2">
-                  <select
-                    value={groupMatches[0]?.timerDuration || 180}
-                    onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
-                    className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
-                  >
-                    {(tournament.timerOptions || [120, 180, 240, 300]).map(secs => (
-                      <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
-                    ))}
-                  </select>
-                  <select
-                    value={groupMatches[0]?.matchType || 'sanbon'}
-                    onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
-                    className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
-                  >
-                    <option value="sanbon">Sanbon</option>
-                    <option value="ippon">Ippon</option>
-                  </select>
-                  <div className="flex rounded-lg overflow-hidden border border-[#1e3a5f]">
-                    <button
-                      className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'A' ? 'bg-amber-600 text-white' : 'bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]'}`}
-                      onClick={() => setGroupCourt(groupId, 'A')}
-                    >
-                      A
-                    </button>
-                    <button
-                      className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'B' ? 'bg-[#1e3a5f] text-white' : 'bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]'}`}
-                      onClick={() => setGroupCourt(groupId, 'B')}
-                    >
-                      B
-                    </button>
-                  </div>
+                <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+                  {isCourtA ? 'A' : 'B'}
+                </span>
+                <span className="text-white font-medium text-sm">{group?.name || groupId}</span>
+                {group?.isNonBogu && <span className="text-[9px] px-1 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
+                <span className="text-[10px] text-[#6b8fad] ml-auto">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
+              </div>
+              {/* Row 2: Settings */}
+              <div className="flex items-center gap-1 mt-1">
+                <select
+                  value={groupMatches[0]?.timerDuration || 180}
+                  onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
+                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#b8d4ec]"
+                >
+                  {(tournament.timerOptions || [120, 180, 240, 300]).map(secs => (
+                    <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
+                  ))}
+                </select>
+                <select
+                  value={groupMatches[0]?.matchType || 'sanbon'}
+                  onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
+                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#b8d4ec]"
+                >
+                  <option value="sanbon">Sanbon</option>
+                  <option value="ippon">Ippon</option>
+                </select>
+                <div className="flex rounded overflow-hidden border border-[#1e3a5f] ml-auto">
+                  <button
+                    className={`px-2 py-0.5 text-[10px] font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    onClick={() => setGroupCourt(groupId, 'A')}
+                  >A</button>
+                  <button
+                    className={`px-2 py-0.5 text-[10px] font-bold ${!isCourtA ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    onClick={() => setGroupCourt(groupId, 'B')}
+                  >B</button>
                 </div>
               </div>
             </CardHeader>
@@ -2147,7 +2141,7 @@ function TournamentManager({
                         <div className="flex items-center gap-2">
                           <span className="text-[#6b8fad] text-xs w-5">#{idx + 1}</span>
                           <button
-                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-amber-600' : 'bg-[#1e3a5f]'}`}
+                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}
                             onClick={() => swapMatchCourt(match.id)}
                           >
                             {match.court}
