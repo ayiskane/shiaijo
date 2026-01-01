@@ -1828,8 +1828,7 @@ function TournamentManager({
                               </span>
                             </div>
                           </div>
-                        {/* Match reorder controls removed - use court badge to swap */}
-                        )}
+                        {/* Match reorder controls removed */}
                         {match.status === 'completed' && (
                           <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-slate-700/50 text-slate-300' : 'bg-slate-700 text-slate-400'}`}>
                             {match.winner === 'draw' ? 'Draw' : 
