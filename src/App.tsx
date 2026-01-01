@@ -2038,7 +2038,7 @@ function TournamentManager({
                     {groupMatches[0]?.court || 'A'}
                   </span>
                   <span className="text-white font-medium">{group?.name || groupId}</span>
-                  {group?.isNonBogu && <span className="text-[10px] px-1.5 py-0.5 bg-orange-900/40 text-orange-300 rounded">判定</span>}
+                  {group?.isNonBogu && <span className="text-[10px] px-1.5 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
                   <span className="text-xs text-[#6b8fad]">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
                 </div>
                 
@@ -2059,8 +2059,8 @@ function TournamentManager({
                     onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
                     className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
                   >
-                    <option value="sanbon">三本</option>
-                    <option value="ippon">一本</option>
+                    <option value="sanbon">Sanbon</option>
+                    <option value="ippon">Ippon</option>
                   </select>
                   <div className="flex rounded-lg overflow-hidden border border-[#1e3a5f]">
                     <button
@@ -2137,8 +2137,8 @@ function TournamentManager({
                                 onChange={(e) => updateMatchSettings(match.id, 'matchType', e.target.value)}
                                 className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#8fb3d1] w-12"
                               >
-                                <option value="sanbon">三本</option>
-                                <option value="ippon">一本</option>
+                                <option value="sanbon">Sanbon</option>
+                                <option value="ippon">Ippon</option>
                               </select>
                             </div>
                           )}
@@ -2149,14 +2149,14 @@ function TournamentManager({
                           <span className="text-[10px] text-[#6b8fad]">
                             {match.status === 'completed' && match.actualDuration ? 
                               `${Math.floor(match.actualDuration / 60)}:${(match.actualDuration % 60).toString().padStart(2, '0')}` : 
-                              `${timerMins}m · ${isIppon ? '一本' : '三本'}`
+                              `${timerMins}m · ${isIppon ? 'Ippon' : 'Sanbon'}`
                             }
                           </span>
                           {match.status === 'completed' && (
                             <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/30 text-red-400' : match.winner === 'player2' ? 'bg-blue-900/30 text-blue-200' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}>
                               {match.winner === 'draw' ? 'Draw' : 
-                               match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}` :
-                               `Win ${match.isHantei ? '(判定)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}`}
+                               match.winner === 'player1' ? `Win ${match.isHantei ? '(Hantei)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}` :
+                               `Win ${match.isHantei ? '(Hantei)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}`}
                             </span>
                           )}
                           {match.status === 'in_progress' && (
@@ -2913,35 +2913,6 @@ function CourtkeeperPortal({
     }
   }
 
-  // Render score display with circled letters
-  const renderScoreDisplay = (scores: number[], opponentHansoku: number) => {
-    const hansokuPoints = Math.floor(opponentHansoku / 2)
-    const allPoints = [
-      ...scores.map(s => scoreTypes.find(t => t.id === s)),
-      ...Array(hansokuPoints).fill(scoreTypes.find(t => t.id === 5))
-    ].filter(Boolean)
-    
-    return (
-      <div className="flex items-center gap-1">
-        {allPoints.map((type, i) => (
-          <span key={i} className="text-2xl">{type?.circle}</span>
-        ))}
-        {allPoints.length === 0 && <span className="text-[#6b8fad] text-sm">No points</span>}
-      </div>
-    )
-  }
-
-  // Render hansoku indicator
-  const renderHansokuIndicator = (count: number, max: number) => {
-    return (
-      <div className="flex items-center gap-1">
-        {Array(count).fill(0).map((_, i) => (
-          <span key={i} className="text-amber-500">△</span>
-        ))}
-        {count < max && <span className="text-[#4a6a8a]">△</span>}
-      </div>
-    )
-  }
 
   // No tournament or not started
   if (!tournament || tournament.status !== 'in_progress') {
@@ -3064,7 +3035,7 @@ function CourtkeeperPortal({
           <div className="flex items-center gap-2">
             <span className="text-slate-400 text-sm">{group?.name || 'No Group'}</span>
             {group?.isNonBogu && (
-              <span className="text-[10px] px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 font-medium">判定</span>
+              <span className="text-[10px] px-2 py-0.5 rounded bg-orange-500/20 text-orange-400 font-medium">Hantei</span>
             )}
           </div>
           {!group?.isNonBogu && (
@@ -3084,8 +3055,8 @@ function CourtkeeperPortal({
                 onChange={(e) => updateMatchSettings('matchType', e.target.value)}
                 className="bg-slate-800 border-0 rounded px-2 py-1 text-xs text-slate-300"
               >
-                <option value="sanbon">三本</option>
-                <option value="ippon">一本</option>
+                <option value="sanbon">Sanbon</option>
+                <option value="ippon">Ippon</option>
               </select>
             </div>
           )}
@@ -3144,7 +3115,7 @@ function CourtkeeperPortal({
                 <div className="text-center">
                   {renderHansokuTriangles(p1Hansoku, p1MaxHansoku)}
                 </div>
-                <span className="text-slate-600 text-xs">反則</span>
+                <span className="text-slate-600 text-xs">Hansoku</span>
                 <div className="text-center">
                   {renderHansokuTriangles(p2Hansoku, p2MaxHansoku)}
                 </div>
@@ -3189,7 +3160,7 @@ function CourtkeeperPortal({
                   disabled={p1Hansoku >= p1MaxHansoku}
                   className="flex-1 h-10 rounded-lg text-sm font-medium border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30 transition-all"
                 >
-                  反則 ▲
+                  Hansoku ▲
                 </button>
                 <button
                   onClick={() => removeLastScore('player1')}
@@ -3231,7 +3202,7 @@ function CourtkeeperPortal({
                   disabled={p2Hansoku >= p2MaxHansoku}
                   className="flex-1 h-10 rounded-lg text-sm font-medium border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30 transition-all"
                 >
-                  反則 ▲
+                  Hansoku ▲
                 </button>
               </div>
             </div>
@@ -3246,14 +3217,14 @@ function CourtkeeperPortal({
               className="h-20 rounded-xl font-bold text-lg bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 transition-all flex items-center justify-center gap-2"
             >
               <Award className="w-6 h-6" />
-              AKA 勝
+              AKA Wins
             </button>
             <button
               onClick={() => completeMatch('player2')}
               className="h-20 rounded-xl font-bold text-lg bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 transition-all flex items-center justify-center gap-2"
             >
               <Award className="w-6 h-6" />
-              SHIRO 勝
+              SHIRO Wins
             </button>
           </div>
         )}
@@ -3303,20 +3274,20 @@ function CourtkeeperPortal({
               disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
               className="py-3 rounded-lg font-bold text-sm bg-red-600/80 hover:bg-red-600 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              AKA 勝
+              AKA Wins
             </button>
             <button
               onClick={() => completeMatch('draw')}
               className="py-3 rounded-lg font-bold text-sm bg-slate-700 hover:bg-slate-600 transition-all"
             >
-              引分
+              Draw
             </button>
             <button
               onClick={() => completeMatch('player2')}
               disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
               className="py-3 rounded-lg font-bold text-sm bg-slate-500/80 hover:bg-slate-500 disabled:opacity-30 disabled:cursor-not-allowed transition-all"
             >
-              SHIRO 勝
+              SHIRO Wins
             </button>
           </div>
         )}
