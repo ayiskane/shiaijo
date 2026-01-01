@@ -1131,6 +1131,24 @@ function AdminPortal({
                   </Button>
                 ))}
                 <Button 
+                  variant="outline" 
+                  size="sm"
+                  className="border-orange-700 bg-orange-950/30 hover:bg-orange-900/50 text-orange-400 h-8 text-xs"
+                  onClick={() => {
+                    const nonBoguGroupIds = state.groups.filter(g => g.isNonBogu).map(g => g.id)
+                    setState(prev => ({
+                      ...prev,
+                      members: prev.members.map(m => ({
+                        ...m,
+                        isParticipating: nonBoguGroupIds.includes(m.group) ? true : m.isParticipating
+                      }))
+                    }))
+                    toast.success('Selected Non-Bogu members')
+                  }}
+                >
+                  Non-Bogu
+                </Button>
+                <Button 
                   variant="ghost" 
                   size="sm" 
                   onClick={deselectAll}
