@@ -518,7 +518,7 @@ export default function App() {
           </div>
           
           <Card 
-            className="bg-slate-800 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-700/50/80 transition-all duration-200"
+            className="bg-slate-800 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-700/80 transition-all duration-200"
             onClick={() => setPortal('admin')}
           >
             <CardHeader>
@@ -533,7 +533,7 @@ export default function App() {
           </Card>
           
           <Card 
-            className="bg-slate-800 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-700/50/80 transition-all duration-200"
+            className="bg-slate-800 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-700/80 transition-all duration-200"
             onClick={() => setPortal('courtkeeper')}
           >
             <CardHeader>
@@ -1681,7 +1681,7 @@ function TournamentManager({
                       <div 
                         key={match.id}
                         className={`flex items-center gap-3 p-3 rounded-lg ${
-                          match.status === 'completed' ? 'bg-slate-700/50/20' :
+                          match.status === 'completed' ? 'bg-slate-700/20' :
                           match.status === 'in_progress' ? 'bg-emerald-900/20 border border-emerald-800' :
                           'bg-slate-800/40'
                         }`}
@@ -2655,7 +2655,7 @@ function CourtkeeperPortal({
                   const p1 = getMemberById(match.player1Id)
                   const p2 = getMemberById(match.player2Id)
                   return (
-                    <div key={match.id} className="p-2 bg-slate-700/50/20 rounded text-sm text-center">
+                    <div key={match.id} className="p-2 bg-slate-700/20 rounded text-sm text-center">
                       <span className="text-red-400">●</span>
                       <span className={match.winner === 'player1' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
                         {p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.
@@ -2692,7 +2692,7 @@ function CourtkeeperPortal({
           <DialogHeader>
             <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
           </DialogHeader>
-          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-red-600' : 'bg-slate-600/50/30 border-2 border-slate-400'}`}>
+          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-red-600' : 'bg-slate-600/30 border-2 border-slate-400'}`}>
             <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-white'}`} />
             <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-white'}`}>
               {winnerPlayer?.firstName} {winnerPlayer?.lastName}
@@ -2894,7 +2894,7 @@ function CourtkeeperPortal({
 
               {/* Player 2 (White/Shiro) */}
               <Card className="bg-slate-800 border-2 border-slate-500">
-                <CardHeader className="pb-2 bg-slate-600/50/30">
+                <CardHeader className="pb-2 bg-slate-600/30">
                   <CardTitle className="text-white text-center flex items-center justify-center gap-2">
                     <span className="text-2xl">○</span>
                     White (Shiro)
