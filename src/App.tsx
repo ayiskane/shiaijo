@@ -1957,9 +1957,10 @@ function TournamentManager({
       </Card>
 
       {/* Match Schedule by Group with Court Assignment */}
-      {(tournament.groupOrder || []).map(groupId => {
+      {(tournament.groupOrder || []).map((groupId, gIdx) => {
         const group = getGroupById(groupId)
         const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
+        const totalGroups = (tournament.groupOrder || []).length
         
         return (
           <Card key={groupId} className={`border ${groupMatches[0]?.court === 'A' ? 'border-red-800/30' : 'border-[#1e3a5f]/30'}`}>
