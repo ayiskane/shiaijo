@@ -2457,7 +2457,7 @@ function CourtkeeperPortal({
         setState(prev => ({ ...prev, timerSecondsB: 0, timerRunningB: false }))
       }
     }
-  }, [currentMatch?.id, selectedCourt])
+  }, [currentMatch?.id, selectedCourt, lastMatchId, setState])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
