@@ -432,7 +432,7 @@ const useDeviceDetection = () => {
 
 // Main App Component
 export default function App() {
-  const [portal, setPortal] = useState<'select' | 'admin' | 'courtkeeper'>('select')
+  const [portal, setPortal] = useState<'select' | 'admin' | 'courtkeeper' | 'spectator'>('select')
   const [state, setState] = useState<AppState>(defaultState)
   const [loading, setLoading] = useState(true)
   const isMobile = useDeviceDetection()
@@ -558,49 +558,53 @@ export default function App() {
 
   if (portal === 'select') {
     return (
-      <div className="min-h-screen bg-[#0a1017] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
         <Toaster theme="dark" position="top-center" />
-        <div className="max-w-md w-full space-y-8">
-          <div className="text-center">
-            <div className="mx-auto mb-4 flex items-center justify-center">
-              <ShiaijoLogo size={100} glow />
+        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-12 max-w-md w-full shadow-2xl">
+          {/* Logo */}
+          <div className="text-center mb-8">
+            <div className="flex justify-center mb-4">
+              <ShiaijoLogo size={120} glow />
             </div>
-            <p className="text-[#6b8fad]">Tournament Manager</p>
+            <p className="text-[#6b8fad] text-sm tracking-wide">Kendo Tournament Manager</p>
           </div>
           
+          {/* Main Buttons */}
           <div className="space-y-4">
             <button 
               onClick={() => setPortal('admin')}
-              className="w-full bg-[#142130] border border-white/5 rounded-2xl p-5 text-left hover:border-orange-500/50 hover:bg-[#252530] transition-all group"
+              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center group-hover:from-orange-500/30 group-hover:to-orange-600/20 transition-colors">
-                  <Settings className="w-6 h-6 text-orange-500" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Admin Portal</h2>
-                  <p className="text-sm text-[#6b8fad]">Manage members, groups & tournament</p>
-                </div>
-              </div>
+              <span>🏟️</span> Enter Admin Portal
             </button>
             
             <button 
               onClick={() => setPortal('courtkeeper')}
-              className="w-full bg-[#142130] border border-white/5 rounded-2xl p-5 text-left hover:border-[#2a4a6f]/50 hover:bg-[#252530] transition-all group"
+              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] text-[#b8d4ec] border border-white/10 hover:from-[#2a4a6f] hover:to-[#1e3a5f] hover:text-white transition-all flex items-center justify-center gap-3"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-[#2a4a6f]/20 to-[#1e3a5f]/10 flex items-center justify-center group-hover:from-[#2a4a6f]/30 group-hover:to-[#1e3a5f]/20 transition-colors">
-                  <Swords className="w-6 h-6 text-[#2a4a6f]" />
-                </div>
-                <div>
-                  <h2 className="text-lg font-semibold text-white">Courtkeeper Portal</h2>
-                  <p className="text-sm text-[#6b8fad]">Run matches & keep score</p>
-                </div>
-              </div>
+              <span>⚔️</span> Courtkeeper Mode
             </button>
           </div>
-
-          <p className="text-center text-xs text-[#4a6a8a]">Renbu Dojo</p>
+          
+          {/* Divider */}
+          <div className="flex items-center my-6">
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
+            <span className="px-4 text-xs text-[#3d5a78] uppercase tracking-widest">or</span>
+            <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
+          </div>
+          
+          {/* Spectator Button */}
+          <button 
+            onClick={() => setPortal('spectator')}
+            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-transparent text-[#6b8fad] border border-[#1e3a5f] hover:bg-[#1e3a5f]/30 hover:border-[#2a4a6f] hover:text-[#8fb3d1] transition-all flex items-center justify-center gap-3"
+          >
+            <span>📱</span> Join as Spectator
+          </button>
+          
+          {/* Footer */}
+          <p className="text-center text-xs text-[#3d5a78] mt-8">
+            Powered by <span className="text-orange-500">Renbu Dojo</span>
+          </p>
         </div>
       </div>
     )
@@ -619,6 +623,17 @@ export default function App() {
     )
   }
 
+  if (portal === 'spectator') {
+    return (
+      <SpectatorPortal 
+        state={state}
+        onSwitchPortal={() => setPortal('select')}
+        getMemberById={getMemberById}
+        getGroupById={getGroupById}
+      />
+    )
+  }
+
   return (
     <CourtkeeperPortal 
       state={state} 
@@ -628,6 +643,163 @@ export default function App() {
       getMemberById={getMemberById}
       getGroupById={getGroupById}
     />
+  )
+}
+
+// Spectator Portal Component
+function SpectatorPortal({ 
+  state, 
+  onSwitchPortal,
+  getMemberById,
+  getGroupById
+}: { 
+  state: AppState
+  onSwitchPortal: () => void
+  getMemberById: (id: string) => Member | undefined
+  getGroupById: (id: string) => Group | undefined
+}) {
+  const tournament = state.currentTournament
+  
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017]">
+      {/* Header */}
+      <header className="bg-[#0f1419]/90 backdrop-blur-sm border-b border-white/5 px-4 py-3 sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ShiaijoLogo size={36} glow />
+            <div>
+              <h1 className="text-white font-semibold">Live Tournament</h1>
+              <p className="text-xs text-[#6b8fad]">Spectator View</p>
+            </div>
+          </div>
+          <button 
+            onClick={onSwitchPortal}
+            className="text-xs text-[#6b8fad] hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/5"
+          >
+            ← Back
+          </button>
+        </div>
+      </header>
+      
+      <main className="max-w-4xl mx-auto p-4 space-y-6">
+        {/* Tournament Status */}
+        {tournament ? (
+          <>
+            <Card className="bg-[#142130]/80 border-white/5">
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-white text-lg">Tournament Status</CardTitle>
+                  {tournament.isLive && (
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
+                      <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2"></span>
+                      LIVE
+                    </Badge>
+                  )}
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-3 gap-4 text-center">
+                  <div className="bg-[#0a1017]/50 rounded-xl p-4">
+                    <p className="text-3xl font-bold text-white">{tournament.matches?.filter(m => m.status === 'completed').length || 0}</p>
+                    <p className="text-xs text-[#6b8fad]">Completed</p>
+                  </div>
+                  <div className="bg-[#0a1017]/50 rounded-xl p-4">
+                    <p className="text-3xl font-bold text-orange-400">{tournament.matches?.filter(m => m.status === 'in-progress').length || 0}</p>
+                    <p className="text-xs text-[#6b8fad]">In Progress</p>
+                  </div>
+                  <div className="bg-[#0a1017]/50 rounded-xl p-4">
+                    <p className="text-3xl font-bold text-[#6b8fad]">{tournament.matches?.filter(m => m.status === 'pending').length || 0}</p>
+                    <p className="text-xs text-[#6b8fad]">Remaining</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+            
+            {/* Current Matches */}
+            <Card className="bg-[#142130]/80 border-white/5">
+              <CardHeader>
+                <CardTitle className="text-white text-lg flex items-center gap-2">
+                  <Swords className="w-5 h-5 text-orange-400" />
+                  Current Matches
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                {tournament.matches?.filter(m => m.status === 'in-progress').length === 0 ? (
+                  <p className="text-[#6b8fad] text-center py-8">No matches in progress</p>
+                ) : (
+                  tournament.matches?.filter(m => m.status === 'in-progress').map(match => {
+                    const player1 = getMemberById(match.player1Id)
+                    const player2 = getMemberById(match.player2Id)
+                    const group = getGroupById(match.groupId)
+                    return (
+                      <div key={match.id} className="bg-[#0a1017]/50 rounded-xl p-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="text-xs text-[#6b8fad]">{group?.name} • Court {match.court}</span>
+                          <Badge className="bg-orange-500/20 text-orange-400 text-xs">LIVE</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 text-center">
+                            <p className="text-white font-medium">{player1?.firstName} {player1?.lastName}</p>
+                            <p className="text-3xl font-bold text-white mt-1">{match.score1}</p>
+                          </div>
+                          <div className="px-4 text-[#4a6b8a]">VS</div>
+                          <div className="flex-1 text-center">
+                            <p className="text-white font-medium">{player2?.firstName} {player2?.lastName}</p>
+                            <p className="text-3xl font-bold text-white mt-1">{match.score2}</p>
+                          </div>
+                        </div>
+                      </div>
+                    )
+                  })
+                )}
+              </CardContent>
+            </Card>
+            
+            {/* Recent Results */}
+            <Card className="bg-[#142130]/80 border-white/5">
+              <CardHeader>
+                <CardTitle className="text-white text-lg flex items-center gap-2">
+                  <Trophy className="w-5 h-5 text-yellow-400" />
+                  Recent Results
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                {tournament.matches?.filter(m => m.status === 'completed').slice(-5).reverse().map(match => {
+                  const player1 = getMemberById(match.player1Id)
+                  const player2 = getMemberById(match.player2Id)
+                  const winner = match.score1 > match.score2 ? player1 : match.score2 > match.score1 ? player2 : null
+                  return (
+                    <div key={match.id} className="flex items-center justify-between bg-[#0a1017]/30 rounded-lg px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <span className={`font-medium ${match.score1 > match.score2 ? 'text-green-400' : 'text-white'}`}>
+                          {player1?.firstName} {player1?.lastName}
+                        </span>
+                        <span className="text-[#4a6b8a] text-sm">{match.score1} - {match.score2}</span>
+                        <span className={`font-medium ${match.score2 > match.score1 ? 'text-green-400' : 'text-white'}`}>
+                          {player2?.firstName} {player2?.lastName}
+                        </span>
+                      </div>
+                      {winner && <CheckCircle2 className="w-4 h-4 text-green-400" />}
+                    </div>
+                  )
+                })}
+                {tournament.matches?.filter(m => m.status === 'completed').length === 0 && (
+                  <p className="text-[#6b8fad] text-center py-4">No completed matches yet</p>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <Card className="bg-[#142130]/80 border-white/5">
+            <CardContent className="py-16 text-center">
+              <ShiaijoLogo size={80} />
+              <h2 className="text-xl text-white mt-6 mb-2">No Active Tournament</h2>
+              <p className="text-[#6b8fad]">Check back when a tournament is in progress</p>
+            </CardContent>
+          </Card>
+        )}
+      </main>
+    </div>
   )
 }
 
