@@ -22,7 +22,7 @@ import {
   ArrowLeftRight, Timer, Award
 } from 'lucide-react'
 
-// Types - v2
+// Types
 interface Member {
   id: string
   firstName: string
