@@ -18,7 +18,7 @@ import {
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus,
   Circle, CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Timer, Award, ChevronLeft, Layers
+  ArrowLeftRight, Timer, Award, ChevronLeft
 } from 'lucide-react'
 
 // Types
@@ -477,7 +477,7 @@ export default function App() {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <Layers className="w-10 h-10 text-white" />
+              <img src="/renbu-logo.png" alt="Renbu" className="w-12 h-12" />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Shiaijo</h1>
             <p className="text-zinc-500">Tournament Manager</p>
@@ -501,11 +501,11 @@ export default function App() {
             
             <button 
               onClick={() => setPortal('courtkeeper')}
-              className="w-full bg-[#1e1e28] border border-white/5 rounded-2xl p-5 text-left hover:border-purple-500/50 hover:bg-[#252530] transition-all group"
+              className="w-full bg-[#1e1e28] border border-white/5 rounded-2xl p-5 text-left hover:border-indigo-500/50 hover:bg-[#252530] transition-all group"
             >
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/10 flex items-center justify-center group-hover:from-purple-500/30 group-hover:to-purple-600/20 transition-colors">
-                  <Swords className="w-6 h-6 text-purple-500" />
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500/20 to-indigo-600/10 flex items-center justify-center group-hover:from-indigo-500/30 group-hover:to-indigo-600/20 transition-colors">
+                  <Swords className="w-6 h-6 text-indigo-500" />
                 </div>
                 <div>
                   <h2 className="text-lg font-semibold text-white">Courtkeeper Portal</h2>
@@ -879,7 +879,7 @@ function AdminPortal({
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
-              <Layers className="w-5 h-5 text-white" />
+              <img src="/renbu-logo.png" alt="Renbu" className="w-6 h-6" />
             </div>
             {!sidebarCollapsed && (
               <div>
@@ -950,7 +950,7 @@ function AdminPortal({
         <div className="p-4 border-t border-white/5">
           <button 
             onClick={onSwitchPortal}
-            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 rounded-xl flex items-center justify-center gap-2 font-medium transition ${sidebarCollapsed ? 'px-0' : ''}`}
+            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 rounded-xl flex items-center justify-center gap-2 font-medium transition ${sidebarCollapsed ? 'px-0' : ''}`}
           >
             <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
             {!sidebarCollapsed && <span>Courtkeeper</span>}
@@ -970,7 +970,7 @@ function AdminPortal({
             <div className="p-4 border-b border-white/5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                  <Layers className="w-5 h-5 text-white" />
+                  <img src="/renbu-logo.png" alt="Renbu" className="w-6 h-6" />
                 </div>
                 <div>
                   <h1 className="font-bold text-white">Shiaijo</h1>
@@ -1004,7 +1004,7 @@ function AdminPortal({
             <div className="p-4 border-t border-white/5">
               <button 
                 onClick={() => { setMobileNavOpen(false); onSwitchPortal(); }}
-                className="w-full py-3 px-4 text-sm bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center gap-2 font-medium text-white"
+                className="w-full py-3 px-4 text-sm bg-gradient-to-r from-indigo-600 to-indigo-700 rounded-xl flex items-center justify-center gap-2 font-medium text-white"
               >
                 <ArrowLeftRight className="w-4 h-4" />
                 <span>Courtkeeper</span>
@@ -1014,7 +1014,7 @@ function AdminPortal({
         </Sheet>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-            <Layers className="w-4 h-4 text-white" />
+            <img src="/renbu-logo.png" alt="Renbu" className="w-5 h-5" />
           </div>
           <span className="font-semibold">Shiaijo</span>
         </div>
@@ -1272,7 +1272,7 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
       <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
         <Dialog open={showAddGuest} onOpenChange={setShowAddGuest}>
           <DialogTrigger asChild>
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button className="bg-indigo-600 hover:bg-indigo-700">
               <Plus className="w-4 h-4 mr-2" />Add Guest
             </Button>
           </DialogTrigger>
@@ -1309,7 +1309,7 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
                             const last = (document.getElementById('guest-last') as HTMLInputElement)?.value
                             const dojo = (document.getElementById('guest-dojo') as HTMLInputElement)?.value
                             if (first && last) { onAddGuest(first, last, state.groups[0]?.id || '', dojo); setShowAddGuest(false); }
-                          }} className="bg-purple-600 hover:bg-purple-700">Add Guest</Button>
+                          }} className="bg-indigo-600 hover:bg-indigo-700">Add Guest</Button>
                         </div>
                       </div>
           </DialogContent>
@@ -2538,7 +2538,7 @@ function CourtkeeperPortal({
   const scoreTypes = [
     { id: 1, name: 'Men', short: 'M', color: 'bg-zinc-600 hover:bg-zinc-700' },
     { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600 hover:bg-green-700' },
-    { id: 3, name: 'Do', short: 'D', color: 'bg-purple-600 hover:bg-purple-700' },
+    { id: 3, name: 'Do', short: 'D', color: 'bg-indigo-600 hover:bg-indigo-700' },
     { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600 hover:bg-cyan-700' },
     { id: 5, name: 'Hansoku', short: 'H', color: 'bg-yellow-600 hover:bg-yellow-700' },
   ]
