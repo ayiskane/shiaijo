@@ -2857,15 +2857,18 @@ function CourtkeeperPortal({
   const p1EffectiveScore = getEffectiveScore(p1Score, p2Hansoku)
   const p2EffectiveScore = getEffectiveScore(p2Score, p1Hansoku)
 
-  // Calculate max hansoku allowed (if opponent has points, max is 2 less per point)
-  const getMaxHansoku = () => {
-    // In kendo, you can always get hansoku even if it loses you the match
-    // Max 4 per player (hansoku-make = automatic loss at 4)
-    return 4
+  // Calculate max hansoku allowed based on opponent's score
+  // If opponent has 0 points: you can have up to 4 hansoku
+  // If opponent has 1 point: you can have up to 2 hansoku (2 more = opponent wins)
+  // If opponent has 2 points: game over
+  const getMaxHansoku = (opponentEffectiveScore: number) => {
+    const pointsOpponentNeeds = winTarget - opponentEffectiveScore
+    if (pointsOpponentNeeds <= 0) return 0 // Game already over
+    return Math.min(4, pointsOpponentNeeds * 2)
   }
 
-  const p1MaxHansoku = getMaxHansoku()
-  const p2MaxHansoku = getMaxHansoku()
+  const p1MaxHansoku = getMaxHansoku(p2EffectiveScore)
+  const p2MaxHansoku = getMaxHansoku(p1EffectiveScore)
 
   const addScore = (player: 'player1' | 'player2', scoreType: number) => {
     const matchId = currentMatch?.id
@@ -3246,20 +3249,16 @@ function CourtkeeperPortal({
             </div>
           </div>
           
-          {/* Hansoku indicator - only show remaining (odd) hansoku */}
-          {(p1Hansoku % 2 === 1 || p2Hansoku % 2 === 1) && (
-            <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-slate-700/30 text-[10px]">
-              <div className="flex items-center gap-1">
-                {p1Hansoku % 2 === 1 && <span className="text-yellow-400">▲</span>}
-                {p1Hansoku % 2 === 0 && <span className="text-slate-700">▲</span>}
-              </div>
-              <span className="text-slate-600">Hansoku</span>
-              <div className="flex items-center gap-1">
-                {p2Hansoku % 2 === 1 && <span className="text-yellow-400">▲</span>}
-                {p2Hansoku % 2 === 0 && <span className="text-slate-700">▲</span>}
-              </div>
+          {/* Hansoku indicator - fixed layout, always centered */}
+          <div className="flex items-center justify-center mt-2 pt-2 border-t border-slate-700/30 text-[10px]">
+            <div className="w-12 flex justify-end">
+              {p1Hansoku % 2 === 1 && <span className="text-yellow-400">▲</span>}
             </div>
-          )}
+            <span className="text-slate-600 mx-2">Hansoku</span>
+            <div className="w-12 flex justify-start">
+              {p2Hansoku % 2 === 1 && <span className="text-yellow-400">▲</span>}
+            </div>
+          </div>
         </div>
 
         {/* Score Buttons - Fixed size, not stretched */}
