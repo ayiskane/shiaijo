@@ -14,28 +14,91 @@ import { Switch } from '@/components/ui/switch'
 import { Toaster, toast } from 'sonner'
 
 // Renbu Dojo Logo SVG Component - Orange fill with black strokes
-// Shiaijo Logo - Traditional Japanese style with hanko seal
-const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolean }) => (
-  <svg 
-    width={size} 
-    height={size} 
-    viewBox="0 0 48 48"
-    style={glow ? { filter: 'drop-shadow(0 0 8px rgba(196, 30, 58, 0.6))' } : {}}
-  >
-    {/* Dark background */}
-    <rect width="48" height="48" rx="8" fill="#0a0f1a"/>
-    
-    {/* Red Hanko Seal */}
-    <rect x="4" y="4" width="12" height="16" rx="1.5" fill="#c41e3a"/>
-    <text x="10" y="12" fontFamily="serif" fontSize="5" fill="#f5e6d3" textAnchor="middle" fontWeight="bold">剣</text>
-    <text x="10" y="18" fontFamily="serif" fontSize="5" fill="#f5e6d3" textAnchor="middle" fontWeight="bold">道</text>
-    
-    {/* Main characters 試合 */}
-    <text x="24" y="18" fontFamily="serif" fontSize="14" fill="#f5f0e6" textAnchor="middle">試</text>
-    <text x="24" y="34" fontFamily="serif" fontSize="14" fill="#f5f0e6" textAnchor="middle">合</text>
-    <text x="24" y="46" fontFamily="serif" fontSize="10" fill="#f5f0e6" textAnchor="middle" opacity="0.7">場</text>
-  </svg>
-)
+// Shiaijo Logo - Minimalist frame style with Renbu logo behind
+const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolean }) => {
+  const scale = size / 100
+  return (
+    <svg 
+      width={size * 1.8} 
+      height={size} 
+      viewBox="0 0 180 100"
+      style={glow ? { filter: 'drop-shadow(0 0 10px rgba(245, 240, 230, 0.3))' } : {}}
+    >
+      {/* Renbu logo behind - half visible on left, very subtle */}
+      <g transform="translate(-25, 5)" opacity="0.08">
+        <circle cx="50" cy="50" r="42" fill="#f5f0e6"/>
+        {/* Simplified Renbu spokes */}
+        <g fill="#0a0f1a">
+          <path d="M50,8 L53,45 L47,45 Z"/>
+          <path d="M50,92 L53,55 L47,55 Z"/>
+          <path d="M8,50 L45,47 L45,53 Z"/>
+          <path d="M92,50 L55,47 L55,53 Z"/>
+          <path d="M20,20 L48,46 L44,50 Z"/>
+          <path d="M80,80 L52,54 L56,50 Z"/>
+          <path d="M80,20 L54,46 L50,44 Z"/>
+          <path d="M20,80 L46,54 L50,56 Z"/>
+        </g>
+      </g>
+      
+      {/* Vertical English text "SHIAIJO" on left */}
+      <g transform="translate(35, 12)" fill="#f5f0e6" opacity="0.7">
+        <text x="0" y="0" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">S</text>
+        <text x="0" y="11" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">H</text>
+        <text x="0" y="22" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">I</text>
+        <text x="0" y="33" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">A</text>
+        <text x="0" y="44" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">I</text>
+        <text x="0" y="55" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">J</text>
+        <text x="0" y="66" fontFamily="'Arial Narrow', Arial, sans-serif" fontSize="8" letterSpacing="1" fontWeight="300">O</text>
+      </g>
+      
+      {/* Main rectangle frame with rough edges */}
+      <g transform="translate(55, 5)">
+        {/* Outer frame - slightly imperfect rectangle */}
+        <path 
+          d="M2,0 L58,0.5 L59,1 L60,90 L58.5,91 L1,90.5 L0.5,89 L0,2 Z" 
+          fill="none" 
+          stroke="#f5f0e6" 
+          strokeWidth="1.5"
+          opacity="0.9"
+        />
+        
+        {/* Inner content area */}
+        <g transform="translate(30, 8)">
+          {/* 試 */}
+          <text 
+            x="0" 
+            y="0" 
+            fontFamily="ShiaijoCalligraphy, 'Yuji Syuku', serif" 
+            fontSize="24" 
+            fill="#f5f0e6" 
+            textAnchor="middle"
+          >試</text>
+          
+          {/* 合 */}
+          <text 
+            x="0" 
+            y="28" 
+            fontFamily="ShiaijoCalligraphy, 'Yuji Syuku', serif" 
+            fontSize="24" 
+            fill="#f5f0e6" 
+            textAnchor="middle"
+          >合</text>
+          
+          {/* 場 */}
+          <text 
+            x="0" 
+            y="56" 
+            fontFamily="ShiaijoCalligraphy, 'Yuji Syuku', serif" 
+            fontSize="24" 
+            fill="#f5f0e6" 
+            textAnchor="middle"
+          >場</text>
+        </g>
+      </g>
+    </svg>
+  )
+}
+
 
 const RenbuLogo = ({ size = 48, glow = false, className = '' }: { size?: number; glow?: boolean; className?: string }) => (
   <svg 
@@ -639,10 +702,9 @@ export default function App() {
         <Toaster theme="dark" position="top-center" />
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
-            <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center">
-              <ShiaijoLogo size={80} glow />
+            <div className="mx-auto mb-4 flex items-center justify-center">
+              <ShiaijoLogo size={100} glow />
             </div>
-            <h1 className="text-4xl font-bold text-white mb-2" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</h1>
             <p className="text-[#6b8fad]">Tournament Manager</p>
           </div>
           
@@ -1069,15 +1131,13 @@ function AdminPortal({
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col fixed h-full bg-[#0f1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
         <div className="p-4 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0">
-              <ShiaijoLogo size={40} glow />
-            </div>
-            {!sidebarCollapsed && (
-              <div>
-                <h1 className="font-bold text-xl" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</h1>
-                <p className="text-xs text-[#6b8fad]">Admin Portal</p>
+          <div className="flex items-center">
+            {sidebarCollapsed ? (
+              <div className="w-10 h-10 flex items-center justify-center">
+                <span className="text-xl" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試</span>
               </div>
+            ) : (
+              <ShiaijoLogo size={45} glow />
             )}
           </div>
         </div>
@@ -1191,15 +1251,10 @@ function AdminPortal({
           </SheetTrigger>
           <SheetContent side="left" className="bg-[#0f1a24] border-[#162d4a] w-72 p-0">
             <div className="p-4 border-b border-white/5">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl flex items-center justify-center">
-                  <ShiaijoLogo size={40} glow />
-                </div>
-                <div>
-                  <h1 className="font-bold text-white text-lg" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</h1>
-                  <p className="text-xs text-[#6b8fad]">Admin Portal</p>
-                </div>
+              <div className="flex items-center">
+                <ShiaijoLogo size={50} glow />
               </div>
+              <p className="text-xs text-[#6b8fad] mt-2">Admin Portal</p>
             </div>
             <nav className="py-4">
               {[
@@ -1236,11 +1291,8 @@ function AdminPortal({
             </div>
           </SheetContent>
         </Sheet>
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl flex items-center justify-center">
-            <ShiaijoLogo size={32} glow />
-          </div>
-          <span className="font-semibold text-lg" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
+        <div className="flex items-center">
+          <ShiaijoLogo size={38} glow />
         </div>
         <button 
           onClick={async () => {
