@@ -2638,16 +2638,20 @@ function CourtkeeperPortal({
     const completedMatches = matches.filter(m => m.status === 'completed')
     
     return (
-      <div className="space-y-2">
-        <div className="flex items-center justify-between mb-2">
+      <div className="space-y-3">
+        <div className="flex items-center gap-2">
+          <div className={`w-3 h-3 rounded-full ${court === 'A' ? 'bg-amber-500' : 'bg-[#1e3a5f]'}`}></div>
           <h3 className={`font-semibold ${court === 'A' ? 'text-amber-400' : 'text-[#7ab0e0]'}`}>
-            Court {court} ({pendingMatches.length} pending)
+            Court {court}
           </h3>
+          <span className="text-[#6b8fad] text-sm">({pendingMatches.length})</span>
         </div>
         <ScrollArea className="h-[280px]">
           <div className="space-y-2 pr-2">
             {pendingMatches.length === 0 && (
-              <p className="text-[#8fb3d1] text-sm text-center py-4">No pending matches</p>
+              <div className="text-[#6b8fad] text-sm text-center py-8 bg-[#142130]/50 rounded-lg border border-dashed border-[#2a4a6f]">
+                No pending matches
+              </div>
             )}
             {pendingMatches.map((match, idx) => {
               const p1 = getMemberById(match.player1Id)
