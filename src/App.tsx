@@ -2851,7 +2851,8 @@ function CourtkeeperPortal({
   const getEffectiveScore = (scores: number[], opponentHansoku: number) => {
     const directPoints = scores.length
     const hansokuPoints = Math.floor(opponentHansoku / 2)
-    return directPoints + hansokuPoints
+    // Cap at win target - can't score more than needed to win
+    return Math.min(directPoints + hansokuPoints, winTarget)
   }
 
   const p1EffectiveScore = getEffectiveScore(p1Score, p2Hansoku)
@@ -2873,6 +2874,12 @@ function CourtkeeperPortal({
   const addScore = (player: 'player1' | 'player2', scoreType: number) => {
     const matchId = currentMatch?.id
     if (!matchId) return
+    
+    // Block scoring if game is already over (either player reached winTarget)
+    if (p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget) {
+      toast.error('Match is over - complete it first')
+      return
+    }
 
     setState(prev => {
       if (!prev.currentTournament) return prev
@@ -2896,11 +2903,17 @@ function CourtkeeperPortal({
     const matchId = currentMatch?.id
     if (!matchId) return
     
+    // Block hansoku if game is already over (either player reached winTarget)
+    if (p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget) {
+      toast.error('Match is over - complete it first')
+      return
+    }
+    
     const currentHansoku = player === 'player1' ? p1Hansoku : p2Hansoku
     const maxHansoku = player === 'player1' ? p1MaxHansoku : p2MaxHansoku
     
     if (currentHansoku >= maxHansoku) {
-      toast.error(`Maximum hansoku reached for this player`)
+      toast.error(`Maximum hansoku reached`)
       return
     }
 
@@ -3211,15 +3224,15 @@ function CourtkeeperPortal({
           
           {/* Score Row: Letters + Numbers + Letters */}
           <div className="flex items-center justify-center gap-2">
-            {/* P1 Score Letters (direct + H for opponent hansoku pairs) */}
+            {/* P1 Score Letters (direct + H for opponent hansoku pairs, capped at winTarget) */}
             <div className="flex gap-1 justify-end min-w-[60px]">
-              {p1Score.filter(s => s !== 5).map((s, i) => (
+              {p1Score.filter(s => s !== 5).slice(0, winTarget).map((s, i) => (
                 <span key={`p1-${i}`} className="w-5 h-5 rounded-full border border-red-400 text-red-400 flex items-center justify-center text-[10px] font-bold">
                   {scoreTypes.find(t => t.id === s)?.letter}
                 </span>
               ))}
-              {/* Yellow H circles for each pair of opponent's hansoku */}
-              {Array.from({ length: Math.floor(p2Hansoku / 2) }).map((_, i) => (
+              {/* Yellow H circles - only show what's needed to reach winTarget */}
+              {Array.from({ length: Math.min(Math.floor(p2Hansoku / 2), winTarget - Math.min(p1Score.length, winTarget)) }).map((_, i) => (
                 <span key={`p1-h-${i}`} className="w-5 h-5 rounded-full border border-yellow-400 bg-yellow-400/20 text-yellow-400 flex items-center justify-center text-[10px] font-bold">
                   H
                 </span>
@@ -3233,15 +3246,15 @@ function CourtkeeperPortal({
               <span className="text-slate-200">{p2EffectiveScore}</span>
             </div>
             
-            {/* P2 Score Letters (direct + H for opponent hansoku pairs) */}
+            {/* P2 Score Letters (direct + H for opponent hansoku pairs, capped at winTarget) */}
             <div className="flex gap-1 min-w-[60px]">
-              {/* Yellow H circles for each pair of opponent's hansoku */}
-              {Array.from({ length: Math.floor(p1Hansoku / 2) }).map((_, i) => (
+              {/* Yellow H circles - only show what's needed to reach winTarget */}
+              {Array.from({ length: Math.min(Math.floor(p1Hansoku / 2), winTarget - Math.min(p2Score.length, winTarget)) }).map((_, i) => (
                 <span key={`p2-h-${i}`} className="w-5 h-5 rounded-full border border-yellow-400 bg-yellow-400/20 text-yellow-400 flex items-center justify-center text-[10px] font-bold">
                   H
                 </span>
               ))}
-              {p2Score.filter(s => s !== 5).map((s, i) => (
+              {p2Score.filter(s => s !== 5).slice(0, winTarget).map((s, i) => (
                 <span key={`p2-${i}`} className="w-5 h-5 rounded-full border border-slate-400 text-slate-300 flex items-center justify-center text-[10px] font-bold">
                   {scoreTypes.find(t => t.id === s)?.letter}
                 </span>
@@ -3272,7 +3285,7 @@ function CourtkeeperPortal({
                   <button
                     key={`p1-${type.id}`}
                     onClick={() => addScore('player1', type.id)}
-                    disabled={p1EffectiveScore >= winTarget}
+                    disabled={p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget}
                     className="h-14 rounded-lg border-2 border-red-500/50 text-red-400 hover:bg-red-500/20 disabled:opacity-30 flex items-center justify-center"
                   >
                     <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
@@ -3290,7 +3303,7 @@ function CourtkeeperPortal({
                 </button>
                 <button
                   onClick={() => addHansoku('player1')}
-                  disabled={p1Hansoku >= p1MaxHansoku}
+                  disabled={p1Hansoku >= p1MaxHansoku || p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget}
                   className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
                 >
                   ▲
@@ -3312,7 +3325,7 @@ function CourtkeeperPortal({
                   <button
                     key={`p2-${type.id}`}
                     onClick={() => addScore('player2', type.id)}
-                    disabled={p2EffectiveScore >= winTarget}
+                    disabled={p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget}
                     className="h-14 rounded-lg border-2 border-slate-500/50 text-slate-300 hover:bg-slate-500/20 disabled:opacity-30 flex items-center justify-center"
                   >
                     <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
@@ -3330,7 +3343,7 @@ function CourtkeeperPortal({
                 </button>
                 <button
                   onClick={() => addHansoku('player2')}
-                  disabled={p2Hansoku >= p2MaxHansoku}
+                  disabled={p2Hansoku >= p2MaxHansoku || p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget}
                   className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
                 >
                   ▲
