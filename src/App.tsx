@@ -2346,11 +2346,11 @@ function CourtkeeperPortal({
   
   const tournament = state.currentTournament
   
-  const courtAMatches = tournament?.matches.filter(m => m.court === 'A') || []
-  const courtBMatches = tournament?.matches.filter(m => m.court === 'B') || []
+  const courtAMatches = tournament?.matches?.filter(m => m.court === 'A') || []
+  const courtBMatches = tournament?.matches?.filter(m => m.court === 'B') || []
   
-  const currentMatchA = courtAMatches.find(m => m.status !== 'completed') || courtAMatches[0]
-  const currentMatchB = courtBMatches.find(m => m.status !== 'completed') || courtBMatches[0]
+  const currentMatchA = courtAMatches.find(m => m.status !== 'completed')
+  const currentMatchB = courtBMatches.find(m => m.status !== 'completed')
   
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
   const currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
@@ -2498,14 +2498,15 @@ function CourtkeeperPortal({
     const newIdx = direction === 'up' ? idx - 1 : idx + 1
     if (newIdx < 0 || newIdx >= courtMatches.length) return
     
-    // Swap order indices
     const allMatches = [...tournament.matches]
     const match1 = allMatches.find(m => m.id === matchId)!
-    const match2 = courtMatches[newIdx]
+    const match2Idx = allMatches.findIndex(m => m.id === courtMatches[newIdx].id)
     
-    const tempOrder = match1.orderIndex
-    match1.orderIndex = match2.orderIndex
-    match2.orderIndex = tempOrder
+    if (match1 && match2Idx !== -1) {
+      const tempOrder = match1.orderIndex
+      match1.orderIndex = allMatches[match2Idx].orderIndex
+      allMatches[match2Idx].orderIndex = tempOrder
+    }
     
     setState(prev => ({
       ...prev,
@@ -2513,20 +2514,23 @@ function CourtkeeperPortal({
     }))
   }
 
+  // No tournament or not started
   if (!tournament || tournament.status !== 'in_progress') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center p-4">
         <Toaster theme="dark" position="top-center" />
-        <Card className="bg-slate-900 border-slate-800 max-w-md w-full">
+        <Card className="bg-slate-900 border-slate-700 max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-white text-center">No Active Tournament</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <AlertCircle className="w-16 h-16 text-slate-600 mx-auto" />
+            <img src="/renbu-logo.png" alt="Renbu" className="w-20 h-20 mx-auto opacity-50" />
             <p className="text-slate-400">
               {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament has been generated yet'}
             </p>
-            <Button onClick={onSwitchPortal} variant="outline">Go to Admin Portal</Button>
+            <Button onClick={onSwitchPortal} variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-500/10">
+              Go to Admin Portal
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -2537,14 +2541,15 @@ function CourtkeeperPortal({
   const player2 = currentMatch ? getMemberById(currentMatch.player2Id) : null
 
   const scoreTypes = [
-    { id: 1, name: 'Men', short: 'M', color: 'bg-blue-600' },
-    { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600' },
-    { id: 3, name: 'Do', short: 'D', color: 'bg-purple-600' },
-    { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600' },
-    { id: 5, name: 'Hansoku', short: 'H', color: 'bg-yellow-600' },
+    { id: 1, name: 'Men', short: 'M', color: 'bg-blue-600 hover:bg-blue-700' },
+    { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600 hover:bg-green-700' },
+    { id: 3, name: 'Do', short: 'D', color: 'bg-purple-600 hover:bg-purple-700' },
+    { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600 hover:bg-cyan-700' },
+    { id: 5, name: 'Hansoku', short: 'H', color: 'bg-yellow-600 hover:bg-yellow-700' },
   ]
 
-  const CourtQueue = ({ court, matches }: { court: 'A' | 'B', matches: Match[] }) => {
+  // Render queue for a court
+  const renderCourtQueue = (court: 'A' | 'B', matches: Match[]) => {
     const pendingMatches = matches.filter(m => m.status !== 'completed').sort((a, b) => a.orderIndex - b.orderIndex)
     const completedMatches = matches.filter(m => m.status === 'completed')
     
@@ -2552,11 +2557,14 @@ function CourtkeeperPortal({
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-2">
           <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-blue-400'}`}>
-            Court {court} Queue ({pendingMatches.length} pending)
+            Court {court} ({pendingMatches.length} pending)
           </h3>
         </div>
-        <ScrollArea className="h-[300px]">
-          <div className="space-y-2">
+        <ScrollArea className="h-[280px]">
+          <div className="space-y-2 pr-2">
+            {pendingMatches.length === 0 && (
+              <p className="text-slate-500 text-sm text-center py-4">No pending matches</p>
+            )}
             {pendingMatches.map((match, idx) => {
               const p1 = getMemberById(match.player1Id)
               const p2 = getMemberById(match.player2Id)
@@ -2572,17 +2580,17 @@ function CourtkeeperPortal({
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-slate-500 text-xs">#{idx + 1}</span>
-                    <Badge variant="outline" className="text-xs border-slate-600">{matchGroup?.name}</Badge>
+                    <Badge variant="outline" className="text-xs border-slate-600">{matchGroup?.name || '?'}</Badge>
                     {isCurrent && <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />}
                   </div>
                   <div className="text-sm text-white text-center">
                     <span className="text-red-400">●</span>
-                    <span className="font-medium ml-1">{p1?.firstName || '?'} {p1?.lastName?.charAt(0) || '?'}.</span>
+                    <span className="font-medium ml-1">{p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.</span>
                     <span className="text-slate-500 mx-2">vs</span>
                     <span className="text-white">○</span>
-                    <span className="font-medium ml-1">{p2?.firstName || '?'} {p2?.lastName?.charAt(0) || '?'}.</span>
+                    <span className="font-medium ml-1">{p2?.firstName || '?'} {p2?.lastName?.charAt(0) || ''}.</span>
                   </div>
-                  <div className="flex gap-1 mt-2">
+                  <div className="flex gap-1 mt-2 justify-center">
                     <Button 
                       size="sm" 
                       variant="ghost" 
@@ -2590,7 +2598,7 @@ function CourtkeeperPortal({
                       onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
                     >
                       <ArrowLeftRight className="w-3 h-3 mr-1" />
-                      To {court === 'A' ? 'B' : 'A'}
+                      {court === 'A' ? 'B' : 'A'}
                     </Button>
                     <Button 
                       size="sm" 
@@ -2618,19 +2626,19 @@ function CourtkeeperPortal({
               <>
                 <Separator className="my-2 bg-slate-700" />
                 <p className="text-xs text-slate-500">Completed ({completedMatches.length})</p>
-                {completedMatches.slice(0, 5).map(match => {
+                {completedMatches.slice(-5).reverse().map(match => {
                   const p1 = getMemberById(match.player1Id)
                   const p2 = getMemberById(match.player2Id)
                   return (
-                    <div key={match.id} className="p-2 bg-slate-800/30 rounded opacity-60 text-sm text-center">
+                    <div key={match.id} className="p-2 bg-slate-800/30 rounded text-sm text-center">
                       <span className="text-red-400">●</span>
                       <span className={match.winner === 'player1' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
-                        {p1?.firstName || '?'} {p1?.lastName?.charAt(0) || '?'}.
+                        {p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.
                       </span>
                       <span className="text-slate-500 mx-2">vs</span>
                       <span className="text-white">○</span>
                       <span className={match.winner === 'player2' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
-                        {p2?.firstName || '?'} {p2?.lastName?.charAt(0) || '?'}.
+                        {p2?.firstName || '?'} {p2?.lastName?.charAt(0) || ''}.
                       </span>
                       <span className="text-slate-400 ml-2">
                         {match.isHantei ? '(判定)' : `${match.player1Score.length}-${match.player2Score.length}`}
@@ -2651,20 +2659,20 @@ function CourtkeeperPortal({
     if (!showWinnerPrompt.show || !showWinnerPrompt.winner || !currentMatch) return null
     
     const winnerPlayer = showWinnerPrompt.winner === 'player1' ? player1 : player2
-    const winnerColor = showWinnerPrompt.winner === 'player1' ? 'red' : 'blue'
+    const winnerColor = showWinnerPrompt.winner === 'player1' ? 'red' : 'white'
     
     return (
       <Dialog open={showWinnerPrompt.show} onOpenChange={() => setShowWinnerPrompt({ show: false, winner: null })}>
-        <DialogContent className="bg-slate-900 border-slate-800">
+        <DialogContent className="bg-slate-900 border-slate-700">
           <DialogHeader>
             <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
           </DialogHeader>
-          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-red-600' : 'bg-blue-900/30 border-2 border-blue-600'}`}>
-            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-400'}`} />
-            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-red-600' : 'bg-slate-700/30 border-2 border-slate-400'}`}>
+            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-white'}`} />
+            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-white'}`}>
               {winnerPlayer?.firstName} {winnerPlayer?.lastName}
             </p>
-            <p className="text-slate-400 mt-2">{winnerColor === 'red' ? 'Red (Aka)' : 'White (Shiro)'} Wins!</p>
+            <p className="text-slate-400 mt-2">{winnerColor === 'red' ? '● Red (Aka)' : '○ White (Shiro)'} Wins!</p>
           </div>
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setShowWinnerPrompt({ show: false, winner: null })}>
@@ -2672,7 +2680,7 @@ function CourtkeeperPortal({
             </Button>
             <Button 
               onClick={() => completeMatch(showWinnerPrompt.winner!)}
-              className={winnerColor === 'red' ? 'bg-red-600 hover:bg-red-700' : 'bg-blue-600 hover:bg-blue-700'}
+              className={winnerColor === 'red' ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-600 hover:bg-slate-500'}
             >
               Complete Match
             </Button>
@@ -2683,7 +2691,7 @@ function CourtkeeperPortal({
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900">
       <Toaster theme="dark" position="top-center" />
       <WinnerPromptDialog />
       
@@ -2693,7 +2701,7 @@ function CourtkeeperPortal({
           <div className="flex items-center gap-3">
             <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
             <h1 className="text-xl font-bold text-white">Courtkeeper</h1>
-            <Badge className={selectedCourt === 'A' ? 'bg-red-600' : 'bg-blue-600'}>
+            <Badge className={selectedCourt === 'A' ? 'bg-red-600' : 'bg-slate-600'}>
               Court {selectedCourt}
             </Badge>
           </div>
@@ -2702,7 +2710,7 @@ function CourtkeeperPortal({
               size="sm"
               variant={selectedCourt === 'A' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('A')}
-              className={selectedCourt === 'A' ? 'bg-red-600' : ''}
+              className={selectedCourt === 'A' ? 'bg-red-600 hover:bg-red-700' : 'border-slate-600'}
             >
               Court A
             </Button>
@@ -2710,18 +2718,18 @@ function CourtkeeperPortal({
               size="sm"
               variant={selectedCourt === 'B' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('B')}
-              className={selectedCourt === 'B' ? 'bg-blue-600' : ''}
+              className={selectedCourt === 'B' ? 'bg-slate-600 hover:bg-slate-500' : 'border-slate-600'}
             >
               Court B
             </Button>
-            <Button variant="ghost" size="sm" onClick={onSwitchPortal}>Switch Portal</Button>
+            <Button variant="ghost" size="sm" onClick={onSwitchPortal}>Exit</Button>
           </div>
         </div>
       </header>
 
       <main className={`p-4 ${!isMobile ? 'mr-80' : ''}`}>
-        {!currentMatch || currentMatches.length === 0 ? (
-          <Card className="bg-slate-900 border-slate-800">
+        {!currentMatch ? (
+          <Card className="bg-slate-900/80 border-slate-700">
             <CardContent className="p-8 text-center">
               <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
               <p className="text-white text-xl">
@@ -2737,7 +2745,7 @@ function CourtkeeperPortal({
               <div className="flex justify-center gap-4 mt-4">
                 <Button
                   onClick={() => setSelectedCourt(selectedCourt === 'A' ? 'B' : 'A')}
-                  className={selectedCourt === 'A' ? 'bg-blue-600 hover:bg-blue-700' : 'bg-red-600 hover:bg-red-700'}
+                  className={selectedCourt === 'A' ? 'bg-slate-600 hover:bg-slate-500' : 'bg-red-600 hover:bg-red-700'}
                 >
                   Switch to Court {selectedCourt === 'A' ? 'B' : 'A'}
                 </Button>
@@ -2746,9 +2754,9 @@ function CourtkeeperPortal({
           </Card>
         ) : (
           <>
-            {/* Timer Section - 3 mins for non-bogu */}
-            <Card className={`bg-slate-900 border-2 mb-4 ${
-              timerSeconds >= state.timerTarget ? 'border-red-600 animate-pulse' : 'border-slate-800'
+            {/* Timer Section */}
+            <Card className={`bg-slate-900/80 border-2 mb-4 ${
+              timerSeconds >= state.timerTarget ? 'border-red-600 animate-pulse' : 'border-slate-700'
             }`}>
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
@@ -2759,7 +2767,7 @@ function CourtkeeperPortal({
                     </span>
                   </div>
                   <Badge variant="outline" className="border-slate-600">
-                    {group?.name}
+                    {group?.name || 'Unknown Group'}
                   </Badge>
                 </div>
                 <div className="text-center my-4">
@@ -2782,7 +2790,7 @@ function CourtkeeperPortal({
                     {timerRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
                     {timerRunning ? 'Pause' : 'Start'}
                   </Button>
-                  <Button size="lg" variant="outline" onClick={resetTimer}>
+                  <Button size="lg" variant="outline" onClick={resetTimer} className="border-slate-600">
                     <RotateCcw className="w-5 h-5 mr-2" />
                     Reset
                   </Button>
@@ -2793,14 +2801,14 @@ function CourtkeeperPortal({
             {/* Scoring Section */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               {/* Player 1 (Red/Aka) */}
-              <Card className="bg-slate-900 border-2 border-red-800">
+              <Card className="bg-slate-900/80 border-2 border-red-800">
                 <CardHeader className="pb-2 bg-red-900/30">
-                  <CardTitle className="text-red-400 text-center">
-                    <Flag className="w-5 h-5 inline mr-2" />
+                  <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
+                    <span className="text-2xl">●</span>
                     Red (Aka)
                   </CardTitle>
-                  <CardDescription className="text-center text-white text-lg">
-                    {player1?.firstName} {player1?.lastName}
+                  <CardDescription className="text-center text-white text-lg font-semibold">
+                    {player1?.firstName || '?'} {player1?.lastName || '?'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
@@ -2811,7 +2819,7 @@ function CourtkeeperPortal({
                       onClick={() => completeMatch('player1')}
                     >
                       <Award className="w-8 h-8 mr-2" />
-                      Red Wins (Hantei)
+                      Red Wins
                     </Button>
                   ) : (
                     <>
@@ -2823,10 +2831,10 @@ function CourtkeeperPortal({
                             return (
                               <Badge 
                                 key={i} 
-                                className={`${scoreType?.color} cursor-pointer hover:opacity-70`}
+                                className={`${scoreType?.color || 'bg-slate-600'} cursor-pointer`}
                                 onClick={() => removeScore('player1', i)}
                               >
-                                {scoreType?.short}
+                                {scoreType?.short || '?'}
                                 <X className="w-3 h-3 ml-1" />
                               </Badge>
                             )
@@ -2838,7 +2846,7 @@ function CourtkeeperPortal({
                           <Button
                             key={type.id}
                             size="lg"
-                            className={`${type.color} hover:opacity-80 h-16 text-lg font-bold`}
+                            className={`${type.color} h-14 text-lg font-bold`}
                             onClick={() => addScore('player1', type.id)}
                           >
                             {type.short}
@@ -2847,7 +2855,7 @@ function CourtkeeperPortal({
                         <Button
                           size="lg"
                           variant="outline"
-                          className="border-slate-600 h-16"
+                          className="border-slate-600 h-14"
                           onClick={() => undoScore('player1')}
                           disabled={currentMatch.player1Score.length === 0}
                         >
@@ -2860,25 +2868,25 @@ function CourtkeeperPortal({
               </Card>
 
               {/* Player 2 (White/Shiro) */}
-              <Card className="bg-slate-900 border-2 border-blue-800">
-                <CardHeader className="pb-2 bg-blue-900/30">
-                  <CardTitle className="text-blue-400 text-center">
-                    <Flag className="w-5 h-5 inline mr-2" />
+              <Card className="bg-slate-900/80 border-2 border-slate-500">
+                <CardHeader className="pb-2 bg-slate-700/30">
+                  <CardTitle className="text-white text-center flex items-center justify-center gap-2">
+                    <span className="text-2xl">○</span>
                     White (Shiro)
                   </CardTitle>
-                  <CardDescription className="text-center text-white text-lg">
-                    {player2?.firstName} {player2?.lastName}
+                  <CardDescription className="text-center text-white text-lg font-semibold">
+                    {player2?.firstName || '?'} {player2?.lastName || '?'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
                   {isHantei ? (
                     <Button
                       size="lg"
-                      className="w-full h-24 text-2xl bg-blue-700 hover:bg-blue-600"
+                      className="w-full h-24 text-2xl bg-slate-600 hover:bg-slate-500"
                       onClick={() => completeMatch('player2')}
                     >
                       <Award className="w-8 h-8 mr-2" />
-                      White Wins (Hantei)
+                      White Wins
                     </Button>
                   ) : (
                     <>
@@ -2890,10 +2898,10 @@ function CourtkeeperPortal({
                             return (
                               <Badge 
                                 key={i} 
-                                className={`${scoreType?.color} cursor-pointer hover:opacity-70`}
+                                className={`${scoreType?.color || 'bg-slate-600'} cursor-pointer`}
                                 onClick={() => removeScore('player2', i)}
                               >
-                                {scoreType?.short}
+                                {scoreType?.short || '?'}
                                 <X className="w-3 h-3 ml-1" />
                               </Badge>
                             )
@@ -2905,7 +2913,7 @@ function CourtkeeperPortal({
                           <Button
                             key={type.id}
                             size="lg"
-                            className={`${type.color} hover:opacity-80 h-16 text-lg font-bold`}
+                            className={`${type.color} h-14 text-lg font-bold`}
                             onClick={() => addScore('player2', type.id)}
                           >
                             {type.short}
@@ -2914,7 +2922,7 @@ function CourtkeeperPortal({
                         <Button
                           size="lg"
                           variant="outline"
-                          className="border-slate-600 h-16"
+                          className="border-slate-600 h-14"
                           onClick={() => undoScore('player2')}
                           disabled={currentMatch.player2Score.length === 0}
                         >
@@ -2928,16 +2936,16 @@ function CourtkeeperPortal({
             </div>
 
             {/* Match Actions */}
-            <Card className="bg-slate-900 border-slate-800">
-              <CardContent className="p-4">
-                {!isHantei && (
-                  <div className="grid grid-cols-3 gap-2 mb-4">
+            {!isHantei && (
+              <Card className="bg-slate-900/80 border-slate-700">
+                <CardContent className="p-4">
+                  <div className="grid grid-cols-3 gap-2">
                     <Button
                       size="lg"
                       onClick={() => completeMatch('player1')}
                       className="bg-red-700 hover:bg-red-600 h-14"
                     >
-                      Red Wins
+                      ● Red Wins
                     </Button>
                     <Button
                       size="lg"
@@ -2950,25 +2958,25 @@ function CourtkeeperPortal({
                     <Button
                       size="lg"
                       onClick={() => completeMatch('player2')}
-                      className="bg-blue-700 hover:bg-blue-600 h-14"
+                      className="bg-slate-600 hover:bg-slate-500 h-14"
                     >
-                      White Wins
+                      ○ White Wins
                     </Button>
                   </div>
-                )}
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            )}
           </>
         )}
       </main>
 
       {/* Court Queue Sidebar (Desktop) */}
       {!isMobile && (
-        <aside className="fixed right-0 top-0 w-80 h-screen bg-slate-900 border-l border-slate-800 pt-14 overflow-y-auto">
+        <aside className="fixed right-0 top-0 w-80 h-screen bg-slate-900 border-l border-slate-700 pt-14 overflow-y-auto">
           <div className="p-4 space-y-6">
-            <CourtQueue court="A" matches={courtAMatches} />
+            {renderCourtQueue('A', courtAMatches)}
             <Separator className="bg-slate-700" />
-            <CourtQueue court="B" matches={courtBMatches} />
+            {renderCourtQueue('B', courtBMatches)}
           </div>
         </aside>
       )}
@@ -2978,19 +2986,19 @@ function CourtkeeperPortal({
         <Sheet>
           <SheetTrigger asChild>
             <Button 
-              className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-emerald-600 hover:bg-emerald-700 shadow-lg"
+              className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-orange-600 hover:bg-orange-700 shadow-lg"
             >
               <Menu className="w-6 h-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="bg-slate-900 border-slate-800 h-[70vh]">
+          <SheetContent side="bottom" className="bg-slate-900 border-slate-700 h-[70vh]">
             <SheetHeader>
               <SheetTitle className="text-white">Match Queues</SheetTitle>
             </SheetHeader>
-            <div className="mt-4 space-y-4">
-              <CourtQueue court="A" matches={courtAMatches} />
+            <div className="mt-4 space-y-4 overflow-y-auto">
+              {renderCourtQueue('A', courtAMatches)}
               <Separator className="bg-slate-700" />
-              <CourtQueue court="B" matches={courtBMatches} />
+              {renderCourtQueue('B', courtBMatches)}
             </div>
           </SheetContent>
         </Sheet>
