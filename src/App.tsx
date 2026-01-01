@@ -21,31 +21,50 @@ const RenbuLogo = ({ size = 48, glow = false, className = '' }: { size?: number;
     height={size} 
     viewBox="0 0 100 100" 
     className={className}
-    style={glow ? { filter: 'drop-shadow(0 0 8px rgba(249, 115, 22, 0.6)) drop-shadow(0 0 20px rgba(249, 115, 22, 0.4))' } : {}}
+    style={glow ? { filter: 'drop-shadow(0 0 10px rgba(249, 115, 22, 0.7)) drop-shadow(0 0 25px rgba(249, 115, 22, 0.5))' } : {}}
   >
     {/* Outer circle */}
-    <circle cx="50" cy="50" r="46" fill="none" stroke="#f97316" strokeWidth="3" />
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#f97316" strokeWidth="2.5" />
     
     {/* Inner decorative ring */}
-    <circle cx="50" cy="50" r="38" fill="none" stroke="#f97316" strokeWidth="1.5" opacity="0.6" />
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#f97316" strokeWidth="1" opacity="0.5" />
     
     {/* Center circle */}
-    <circle cx="50" cy="50" r="8" fill="#f97316" />
+    <circle cx="50" cy="50" r="6" fill="#f97316" />
     
-    {/* 8 Shinai arranged radially */}
-    {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
-      <g key={i} transform={`rotate(${angle} 50 50)`}>
-        {/* Shinai shaft */}
-        <rect x="48" y="12" width="4" height="30" fill="#f97316" rx="1" />
-        {/* Shinai tip (sakigawa) */}
-        <rect x="47" y="8" width="6" height="6" fill="#f97316" rx="2" />
-        {/* Tsuba (guard) */}
-        <rect x="46" y="40" width="8" height="3" fill="#f97316" rx="1" />
-      </g>
-    ))}
-    
-    {/* Center kanji-style mark */}
-    <text x="50" y="54" textAnchor="middle" fill="#0a1017" fontSize="10" fontWeight="bold" fontFamily="serif">連</text>
+    {/* 8 Shinai arranged radially - explicit for each angle */}
+    <g transform="rotate(0 50 50)">
+      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
+      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    </g>
+    <g transform="rotate(45 50 50)">
+      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
+      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    </g>
+    <g transform="rotate(90 50 50)">
+      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
+      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    </g>
+    <g transform="rotate(135 50 50)">
+      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
+      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    </g>
+    <g transform="rotate(180 50 50)">
+      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
+      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    </g>
+    <g transform="rotate(225 50 50)">
+      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
+      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    </g>
+    <g transform="rotate(270 50 50)">
+      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
+      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    </g>
+    <g transform="rotate(315 50 50)">
+      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
+      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    </g>
   </svg>
 )
 import { 
