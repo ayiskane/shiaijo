@@ -689,7 +689,7 @@ function SpectatorPortal({
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
                   <CardTitle className="text-white text-lg">Tournament Status</CardTitle>
-                  {tournament.isLive && (
+                  {tournament.status === 'in_progress' && (
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2"></span>
                       LIVE
@@ -704,7 +704,7 @@ function SpectatorPortal({
                     <p className="text-xs text-[#6b8fad]">Completed</p>
                   </div>
                   <div className="bg-[#0a1017]/50 rounded-xl p-4">
-                    <p className="text-3xl font-bold text-orange-400">{tournament.matches?.filter(m => m.status === 'in-progress').length || 0}</p>
+                    <p className="text-3xl font-bold text-orange-400">{tournament.matches?.filter(m => m.status === 'in_progress').length || 0}</p>
                     <p className="text-xs text-[#6b8fad]">In Progress</p>
                   </div>
                   <div className="bg-[#0a1017]/50 rounded-xl p-4">
@@ -724,10 +724,10 @@ function SpectatorPortal({
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                {tournament.matches?.filter(m => m.status === 'in-progress').length === 0 ? (
+                {tournament.matches?.filter(m => m.status === 'in_progress').length === 0 ? (
                   <p className="text-[#6b8fad] text-center py-8">No matches in progress</p>
                 ) : (
-                  tournament.matches?.filter(m => m.status === 'in-progress').map(match => {
+                  tournament.matches?.filter(m => m.status === 'in_progress').map(match => {
                     const player1 = getMemberById(match.player1Id)
                     const player2 = getMemberById(match.player2Id)
                     const group = getGroupById(match.groupId)
@@ -740,12 +740,12 @@ function SpectatorPortal({
                         <div className="flex items-center justify-between">
                           <div className="flex-1 text-center">
                             <p className="text-white font-medium">{player1?.firstName} {player1?.lastName}</p>
-                            <p className="text-3xl font-bold text-white mt-1">{match.score1}</p>
+                            <p className="text-3xl font-bold text-white mt-1">{match.player1Score.length}</p>
                           </div>
                           <div className="px-4 text-[#4a6b8a]">VS</div>
                           <div className="flex-1 text-center">
                             <p className="text-white font-medium">{player2?.firstName} {player2?.lastName}</p>
-                            <p className="text-3xl font-bold text-white mt-1">{match.score2}</p>
+                            <p className="text-3xl font-bold text-white mt-1">{match.player2Score.length}</p>
                           </div>
                         </div>
                       </div>
@@ -767,15 +767,17 @@ function SpectatorPortal({
                 {tournament.matches?.filter(m => m.status === 'completed').slice(-5).reverse().map(match => {
                   const player1 = getMemberById(match.player1Id)
                   const player2 = getMemberById(match.player2Id)
-                  const winner = match.score1 > match.score2 ? player1 : match.score2 > match.score1 ? player2 : null
+                  const p1Score = match.player1Score.length
+                  const p2Score = match.player2Score.length
+                  const winner = p1Score > p2Score ? player1 : p2Score > p1Score ? player2 : null
                   return (
                     <div key={match.id} className="flex items-center justify-between bg-[#0a1017]/30 rounded-lg px-4 py-3">
                       <div className="flex items-center gap-3">
-                        <span className={`font-medium ${match.score1 > match.score2 ? 'text-green-400' : 'text-white'}`}>
+                        <span className={`font-medium ${p1Score > p2Score ? 'text-green-400' : 'text-white'}`}>
                           {player1?.firstName} {player1?.lastName}
                         </span>
-                        <span className="text-[#4a6b8a] text-sm">{match.score1} - {match.score2}</span>
-                        <span className={`font-medium ${match.score2 > match.score1 ? 'text-green-400' : 'text-white'}`}>
+                        <span className="text-[#4a6b8a] text-sm">{p1Score} - {p2Score}</span>
+                        <span className={`font-medium ${p2Score > p1Score ? 'text-green-400' : 'text-white'}`}>
                           {player2?.firstName} {player2?.lastName}
                         </span>
                       </div>
