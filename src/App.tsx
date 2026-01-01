@@ -1473,7 +1473,7 @@ function GroupsManager({
                       return { ...prev, groups }
                     })
                   }}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-move hover:bg-[#1e3a5f]/30 transition-colors border-l-4 ${groupIndex % 2 === 0 ? 'border-l-amber-500' : 'border-l-zinc-500'}`}
+                  className={`flex items-center gap-3 p-3 rounded-lg cursor-move hover:bg-[#1e3a5f]/30 transition-colors border-l-4 ${groupIndex % 2 === 0 ? 'border-l-amber-500' : 'border-l-[#4a7ab0]'}`}
                 >
                   {/* Court indicator - small pill */}
                   <span className={`px-2 py-0.5 rounded text-xs font-semibold ${groupIndex % 2 === 0 ? 'bg-amber-600/20 text-amber-400' : 'bg-[#2e4a65]/20 text-[#8fb3d1]'}`}>
