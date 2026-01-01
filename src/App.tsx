@@ -374,6 +374,10 @@ const defaultGroups: Group[] = [
 
 const defaultState: AppState = {
   members: [],
+  courtASelectedMatch: null,
+  courtBSelectedMatch: null,
+  courtAGroupOrder: [],
+  courtBGroupOrder: [],
   groups: defaultGroups,
   guestRegistry: [],
   currentTournament: null,
