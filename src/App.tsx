@@ -1640,18 +1640,30 @@ function TournamentManager({
                         <Badge className={match.court === 'A' ? 'bg-red-900 text-red-200' : 'bg-blue-900 text-blue-200'}>
                           {match.court}
                         </Badge>
-                        <div className="flex-1 flex items-center justify-between">
-                          <span className={`${match.winner === 'player1' ? 'text-green-400 font-semibold' : 'text-white'}`}>
-                            {p1?.firstName} {p1?.lastName}
-                          </span>
+                        <div className="flex-1 flex items-center justify-center gap-2">
+                          <div className="flex items-center gap-1">
+                            <Badge variant="outline" className="border-red-600 text-red-400 text-xs">赤</Badge>
+                            <span className={`${match.winner === 'player1' ? 'text-green-400 font-semibold' : 'text-white'}`}>
+                              {p1?.firstName || '?'} {p1?.lastName || '?'}
+                            </span>
+                            {match.status !== 'pending' && !match.isHantei && (
+                              <span className="text-red-400 font-mono text-sm ml-1">({match.player1Score.length})</span>
+                            )}
+                          </div>
                           <span className="text-slate-500 text-sm mx-2">vs</span>
-                          <span className={`${match.winner === 'player2' ? 'text-green-400 font-semibold' : 'text-white'}`}>
-                            {p2?.firstName} {p2?.lastName}
-                          </span>
+                          <div className="flex items-center gap-1">
+                            <span className={`${match.winner === 'player2' ? 'text-green-400 font-semibold' : 'text-white'}`}>
+                              {p2?.firstName || '?'} {p2?.lastName || '?'}
+                            </span>
+                            {match.status !== 'pending' && !match.isHantei && (
+                              <span className="text-blue-400 font-mono text-sm ml-1">({match.player2Score.length})</span>
+                            )}
+                            <Badge variant="outline" className="border-blue-600 text-blue-400 text-xs">白</Badge>
+                          </div>
                         </div>
-                        {tournament.status === 'setup' && (
+                        {(tournament.status === 'setup' || (tournament.status === 'in_progress' && match.status === 'pending')) && (
                           <div className="flex gap-1">
-                            <Button size="icon" variant="ghost" onClick={() => swapMatchCourt(match.id)} className="h-8 w-8">
+                            <Button size="icon" variant="ghost" onClick={() => swapMatchCourt(match.id)} className="h-8 w-8" title="Swap court">
                               <ArrowLeftRight className="w-3 h-3" />
                             </Button>
                             <Button size="icon" variant="ghost" onClick={() => moveMatchInQueue(match.id, 'up')} className="h-8 w-8">
@@ -1663,10 +1675,10 @@ function TournamentManager({
                           </div>
                         )}
                         {match.status === 'completed' && (
-                          <Badge variant="outline" className="border-slate-600">
+                          <Badge variant="outline" className={match.winner === 'player1' ? 'border-red-600 text-red-400' : match.winner === 'player2' ? 'border-blue-600 text-blue-400' : 'border-slate-600'}>
                             {match.winner === 'draw' ? 'Draw' : 
-                             match.isHantei ? 'Hantei' :
-                             `${match.player1Score.length}-${match.player2Score.length}`}
+                             match.winner === 'player1' ? `赤 Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}` :
+                             `白 Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}`}
                           </Badge>
                         )}
                         {match.status === 'in_progress' && (
@@ -2541,8 +2553,10 @@ function CourtkeeperPortal({
                     <Badge variant="outline" className="text-xs border-slate-600">{matchGroup?.name}</Badge>
                     {isCurrent && <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />}
                   </div>
-                  <div className="text-sm text-white">
-                    {p1?.firstName} {p1?.lastName?.charAt(0)}. vs {p2?.firstName} {p2?.lastName?.charAt(0)}.
+                  <div className="text-sm text-white text-center">
+                    <span className="text-red-400">{p1?.firstName || '?'} {p1?.lastName?.charAt(0) || '?'}.</span>
+                    <span className="text-slate-500 mx-2">vs</span>
+                    <span className="text-blue-400">{p2?.firstName || '?'} {p2?.lastName?.charAt(0) || '?'}.</span>
                   </div>
                   <div className="flex gap-1 mt-2">
                     <Button 
@@ -2584,13 +2598,16 @@ function CourtkeeperPortal({
                   const p1 = getMemberById(match.player1Id)
                   const p2 = getMemberById(match.player2Id)
                   return (
-                    <div key={match.id} className="p-2 bg-slate-800/30 rounded opacity-60 text-sm">
-                      <span className={match.winner === 'player1' ? 'text-green-400' : 'text-white'}>
-                        {p1?.firstName} {p1?.lastName?.charAt(0)}.
+                    <div key={match.id} className="p-2 bg-slate-800/30 rounded opacity-60 text-sm text-center">
+                      <span className={match.winner === 'player1' ? 'text-green-400 font-semibold' : 'text-red-400'}>
+                        {p1?.firstName || '?'} {p1?.lastName?.charAt(0) || '?'}.
                       </span>
                       <span className="text-slate-500 mx-1">vs</span>
-                      <span className={match.winner === 'player2' ? 'text-green-400' : 'text-white'}>
-                        {p2?.firstName} {p2?.lastName?.charAt(0)}.
+                      <span className={match.winner === 'player2' ? 'text-green-400 font-semibold' : 'text-blue-400'}>
+                        {p2?.firstName || '?'} {p2?.lastName?.charAt(0) || '?'}.
+                      </span>
+                      <span className="text-slate-400 ml-2">
+                        {match.isHantei ? '(判定)' : `${match.player1Score.length}-${match.player2Score.length}`}
                       </span>
                     </div>
                   )
