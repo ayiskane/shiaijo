@@ -1197,6 +1197,509 @@ function AdminPortal({
   )
 }
 
+// Members Tab Component
+function MembersTab({
+  state,
+  setState,
+  filteredMembers,
+  searchQuery,
+  setSearchQuery,
+  filterGroup,
+  setFilterGroup,
+  sortBy,
+  setSortBy,
+  showAddMember,
+  setShowAddMember,
+  showBulkAdd,
+  setShowBulkAdd,
+  showClearConfirm,
+  setShowClearConfirm,
+  addMember,
+  deleteMember,
+  clearAllMembers,
+  toggleParticipation,
+  selectByGroup,
+  deselectAll,
+  handleCSVImport,
+  getGroupById,
+}: {
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+  filteredMembers: Member[]
+  searchQuery: string
+  setSearchQuery: (q: string) => void
+  filterGroup: string
+  setFilterGroup: (g: string) => void
+  sortBy: 'name' | 'group'
+  setSortBy: (s: 'name' | 'group') => void
+  showAddMember: boolean
+  setShowAddMember: (s: boolean) => void
+  showBulkAdd: boolean
+  setShowBulkAdd: (s: boolean) => void
+  showClearConfirm: boolean
+  setShowClearConfirm: (s: boolean) => void
+  addMember: (firstName: string, lastName: string, group: string) => void
+  deleteMember: (id: string) => void
+  clearAllMembers: () => void
+  toggleParticipation: (id: string) => void
+  selectByGroup: (groupId: string) => void
+  deselectAll: () => void
+  handleCSVImport: (csvText: string) => void
+  getGroupById: (id: string) => Group | undefined
+}) {
+  const [newFirstName, setNewFirstName] = useState('')
+  const [newLastName, setNewLastName] = useState('')
+  const [newGroup, setNewGroup] = useState(state.groups[0]?.id || '')
+  const [csvText, setCsvText] = useState('')
+
+  const participatingCount = state.members.filter(m => m.isParticipating).length
+  const totalMatches = state.currentTournament?.matches?.length || 0
+  const completedMatches = state.currentTournament?.matches?.filter(m => m.status === 'completed').length || 0
+
+  // Avatar colors based on group
+  const getAvatarColor = (groupId: string, index: number) => {
+    const colors = [
+      'from-orange-500 to-orange-600',
+      'from-purple-500 to-purple-600',
+      'from-cyan-500 to-cyan-600',
+      'from-green-500 to-green-600',
+      'from-pink-500 to-pink-600',
+      'from-amber-500 to-amber-600',
+    ]
+    const group = getGroupById(groupId)
+    if (group?.isNonBogu) return 'from-amber-500 to-amber-600'
+    return colors[index % colors.length]
+  }
+
+  return (
+    <div className="space-y-4 md:space-y-6">
+      {/* Mobile Stats */}
+      <div className="grid grid-cols-2 gap-3 md:hidden">
+        <div className="bg-[#1e1e2a] border border-white/5 rounded-xl p-4">
+          <p className="text-zinc-500 text-xs mb-1">Participants</p>
+          <p className="text-2xl font-bold">{participatingCount}</p>
+        </div>
+        <div className="bg-[#1e1e2a] border border-white/5 rounded-xl p-4">
+          <p className="text-zinc-500 text-xs mb-1">Completed</p>
+          <p className="text-2xl font-bold text-green-400">{completedMatches}</p>
+        </div>
+      </div>
+
+      {/* Desktop Stats Cards */}
+      <div className="hidden md:grid grid-cols-4 gap-4">
+        <div className="bg-[#1e1e2a] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Total</p>
+              <p className="text-3xl font-bold">{totalMatches}</p>
+              <p className="text-zinc-500 text-sm mt-1">matches</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center">
+              <Trophy className="w-6 h-6 text-orange-500" />
+            </div>
+          </div>
+          {totalMatches > 0 && (
+            <div className="mt-4 flex items-center gap-2">
+              <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-orange-500 to-orange-400 rounded-full" style={{width: `${Math.round((completedMatches / totalMatches) * 100)}%`}}></div>
+              </div>
+              <span className="text-xs text-orange-400 font-medium">{Math.round((completedMatches / totalMatches) * 100)}%</span>
+            </div>
+          )}
+        </div>
+
+        <div className="bg-[#1e1e2a] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Completed</p>
+              <p className="text-3xl font-bold text-green-400">{completedMatches}</p>
+              <p className="text-zinc-500 text-sm mt-1">matches</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-green-500/20 to-green-600/10 flex items-center justify-center">
+              <CheckCircle2 className="w-6 h-6 text-green-500" />
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-[#1e1e2a] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Court A</p>
+              <p className="text-3xl font-bold text-amber-400">{state.currentTournament?.matches?.filter(m => m.court === 'A').length || 0}</p>
+              <p className="text-zinc-500 text-sm mt-1">queued</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500/20 to-amber-600/10 flex items-center justify-center">
+              <span className="text-amber-500 font-bold text-xl">A</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-[#1e1e2a] border border-white/5 rounded-2xl p-5 hover:border-white/10 transition-colors">
+          <div className="flex items-start justify-between">
+            <div>
+              <p className="text-zinc-500 text-xs uppercase tracking-wider mb-2">Court B</p>
+              <p className="text-3xl font-bold text-zinc-300">{state.currentTournament?.matches?.filter(m => m.court === 'B').length || 0}</p>
+              <p className="text-zinc-500 text-sm mt-1">queued</p>
+            </div>
+            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-zinc-600/20 to-zinc-700/10 flex items-center justify-center">
+              <span className="text-zinc-400 font-bold text-xl">B</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Actions & Filters */}
+      <div className="bg-[#1e1e2a] border border-white/5 rounded-xl md:rounded-2xl p-3 md:p-4">
+        <div className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4">
+          {/* Add Button */}
+          <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
+            <DialogTrigger asChild>
+              <button className="px-4 py-2.5 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl text-sm font-medium flex items-center justify-center gap-2 shadow-lg shadow-orange-500/20">
+                <Plus className="w-4 h-4" />
+                Add Member
+              </button>
+            </DialogTrigger>
+            <DialogContent className="bg-[#1e1e2a] border-zinc-800">
+              <DialogHeader>
+                <DialogTitle className="text-white">Add Member</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <Label className="text-zinc-300">First Name</Label>
+                  <Input value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="bg-zinc-800 border-zinc-700" placeholder="First name" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-zinc-300">Last Name</Label>
+                  <Input value={newLastName} onChange={e => setNewLastName(e.target.value)} className="bg-zinc-800 border-zinc-700" placeholder="Last name" />
+                </div>
+                <div className="space-y-2">
+                  <Label className="text-zinc-300">Group</Label>
+                  <Select value={newGroup} onValueChange={setNewGroup}>
+                    <SelectTrigger className="bg-zinc-800 border-zinc-700">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-zinc-800 border-zinc-700">
+                      {state.groups.map(g => (
+                        <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowAddMember(false)} className="border-zinc-700">Cancel</Button>
+                <Button onClick={() => { addMember(newFirstName, newLastName, newGroup); setNewFirstName(''); setNewLastName(''); setShowAddMember(false); }} className="bg-orange-600 hover:bg-orange-700">Add</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
+            <DialogTrigger asChild>
+              <button className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 rounded-xl text-sm text-zinc-300 flex items-center justify-center gap-2">
+                <Upload className="w-4 h-4" />
+                Import
+              </button>
+            </DialogTrigger>
+            <DialogContent className="bg-[#1e1e2a] border-zinc-800">
+              <DialogHeader>
+                <DialogTitle className="text-white">Import Members</DialogTitle>
+                <DialogDescription className="text-zinc-400">Paste CSV: FirstName,LastName,Group</DialogDescription>
+              </DialogHeader>
+              <textarea 
+                value={csvText} 
+                onChange={e => setCsvText(e.target.value)} 
+                className="w-full h-40 bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-sm"
+                placeholder="John,Doe,Group A&#10;Jane,Smith,Group B"
+              />
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setShowBulkAdd(false)} className="border-zinc-700">Cancel</Button>
+                <Button onClick={() => { handleCSVImport(csvText); setCsvText(''); setShowBulkAdd(false); }} className="bg-orange-600 hover:bg-orange-700">Import</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          <div className="hidden md:block h-6 w-px bg-zinc-700"></div>
+
+          {/* Filter Pills */}
+          <div className="flex gap-2 overflow-x-auto pb-1 md:pb-0 md:flex-wrap">
+            <button 
+              onClick={() => setFilterGroup('all')}
+              className={`px-3 md:px-4 py-2 text-xs md:text-sm rounded-lg md:rounded-xl font-medium whitespace-nowrap transition-colors ${filterGroup === 'all' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700'}`}
+            >
+              All
+            </button>
+            {state.groups.map(g => (
+              <button 
+                key={g.id}
+                onClick={() => setFilterGroup(g.id)}
+                className={`px-3 md:px-4 py-2 text-xs md:text-sm rounded-lg md:rounded-xl whitespace-nowrap transition-colors ${filterGroup === g.id ? (g.isNonBogu ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-orange-500/20 text-orange-400 border border-orange-500/30') : (g.isNonBogu ? 'bg-amber-500/20 text-amber-400' : 'bg-zinc-800 text-zinc-400 hover:bg-zinc-700')}`}
+              >
+                {g.name}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Quick Select Row */}
+        <div className="flex items-center gap-2 mt-3 pt-3 border-t border-white/5">
+          <span className="text-xs text-zinc-500">Quick:</span>
+          {state.groups.map(g => (
+            <button 
+              key={g.id}
+              onClick={() => selectByGroup(g.id)}
+              className="px-2 py-1 text-xs rounded bg-zinc-800 text-zinc-400 hover:bg-zinc-700 transition-colors"
+            >
+              +{g.name}
+            </button>
+          ))}
+          <button onClick={deselectAll} className="px-2 py-1 text-xs rounded text-zinc-500 hover:text-zinc-300 transition-colors">Clear</button>
+        </div>
+      </div>
+
+      {/* Members List */}
+      <div className="bg-[#1e1e2a] border border-white/5 rounded-xl md:rounded-2xl overflow-hidden">
+        {/* Mobile Member Cards */}
+        <div className="md:hidden divide-y divide-white/5">
+          {filteredMembers.slice(0, 20).map((member, idx) => {
+            const group = getGroupById(member.group)
+            return (
+              <div key={member.id} className="p-4 flex items-center gap-3">
+                <Checkbox 
+                  checked={member.isParticipating} 
+                  onCheckedChange={() => toggleParticipation(member.id)}
+                  className="w-5 h-5 rounded bg-zinc-700 border-zinc-600 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                />
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor(member.group, idx)} flex items-center justify-center flex-shrink-0`}>
+                  <span className="text-white font-semibold text-sm">{member.firstName[0]}{member.lastName[0]}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium truncate">{member.lastName}, {member.firstName}</p>
+                  <p className={`text-xs ${group?.isNonBogu ? 'text-amber-400' : 'text-zinc-500'}`}>{group?.name || member.group}</p>
+                </div>
+                <span className={`w-2 h-2 rounded-full ${member.isParticipating ? 'bg-green-500' : 'bg-zinc-600'}`}></span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Desktop Table */}
+        <div className="hidden md:block">
+          <div className="px-5 py-3 bg-zinc-800/30 border-b border-white/5 flex items-center gap-4">
+            <Checkbox className="w-4 h-4 rounded bg-zinc-700 border-zinc-600" />
+            <span className="text-xs text-zinc-500 uppercase tracking-wider flex-1">Member</span>
+            <span className="text-xs text-zinc-500 uppercase tracking-wider w-24">Group</span>
+            <span className="text-xs text-zinc-500 uppercase tracking-wider w-28">Status</span>
+            <span className="text-xs text-zinc-500 uppercase tracking-wider w-20 text-right">Actions</span>
+          </div>
+
+          <div className="divide-y divide-white/5">
+            {filteredMembers.map((member, idx) => {
+              const group = getGroupById(member.group)
+              return (
+                <div key={member.id} className="px-5 py-4 flex items-center gap-4 hover:bg-zinc-800/30 transition cursor-pointer">
+                  <Checkbox 
+                    checked={member.isParticipating} 
+                    onCheckedChange={() => toggleParticipation(member.id)}
+                    className="w-4 h-4 rounded bg-zinc-700 border-zinc-600 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                  />
+                  <div className="flex items-center gap-3 flex-1">
+                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor(member.group, idx)} flex items-center justify-center`}>
+                      <span className="text-white font-semibold text-sm">{member.firstName[0]}{member.lastName[0]}</span>
+                    </div>
+                    <div>
+                      <p className="font-medium">{member.lastName}, {member.firstName}</p>
+                      <p className="text-xs text-zinc-500">{member.isGuest ? 'Guest' : 'Member'}</p>
+                    </div>
+                  </div>
+                  <span className={`w-24 px-3 py-1 text-xs rounded-lg text-center ${group?.isNonBogu ? 'bg-amber-500/20 text-amber-400' : 'bg-zinc-800 text-zinc-300'}`}>
+                    {group?.name || member.group}
+                  </span>
+                  <span className={`w-28 px-3 py-1 text-xs rounded-lg text-center flex items-center justify-center gap-1 ${member.isParticipating ? 'bg-green-500/20 text-green-400' : 'bg-zinc-700 text-zinc-400'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${member.isParticipating ? 'bg-green-500' : 'bg-zinc-500'}`}></span>
+                    {member.isParticipating ? 'Participating' : 'Not selected'}
+                  </span>
+                  <div className="w-20 flex justify-end">
+                    <button onClick={() => deleteMember(member.id)} className="p-2 text-zinc-500 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="px-4 md:px-5 py-3 md:py-4 border-t border-white/5 flex items-center justify-between">
+          <span className="text-xs md:text-sm text-zinc-500">{filteredMembers.length} of {state.members.length} members</span>
+          <span className="text-xs md:text-sm text-orange-400">{participatingCount} participating</span>
+        </div>
+      </div>
+
+      {/* Clear All Dialog */}
+      <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <DialogContent className="bg-[#1e1e2a] border-zinc-800">
+          <DialogHeader>
+            <DialogTitle className="text-white">Clear All Members?</DialogTitle>
+            <DialogDescription className="text-zinc-400">This will remove all {state.members.length} members. This cannot be undone.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowClearConfirm(false)} className="border-zinc-700">Cancel</Button>
+            <Button variant="destructive" onClick={clearAllMembers}>Clear All</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dev tools */}
+      <details className="text-sm">
+        <summary className="text-zinc-500 cursor-pointer hover:text-zinc-400">Dev tools</summary>
+        <div className="flex gap-2 mt-2">
+          <button 
+            onClick={() => {
+              const testMembers: Member[] = []
+              const firstNames = ['Amanda', 'Alex', 'Sakura', 'Kenji', 'Yuki', 'Mei', 'Takeshi', 'Nana', 'Rachel', 'Brian', 'Emily', 'Sota', 'Nicole', 'Ren', 'Ashley']
+              const lastNames = ['Suzuki', 'Tanaka', 'Johnson', 'Kimura', 'Yamada', 'Smith', 'Ito', 'Miller', 'Yoshida', 'Williams']
+              for (let i = 0; i < 25; i++) {
+                testMembers.push({
+                  id: generateId(),
+                  firstName: firstNames[i % firstNames.length],
+                  lastName: lastNames[i % lastNames.length],
+                  group: state.groups[i % state.groups.length]?.id || 'group-a',
+                  isGuest: false,
+                  isParticipating: true,
+                })
+              }
+              setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
+              toast.success('Added 25 test members')
+            }}
+            className="px-3 py-1.5 text-xs rounded bg-emerald-900/30 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-900/50"
+          >
+            + Test Data
+          </button>
+          <button onClick={() => setShowClearConfirm(true)} className="px-3 py-1.5 text-xs rounded bg-red-900/30 text-red-400 border border-red-800/50 hover:bg-red-900/50">
+            Clear All
+          </button>
+        </div>
+      </details>
+    </div>
+  )
+}
+
+// Guests Tab Component  
+function GuestsTab({
+  state,
+  setState,
+  addGuestMember,
+  getGroupById,
+}: {
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+  addGuestMember: (firstName: string, lastName: string, group: string, guestDojo?: string) => void
+  getGroupById: (id: string) => Group | undefined
+}) {
+  const [showAddGuest, setShowAddGuest] = useState(false)
+  const [guestFirstName, setGuestFirstName] = useState('')
+  const [guestLastName, setGuestLastName] = useState('')
+  const [guestGroup, setGuestGroup] = useState(state.groups[0]?.id || '')
+  const [guestDojo, setGuestDojo] = useState('')
+
+  const guests = state.members.filter(m => m.isGuest)
+
+  return (
+    <div className="space-y-4 md:space-y-6">
+      {/* Actions */}
+      <div className="bg-[#1e1e2a] border border-white/5 rounded-xl md:rounded-2xl p-3 md:p-4">
+        <Dialog open={showAddGuest} onOpenChange={setShowAddGuest}>
+          <DialogTrigger asChild>
+            <button className="px-4 py-2.5 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl text-sm font-medium flex items-center gap-2 shadow-lg shadow-purple-500/20">
+              <Plus className="w-4 h-4" />
+              Add Guest
+            </button>
+          </DialogTrigger>
+          <DialogContent className="bg-[#1e1e2a] border-zinc-800">
+            <DialogHeader>
+              <DialogTitle className="text-white">Add Guest</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="text-zinc-300">First Name</Label>
+                <Input value={guestFirstName} onChange={e => setGuestFirstName(e.target.value)} className="bg-zinc-800 border-zinc-700" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-zinc-300">Last Name</Label>
+                <Input value={guestLastName} onChange={e => setGuestLastName(e.target.value)} className="bg-zinc-800 border-zinc-700" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-zinc-300">Group</Label>
+                <Select value={guestGroup} onValueChange={setGuestGroup}>
+                  <SelectTrigger className="bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-zinc-800 border-zinc-700">
+                    {state.groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-zinc-300">Dojo (optional)</Label>
+                <Input value={guestDojo} onChange={e => setGuestDojo(e.target.value)} className="bg-zinc-800 border-zinc-700" placeholder="Guest's home dojo" />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setShowAddGuest(false)} className="border-zinc-700">Cancel</Button>
+              <Button onClick={() => { addGuestMember(guestFirstName, guestLastName, guestGroup, guestDojo); setGuestFirstName(''); setGuestLastName(''); setGuestDojo(''); setShowAddGuest(false); }} className="bg-purple-600 hover:bg-purple-700">Add Guest</Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+
+      {/* Guests List */}
+      <div className="bg-[#1e1e2a] border border-white/5 rounded-xl md:rounded-2xl overflow-hidden">
+        <div className="px-5 py-3 bg-zinc-800/30 border-b border-white/5">
+          <span className="text-sm font-medium">Guests ({guests.length})</span>
+        </div>
+        <div className="divide-y divide-white/5">
+          {guests.length === 0 ? (
+            <div className="p-8 text-center text-zinc-500">No guests added yet</div>
+          ) : (
+            guests.map((guest, idx) => {
+              const group = getGroupById(guest.group)
+              return (
+                <div key={guest.id} className="px-5 py-4 flex items-center gap-4 hover:bg-zinc-800/30 transition">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 flex items-center justify-center">
+                    <span className="text-white font-semibold text-sm">{guest.firstName[0]}{guest.lastName[0]}</span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="font-medium">{guest.lastName}, {guest.firstName}</p>
+                    <p className="text-xs text-zinc-500">{guest.guestDojo || 'Guest'}</p>
+                  </div>
+                  <span className="px-3 py-1 text-xs rounded-lg bg-zinc-800 text-zinc-300">{group?.name}</span>
+                </div>
+              )
+            })
+          )}
+        </div>
+      </div>
+
+      {/* Guest Registry */}
+      {state.guestRegistry.length > 0 && (
+        <div className="bg-[#1e1e2a] border border-white/5 rounded-xl md:rounded-2xl overflow-hidden">
+          <div className="px-5 py-3 bg-zinc-800/30 border-b border-white/5">
+            <span className="text-sm font-medium">Guest Registry ({state.guestRegistry.length})</span>
+          </div>
+          <div className="divide-y divide-white/5">
+            {state.guestRegistry.map(guest => (
+              <div key={guest.id} className="px-5 py-3 flex items-center gap-3 text-sm">
+                <span className="text-zinc-300">{guest.lastName}, {guest.firstName}</span>
+                {guest.guestDojo && <span className="text-zinc-500">({guest.guestDojo})</span>}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+
 // Groups Manager Component
 function GroupsManager({
   state,
