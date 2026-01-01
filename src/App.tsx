@@ -19,7 +19,7 @@ import {
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus, FileSpreadsheet,
   Circle, CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Timer, Award
+  ArrowLeftRight, Timer, Award, ChevronLeft, Layers
 } from 'lucide-react'
 
 // Types
