@@ -1930,20 +1930,17 @@ function TournamentManager({
                             </div>
                           </div>
                         {(tournament.status === 'setup' || (tournament.status === 'in_progress' && match.status === 'pending')) && (
-                          <div className="flex gap-1">
-                            <Button size="icon" variant="ghost" className="h-8 w-8 h-8 w-8" onClick={() => swapMatchCourt(match.id)} title="Swap court">
-                              <ArrowLeftRight className="w-3 h-3" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 h-8 w-8" onClick={() => moveMatchInQueue(match.id, 'up')}>
-                              <ChevronLeft className="w-3 h-3 rotate-90" />
-                            </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8 h-8 w-8" onClick={() => moveMatchInQueue(match.id, 'down')}>
-                              <ChevronRight className="w-3 h-3 rotate-90" />
-                            </Button>
+                          <div className="flex gap-0.5">
+                            <button className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded" onClick={() => moveMatchInQueue(match.id, 'up')} title="Move up">
+                              <ChevronLeft className="w-4 h-4 rotate-90" />
+                            </button>
+                            <button className="p-1.5 text-slate-400 hover:text-white hover:bg-slate-700 rounded" onClick={() => moveMatchInQueue(match.id, 'down')} title="Move down">
+                              <ChevronRight className="w-4 h-4 rotate-90" />
+                            </button>
                           </div>
                         )}
                         {match.status === 'completed' && (
-                          <Badge variant="outline" className={match.winner === 'player1' ? 'border-red-600 bg-red-950/50 text-red-400' : match.winner === 'player2' ? 'border-slate-400 bg-blue-950/50 text-slate-200' : 'border-slate-600'}>
+                          <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-blue-900/50 text-blue-300' : 'bg-slate-700 text-slate-400'}`}>
                             {match.winner === 'draw' ? 'Draw' : 
                              match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}` :
                              `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}`}
