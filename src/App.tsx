@@ -2858,21 +2858,14 @@ function CourtkeeperPortal({
   const p2EffectiveScore = getEffectiveScore(p2Score, p1Hansoku)
 
   // Calculate max hansoku allowed (if opponent has points, max is 2 less per point)
-  const getMaxHansoku = (_ownScore: number[], opponentScore: number[], opponentHansoku: number) => {
-    // Base: 4 hansoku max if no one scored
-    // Each opponent direct point reduces max by 2
-    // Each pair of own hansoku (that gave opponent a point) also counts
-    const opponentDirectPoints = opponentScore.length
-    const hansokuPointsGiven = Math.floor(opponentHansoku / 2)
-    const totalOpponentPoints = opponentDirectPoints + hansokuPointsGiven
-    
-    if (totalOpponentPoints >= 2) return 0 // Opponent already won
-    if (totalOpponentPoints === 1) return 1 // Can only get 1 more (2 would give opponent win)
-    return 4 // No restrictions yet
+  const getMaxHansoku = () => {
+    // In kendo, you can always get hansoku even if it loses you the match
+    // Max 4 per player (hansoku-make = automatic loss at 4)
+    return 4
   }
 
-  const p1MaxHansoku = getMaxHansoku(p1Score, p2Score, p1Hansoku)
-  const p2MaxHansoku = getMaxHansoku(p2Score, p1Score, p2Hansoku)
+  const p1MaxHansoku = getMaxHansoku()
+  const p2MaxHansoku = getMaxHansoku()
 
   const addScore = (player: 'player1' | 'player2', scoreType: number) => {
     const matchId = currentMatch?.id
@@ -3197,25 +3190,14 @@ function CourtkeeperPortal({
 
         {/* Score Display */}
         <div className="bg-gradient-to-r from-red-950/30 via-[#12181f] to-slate-700/20 rounded-xl p-3">
-          <div className="flex items-center justify-between">
-            {/* AKA Name */}
+          {/* Names Row */}
+          <div className="flex items-center justify-between mb-2">
             <div className="flex-1 min-w-0">
               <p className="text-red-400 text-[10px] font-medium">AKA</p>
               <p className="text-sm font-semibold truncate">
                 {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '—'}
               </p>
             </div>
-            
-            {/* Center Score */}
-            <div className="px-4 text-center flex-shrink-0">
-              <div className="text-3xl font-mono font-bold">
-                <span className="text-red-400">{p1EffectiveScore}</span>
-                <span className="text-slate-500 mx-1">:</span>
-                <span className="text-slate-200">{p2EffectiveScore}</span>
-              </div>
-            </div>
-            
-            {/* SHIRO Name */}
             <div className="flex-1 min-w-0 text-right">
               <p className="text-slate-400 text-[10px] font-medium">SHIRO</p>
               <p className="text-sm font-semibold truncate">
@@ -3224,36 +3206,60 @@ function CourtkeeperPortal({
             </div>
           </div>
           
-          {/* Score letters and Hansoku */}
-          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
-            <div className="flex gap-1">
+          {/* Score Row: Letters + Numbers + Letters */}
+          <div className="flex items-center justify-center gap-2">
+            {/* P1 Score Letters (direct + H for opponent hansoku pairs) */}
+            <div className="flex gap-1 justify-end min-w-[60px]">
               {p1Score.filter(s => s !== 5).map((s, i) => (
-                <span key={i} className="w-5 h-5 rounded-full border border-red-400 text-red-400 flex items-center justify-center text-[10px]">
+                <span key={`p1-${i}`} className="w-5 h-5 rounded-full border border-red-400 text-red-400 flex items-center justify-center text-[10px] font-bold">
                   {scoreTypes.find(t => t.id === s)?.letter}
                 </span>
               ))}
+              {/* Yellow H circles for each pair of opponent's hansoku */}
+              {Array.from({ length: Math.floor(p2Hansoku / 2) }).map((_, i) => (
+                <span key={`p1-h-${i}`} className="w-5 h-5 rounded-full border border-yellow-400 bg-yellow-400/20 text-yellow-400 flex items-center justify-center text-[10px] font-bold">
+                  H
+                </span>
+              ))}
             </div>
-            <div className="flex items-center gap-3 text-[10px]">
-              <div className="flex gap-0.5">
-                {Array.from({ length: p1Hansoku }).map((_, i) => (
-                  <span key={i} className="text-yellow-400">▲</span>
-                ))}
-              </div>
-              <span className="text-slate-600">Hansoku</span>
-              <div className="flex gap-0.5">
-                {Array.from({ length: p2Hansoku }).map((_, i) => (
-                  <span key={i} className="text-yellow-400">▲</span>
-                ))}
-              </div>
+            
+            {/* Center Numbers */}
+            <div className="text-3xl font-mono font-bold px-2">
+              <span className="text-red-400">{p1EffectiveScore}</span>
+              <span className="text-slate-500 mx-1">:</span>
+              <span className="text-slate-200">{p2EffectiveScore}</span>
             </div>
-            <div className="flex gap-1 justify-end">
+            
+            {/* P2 Score Letters (direct + H for opponent hansoku pairs) */}
+            <div className="flex gap-1 min-w-[60px]">
+              {/* Yellow H circles for each pair of opponent's hansoku */}
+              {Array.from({ length: Math.floor(p1Hansoku / 2) }).map((_, i) => (
+                <span key={`p2-h-${i}`} className="w-5 h-5 rounded-full border border-yellow-400 bg-yellow-400/20 text-yellow-400 flex items-center justify-center text-[10px] font-bold">
+                  H
+                </span>
+              ))}
               {p2Score.filter(s => s !== 5).map((s, i) => (
-                <span key={i} className="w-5 h-5 rounded-full border border-slate-400 text-slate-300 flex items-center justify-center text-[10px]">
+                <span key={`p2-${i}`} className="w-5 h-5 rounded-full border border-slate-400 text-slate-300 flex items-center justify-center text-[10px] font-bold">
                   {scoreTypes.find(t => t.id === s)?.letter}
                 </span>
               ))}
             </div>
           </div>
+          
+          {/* Hansoku indicator - only show remaining (odd) hansoku */}
+          {(p1Hansoku % 2 === 1 || p2Hansoku % 2 === 1) && (
+            <div className="flex items-center justify-center gap-4 mt-2 pt-2 border-t border-slate-700/30 text-[10px]">
+              <div className="flex items-center gap-1">
+                {p1Hansoku % 2 === 1 && <span className="text-yellow-400">▲</span>}
+                {p1Hansoku % 2 === 0 && <span className="text-slate-700">▲</span>}
+              </div>
+              <span className="text-slate-600">Hansoku</span>
+              <div className="flex items-center gap-1">
+                {p2Hansoku % 2 === 1 && <span className="text-yellow-400">▲</span>}
+                {p2Hansoku % 2 === 0 && <span className="text-slate-700">▲</span>}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Score Buttons - Fixed size, not stretched */}
