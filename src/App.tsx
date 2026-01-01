@@ -1198,10 +1198,10 @@ function AdminPortal({
                            </span>
                            <button
                              onClick={() => deleteMember(member.id)}
-                             className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-950/30"
+                             className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-950/30 rounded"
                            >
                              <Trash2 className="w-4 h-4" />
-                           </Button>
+                           </button>
                          </div>
                        )
                      })}
