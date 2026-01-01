@@ -1831,7 +1831,6 @@ function TournamentManager({
                         {match.status === 'in_progress' && (
                           <span className="text-xs px-2 py-0.5 rounded bg-emerald-600 text-white animate-pulse">Live</span>
                         )}
-                        </div>
                       </div>
                     )
                   })}
