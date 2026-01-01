@@ -2683,31 +2683,27 @@ function CourtkeeperPortal({
                     <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
                     <span className="font-medium ml-1">{p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}</span>
                   </div>
-                  <div className="flex gap-1 mt-2 justify-center">
-                    <Button 
-                      size="sm" 
-                      variant="ghost" className="h-7 w-auto px-2 text-xs"
+                  <div className="flex items-center justify-center gap-1 mt-2 opacity-60 hover:opacity-100 transition-opacity">
+                    <button 
+                      className="px-2 py-1 text-[10px] rounded bg-[#1e3a5f]/50 hover:bg-[#1e3a5f] text-[#8fb3d1] transition-colors"
                       onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
                     >
-                      <ArrowLeftRight className="w-3 h-3 mr-1" />
-                      {court === 'A' ? 'B' : 'A'}
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" className="h-7 w-auto px-2 text-xs"
+                      → {court === 'A' ? 'B' : 'A'}
+                    </button>
+                    <button 
+                      className="px-2 py-1 text-[10px] rounded bg-[#1e3a5f]/50 hover:bg-[#1e3a5f] text-[#8fb3d1] transition-colors disabled:opacity-30"
                       onClick={() => moveInQueue(match.id, 'up')}
                       disabled={idx === 0}
                     >
-                      ↑
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="ghost" className="h-7 w-auto px-2 text-xs"
+                      ▲
+                    </button>
+                    <button 
+                      className="px-2 py-1 text-[10px] rounded bg-[#1e3a5f]/50 hover:bg-[#1e3a5f] text-[#8fb3d1] transition-colors disabled:opacity-30"
                       onClick={() => moveInQueue(match.id, 'down')}
                       disabled={idx === pendingMatches.length - 1}
                     >
-                      ↓
-                    </Button>
+                      ▼
+                    </button>
                   </div>
                 </div>
               )
