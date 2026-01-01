@@ -2858,7 +2858,7 @@ function CourtkeeperPortal({
               <Card className="bg-slate-800 border-2 border-red-800">
                 <CardHeader className="pb-2 bg-red-900/30">
                   <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
-                    <span className="inline-block w-4 h-4 rounded bg-blue-500"></span>
+                    <span className="inline-block w-4 h-4 rounded bg-red-500"></span>
                     AKA
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
@@ -2923,8 +2923,8 @@ function CourtkeeperPortal({
 
               {/* Player 2 (White/Shiro) */}
               <Card className="bg-slate-800 border-2 border-blue-700">
-                <CardHeader className="pb-2 bg-slate-600/30">
-                  <CardTitle className="text-white text-center flex items-center justify-center gap-2">
+                <CardHeader className="pb-2 bg-blue-900/30">
+                  <CardTitle className="text-blue-400 text-center flex items-center justify-center gap-2">
                     <span className="inline-block w-4 h-4 rounded bg-blue-500"></span>
                     SHIRO
                   </CardTitle>
