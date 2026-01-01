@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 // import { Separator } from '@/components/ui/separator'
-import { Progress } from '@/components/ui/progress'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Toaster, toast } from 'sonner'
@@ -2918,8 +2917,6 @@ function CourtkeeperPortal({
     }
 
     const newHansoku = currentHansoku + 1
-    const opponent = player === 'player1' ? 'player2' : 'player1'
-    const givesPoint = newHansoku % 2 === 0
 
     setState(prev => {
       if (!prev.currentTournament) return prev
