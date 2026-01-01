@@ -908,7 +908,11 @@ function AdminPortal({
       participantsByGroup.set(p.group, [...existing, p])
     })
     
-    const allMatches: Match[] = []
+    // Keep completed and in-progress matches
+    const existingMatches = state.currentTournament.matches || []
+    const completedMatches = existingMatches.filter(m => m.status === 'completed' || m.status === 'in_progress')
+    
+    const newMatches: Match[] = []
     let globalOrderIndex = 0
     const groupOrder = state.groups.filter(g => participantsByGroup.has(g.id)).map(g => g.id)
     
@@ -922,36 +926,51 @@ function AdminPortal({
       const court = groupIndex % 2 === 0 ? 'A' : 'B'
       
       matchPairs.forEach((pair) => {
-        allMatches.push({
-          id: generateId(),
-          groupId,
-          player1Id: pair[0],
-          player2Id: pair[1],
-          player1Score: [],
-          player2Score: [],
-          player1Hansoku: 0,
-          player2Hansoku: 0,
-          winner: null,
-          status: 'pending',
-          court,
-          isHantei,
-          matchType: isHantei ? 'ippon' : 'sanbon',
-          timerDuration: 180,
-          orderIndex: globalOrderIndex++,
-        })
+        // Check if this match already exists (same players, same group)
+        const existingMatch = completedMatches.find(m => 
+          m.groupId === groupId &&
+          ((m.player1Id === pair[0] && m.player2Id === pair[1]) ||
+           (m.player1Id === pair[1] && m.player2Id === pair[0]))
+        )
+        
+        if (existingMatch) {
+          // Keep the existing match with its results
+          newMatches.push({ ...existingMatch, orderIndex: globalOrderIndex++ })
+        } else {
+          // Create new pending match
+          newMatches.push({
+            id: generateId(),
+            groupId,
+            player1Id: pair[0],
+            player2Id: pair[1],
+            player1Score: [],
+            player2Score: [],
+            player1Hansoku: 0,
+            player2Hansoku: 0,
+            winner: null,
+            status: 'pending',
+            court,
+            isHantei,
+            matchType: isHantei ? 'ippon' : 'sanbon',
+            timerDuration: state.currentTournament?.defaultTimerDuration || 180,
+            orderIndex: globalOrderIndex++,
+          })
+        }
       })
     })
     
-    if (allMatches.length === 0) {
+    if (newMatches.length === 0) {
       toast.error('No matches could be generated')
       return
     }
+    
+    const keptCount = newMatches.filter(m => m.status === 'completed' || m.status === 'in_progress').length
     
     setState(prev => ({
       ...prev,
       currentTournament: {
         ...prev.currentTournament!,
-        matches: allMatches,
+        matches: newMatches,
         groups: [...participantsByGroup.keys()],
         groupOrder,
       },
@@ -959,7 +978,7 @@ function AdminPortal({
       currentMatchIndexB: 0,
     }))
     
-    toast.success(`Refreshed with ${allMatches.length} matches`)
+    toast.success(`Refreshed: ${newMatches.length} matches (${keptCount} preserved)`)
   }
 
   const archiveTournament = () => {
@@ -1515,6 +1534,7 @@ function GroupsManager({
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
 }) {
+  const [editMode, setEditMode] = useState(false)
   const [editingGroup, setEditingGroup] = useState<Group | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
 
@@ -1525,7 +1545,7 @@ function GroupsManager({
     }))
   }
 
-    const addGroup = () => {
+  const addGroup = () => {
     if (!newGroupName.trim()) {
       toast.error('Enter a group name')
       return
@@ -1551,129 +1571,134 @@ function GroupsManager({
   }
 
   return (
-    <div className="space-y-4">
-      <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white">Group Settings</CardTitle>
-          <CardDescription className="text-[#8fb3d1] text-sm">
-            Reorder groups to set court assignments. Position 1,3,5 → Court A | Position 2,4,6 → Court B
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex gap-2">
-            <Input
-              placeholder="New group name..."
-              value={newGroupName}
-              onChange={e => setNewGroupName(e.target.value)}
-              className="bg-[#1a2d42] border-[#2a4a6f] focus:border-orange-500"
-            />
-            <Button onClick={addGroup} className="bg-orange-600 hover:bg-orange-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Add Group
+    <div className="space-y-3">
+      <Card className="bg-[#142130] border-white/5">
+        <CardHeader className="pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-white text-base">Groups</CardTitle>
+            <Button
+              size="sm"
+              variant={editMode ? "default" : "outline"}
+              onClick={() => setEditMode(!editMode)}
+              className={editMode ? "bg-orange-600 hover:bg-orange-700" : "border-[#2a4a6f]"}
+            >
+              <Edit2 className="w-3 h-3 mr-1" />
+              {editMode ? 'Done' : 'Edit'}
             </Button>
           </div>
+          <CardDescription className="text-[#8fb3d1] text-xs">
+            Odd positions → Court A (amber) | Even → Court B (blue)
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-2 pt-0">
+          {editMode && (
+            <div className="flex gap-2 mb-3">
+              <Input
+                placeholder="New group..."
+                value={newGroupName}
+                onChange={e => setNewGroupName(e.target.value)}
+                className="bg-[#1a2d42] border-[#2a4a6f] text-sm h-9"
+              />
+              <Button onClick={addGroup} size="sm" className="bg-orange-600 hover:bg-orange-700 h-9">
+                <Plus className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
 
-          <Separator className="bg-[#243a52]/50" />
-
-          <div className="space-y-2">
-            {state.groups.map((group, groupIndex) => {
+          <div className="space-y-1">
+            {state.groups.map((group, idx) => {
               const memberCount = state.members.filter(m => m.group === group.id).length
+              const isCourtA = idx % 2 === 0
+              
               return (
                 <div 
                   key={group.id}
-                  draggable
-                  onDragStart={(e) => e.dataTransfer.setData('groupId', group.id)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    const draggedId = e.dataTransfer.getData('groupId')
-                    if (draggedId === group.id) return
-                    setState(prev => {
-                      const groups = [...prev.groups]
-                      const fromIdx = groups.findIndex(g => g.id === draggedId)
-                      const toIdx = groups.findIndex(g => g.id === group.id)
-                      if (fromIdx === -1 || toIdx === -1) return prev
-                      const [moved] = groups.splice(fromIdx, 1)
-                      groups.splice(toIdx, 0, moved)
-                      return { ...prev, groups }
-                    })
-                  }}
-                  className={`flex items-center gap-3 p-3 rounded-lg cursor-move hover:bg-[#1e3a5f]/30 transition-colors border-l-4 ${groupIndex % 2 === 0 ? 'border-l-amber-500' : 'border-l-[#4a7ab0]'}`}
+                  className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
+                    isCourtA 
+                      ? 'bg-amber-950/20 border-l-2 border-l-amber-500' 
+                      : 'bg-blue-950/20 border-l-2 border-l-blue-500'
+                  }`}
                 >
-                  {/* Court indicator - small pill */}
-                  <span className={`px-2 py-0.5 rounded text-xs font-semibold ${groupIndex % 2 === 0 ? 'bg-amber-600/20 text-amber-400' : 'bg-[#2e4a65]/20 text-[#8fb3d1]'}`}>
-                    {groupIndex % 2 === 0 ? 'A' : 'B'}
+                  {/* Court badge */}
+                  <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
+                    isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
+                  }`}>
+                    {isCourtA ? 'A' : 'B'}
                   </span>
                   
-                  {/* Position */}
-                  <span className="text-xs text-[#6b8fad] w-4">#{groupIndex + 1}</span>
-                  
+                  {/* Group info */}
                   {editingGroup?.id === group.id ? (
                     <Input
                       value={editingGroup.name}
                       onChange={e => setEditingGroup({ ...editingGroup, name: e.target.value })}
-                      className="bg-[#1e3a5f] border-[#2a4a6f] flex-1"
+                      className="bg-[#1e3a5f] border-[#2a4a6f] flex-1 h-8 text-sm"
                       autoFocus
-                    />
-                  ) : (
-                    <div className="flex-1">
-                      <span className="text-white font-medium">{group.name}</span>
-                      <span className="text-[#8fb3d1] ml-2 text-sm">({memberCount} members)</span>
-                    </div>
-                  )}
-
-                  <div className="flex items-center gap-2">
-                    <Label className="text-[#b8d4ec] text-sm">Non-Bogu</Label>
-                    <Switch
-                      checked={group.isNonBogu}
-                      onCheckedChange={(checked) => updateGroup(group.id, { isNonBogu: checked })}
-                    />
-                  </div>
-
-                  {group.isNonBogu && (
-                    <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>
-                  )}
-
-                  {editingGroup?.id === group.id ? (
-                    <div className="flex gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => {
+                      onKeyDown={e => {
+                        if (e.key === 'Enter') {
                           updateGroup(group.id, { name: editingGroup.name })
                           setEditingGroup(null)
-                        }}
-                        className="h-8 w-8 text-green-400 hover:text-green-300"
-                      >
-                        <CheckCircle2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setEditingGroup(null)}
-                        className="h-8 w-8 text-[#b8d4ec]"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    </div>
+                        }
+                        if (e.key === 'Escape') setEditingGroup(null)
+                      }}
+                    />
                   ) : (
-                    <div className="flex gap-1">
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => setEditingGroup(group)}
-                        className="h-8 w-8 text-[#b8d4ec] hover:text-white"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        onClick={() => deleteGroup(group.id)}
-                        className="h-8 w-8 text-red-400 hover:text-red-300"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                    <div className="flex-1 min-w-0">
+                      <span className="text-white text-sm font-medium">{group.name}</span>
+                      <span className="text-[#6b8fad] text-xs ml-1">({memberCount})</span>
+                    </div>
+                  )}
+                  
+                  {/* Non-bogu toggle */}
+                  <div className="flex items-center gap-1">
+                    {group.isNonBogu && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400">Hantei</span>
+                    )}
+                    {editMode && (
+                      <Switch
+                        checked={group.isNonBogu}
+                        onCheckedChange={(checked) => updateGroup(group.id, { isNonBogu: checked })}
+                        className="scale-75"
+                      />
+                    )}
+                  </div>
+                  
+                  {/* Edit/Delete buttons - only in edit mode */}
+                  {editMode && (
+                    <div className="flex gap-0.5">
+                      {editingGroup?.id === group.id ? (
+                        <>
+                          <button
+                            onClick={() => {
+                              updateGroup(group.id, { name: editingGroup.name })
+                              setEditingGroup(null)
+                            }}
+                            className="p-1.5 rounded text-green-400 hover:bg-green-900/30"
+                          >
+                            <CheckCircle2 className="w-4 h-4" />
+                          </button>
+                          <button
+                            onClick={() => setEditingGroup(null)}
+                            className="p-1.5 rounded text-slate-400 hover:bg-slate-700/30"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </>
+                      ) : (
+                        <>
+                          <button
+                            onClick={() => setEditingGroup(group)}
+                            className="p-1.5 rounded text-slate-400 hover:bg-slate-700/30"
+                          >
+                            <Edit2 className="w-3 h-3" />
+                          </button>
+                          <button
+                            onClick={() => deleteGroup(group.id)}
+                            className="p-1.5 rounded text-red-400 hover:bg-red-900/30"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
+                        </>
+                      )}
                     </div>
                   )}
                 </div>
@@ -1683,32 +1708,16 @@ function GroupsManager({
         </CardContent>
       </Card>
 
-      <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
-        <CardHeader>
-          <CardTitle className="text-white text-lg">Tournament Rules</CardTitle>
+      <Card className="bg-[#142130] border-white/5">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-white text-base">Rules</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-4 text-[#b8d4ec]">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-4 bg-[#142130] rounded-lg">
-              <h4 className="font-semibold text-white mb-2">Regular Groups (Bogu)</h4>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>First to 2 ippons wins</li>
-                <li>3 minute match time</li>
-                <li>No encho (overtime)</li>
-                <li>If time expires with 1-0, 1-ippon holder wins</li>
-                <li>If time expires with 0-0 or 1-1, match is a draw</li>
-              </ul>
-            </div>
-            <div className="p-4 bg-orange-900/20 border border-orange-800 rounded-lg">
-              <h4 className="font-semibold text-orange-400 mb-2">Non-Bogu Groups (Hantei)</h4>
-              <ul className="list-disc list-inside space-y-1 text-sm">
-                <li>Judge decision (hantei) determines winner</li>
-                <li>3 minute match time</li>
-                <li>No ippon scoring</li>
-                <li>3 shinpan (judges) - always a winner</li>
-                <li className="text-orange-300 font-medium">No draws possible</li>
-              </ul>
-            </div>
+        <CardContent className="text-[#b8d4ec] text-xs space-y-2">
+          <div>
+            <span className="font-semibold text-white">Bogu:</span> First to 2 ippons wins, 3 min, draws allowed
+          </div>
+          <div>
+            <span className="font-semibold text-orange-400">Hantei:</span> Judge decision, no ippons, no draws
           </div>
         </CardContent>
       </Card>
@@ -1716,7 +1725,7 @@ function GroupsManager({
   )
 }
 
-// Tournament Manager Component
+
 function TournamentManager({
   state,
   setState,
