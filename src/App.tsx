@@ -518,7 +518,7 @@ export default function App() {
           </div>
           
           <Card 
-            className="bg-slate-900/80 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-700/50/80 transition-all duration-200"
+            className="bg-slate-800 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-700/50/80 transition-all duration-200"
             onClick={() => setPortal('admin')}
           >
             <CardHeader>
@@ -533,7 +533,7 @@ export default function App() {
           </Card>
           
           <Card 
-            className="bg-slate-900/80 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-700/50/80 transition-all duration-200"
+            className="bg-slate-800 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-700/50/80 transition-all duration-200"
             onClick={() => setPortal('courtkeeper')}
           >
             <CardHeader>
@@ -992,10 +992,11 @@ function AdminPortal({
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                     <Input
+                      className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                       placeholder="Search members..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-slate-900/80 border-slate-600 focus:border-orange-500"
+                      className="pl-10 bg-slate-800 border-slate-600 text-white"
                     />
                   </div>
                   <Select value={filterGroup} onValueChange={setFilterGroup}>
@@ -1272,7 +1273,7 @@ function GroupsManager({
               placeholder="New group name..."
               value={newGroupName}
               onChange={e => setNewGroupName(e.target.value)}
-              className="bg-slate-900/80 border-slate-600 focus:border-orange-500"
+              className="bg-slate-800 border-slate-600 focus:border-orange-500"
             />
             <Button onClick={addGroup} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20">
               <Plus className="w-4 h-4 mr-2" />
@@ -2067,7 +2068,7 @@ function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
           accept=".csv,.xlsx,.xls"
           ref={fileInputRef}
           onChange={handleFileUpload}
-          className="bg-slate-900/80 border-slate-600 focus:border-orange-500"
+          className="bg-slate-800 border-slate-600 focus:border-orange-500"
         />
       </div>
       <div className="space-y-2">
@@ -2112,7 +2113,7 @@ function AddMemberForm({
         <Input 
           value={firstName} 
           onChange={(e) => setFirstName(e.target.value)}
-          className="bg-slate-900/80 border-slate-600 focus:border-orange-500"
+          className="bg-slate-800 border-slate-600 focus:border-orange-500"
           placeholder="Enter first name"
         />
       </div>
@@ -2121,7 +2122,7 @@ function AddMemberForm({
         <Input 
           value={lastName} 
           onChange={(e) => setLastName(e.target.value)}
-          className="bg-slate-900/80 border-slate-600 focus:border-orange-500"
+          className="bg-slate-800 border-slate-600 focus:border-orange-500"
           placeholder="Enter last name"
         />
       </div>
@@ -2177,7 +2178,7 @@ function CSVImportForm({ onImport }: { onImport: (csv: string) => void }) {
           accept=".csv"
           ref={fileInputRef}
           onChange={handleFileUpload}
-          className="bg-slate-900/80 border-slate-600 focus:border-orange-500"
+          className="bg-slate-800 border-slate-600 focus:border-orange-500"
         />
       </div>
       <div className="space-y-2">
@@ -2265,7 +2266,7 @@ function GuestsManager({
                       <Input 
                         value={firstName}
                         onChange={e => setFirstName(e.target.value)}
-                        className="bg-slate-900/80 border-slate-600 focus:border-orange-500"
+                        className="bg-slate-800 border-slate-600 focus:border-orange-500"
                       />
                     </div>
                     <div className="space-y-2">
@@ -2273,7 +2274,7 @@ function GuestsManager({
                       <Input 
                         value={lastName}
                         onChange={e => setLastName(e.target.value)}
-                        className="bg-slate-900/80 border-slate-600 focus:border-orange-500"
+                        className="bg-slate-800 border-slate-600 focus:border-orange-500"
                       />
                     </div>
                   </div>
@@ -2282,7 +2283,7 @@ function GuestsManager({
                     <Input 
                       value={dojo}
                       onChange={e => setDojo(e.target.value)}
-                      className="bg-slate-900/80 border-slate-600 focus:border-orange-500"
+                      className="bg-slate-800 border-slate-600 focus:border-orange-500"
                       placeholder="Guest's home dojo"
                     />
                   </div>
@@ -2620,8 +2621,7 @@ function CourtkeeperPortal({
                   <div className="flex gap-1 mt-2 justify-center">
                     <Button 
                       size="sm" 
-                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" 
-                      className="h-7 text-xs"
+                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700 h-7 text-xs"
                       onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
                     >
                       <ArrowLeftRight className="w-3 h-3 mr-1" />
@@ -2629,8 +2629,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" 
-                      className="h-7 text-xs"
+                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700 h-7 text-xs"
                       onClick={() => moveInQueue(match.id, 'up')}
                       disabled={idx === 0}
                     >
@@ -2638,8 +2637,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" 
-                      className="h-7 text-xs"
+                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700 h-7 text-xs"
                       onClick={() => moveInQueue(match.id, 'down')}
                       disabled={idx === pendingMatches.length - 1}
                     >
@@ -2756,7 +2754,7 @@ function CourtkeeperPortal({
 
       <main className={`p-4 ${!isMobile ? 'mr-80' : ''}`}>
         {!currentMatch ? (
-          <Card className="bg-slate-900/80 border-slate-600 bg-slate-700/50/40 hover:bg-slate-600/50">
+          <Card className="bg-slate-800 border-slate-600 bg-slate-700/50/40 hover:bg-slate-600/50">
             <CardContent className="p-8 text-center">
               <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
               <p className="text-white text-xl">
@@ -2782,7 +2780,7 @@ function CourtkeeperPortal({
         ) : (
           <>
             {/* Timer Section */}
-            <Card className={`bg-slate-900/80 border-2 mb-4 ${
+            <Card className={`bg-slate-800 border-2 mb-4 ${
               timerSeconds >= state.timerTarget ? 'border-red-600 animate-pulse' : 'border-slate-700'
             }`}>
               <CardContent className="p-4">
@@ -2828,7 +2826,7 @@ function CourtkeeperPortal({
             {/* Scoring Section */}
             <div className="grid grid-cols-2 gap-4 mb-4">
               {/* Player 1 (Red/Aka) */}
-              <Card className="bg-slate-900/80 border-2 border-red-800">
+              <Card className="bg-slate-800 border-2 border-red-800">
                 <CardHeader className="pb-2 bg-red-900/30">
                   <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
                     <span className="text-2xl">●</span>
@@ -2895,7 +2893,7 @@ function CourtkeeperPortal({
               </Card>
 
               {/* Player 2 (White/Shiro) */}
-              <Card className="bg-slate-900/80 border-2 border-slate-500">
+              <Card className="bg-slate-800 border-2 border-slate-500">
                 <CardHeader className="pb-2 bg-slate-600/50/30">
                   <CardTitle className="text-white text-center flex items-center justify-center gap-2">
                     <span className="text-2xl">○</span>
@@ -2964,7 +2962,7 @@ function CourtkeeperPortal({
 
             {/* Match Actions */}
             {!isHantei && (
-              <Card className="bg-slate-900/80 border-slate-600 bg-slate-700/50/40 hover:bg-slate-600/50">
+              <Card className="bg-slate-800 border-slate-600 bg-slate-700/50/40 hover:bg-slate-600/50">
                 <CardContent className="p-4">
                   <div className="grid grid-cols-3 gap-2">
                     <Button
