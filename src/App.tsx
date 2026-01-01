@@ -71,8 +71,8 @@ import {
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus,
-  Circle, CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Timer, Award, ChevronLeft
+  CheckCircle2, Table, History, RefreshCw,
+  ArrowLeftRight, Award, ChevronLeft
 } from 'lucide-react'
 
 // Types
@@ -3297,7 +3297,7 @@ function CourtkeeperPortal({
                   
                   {/* Group Matches */}
                   <div className="p-2 space-y-1">
-                    {groupMatches.map((match, mIdx) => {
+                    {groupMatches.map((match) => {
                       const mp1 = getMemberById(match.player1Id)
                       const mp2 = getMemberById(match.player2Id)
                       const isSelected = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
