@@ -1388,30 +1388,34 @@ function GroupsManager({
               return (
                 <div 
                   key={group.id}
-                  className="flex items-center gap-3 p-4 bg-slate-800/40 rounded-lg"
+                  className={`flex items-center gap-4 p-4 rounded-lg border-2 ${state.groups.indexOf(group) % 2 === 0 ? 'bg-red-950/20 border-red-800/50' : 'bg-blue-950/20 border-blue-800/50'}`}
                 >
-                  {/* Order indicator and move buttons */}
-                  <div className="flex flex-col items-center gap-0.5">
+                  {/* Large Court indicator */}
+                  <div className={`w-16 h-16 rounded-xl flex flex-col items-center justify-center font-bold ${state.groups.indexOf(group) % 2 === 0 ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
+                    <span className="text-2xl">Court</span>
+                    <span className="text-3xl">{state.groups.indexOf(group) % 2 === 0 ? 'A' : 'B'}</span>
+                  </div>
+                  
+                  {/* Order controls */}
+                  <div className="flex flex-col gap-1">
                     <Button
                       size="icon"
-                      variant="ghost"
-                      className="h-5 w-5 text-slate-400 hover:text-white"
+                      variant="outline"
+                      className="h-8 w-8 border-slate-600 hover:bg-slate-700"
                       onClick={() => moveGroup(group.id, 'up')}
                       disabled={state.groups.indexOf(group) === 0}
                     >
-                      <ChevronLeft className="w-3 h-3 rotate-90" />
+                      <ChevronLeft className="w-4 h-4 rotate-90" />
                     </Button>
-                    <div className={`w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm ${state.groups.indexOf(group) % 2 === 0 ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
-                      {state.groups.indexOf(group) % 2 === 0 ? 'A' : 'B'}
-                    </div>
+                    <div className="text-center text-slate-400 text-sm font-mono">#{state.groups.indexOf(group) + 1}</div>
                     <Button
                       size="icon"
-                      variant="ghost"
-                      className="h-5 w-5 text-slate-400 hover:text-white"
+                      variant="outline"
+                      className="h-8 w-8 border-slate-600 hover:bg-slate-700"
                       onClick={() => moveGroup(group.id, 'down')}
                       disabled={state.groups.indexOf(group) === state.groups.length - 1}
                     >
-                      <ChevronRight className="w-3 h-3 rotate-90" />
+                      <ChevronRight className="w-4 h-4 rotate-90" />
                     </Button>
                   </div>
                   
