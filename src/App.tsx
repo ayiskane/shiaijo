@@ -1261,22 +1261,7 @@ function MembersTab({
   const totalMatches = state.currentTournament?.matches?.length || 0
   const completedMatches = state.currentTournament?.matches?.filter(m => m.status === 'completed').length || 0
 
-  // Avatar colors based on group
-  const getAvatarColor = (groupId: string, index: number) => {
-    const colors = [
-      'from-orange-500 to-orange-600',
-      'from-purple-500 to-purple-600',
-      'from-cyan-500 to-cyan-600',
-      'from-green-500 to-green-600',
-      'from-pink-500 to-pink-600',
-      'from-amber-500 to-amber-600',
-    ]
-    const group = getGroupById(groupId)
-    if (group?.isNonBogu) return 'from-amber-500 to-amber-600'
-    return colors[index % colors.length]
-  }
-
-  return (
+    return (
     <div className="space-y-4 md:space-y-6">
       {/* Mobile Stats */}
       <div className="grid grid-cols-2 gap-3 md:hidden">
@@ -1474,9 +1459,6 @@ function MembersTab({
                   onCheckedChange={() => toggleParticipation(member.id)}
                   className="w-5 h-5 rounded bg-zinc-700 border-zinc-600 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                 />
-                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor(member.group, idx)} flex items-center justify-center flex-shrink-0`}>
-                  <span className="text-white font-semibold text-sm">{member.firstName[0]}{member.lastName[0]}</span>
-                </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-medium truncate">{member.lastName}, {member.firstName}</p>
                   <p className={`text-xs ${group?.isNonBogu ? 'text-amber-400' : 'text-zinc-500'}`}>{group?.name || member.group}</p>
@@ -1507,14 +1489,9 @@ function MembersTab({
                     onCheckedChange={() => toggleParticipation(member.id)}
                     className="w-4 h-4 rounded bg-zinc-700 border-zinc-600 data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
                   />
-                  <div className="flex items-center gap-3 flex-1">
-                    <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${getAvatarColor(member.group, idx)} flex items-center justify-center`}>
-                      <span className="text-white font-semibold text-sm">{member.firstName[0]}{member.lastName[0]}</span>
-                    </div>
-                    <div>
-                      <p className="font-medium">{member.lastName}, {member.firstName}</p>
-                      <p className="text-xs text-zinc-500">{member.isGuest ? 'Guest' : 'Member'}</p>
-                    </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium">{member.lastName}, {member.firstName}</p>
+                    <p className="text-xs text-zinc-500">{member.isGuest ? 'Guest' : 'Member'}</p>
                   </div>
                   <span className={`w-24 px-3 py-1 text-xs rounded-lg text-center ${group?.isNonBogu ? 'bg-amber-500/20 text-amber-400' : 'bg-zinc-800 text-zinc-300'}`}>
                     {group?.name || member.group}
