@@ -1828,66 +1828,40 @@ function TournamentManager({
         const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
         
         return (
-          <Card key={groupId} className={`border-2 ${groupMatches[0]?.court === 'A' ? 'bg-red-950/10 border-red-800/40' : 'bg-blue-950/10 border-blue-800/40'}`}>
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-3">
-                {/* Large Court indicator */}
-                <div className={`w-14 h-14 rounded-lg flex flex-col items-center justify-center font-bold ${groupMatches[0]?.court === 'A' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
-                  <span className="text-xs">Court</span>
-                  <span className="text-2xl">{groupMatches[0]?.court || 'A'}</span>
+          <Card key={groupId} className={`border ${groupMatches[0]?.court === 'A' ? 'border-red-800/30' : 'border-blue-800/30'}`}>
+            <CardHeader className="p-3 sm:p-4">
+              <div className="flex items-center gap-2 sm:gap-3">
+                {/* Court badge - compact */}
+                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl ${groupMatches[0]?.court === 'A' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}>
+                  {groupMatches[0]?.court || 'A'}
                 </div>
                 
-                {/* Group reorder controls */}
-                <div className="flex flex-col gap-0.5">
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 text-slate-400 hover:text-white"
-                    onClick={() => moveGroupOrder(groupId, 'up')}
-                    disabled={(tournament.groupOrder || []).indexOf(groupId) === 0}
-                  >
-                    <ChevronLeft className="w-4 h-4 rotate-90" />
-                  </Button>
-                  <span className="text-xs text-slate-500 text-center">#{(tournament.groupOrder || []).indexOf(groupId) + 1}</span>
-                  <Button
-                    size="icon"
-                    variant="ghost"
-                    className="h-6 w-6 text-slate-400 hover:text-white"
-                    onClick={() => moveGroupOrder(groupId, 'down')}
-                    disabled={(tournament.groupOrder || []).indexOf(groupId) === (tournament.groupOrder || []).length - 1}
-                  >
-                    <ChevronRight className="w-4 h-4 rotate-90" />
-                  </Button>
+                {/* Group name and progress */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="text-white font-semibold truncate">{group?.name || groupId}</span>
+                    {group?.isNonBogu && <span className="text-[10px] px-1.5 py-0.5 bg-orange-900/50 text-orange-300 rounded">判定</span>}
+                  </div>
+                  <div className="text-xs text-slate-400 mt-0.5">
+                    {groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length} completed
+                  </div>
                 </div>
                 
-                <CardTitle className="text-white flex items-center gap-2 flex-1">
-                  {group?.name || groupId}
-                  {group?.isNonBogu && <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>}
-                </CardTitle>
-                
-                {/* Court switch buttons */}
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant={groupMatches[0]?.court === 'A' ? 'default' : 'outline'}
-                    className={`h-9 px-4 font-bold ${groupMatches[0]?.court === 'A' ? 'bg-red-600 hover:bg-red-700' : 'border-red-600/50 text-red-400 hover:bg-red-900/30'}`}
+                {/* Court switch - simplified */}
+                <div className="flex gap-1">
+                  <button
+                    className={`w-8 h-8 rounded text-xs font-bold ${groupMatches[0]?.court === 'A' ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-red-900/50'}`}
                     onClick={() => setGroupCourt(groupId, 'A')}
                   >
-                    Court A
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant={groupMatches[0]?.court === 'B' ? 'default' : 'outline'}
-                    className={`h-9 px-4 font-bold ${groupMatches[0]?.court === 'B' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-600/50 text-blue-400 hover:bg-blue-900/30'}`}
+                    A
+                  </button>
+                  <button
+                    className={`w-8 h-8 rounded text-xs font-bold ${groupMatches[0]?.court === 'B' ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-blue-900/50'}`}
                     onClick={() => setGroupCourt(groupId, 'B')}
                   >
-                    Court B
-                  </Button>
+                    B
+                  </button>
                 </div>
-                
-                <Badge variant="outline" className="border-slate-600 text-slate-300">
-                  {groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}
-                </Badge>
               </div>
             </CardHeader>
             <CardContent>
