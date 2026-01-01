@@ -1083,14 +1083,41 @@ function AdminPortal({
 
         <nav className="flex-1 py-4 overflow-y-auto">
           {!sidebarCollapsed && <p className="px-4 mb-2 text-xs text-[#6b8fad] uppercase tracking-wider">Menu</p>}
-          {[
-            { id: 'members', icon: Users, label: 'Members' },
-            { id: 'guests', icon: UserPlus, label: 'Guests' },
-            { id: 'groups', icon: Filter, label: 'Groups' },
-            { id: 'tournament', icon: Trophy, label: 'Tournament', badge: state.currentTournament?.status === 'in_progress' ? 'Live' : null },
-            { id: 'standings', icon: Table, label: 'Standings' },
-            { id: 'history', icon: History, label: 'History' },
-          ].map(item => (
+          {(() => {
+            // Determine upcoming month indicator
+            const now = new Date()
+            const dayOfMonth = now.getDate()
+            const isFirstTwoWeeks = dayOfMonth <= 14
+            const currentMonth = MONTHS[now.getMonth()]
+            const currentYear = now.getFullYear()
+            const nextMonth = MONTHS[(now.getMonth() + 1) % 12]
+            const nextYear = now.getMonth() === 11 ? currentYear + 1 : currentYear
+            
+            // Check if current month has results
+            const hasCurrentMonthResults = (state.history || []).some(h => 
+              h.month === currentMonth && h.year === currentYear
+            ) || (state.currentTournament?.month === currentMonth && state.currentTournament?.year === currentYear)
+            
+            // Upcoming is next month if: past first 2 weeks OR current month already has results
+            const upcomingMonth = (!isFirstTwoWeeks || hasCurrentMonthResults) ? nextMonth : currentMonth
+            const upcomingYear = (!isFirstTwoWeeks || hasCurrentMonthResults) ? nextYear : currentYear
+            
+            const tournamentBadge = state.currentTournament?.status === 'in_progress' 
+              ? 'Live' 
+              : (state.currentTournament?.month === upcomingMonth && state.currentTournament?.year === upcomingYear)
+                ? upcomingMonth.slice(0, 3)
+                : null
+            
+            return [
+              { id: 'members', icon: Users, label: 'Members', badge: null },
+              { id: 'guests', icon: UserPlus, label: 'Guests', badge: null },
+              { id: 'groups', icon: Filter, label: 'Groups', badge: null },
+              { id: 'tournament', icon: Trophy, label: 'Tournament', badge: tournamentBadge, badgeColor: state.currentTournament?.status === 'in_progress' ? 'green' : 'amber' },
+              { id: 'standings', icon: Table, label: 'Standings', badge: null },
+              { id: 'history', icon: History, label: 'History', badge: null },
+              { id: 'settings', icon: Settings, label: 'Settings', badge: null },
+            ]
+          })().map(item => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
@@ -1108,7 +1135,11 @@ function AdminPortal({
                 <>
                   <span className="font-medium">{item.label}</span>
                   {item.badge && (
-                    <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400 border border-green-500/30">{item.badge}</span>
+                    <span className={`ml-auto px-2 py-0.5 text-xs rounded-full border ${
+                      item.badgeColor === 'green' 
+                        ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                        : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                    }`}>{item.badge}</span>
                   )}
                 </>
               )}
@@ -1155,6 +1186,7 @@ function AdminPortal({
                 { id: 'tournament', icon: Trophy, label: 'Tournament' },
                 { id: 'standings', icon: Table, label: 'Standings' },
                 { id: 'history', icon: History, label: 'History' },
+                { id: 'settings', icon: Settings, label: 'Settings' },
               ].map(item => (
                 <button
                   key={item.id}
@@ -1225,14 +1257,7 @@ function AdminPortal({
                   className="w-64 bg-[#1e3a5f]/30 border border-[#1e3a5f]/50 rounded-xl pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500/50"
                 />
               </div>
-              <div className="flex items-center gap-2 px-3 py-1.5 bg-[#1e3a5f]/30 rounded-lg">
-                <span className="text-xs text-[#6b8fad]">First names</span>
-                <Switch 
-                  checked={state.useFirstNamesOnly}
-                  onCheckedChange={(checked) => setState(prev => ({ ...prev, useFirstNamesOnly: checked }))}
-                  className="data-[state=checked]:bg-orange-500"
-                />
-              </div>
+
               <button 
                 onClick={async () => {
                   const saved = await loadFromStorage()
@@ -1372,22 +1397,6 @@ function AdminPortal({
                 </div>
               </div>
 
-              {/* Dev tools */}
-              <details className="text-sm">
-                <summary className="text-[#6b8fad] cursor-pointer">Dev tools</summary>
-                <div className="flex gap-2 mt-2">
-                  <button onClick={() => {
-                    const testMembers: Member[] = []
-                    const names = ['Tanaka', 'Suzuki', 'Yamada', 'Sato', 'Watanabe', 'Ito', 'Takahashi', 'Nakamura']
-                    for (let i = 0; i < 20; i++) {
-                      testMembers.push({ id: generateId(), firstName: names[i % names.length], lastName: 'Test' + i, group: state.groups[i % state.groups.length]?.id || 'group-a', isGuest: false, isParticipating: true })
-                    }
-                    setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
-                    toast.success('Added test data')
-                  }} className="px-3 py-1.5 text-xs rounded bg-emerald-900/30 text-emerald-400 border border-emerald-800/50">+ Test Data</button>
-                  <button onClick={() => setShowClearConfirm(true)} className="px-3 py-1.5 text-xs rounded bg-red-900/30 text-red-400 border border-red-800/50">Clear All</button>
-                </div>
-              </details>
             </div>
           )}
 
@@ -1414,6 +1423,144 @@ function AdminPortal({
           {/* History Tab */}
           {activeTab === 'history' && (
             <HistoryView state={state} setState={setState} />
+          )}
+
+          {/* Settings Tab */}
+          {activeTab === 'settings' && (
+            <div className="space-y-6">
+              <Card className="bg-[#142130] border-white/5">
+                <CardHeader>
+                  <CardTitle className="text-white">Display Settings</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between py-3 border-b border-white/5">
+                    <div>
+                      <p className="font-medium">First Names Only</p>
+                      <p className="text-sm text-[#6b8fad]">Show first names only (disambiguate with last initial when needed)</p>
+                    </div>
+                    <Switch 
+                      checked={state.useFirstNamesOnly}
+                      onCheckedChange={(checked) => setState(prev => ({ ...prev, useFirstNamesOnly: checked }))}
+                      className="data-[state=checked]:bg-orange-500"
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#142130] border-white/5">
+                <CardHeader>
+                  <CardTitle className="text-white">Developer Tools</CardTitle>
+                  <CardDescription className="text-[#6b8fad]">Test data and debugging options</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <button onClick={() => {
+                      const testMembers: Member[] = []
+                      const firstNames = ['Sakura', 'Yuki', 'Hana', 'Ren', 'Kai', 'Aoi', 'Sora', 'Hiro']
+                      const lastNames = ['Tanaka', 'Suzuki', 'Yamada', 'Sato', 'Watanabe', 'Ito', 'Takahashi', 'Nakamura']
+                      for (let i = 0; i < 20; i++) {
+                        testMembers.push({ 
+                          id: generateId(), 
+                          firstName: firstNames[i % firstNames.length], 
+                          lastName: lastNames[i % lastNames.length] + (i > 7 ? (i - 7).toString() : ''), 
+                          group: state.groups[i % state.groups.length]?.id || 'group-a', 
+                          isGuest: false, 
+                          isParticipating: true 
+                        })
+                      }
+                      setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
+                      toast.success('Added 20 test members')
+                    }} className="px-4 py-3 rounded-xl bg-emerald-900/30 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-900/50 transition">
+                      <Plus className="w-4 h-4 inline mr-2" />Add Test Members
+                    </button>
+                    
+                    <button onClick={() => {
+                      // Generate demo history
+                      const demoHistory: TournamentHistory[] = []
+                      const months = ['November', 'October', 'September', 'August', 'July']
+                      const players = ['Sakura T.', 'Yuki S.', 'Hana Y.', 'Ren W.', 'Kai I.', 'Aoi N.']
+                      
+                      months.forEach((month, idx) => {
+                        const year = 2025
+                        demoHistory.push({
+                          id: generateId(),
+                          name: \`Renbu Monthly Shiai - \${month} \${year}\`,
+                          date: \`\${year}-\${String(11 - idx).padStart(2, '0')}-15\`,
+                          month,
+                          year,
+                          results: [
+                            {
+                              groupId: 'demo-a',
+                              groupName: 'Group A',
+                              isNonBogu: false,
+                              standings: players.slice(0, 5).map((name, i) => ({
+                                rank: i + 1,
+                                playerName: name,
+                                points: Math.max(0, 10 - i * 2 + Math.floor(Math.random() * 2)),
+                                wins: Math.max(0, 4 - i + Math.floor(Math.random() * 2)),
+                                losses: i + Math.floor(Math.random() * 2),
+                                draws: Math.floor(Math.random() * 2),
+                              }))
+                            },
+                            {
+                              groupId: 'demo-b',
+                              groupName: 'Group B', 
+                              isNonBogu: false,
+                              standings: players.slice(1, 6).map((name, i) => ({
+                                rank: i + 1,
+                                playerName: name,
+                                points: Math.max(0, 8 - i * 2 + Math.floor(Math.random() * 2)),
+                                wins: Math.max(0, 3 - i + Math.floor(Math.random() * 2)),
+                                losses: i + Math.floor(Math.random() * 2),
+                                draws: Math.floor(Math.random() * 2),
+                              }))
+                            }
+                          ]
+                        })
+                      })
+                      setState(prev => ({ ...prev, history: [...(prev.history || []), ...demoHistory] }))
+                      toast.success('Added 5 months of demo history')
+                    }} className="px-4 py-3 rounded-xl bg-blue-900/30 text-blue-400 border border-blue-800/50 hover:bg-blue-900/50 transition">
+                      <History className="w-4 h-4 inline mr-2" />Generate Demo History
+                    </button>
+                    
+                    <button onClick={() => setShowClearConfirm(true)} className="px-4 py-3 rounded-xl bg-red-900/30 text-red-400 border border-red-800/50 hover:bg-red-900/50 transition">
+                      <Trash2 className="w-4 h-4 inline mr-2" />Clear All Members
+                    </button>
+                    
+                    <button onClick={() => {
+                      setState(prev => ({ ...prev, history: [] }))
+                      toast.success('History cleared')
+                    }} className="px-4 py-3 rounded-xl bg-red-900/30 text-red-400 border border-red-800/50 hover:bg-red-900/50 transition">
+                      <Trash2 className="w-4 h-4 inline mr-2" />Clear History
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-[#142130] border-white/5">
+                <CardHeader>
+                  <CardTitle className="text-white">Data Management</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex flex-wrap gap-3">
+                    <button 
+                      onClick={async () => {
+                        const saved = await loadFromStorage()
+                        if (saved) {
+                          const tournament = sanitizeTournament(saved.currentTournament)
+                          setState(prev => ({ ...prev, members: saved.members || prev.members, groups: saved.groups || prev.groups, guestRegistry: saved.guestRegistry || prev.guestRegistry, currentTournament: tournament, history: saved.history || prev.history }))
+                          toast.success('Data synced from cloud')
+                        }
+                      }}
+                      className="px-4 py-3 rounded-xl bg-[#1e3a5f] text-[#b8d4ec] border border-[#2a4a6f] hover:bg-[#243a52] transition"
+                    >
+                      <RefreshCw className="w-4 h-4 inline mr-2" />Sync from Cloud
+                    </button>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           )}
         </div>
       </main>
@@ -1546,6 +1693,7 @@ function GroupsManager({
   const [editMode, setEditMode] = useState(false)
   const [editingGroup, setEditingGroup] = useState<Group | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
+  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
 
   const updateGroup = (groupId: string, updates: Partial<Group>) => {
     setState(prev => ({
@@ -1562,6 +1710,19 @@ function GroupsManager({
       const newIdx = direction === 'up' ? idx - 1 : idx + 1
       if (newIdx < 0 || newIdx >= groups.length) return prev
       ;[groups[idx], groups[newIdx]] = [groups[newIdx], groups[idx]]
+      return { ...prev, groups }
+    })
+  }
+
+  const reorderGroups = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return
+    setState(prev => {
+      const groups = [...prev.groups]
+      const draggedIdx = groups.findIndex(g => g.id === draggedId)
+      const targetIdx = groups.findIndex(g => g.id === targetId)
+      if (draggedIdx === -1 || targetIdx === -1) return prev
+      const [dragged] = groups.splice(draggedIdx, 1)
+      groups.splice(targetIdx, 0, dragged)
       return { ...prev, groups }
     })
   }
@@ -1630,29 +1791,40 @@ function GroupsManager({
             {state.groups.map((group, idx) => {
               const memberCount = state.members.filter(m => m.group === group.id).length
               const isCourtA = idx % 2 === 0
+              const isDragging = draggedGroupId === group.id
+              const isDragTarget = draggedGroupId && draggedGroupId !== group.id
               
               return (
                 <div 
                   key={group.id}
-                  className={`flex items-center gap-2 p-2 rounded-lg transition-colors ${
+                  draggable
+                  onDragStart={(e) => {
+                    setDraggedGroupId(group.id)
+                    e.dataTransfer.effectAllowed = 'move'
+                  }}
+                  onDragEnd={() => setDraggedGroupId(null)}
+                  onDragOver={(e) => {
+                    if (!isDragTarget) return
+                    e.preventDefault()
+                    e.dataTransfer.dropEffect = 'move'
+                  }}
+                  onDrop={(e) => {
+                    e.preventDefault()
+                    if (draggedGroupId && isDragTarget) {
+                      reorderGroups(draggedGroupId, group.id)
+                    }
+                    setDraggedGroupId(null)
+                  }}
+                  className={`flex items-center gap-2 p-3 rounded-lg transition-all cursor-grab active:cursor-grabbing select-none ${
+                    isDragging ? 'opacity-50 scale-95' :
+                    isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
                     isCourtA 
                       ? 'bg-amber-950/20 border-l-2 border-l-amber-500' 
                       : 'bg-blue-950/20 border-l-2 border-l-blue-500'
                   }`}
                 >
-                  {/* Reorder buttons */}
-                  <div className="flex flex-col gap-0.5">
-                    <button
-                      onClick={() => moveGroupPosition(group.id, 'up')}
-                      disabled={idx === 0}
-                      className="w-5 h-4 rounded text-[10px] bg-slate-800 text-slate-400 disabled:opacity-30 hover:bg-slate-700"
-                    >▲</button>
-                    <button
-                      onClick={() => moveGroupPosition(group.id, 'down')}
-                      disabled={idx === state.groups.length - 1}
-                      className="w-5 h-4 rounded text-[10px] bg-slate-800 text-slate-400 disabled:opacity-30 hover:bg-slate-700"
-                    >▼</button>
-                  </div>
+                  {/* Drag handle */}
+                  <span className="text-slate-500 cursor-grab">☰</span>
                   {/* Court badge */}
                   <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
                     isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
@@ -1888,6 +2060,9 @@ function TournamentManager({
     toast.success(`Updated ${field} for all ${getGroupById(groupId)?.name || 'group'} matches`)
   }
 
+  // Track dragged group in tournament
+  const [draggedTournamentGroupId, setDraggedTournamentGroupId] = useState<string | null>(null)
+
   // Reorder groups in tournament
   const moveGroupOrder = (groupId: string, direction: 'up' | 'down') => {
     if (!tournament || !tournament.groupOrder) return
@@ -1901,6 +2076,20 @@ function TournamentManager({
     // Swap
     [currentOrder[idx], currentOrder[newIdx]] = [currentOrder[newIdx], currentOrder[idx]]
     
+    setState(prev => ({
+      ...prev,
+      currentTournament: { ...tournament, groupOrder: currentOrder }
+    }))
+  }
+
+  const reorderTournamentGroups = (draggedId: string, targetId: string) => {
+    if (!tournament || !tournament.groupOrder || draggedId === targetId) return
+    const currentOrder = [...tournament.groupOrder]
+    const draggedIdx = currentOrder.indexOf(draggedId)
+    const targetIdx = currentOrder.indexOf(targetId)
+    if (draggedIdx === -1 || targetIdx === -1) return
+    currentOrder.splice(draggedIdx, 1)
+    currentOrder.splice(targetIdx, 0, draggedId)
     setState(prev => ({
       ...prev,
       currentTournament: { ...tournament, groupOrder: currentOrder }
@@ -2113,19 +2302,18 @@ function TournamentManager({
               </>
             )}
             {tournament.status === 'in_progress' && !isComplete && (
-              <Button onClick={refreshTournamentParticipants} variant="outline" size="sm" className="border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]">
-                <RefreshCw className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Update Participants</span>
-                <span className="sm:hidden">Refresh</span>
+              <Button onClick={refreshTournamentParticipants} variant="outline" className="h-10 px-4 border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]">
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Update Participants
               </Button>
             )}
             {isComplete && (
-              <Button onClick={archiveTournament} className="bg-orange-600 hover:bg-orange-700">
+              <Button onClick={archiveTournament} className="h-10 px-4 bg-orange-600 hover:bg-orange-700">
                 <History className="w-4 h-4 mr-2" />
                 Archive & Complete
               </Button>
             )}
-            <Button variant="outline" onClick={clearTournament} className="border-amber-700/60 text-red-400 bg-red-900/20 hover:bg-red-800/40 hover:border-amber-600">
+            <Button variant="outline" onClick={clearTournament} className="h-10 px-4 border-red-700/60 text-red-400 bg-red-900/20 hover:bg-red-800/40 hover:border-red-600">
               <Trash2 className="w-4 h-4 mr-2" />
               Clear Tournament
             </Button>
@@ -2141,16 +2329,40 @@ function TournamentManager({
         const isShared = state.sharedGroups.includes(groupId)
         const isCourtA = !isShared && groupMatches[0]?.court === 'A'
         const isCourtB = !isShared && groupMatches[0]?.court === 'B'
+        const isDraggingGroup = draggedTournamentGroupId === groupId
+        const isDragTargetGroup = draggedTournamentGroupId && draggedTournamentGroupId !== groupId
         
         return (
-          <Card key={groupId} className={`border-l-2 ${isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'}`}>
-            <CardHeader className="p-2 pb-1">
+          <Card 
+            key={groupId} 
+            draggable
+            onDragStart={(e) => {
+              setDraggedTournamentGroupId(groupId)
+              e.dataTransfer.effectAllowed = 'move'
+            }}
+            onDragEnd={() => setDraggedTournamentGroupId(null)}
+            onDragOver={(e) => {
+              if (!isDragTargetGroup) return
+              e.preventDefault()
+              e.dataTransfer.dropEffect = 'move'
+            }}
+            onDrop={(e) => {
+              e.preventDefault()
+              if (draggedTournamentGroupId && isDragTargetGroup) {
+                reorderTournamentGroups(draggedTournamentGroupId, groupId)
+              }
+              setDraggedTournamentGroupId(null)
+            }}
+            className={`border-l-2 transition-all cursor-grab active:cursor-grabbing ${
+              isDraggingGroup ? 'opacity-50 scale-[0.98]' :
+              isDragTargetGroup ? 'border-2 border-dashed border-amber-400/50' :
+              isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
+            }`}
+          >
+            <CardHeader className="p-3 pb-2">
               {/* Row 1: Group name and progress */}
               <div className="flex items-center gap-2">
-                <div className="flex gap-0.5">
-                  <button onClick={() => moveGroupOrder(groupId, 'up')} disabled={gIdx === 0} className="px-1 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▲</button>
-                  <button onClick={() => moveGroupOrder(groupId, 'down')} disabled={gIdx === totalGroups - 1} className="px-1 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▼</button>
-                </div>
+                <span className="text-slate-500 cursor-grab">☰</span>
                 <span className={`px-1.5 h-6 rounded flex items-center justify-center text-xs font-bold ${
                   isShared ? 'bg-emerald-500 text-white' : isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
                 }`}>
