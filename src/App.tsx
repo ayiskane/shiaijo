@@ -8,7 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { Separator } from '@/components/ui/separator'
+// import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
@@ -88,7 +88,7 @@ import {
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus,
   CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Award, ChevronLeft
+  ArrowLeftRight, Award, ChevronLeft, Undo2, ChevronDown, ChevronUp
 } from 'lucide-react'
 
 // Types
@@ -2996,173 +2996,202 @@ function CourtkeeperPortal({
   }
 
   const [showQueue, setShowQueue] = useState(false)
+  const [showGroupQueue, setShowGroupQueue] = useState(true)
   
-  // Render hansoku triangles
-  const renderHansokuTriangles = (count: number, max: number) => (
-    <div className="flex gap-0.5">
-      {Array.from({ length: max }).map((_, i) => (
-        <span key={i} className={`text-[10px] ${i < count ? 'text-yellow-400' : 'text-slate-700'}`}>
-          ▲
-        </span>
-      ))}
-    </div>
-  )
+  // Get next pending match (after current)
+  const getNextMatch = () => {
+    const currentIdx = pendingMatches.findIndex(m => m.id === currentMatch?.id)
+    return currentIdx >= 0 && currentIdx < pendingMatches.length - 1 
+      ? pendingMatches[currentIdx + 1] 
+      : pendingMatches.find(m => m.id !== currentMatch?.id)
+  }
+  const nextMatch = getNextMatch()
+  const nextPlayer1 = nextMatch ? getMemberById(nextMatch.player1Id) : null
+  const nextPlayer2 = nextMatch ? getMemberById(nextMatch.player2Id) : null
+  const nextGroup = nextMatch ? getGroupById(nextMatch.groupId) : null
 
   return (
     <div className="h-screen bg-[#0a0e14] text-white flex flex-col overflow-hidden">
       <Toaster theme="dark" position="top-center" />
       
-      {/* Compact Header */}
+      {/* Header */}
       <header className="bg-[#0f1419] border-b border-slate-800 px-3 py-2 flex-shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <RenbuLogo size={28} glow />
+            <RenbuLogo size={24} glow />
             <span className="font-bold text-sm">COURTKEEPER</span>
           </div>
+          <button 
+            onClick={() => setShowQueue(true)}
+            className={`p-2 rounded-lg ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}
+          >
+            <Menu className="w-4 h-4" />
+          </button>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="flex-1 flex flex-col p-3 gap-3 overflow-auto">
+        {/* Group Header Bar */}
+        <div className="flex items-center justify-between text-xs">
           <div className="flex items-center gap-2">
-            <span className="text-slate-400 text-xs">{group?.name || 'No Match'}</span>
-            {!group?.isNonBogu && (
+            <span className={`px-2 py-1 rounded font-bold ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+              {selectedCourt === 'A' ? 'COURT A' : 'COURT B'}
+            </span>
+            <span className="text-slate-400 font-semibold uppercase">{group?.name || 'No Match'}</span>
+            {group?.isNonBogu && <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[10px]">Hantei</span>}
+          </div>
+          {!group?.isNonBogu && (
+            <div className="flex items-center gap-1">
               <select 
                 value={timerDuration} 
                 onChange={(e) => updateMatchSettings('timerDuration', parseInt(e.target.value))}
                 className="bg-slate-800 border-0 rounded px-1.5 py-0.5 text-[10px] text-slate-300"
               >
                 {(tournament?.timerOptions || [120, 180, 240, 300]).map(secs => (
-                  <option key={secs} value={secs}>
-                    {Math.floor(secs / 60)}:{(secs % 60).toString().padStart(2, '0')}
-                  </option>
+                  <option key={secs} value={secs}>{Math.floor(secs / 60)}:{(secs % 60).toString().padStart(2, '0')}</option>
                 ))}
               </select>
-            )}
-            <button 
-              onClick={() => setShowQueue(true)}
-              className={`p-1.5 rounded transition-all ${
-                selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
-              }`}
-            >
-              <Menu className="w-4 h-4" />
-            </button>
-          </div>
+              <select 
+                value={matchType} 
+                onChange={(e) => updateMatchSettings('matchType', e.target.value)}
+                className="bg-slate-800 border-0 rounded px-1.5 py-0.5 text-[10px] text-slate-300"
+              >
+                <option value="sanbon">Sanbon</option>
+                <option value="ippon">Ippon</option>
+              </select>
+            </div>
+          )}
         </div>
-      </header>
 
-      {/* Main Content - Flex grow to fill space */}
-      <main className="flex-1 flex flex-col p-2 gap-2 overflow-hidden">
-        {/* Score Display - Compact */}
-        <div className="bg-gradient-to-r from-red-950/40 via-[#12181f] to-slate-700/30 rounded-xl p-3 flex-shrink-0">
+        {/* Score Display */}
+        <div className="bg-gradient-to-r from-red-950/30 via-[#12181f] to-slate-700/20 rounded-xl p-3">
           <div className="flex items-center justify-between">
-            {/* AKA */}
-            <div className="flex-1">
+            {/* AKA Name */}
+            <div className="flex-1 min-w-0">
               <p className="text-red-400 text-[10px] font-medium">AKA</p>
-              <p className="text-base font-bold truncate">
+              <p className="text-sm font-semibold truncate">
                 {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '—'}
               </p>
-              <div className="flex items-center gap-1 mt-1">
-                {p1Score.filter(s => s !== 5).map((s, i) => (
-                  <span key={i} className="w-5 h-5 rounded-full border border-red-400 text-red-400 flex items-center justify-center text-[10px]">
-                    {scoreTypes.find(t => t.id === s)?.letter}
-                  </span>
-                ))}
-              </div>
             </div>
             
             {/* Center Score */}
-            <div className="px-4 text-center">
+            <div className="px-4 text-center flex-shrink-0">
               <div className="text-3xl font-mono font-bold">
                 <span className="text-red-400">{p1EffectiveScore}</span>
                 <span className="text-slate-500 mx-1">:</span>
                 <span className="text-slate-200">{p2EffectiveScore}</span>
               </div>
-              <div className="flex items-center justify-center gap-3 mt-1">
-                {renderHansokuTriangles(p1Hansoku, 4)}
-                {renderHansokuTriangles(p2Hansoku, 4)}
-              </div>
             </div>
             
-            {/* SHIRO */}
-            <div className="flex-1 text-right">
+            {/* SHIRO Name */}
+            <div className="flex-1 min-w-0 text-right">
               <p className="text-slate-400 text-[10px] font-medium">SHIRO</p>
-              <p className="text-base font-bold truncate">
+              <p className="text-sm font-semibold truncate">
                 {player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : '—'}
               </p>
-              <div className="flex items-center justify-end gap-1 mt-1">
-                {p2Score.filter(s => s !== 5).map((s, i) => (
-                  <span key={i} className="w-5 h-5 rounded-full border border-slate-400 text-slate-300 flex items-center justify-center text-[10px]">
-                    {scoreTypes.find(t => t.id === s)?.letter}
-                  </span>
+            </div>
+          </div>
+          
+          {/* Score letters and Hansoku */}
+          <div className="flex items-center justify-between mt-2 pt-2 border-t border-slate-700/30">
+            <div className="flex gap-1">
+              {p1Score.filter(s => s !== 5).map((s, i) => (
+                <span key={i} className="w-5 h-5 rounded-full border border-red-400 text-red-400 flex items-center justify-center text-[10px]">
+                  {scoreTypes.find(t => t.id === s)?.letter}
+                </span>
+              ))}
+            </div>
+            <div className="flex items-center gap-3 text-[10px]">
+              <div className="flex gap-0.5">
+                {Array.from({ length: p1Hansoku }).map((_, i) => (
+                  <span key={i} className="text-yellow-400">▲</span>
                 ))}
               </div>
+              <span className="text-slate-600">Hansoku</span>
+              <div className="flex gap-0.5">
+                {Array.from({ length: p2Hansoku }).map((_, i) => (
+                  <span key={i} className="text-yellow-400">▲</span>
+                ))}
+              </div>
+            </div>
+            <div className="flex gap-1 justify-end">
+              {p2Score.filter(s => s !== 5).map((s, i) => (
+                <span key={i} className="w-5 h-5 rounded-full border border-slate-400 text-slate-300 flex items-center justify-center text-[10px]">
+                  {scoreTypes.find(t => t.id === s)?.letter}
+                </span>
+              ))}
             </div>
           </div>
         </div>
 
-        {/* Score Buttons - Split */}
+        {/* Score Buttons - Fixed size, not stretched */}
         {!currentMatch?.isHantei && (
-          <div className="grid grid-cols-2 gap-2 flex-1 min-h-0">
+          <div className="grid grid-cols-2 gap-3">
             {/* AKA Controls */}
-            <div className="bg-red-950/20 rounded-xl p-2 border border-red-900/30 flex flex-col">
-              <p className="text-red-400 text-[10px] font-bold mb-1">AKA</p>
-              <div className="grid grid-cols-2 gap-1.5 flex-1">
+            <div className="bg-red-950/20 rounded-xl p-3 border border-red-900/30">
+              <p className="text-red-400 text-[10px] font-bold mb-2">AKA</p>
+              <div className="grid grid-cols-2 gap-2">
                 {scoreTypes.slice(0, 4).map(type => (
                   <button
                     key={`p1-${type.id}`}
                     onClick={() => addScore('player1', type.id)}
                     disabled={p1EffectiveScore >= winTarget}
-                    className="rounded-lg border-2 border-red-500/50 text-red-400 hover:bg-red-500/20 disabled:opacity-30 flex items-center justify-center"
+                    className="h-14 rounded-lg border-2 border-red-500/50 text-red-400 hover:bg-red-500/20 disabled:opacity-30 flex items-center justify-center"
                   >
-                    <span className="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-sm font-bold">
+                    <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
                       {type.letter}
                     </span>
                   </button>
                 ))}
               </div>
-              <div className="flex gap-1.5 mt-1.5">
+              <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => addHansoku('player1')}
                   disabled={p1Hansoku >= p1MaxHansoku}
-                  className="flex-1 h-8 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
+                  className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
                 >
                   ▲
                 </button>
                 <button
                   onClick={() => removeLastScore('player1')}
                   disabled={p1Score.length === 0}
-                  className="w-10 h-8 rounded-lg text-sm border border-slate-600 text-slate-400 hover:bg-slate-700/50 disabled:opacity-30"
+                  className="w-12 h-9 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 disabled:opacity-30 flex items-center justify-center"
                 >
-                  ↩
+                  <Undo2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
             {/* SHIRO Controls */}
-            <div className="bg-slate-700/20 rounded-xl p-2 border border-slate-700/30 flex flex-col">
-              <p className="text-slate-400 text-[10px] font-bold mb-1 text-right">SHIRO</p>
-              <div className="grid grid-cols-2 gap-1.5 flex-1">
+            <div className="bg-slate-700/20 rounded-xl p-3 border border-slate-700/30">
+              <p className="text-slate-400 text-[10px] font-bold mb-2 text-right">SHIRO</p>
+              <div className="grid grid-cols-2 gap-2">
                 {scoreTypes.slice(0, 4).map(type => (
                   <button
                     key={`p2-${type.id}`}
                     onClick={() => addScore('player2', type.id)}
                     disabled={p2EffectiveScore >= winTarget}
-                    className="rounded-lg border-2 border-slate-500/50 text-slate-300 hover:bg-slate-500/20 disabled:opacity-30 flex items-center justify-center"
+                    className="h-14 rounded-lg border-2 border-slate-500/50 text-slate-300 hover:bg-slate-500/20 disabled:opacity-30 flex items-center justify-center"
                   >
-                    <span className="w-8 h-8 rounded-full border-2 border-current flex items-center justify-center text-sm font-bold">
+                    <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
                       {type.letter}
                     </span>
                   </button>
                 ))}
               </div>
-              <div className="flex gap-1.5 mt-1.5">
+              <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => removeLastScore('player2')}
                   disabled={p2Score.length === 0}
-                  className="w-10 h-8 rounded-lg text-sm border border-slate-600 text-slate-400 hover:bg-slate-700/50 disabled:opacity-30"
+                  className="w-12 h-9 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 disabled:opacity-30 flex items-center justify-center"
                 >
-                  ↩
+                  <Undo2 className="w-4 h-4" />
                 </button>
                 <button
                   onClick={() => addHansoku('player2')}
                   disabled={p2Hansoku >= p2MaxHansoku}
-                  className="flex-1 h-8 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
+                  className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
                 >
                   ▲
                 </button>
@@ -3173,43 +3202,39 @@ function CourtkeeperPortal({
 
         {/* Hantei Buttons */}
         {currentMatch?.isHantei && (
-          <div className="grid grid-cols-2 gap-2 flex-1">
+          <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => completeMatch('player1')}
-              className="rounded-xl font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 flex items-center justify-center gap-2"
+              className="h-16 rounded-xl font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 flex items-center justify-center gap-2"
             >
-              <Award className="w-5 h-5" />
-              AKA Wins
+              <Award className="w-5 h-5" /> AKA Wins
             </button>
             <button
               onClick={() => completeMatch('player2')}
-              className="rounded-xl font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 flex items-center justify-center gap-2"
+              className="h-16 rounded-xl font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 flex items-center justify-center gap-2"
             >
-              <Award className="w-5 h-5" />
-              SHIRO Wins
+              <Award className="w-5 h-5" /> SHIRO Wins
             </button>
           </div>
         )}
 
-        {/* Timer - Compact */}
+        {/* Timer */}
         {!group?.isNonBogu && (
-          <div className={`rounded-xl p-2 flex items-center gap-2 flex-shrink-0 ${timerSeconds >= timerDuration ? 'bg-red-950/30 border border-red-600' : 'bg-slate-800/30'}`}>
+          <div className={`rounded-xl p-3 flex items-center gap-3 ${timerSeconds >= timerDuration ? 'bg-red-950/30 border border-red-600' : 'bg-slate-800/30'}`}>
             <button
               onClick={toggleTimer}
-              className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${
-                timerRunning 
-                  ? 'bg-amber-500 text-black' 
-                  : 'bg-emerald-500 text-white'
+              className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
+                timerRunning ? 'bg-amber-500 text-black' : 'bg-emerald-500 text-white'
               }`}
             >
               {timerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
             </button>
             
             <div className="flex-1 text-center">
-              <div className={`text-2xl font-mono font-bold ${timerSeconds >= timerDuration ? 'text-red-400' : 'text-white'}`}>
+              <div className={`text-3xl font-mono font-bold ${timerSeconds >= timerDuration ? 'text-red-400' : 'text-white'}`}>
                 {formatTime(timerSeconds)}
               </div>
-              <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden">
+              <div className="w-full h-1 bg-slate-700 rounded-full overflow-hidden mt-1">
                 <div 
                   className={`h-full transition-all ${timerSeconds >= timerDuration ? 'bg-red-500' : 'bg-emerald-500'}`}
                   style={{ width: `${Math.min((timerSeconds / timerDuration) * 100, 100)}%` }}
@@ -3219,33 +3244,48 @@ function CourtkeeperPortal({
             
             <button
               onClick={resetTimer}
-              className="w-10 h-10 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center flex-shrink-0"
+              className="w-12 h-12 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center flex-shrink-0"
             >
-              <RotateCcw className="w-4 h-4" />
+              <RotateCcw className="w-5 h-5" />
             </button>
           </div>
         )}
 
-        {/* Match Complete Buttons - Compact */}
+        {/* Up Next Card */}
+        {nextMatch && (
+          <div className="bg-slate-800/20 rounded-xl p-2 border border-slate-700/30">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-slate-500 font-medium">UP NEXT</span>
+              <span className="text-slate-600">{nextGroup?.name}</span>
+            </div>
+            <div className="flex items-center justify-center gap-2 mt-1 text-sm">
+              <span className="text-red-400">{nextPlayer1 ? formatDisplayName(nextPlayer1, state.members, state.useFirstNamesOnly) : '?'}</span>
+              <span className="text-slate-500">vs</span>
+              <span className="text-slate-300">{nextPlayer2 ? formatDisplayName(nextPlayer2, state.members, state.useFirstNamesOnly) : '?'}</span>
+            </div>
+          </div>
+        )}
+
+        {/* Match Complete Buttons */}
         {!currentMatch?.isHantei && (
-          <div className="grid grid-cols-3 gap-1.5 flex-shrink-0">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => completeMatch('player1')}
               disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
-              className="py-2 rounded-lg font-bold text-xs bg-red-600/80 hover:bg-red-600 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="py-2.5 rounded-lg font-bold text-xs bg-red-600/80 hover:bg-red-600 disabled:opacity-30"
             >
               AKA Wins
             </button>
             <button
               onClick={() => completeMatch('draw')}
-              className="py-2 rounded-lg font-bold text-xs bg-slate-700 hover:bg-slate-600"
+              className="py-2.5 rounded-lg font-bold text-xs bg-slate-700 hover:bg-slate-600"
             >
               Draw
             </button>
             <button
               onClick={() => completeMatch('player2')}
               disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
-              className="py-2 rounded-lg font-bold text-xs bg-slate-500/80 hover:bg-slate-500 disabled:opacity-30 disabled:cursor-not-allowed"
+              className="py-2.5 rounded-lg font-bold text-xs bg-slate-500/80 hover:bg-slate-500 disabled:opacity-30"
             >
               SHIRO Wins
             </button>
@@ -3256,19 +3296,13 @@ function CourtkeeperPortal({
       {/* Queue Slide Panel */}
       {showQueue && (
         <>
-          <div 
-            className="fixed inset-0 bg-black/60 z-40"
-            onClick={() => setShowQueue(false)}
-          />
-          <div className="fixed right-0 top-0 bottom-0 w-72 bg-[#0f1419] border-l border-slate-800 z-50 flex flex-col">
+          <div className="fixed inset-0 bg-black/60 z-40" onClick={() => setShowQueue(false)} />
+          <div className="fixed right-0 top-0 bottom-0 w-80 bg-[#0f1419] border-l border-slate-800 z-50 flex flex-col">
             {/* Panel Header */}
             <div className="p-3 border-b border-slate-800 flex-shrink-0">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-bold text-sm">Menu</span>
-                <button 
-                  onClick={() => setShowQueue(false)}
-                  className="p-1 rounded hover:bg-slate-800"
-                >
+                <span className="font-bold">Menu</span>
+                <button onClick={() => setShowQueue(false)} className="p-1 rounded hover:bg-slate-800">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -3278,78 +3312,86 @@ function CourtkeeperPortal({
                 <span className="text-slate-400 text-xs">Court:</span>
                 <button
                   onClick={() => { setSelectedCourt('A'); setShowQueue(false) }}
-                  className={`px-3 py-1 rounded text-xs font-bold ${
-                    selectedCourt === 'A' 
-                      ? 'bg-amber-500 text-black' 
-                      : 'bg-slate-800 text-slate-400'
-                  }`}
+                  className={`px-4 py-1.5 rounded text-xs font-bold ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400'}`}
                 >
                   A
                 </button>
                 <button
                   onClick={() => { setSelectedCourt('B'); setShowQueue(false) }}
-                  className={`px-3 py-1 rounded text-xs font-bold ${
-                    selectedCourt === 'B' 
-                      ? 'bg-blue-500 text-white' 
-                      : 'bg-slate-800 text-slate-400'
-                  }`}
+                  className={`px-4 py-1.5 rounded text-xs font-bold ${selectedCourt === 'B' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'}`}
                 >
                   B
                 </button>
               </div>
               
-              {/* Admin Switch */}
               <button 
                 onClick={onSwitchPortal}
                 className="w-full py-2 rounded bg-slate-800 text-slate-400 text-xs hover:bg-slate-700 flex items-center justify-center gap-2"
               >
-                <ArrowLeftRight className="w-3 h-3" />
-                Switch to Admin
+                <ArrowLeftRight className="w-3 h-3" /> Switch to Admin
               </button>
             </div>
             
-            {/* Queue Header */}
+            {/* Group Queue - Collapsible */}
+            <div className="border-b border-slate-800">
+              <button 
+                onClick={() => setShowGroupQueue(!showGroupQueue)}
+                className="w-full px-3 py-2 flex items-center justify-between text-xs font-medium text-slate-400 hover:bg-slate-800/50"
+              >
+                <span>Group Queue</span>
+                {showGroupQueue ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+              {showGroupQueue && (
+                <div className="px-3 pb-2 space-y-1">
+                  {groupOrder.map((groupId, gIdx) => {
+                    const groupInfo = getGroupById(groupId)
+                    const groupMatchCount = pendingMatches.filter(m => m.groupId === groupId).length
+                    if (groupMatchCount === 0) return null
+                    return (
+                      <div key={groupId} className="flex items-center justify-between text-xs py-1">
+                        <span className="text-slate-300">{groupInfo?.name}</span>
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-500">{groupMatchCount} left</span>
+                          <button
+                            onClick={() => moveGroupInQueue(groupId, 'up')}
+                            disabled={gIdx === 0}
+                            className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
+                          >▲</button>
+                          <button
+                            onClick={() => moveGroupInQueue(groupId, 'down')}
+                            disabled={gIdx === groupOrder.length - 1}
+                            className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
+                          >▼</button>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+            
+            {/* Match Queue Header */}
             <div className="px-3 py-2 flex items-center justify-between flex-shrink-0">
               <span className="text-slate-400 text-xs font-medium">Match Queue</span>
               {(selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB) && (
-                <button 
-                  onClick={clearSelectedMatch}
-                  className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400"
-                >
+                <button onClick={clearSelectedMatch} className="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-400">
                   Clear
                 </button>
               )}
             </div>
             
-            {/* Queue List */}
+            {/* Match Queue List */}
             <div className="flex-1 overflow-y-auto px-2 pb-2">
-              {groupOrder.map((groupId, gIdx) => {
+              {groupOrder.map((groupId) => {
                 const groupInfo = getGroupById(groupId)
                 const groupMatches = pendingMatches.filter(m => m.groupId === groupId)
                 if (groupMatches.length === 0) return null
                 
                 return (
                   <div key={groupId} className="mb-2">
-                    <div className="px-1 py-1 flex items-center justify-between">
-                      <span className="text-slate-500 text-[10px] font-medium">{groupInfo?.name || groupId}</span>
-                      <div className="flex gap-0.5">
-                        <button
-                          onClick={() => moveGroupInQueue(groupId, 'up')}
-                          disabled={gIdx === 0}
-                          className="w-4 h-4 rounded text-[8px] bg-slate-800 text-slate-500 disabled:opacity-30"
-                        >
-                          ▲
-                        </button>
-                        <button
-                          onClick={() => moveGroupInQueue(groupId, 'down')}
-                          disabled={gIdx === groupOrder.length - 1}
-                          className="w-4 h-4 rounded text-[8px] bg-slate-800 text-slate-500 disabled:opacity-30"
-                        >
-                          ▼
-                        </button>
-                      </div>
+                    <div className="px-1 py-1">
+                      <span className="text-slate-500 text-[10px] font-medium">{groupInfo?.name}</span>
                     </div>
-                    
                     {groupMatches.map((match) => {
                       const mp1 = getMemberById(match.player1Id)
                       const mp2 = getMemberById(match.player2Id)
@@ -3359,30 +3401,21 @@ function CourtkeeperPortal({
                       return (
                         <button
                           key={match.id}
-                          onClick={() => {
-                            if (!isCurrentlyPlaying) {
-                              selectMatch(match.id)
-                              setShowQueue(false)
-                            }
-                          }}
-                          className={`w-full p-2 rounded-lg mb-1 text-left text-xs transition-all ${
-                            isCurrentlyPlaying 
-                              ? 'bg-emerald-900/30 border border-emerald-600' 
-                              : isSelected 
-                                ? 'bg-amber-900/30 border border-amber-500'
-                                : 'bg-slate-800/50 hover:bg-slate-800'
+                          onClick={() => { if (!isCurrentlyPlaying) { selectMatch(match.id); setShowQueue(false) } }}
+                          className={`w-full p-2 rounded-lg mb-1 text-xs transition-all ${
+                            isCurrentlyPlaying ? 'bg-emerald-900/30 border border-emerald-600' 
+                            : isSelected ? 'bg-amber-900/30 border border-amber-500'
+                            : 'bg-slate-800/50 hover:bg-slate-800'
                           }`}
                         >
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-1.5">
-                              {isCurrentlyPlaying && <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold">LIVE</span>}
-                              {isSelected && !isCurrentlyPlaying && <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500 text-black font-bold">NEXT</span>}
-                              <span className="text-red-400 truncate max-w-[70px]">
-                                {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
-                              </span>
-                            </div>
-                            <span className="text-slate-500 text-[10px]">vs</span>
-                            <span className="text-slate-300 truncate max-w-[70px]">
+                          <div className="flex items-center">
+                            {isCurrentlyPlaying && <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold mr-2">LIVE</span>}
+                            {isSelected && !isCurrentlyPlaying && <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
+                            <span className="text-red-400 truncate flex-1 text-left">
+                              {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
+                            </span>
+                            <span className="text-slate-500 px-2">vs</span>
+                            <span className="text-slate-300 truncate flex-1 text-right">
                               {mp2 ? formatDisplayName(mp2, state.members, state.useFirstNamesOnly) : '?'}
                             </span>
                           </div>
@@ -3392,11 +3425,8 @@ function CourtkeeperPortal({
                   </div>
                 )
               })}
-              
               {pendingMatches.length === 0 && (
-                <div className="text-center py-6 text-slate-500 text-xs">
-                  No pending matches
-                </div>
+                <div className="text-center py-6 text-slate-500 text-xs">No pending matches</div>
               )}
             </div>
           </div>
@@ -3405,6 +3435,8 @@ function CourtkeeperPortal({
     </div>
   )
 }
+
+
 
 
 
