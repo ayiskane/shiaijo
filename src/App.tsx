@@ -1066,120 +1066,95 @@ function AdminPortal({
               </Select>
             </div>
 
-            {/* Action Buttons - Organized in groups */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* Primary Actions */}
-              <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
-                <DialogTrigger asChild>
-                  <Button className="bg-orange-600 hover:bg-orange-700 h-9">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Member
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-slate-900 border-slate-700">
-                  <DialogHeader>
-                    <DialogTitle className="text-white">Add Member</DialogTitle>
-                    <DialogDescription className="text-slate-400">Add a new member to the roster</DialogDescription>
-                  </DialogHeader>
-                  <AddMemberForm 
-                    groups={state.groups} 
-                    onAdd={(fn, ln, g) => {
-                      addMember(fn, ln, g)
-                      setShowAddMember(false)
-                    }} 
-                  />
-                </DialogContent>
-              </Dialog>
+            {/* Action Buttons - Compact for mobile */}
+            <div className="space-y-3">
+              {/* Primary row */}
+              <div className="flex gap-2">
+                <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-orange-600 hover:bg-orange-700 h-8 text-sm flex-1 sm:flex-none">
+                      <Plus className="w-4 h-4 mr-1" />
+                      Add
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-slate-900 border-slate-700">
+                    <DialogHeader>
+                      <DialogTitle className="text-white">Add Member</DialogTitle>
+                      <DialogDescription className="text-slate-400">Add a new member to the roster</DialogDescription>
+                    </DialogHeader>
+                    <AddMemberForm 
+                      groups={state.groups} 
+                      onAdd={(fn, ln, g) => {
+                        addMember(fn, ln, g)
+                        setShowAddMember(false)
+                      }} 
+                    />
+                  </DialogContent>
+                </Dialog>
 
-              <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="border-slate-700 bg-slate-800/50 hover:bg-slate-700 h-9">
-                    <FileSpreadsheet className="w-4 h-4 mr-2" />
-                    Import CSV
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="bg-slate-900 border-slate-700">
-                  <DialogHeader>
-                    <DialogTitle className="text-white">Import from CSV</DialogTitle>
-                    <DialogDescription className="text-slate-400">
-                      Format: FirstName,LastName,GroupID (one per line)
-                    </DialogDescription>
-                  </DialogHeader>
-                  <CSVImportForm onImport={(csv) => {
-                    handleCSVImport(csv)
-                    setShowBulkAdd(false)
-                  }} />
-                </DialogContent>
-              </Dialog>
-
-              <div className="h-6 w-px bg-slate-700 hidden sm:block" />
-
-              {/* Selection Actions */}
-              <div className="flex flex-wrap gap-2">
-                {state.groups.slice(0, 4).map(g => (
-                  <Button 
+                <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="border-slate-700 bg-slate-800/40 h-8 text-sm">
+                      <FileSpreadsheet className="w-4 h-4 sm:mr-1" />
+                      <span className="hidden sm:inline">Import</span>
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-slate-900 border-slate-700">
+                    <DialogHeader>
+                      <DialogTitle className="text-white">Import from CSV</DialogTitle>
+                      <DialogDescription className="text-slate-400">
+                        Format: FirstName,LastName,GroupID (one per line)
+                      </DialogDescription>
+                    </DialogHeader>
+                    <CSVImportForm onImport={(csv) => {
+                      handleCSVImport(csv)
+                      setShowBulkAdd(false)
+                    }} />
+                  </DialogContent>
+                </Dialog>
+                
+                <button 
+                  onClick={deselectAll}
+                  className="px-2 h-8 text-slate-500 hover:text-white hover:bg-slate-800 rounded text-sm"
+                >
+                  Reset
+                </button>
+              </div>
+              
+              {/* Quick select row */}
+              <div className="flex flex-wrap gap-1.5">
+                {state.groups.map(g => (
+                  <button 
                     key={g.id}
-                    variant="outline" 
-                    size="sm"
-                    className="border-slate-700 bg-slate-800/30 hover:bg-slate-700 h-8 text-xs"
+                    className="px-2.5 py-1 text-xs rounded bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700/50"
                     onClick={() => selectByGroup(g.id)}
                   >
                     {g.name}
-                  </Button>
+                  </button>
                 ))}
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="border-orange-700 bg-orange-950/30 hover:bg-orange-900/50 text-orange-400 h-8 text-xs"
+              </div>
+            </div>
+
+            {/* Dev tools - hidden by default */}
+            <details className="text-sm">
+              <summary className="text-slate-500 cursor-pointer hover:text-slate-400">Dev tools</summary>
+              <div className="flex gap-2 mt-2">
+                <button 
+                  className="px-3 py-1.5 text-xs rounded bg-emerald-900/30 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-900/50"
                   onClick={() => {
-                    const nonBoguGroupIds = state.groups.filter(g => g.isNonBogu).map(g => g.id)
-                    setState(prev => ({
-                      ...prev,
-                      members: prev.members.map(m => ({
-                        ...m,
-                        isParticipating: nonBoguGroupIds.includes(m.group) ? true : m.isParticipating
-                      }))
-                    }))
-                    toast.success('Selected Non-Bogu members')
+                    const testMembers = generateTestMembers()
+                    setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
+                    toast.success(`Added ${testMembers.length} test members`)
                   }}
                 >
-                  Non-Bogu
-                </Button>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={deselectAll}
-                  className="h-8 text-xs text-slate-400 hover:text-white"
-                >
-                  <RefreshCw className="w-3 h-3 mr-1" />
-                  Reset
-                </Button>
-              </div>
-
-              <div className="h-6 w-px bg-slate-700 hidden sm:block" />
-
-              {/* Utility Actions */}
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="border-emerald-800 text-emerald-400 bg-emerald-950/30 hover:bg-emerald-900/50 h-8"
-                onClick={() => {
-                  const testMembers = generateTestMembers()
-                  setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
-                  toast.success(`Added ${testMembers.length} test members`)
-                }}
-              >
-                <Plus className="w-3 h-3 mr-1" />
-                Test Data
-              </Button>
-
-              <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-red-900 text-red-400 bg-red-950/30 hover:bg-red-900/50 h-8">
-                    <Trash2 className="w-3 h-3 mr-1" />
-                    Clear All
-                  </Button>
-                </DialogTrigger>
+                  + Test Data
+                </button>
+                <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+                  <DialogTrigger asChild>
+                    <button className="px-3 py-1.5 text-xs rounded bg-red-900/30 text-red-400 border border-red-800/50 hover:bg-red-900/50">
+                      Clear All
+                    </button>
+                  </DialogTrigger>
                 <DialogContent className="bg-slate-900 border-slate-700">
                   <DialogHeader>
                     <DialogTitle className="text-white">Clear All Members?</DialogTitle>
