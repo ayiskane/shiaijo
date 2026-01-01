@@ -3011,243 +3011,236 @@ function CourtkeeperPortal({
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto p-4 space-y-4">
-        {/* Match Info Bar */}
-        <div className="bg-[#142130] rounded-xl p-4 border border-[#1e3a5f]">
-          <div className="flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-3">
-              <span className={`px-3 py-1 rounded-lg font-bold ${selectedCourt === 'A' ? 'bg-amber-600' : 'bg-[#1e3a5f]'}`}>
-                Court {selectedCourt}
-              </span>
-              <span className="px-3 py-1 rounded-lg bg-[#1e3a5f]/50 text-[#b8d4ec]">
-                {group?.name || 'Unknown'}
-              </span>
-            </div>
+      <main className="max-w-2xl mx-auto p-4 space-y-3">
+        {/* Match Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <span className={`px-3 py-1.5 rounded-lg font-bold text-sm ${selectedCourt === 'A' ? 'bg-amber-600' : 'bg-[#1e3a5f]'}`}>
+              Court {selectedCourt}
+            </span>
+            <span className="text-[#8fb3d1] text-sm">{group?.name || 'Unknown'}</span>
+            {group?.isNonBogu && <span className="text-[10px] px-2 py-0.5 rounded bg-orange-600/20 text-orange-400">判定</span>}
+          </div>
+          {!group?.isNonBogu && (
             <div className="flex items-center gap-2">
               <select 
                 value={timerDuration} 
                 onChange={(e) => updateMatchSettings('timerDuration', parseInt(e.target.value))}
-                className="bg-[#1e3a5f]/50 border border-[#2a4a6f] rounded px-2 py-1 text-sm"
+                className="bg-[#1a2d42] border border-[#2a4a6f] rounded px-2 py-1 text-xs"
               >
+                <option value={120}>2 min</option>
                 <option value={180}>3 min</option>
                 <option value={240}>4 min</option>
                 <option value={300}>5 min</option>
-                <option value={120}>2 min</option>
               </select>
               <select 
                 value={matchType} 
                 onChange={(e) => updateMatchSettings('matchType', e.target.value)}
-                className="bg-[#1e3a5f]/50 border border-[#2a4a6f] rounded px-2 py-1 text-sm"
+                className="bg-[#1a2d42] border border-[#2a4a6f] rounded px-2 py-1 text-xs"
               >
-                <option value="sanbon">Sanbon</option>
-                <option value="ippon">Ippon</option>
+                <option value="sanbon">三本</option>
+                <option value="ippon">一本</option>
               </select>
             </div>
-          </div>
+          )}
         </div>
 
-        {/* Player 1 (AKA/Red) */}
-        <div className="bg-red-900/30 rounded-xl overflow-hidden border-2 border-red-800">
-          <div className="bg-red-900/50 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-red-500"></span>
-                <span className="font-bold text-lg text-red-200">AKA</span>
-              </div>
-              <span className="text-xl font-bold text-white">
-                {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '?'}
-              </span>
+        {/* Player 1 - AKA */}
+        <div className="bg-gradient-to-r from-red-950/80 to-red-900/40 rounded-lg border border-red-800/50 p-3">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
+              <span className="font-semibold text-red-300">AKA</span>
+            </div>
+            <span className="text-lg font-bold">
+              {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '?'}
+            </span>
+          </div>
+          
+          {/* Score & Hansoku Row */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex-1 min-h-[28px]">
+              {renderScoreDisplay(p1Score, p2Hansoku)}
+            </div>
+            <div className="flex items-center gap-1 text-[#6b8fad]">
+              {renderHansokuIndicator(p1Hansoku, p1MaxHansoku)}
             </div>
           </div>
-          <div className="p-4 space-y-4">
-            {/* Score Display */}
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                {renderScoreDisplay(p1Score, p2Hansoku)}
+          
+          {/* Controls */}
+          {!currentMatch?.isHantei ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-4 gap-1.5">
+                {scoreTypes.slice(0, 4).map(type => (
+                  <button
+                    key={type.id}
+                    onClick={() => addScore('player1', type.id)}
+                    disabled={p1EffectiveScore >= winTarget}
+                    className="h-11 text-base font-bold bg-[#1e3a5f] hover:bg-[#2a4a6f] rounded-lg disabled:opacity-40 transition-colors"
+                  >
+                    {type.letter}
+                  </button>
+                ))}
               </div>
-              <div className="border-l border-red-800/50 pl-4">
-                {renderHansokuIndicator(p1Hansoku, p1MaxHansoku)}
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => addHansoku('player1')}
+                  disabled={p1Hansoku >= p1MaxHansoku}
+                  className="flex-1 h-9 text-sm bg-amber-700/80 hover:bg-amber-600 rounded-lg disabled:opacity-40 transition-colors"
+                >
+                  Hansoku △
+                </button>
+                <button
+                  onClick={() => removeLastScore('player1')}
+                  disabled={p1Score.length === 0}
+                  className="px-4 h-9 text-sm bg-[#1a2d42] hover:bg-[#243a50] rounded-lg border border-[#2a4a6f] disabled:opacity-40 transition-colors"
+                >
+                  Undo
+                </button>
               </div>
             </div>
-            
-            {/* Score Buttons */}
-            {!currentMatch?.isHantei && (
-              <>
-                <div className="grid grid-cols-4 gap-2">
-                  {scoreTypes.slice(0, 4).map(type => (
-                    <Button
-                      key={type.id}
-                      onClick={() => addScore('player1', type.id)}
-                      disabled={p1EffectiveScore >= winTarget}
-                      className="h-14 text-lg font-bold bg-[#1e3a5f] hover:bg-[#2a4a6f]"
-                    >
-                      {type.letter}
-                    </Button>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => addHansoku('player1')}
-                    disabled={p1Hansoku >= p1MaxHansoku}
-                    className="flex-1 h-12 bg-amber-700 hover:bg-amber-600"
-                  >
-                    Hansoku △
-                  </Button>
-                  <Button
-                    onClick={() => removeLastScore('player1')}
-                    disabled={p1Score.length === 0}
-                    variant="outline"
-                    className="h-12 border-[#2a4a6f]"
-                  >
-                    Undo
-                  </Button>
-                </div>
-              </>
-            )}
-            
-            {/* Hantei Button */}
-            {currentMatch?.isHantei && (
-              <Button
-                onClick={() => completeMatch('player1')}
-                className="w-full h-16 text-xl bg-red-700 hover:bg-red-600"
-              >
-                <Award className="w-6 h-6 mr-2" />
-                AKA Wins (判定)
-              </Button>
-            )}
-          </div>
+          ) : (
+            <button
+              onClick={() => completeMatch('player1')}
+              className="w-full h-12 text-base font-semibold bg-red-700 hover:bg-red-600 rounded-lg flex items-center justify-center gap-2"
+            >
+              <Award className="w-5 h-5" />
+              AKA Wins (判定)
+            </button>
+          )}
         </div>
 
-        {/* Player 2 (SHIRO/White) */}
-        <div className="bg-[#1e3a5f]/30 rounded-xl overflow-hidden border-2 border-[#4a7ab0]">
-          <div className="bg-[#1e3a5f]/50 px-4 py-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <span className="w-3 h-3 rounded-full bg-white"></span>
-                <span className="font-bold text-lg text-blue-200">SHIRO</span>
-              </div>
-              <span className="text-xl font-bold text-white">
-                {player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : '?'}
-              </span>
+        {/* Player 2 - SHIRO */}
+        <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/40 rounded-lg border border-slate-600/50 p-3">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              <span className="font-semibold text-slate-300">SHIRO</span>
+            </div>
+            <span className="text-lg font-bold">
+              {player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : '?'}
+            </span>
+          </div>
+          
+          {/* Score & Hansoku Row */}
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex-1 min-h-[28px]">
+              {renderScoreDisplay(p2Score, p1Hansoku)}
+            </div>
+            <div className="flex items-center gap-1 text-[#6b8fad]">
+              {renderHansokuIndicator(p2Hansoku, p2MaxHansoku)}
             </div>
           </div>
-          <div className="p-4 space-y-4">
-            {/* Score Display */}
-            <div className="flex items-center justify-between">
-              <div className="flex-1">
-                {renderScoreDisplay(p2Score, p1Hansoku)}
+          
+          {/* Controls */}
+          {!currentMatch?.isHantei ? (
+            <div className="space-y-2">
+              <div className="grid grid-cols-4 gap-1.5">
+                {scoreTypes.slice(0, 4).map(type => (
+                  <button
+                    key={type.id}
+                    onClick={() => addScore('player2', type.id)}
+                    disabled={p2EffectiveScore >= winTarget}
+                    className="h-11 text-base font-bold bg-[#1e3a5f] hover:bg-[#2a4a6f] rounded-lg disabled:opacity-40 transition-colors"
+                  >
+                    {type.letter}
+                  </button>
+                ))}
               </div>
-              <div className="border-l border-[#4a7ab0]/50 pl-4">
-                {renderHansokuIndicator(p2Hansoku, p2MaxHansoku)}
+              <div className="flex gap-1.5">
+                <button
+                  onClick={() => addHansoku('player2')}
+                  disabled={p2Hansoku >= p2MaxHansoku}
+                  className="flex-1 h-9 text-sm bg-amber-700/80 hover:bg-amber-600 rounded-lg disabled:opacity-40 transition-colors"
+                >
+                  Hansoku △
+                </button>
+                <button
+                  onClick={() => removeLastScore('player2')}
+                  disabled={p2Score.length === 0}
+                  className="px-4 h-9 text-sm bg-[#1a2d42] hover:bg-[#243a50] rounded-lg border border-[#2a4a6f] disabled:opacity-40 transition-colors"
+                >
+                  Undo
+                </button>
               </div>
             </div>
-            
-            {/* Score Buttons */}
-            {!currentMatch?.isHantei && (
-              <>
-                <div className="grid grid-cols-4 gap-2">
-                  {scoreTypes.slice(0, 4).map(type => (
-                    <Button
-                      key={type.id}
-                      onClick={() => addScore('player2', type.id)}
-                      disabled={p2EffectiveScore >= winTarget}
-                      className="h-14 text-lg font-bold bg-[#1e3a5f] hover:bg-[#2a4a6f]"
-                    >
-                      {type.letter}
-                    </Button>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    onClick={() => addHansoku('player2')}
-                    disabled={p2Hansoku >= p2MaxHansoku}
-                    className="flex-1 h-12 bg-amber-700 hover:bg-amber-600"
-                  >
-                    Hansoku △
-                  </Button>
-                  <Button
-                    onClick={() => removeLastScore('player2')}
-                    disabled={p2Score.length === 0}
-                    variant="outline"
-                    className="h-12 border-[#2a4a6f]"
-                  >
-                    Undo
-                  </Button>
-                </div>
-              </>
-            )}
-            
-            {/* Hantei Button */}
-            {currentMatch?.isHantei && (
-              <Button
-                onClick={() => completeMatch('player2')}
-                className="w-full h-16 text-xl bg-[#1e3a5f] hover:bg-[#2a4a6f]"
-              >
-                <Award className="w-6 h-6 mr-2" />
-                SHIRO Wins (判定)
-              </Button>
-            )}
-          </div>
+          ) : (
+            <button
+              onClick={() => completeMatch('player2')}
+              className="w-full h-12 text-base font-semibold bg-slate-600 hover:bg-slate-500 rounded-lg flex items-center justify-center gap-2"
+            >
+              <Award className="w-5 h-5" />
+              SHIRO Wins (判定)
+            </button>
+          )}
         </div>
 
-        {/* Timer */}
-        <Card className={`bg-[#142130] border-2 ${timerSeconds >= timerDuration ? 'border-red-600 animate-pulse' : 'border-[#1e3a5f]'}`}>
-          <CardContent className="p-4">
+        {/* Timer - Only show for bogu matches */}
+        {!group?.isNonBogu && (
+          <div className={`rounded-lg p-4 ${timerSeconds >= timerDuration ? 'bg-red-950/50 border border-red-600' : 'bg-[#0f1a24]'}`}>
             <div className="text-center">
-              <div className={`text-6xl font-mono font-bold ${timerSeconds >= timerDuration ? 'text-red-500' : 'text-white'}`}>
+              <div className={`text-5xl font-mono font-bold tracking-wider ${timerSeconds >= timerDuration ? 'text-red-400' : 'text-white'}`}>
                 {formatTime(timerSeconds)}
               </div>
-              <Progress value={(timerSeconds / timerDuration) * 100} className="mt-3" />
-              <p className="text-[#6b8fad] text-sm mt-2">
+              <div className="w-full h-1 bg-[#1e3a5f] rounded-full mt-3 overflow-hidden">
+                <div 
+                  className={`h-full transition-all ${timerSeconds >= timerDuration ? 'bg-red-500' : 'bg-emerald-500'}`}
+                  style={{ width: `${Math.min((timerSeconds / timerDuration) * 100, 100)}%` }}
+                />
+              </div>
+              <p className="text-[#6b8fad] text-xs mt-2">
                 {timerSeconds >= timerDuration ? 'Time expired!' : `Target: ${formatTime(timerDuration)}`}
               </p>
             </div>
-            <div className="flex justify-center gap-4 mt-4">
-              <Button
-                size="lg"
+            <div className="flex justify-center gap-3 mt-3">
+              <button
                 onClick={toggleTimer}
-                className={timerRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'}
+                className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 ${
+                  timerRunning 
+                    ? 'bg-amber-600 hover:bg-amber-500' 
+                    : 'bg-emerald-600 hover:bg-emerald-500'
+                }`}
               >
-                {timerRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+                {timerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
                 {timerRunning ? 'Pause' : 'Start'}
-              </Button>
-              <Button size="lg" variant="outline" onClick={resetTimer} className="border-[#2a4a6f]">
-                <RotateCcw className="w-5 h-5 mr-2" />
+              </button>
+              <button
+                onClick={resetTimer}
+                className="px-4 py-2 rounded-lg font-medium bg-[#1a2d42] hover:bg-[#243a50] border border-[#2a4a6f] flex items-center gap-2"
+              >
+                <RotateCcw className="w-4 h-4" />
                 Reset
-              </Button>
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        )}
 
         {/* Match Complete Buttons */}
         {!currentMatch?.isHantei && (
-          <div className="grid grid-cols-3 gap-2">
-            <Button
-              size="lg"
+          <div className="grid grid-cols-3 gap-2 pt-1">
+            <button
               onClick={() => completeMatch('player1')}
-              className="bg-red-700 hover:bg-red-600 h-14"
               disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
+              className="py-3 rounded-lg font-semibold bg-red-800/80 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               AKA Wins
-            </Button>
-            <Button
-              size="lg"
+            </button>
+            <button
               onClick={() => completeMatch('draw')}
-              variant="outline"
-              className="border-[#2a4a6f] h-14"
+              className="py-3 rounded-lg font-semibold bg-[#1a2d42] hover:bg-[#243a50] border border-[#2a4a6f] transition-colors"
             >
               Draw
-            </Button>
-            <Button
-              size="lg"
+            </button>
+            <button
               onClick={() => completeMatch('player2')}
-              className="bg-[#1e3a5f] hover:bg-[#2a4a6f] h-14"
               disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
+              className="py-3 rounded-lg font-semibold bg-slate-700/80 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
             >
               SHIRO Wins
-            </Button>
+            </button>
           </div>
         )}
+
 
         {/* Queue Panel */}
         <Card className="bg-[#0f1a24] border-[#1e3a5f]">
