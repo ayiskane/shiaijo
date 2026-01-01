@@ -2933,9 +2933,7 @@ function CourtkeeperPortal({
       return { ...prev, currentTournament: { ...prev.currentTournament, matches: updatedMatches } }
     })
 
-    if (givesPoint) {
-      toast.success(`Hansoku! Point awarded to ${opponent === 'player1' ? 'AKA' : 'SHIRO'}`)
-    }
+    // Toast removed - yellow H circle shows the point visually
   }
 
   const removeLastScore = (player: 'player1' | 'player2') => {
@@ -3168,6 +3166,7 @@ function CourtkeeperPortal({
   const [showGroupQueue, setShowGroupQueue] = useState(true)
   const [showWinModal, setShowWinModal] = useState(false)
   const [pendingWinner, setPendingWinner] = useState<'player1' | 'player2' | null>(null)
+  const [modalDismissedForMatch, setModalDismissedForMatch] = useState<string | null>(null)
   const [draggedMatchId, setDraggedMatchId] = useState<string | null>(null)
   const [touchStartY, setTouchStartY] = useState<number | null>(null)
   
@@ -3175,19 +3174,24 @@ function CourtkeeperPortal({
   useEffect(() => {
     const p1Wins = p1EffectiveScore >= winTarget
     const p2Wins = p2EffectiveScore >= winTarget
+    const matchId = currentMatch?.id
     
-    if (p1Wins && !showWinModal) {
+    // Don't show modal if user dismissed it for this match
+    const wasDismissed = modalDismissedForMatch === matchId
+    
+    if (p1Wins && !showWinModal && !wasDismissed) {
       setPendingWinner('player1')
       setShowWinModal(true)
-    } else if (p2Wins && !showWinModal) {
+    } else if (p2Wins && !showWinModal && !wasDismissed) {
       setPendingWinner('player2')
       setShowWinModal(true)
     } else if (showWinModal && !p1Wins && !p2Wins) {
       // Score was undone (possibly from another device) - close modal
       setShowWinModal(false)
       setPendingWinner(null)
+      setModalDismissedForMatch(null) // Reset so modal can show again if they win again
     }
-  }, [p1EffectiveScore, p2EffectiveScore, winTarget, showWinModal])
+  }, [p1EffectiveScore, p2EffectiveScore, winTarget, showWinModal, currentMatch?.id, modalDismissedForMatch])
 
   // Undo the winning point
   const undoWinningPoint = () => {
@@ -3239,6 +3243,7 @@ function CourtkeeperPortal({
     
     setShowWinModal(false)
     setPendingWinner(null)
+    setModalDismissedForMatch(null)
   }
 
   // Confirm the win
@@ -3248,6 +3253,7 @@ function CourtkeeperPortal({
     }
     setShowWinModal(false)
     setPendingWinner(null)
+    setModalDismissedForMatch(null)
   }
   
   // Get next pending match (after current)
@@ -3579,7 +3585,7 @@ function CourtkeeperPortal({
               : 'bg-gradient-to-b from-slate-700/90 to-[#1a2535] border-slate-400/50'
           }`}>
             <button
-              onClick={() => { setShowWinModal(false); setPendingWinner(null) }}
+              onClick={() => { setShowWinModal(false); setPendingWinner(null); setModalDismissedForMatch(currentMatch?.id || null) }}
               className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center"
             >
               ✕
