@@ -169,6 +169,7 @@ interface PlayerStanding {
   wins: number
   draws: number
   losses: number
+  gamesLeft: number
   ipponsScored: number
   ipponsAgainst: number
   results: Map<string, 'W' | 'L' | 'D' | null>
@@ -296,11 +297,17 @@ const calculateStandings = (
   useFirstNamesOnly: boolean = false
 ): PlayerStanding[] => {
   const groupMatches = matches.filter(m => m.groupId === groupId && m.status === 'completed')
+  const allGroupMatches = matches.filter(m => m.groupId === groupId)
   const groupMembers = members.filter(m => m.group === groupId && m.isParticipating)
   
   const standings: Map<string, PlayerStanding> = new Map()
   
   groupMembers.forEach(member => {
+    // Count pending/in_progress matches for this player
+    const pendingMatches = allGroupMatches.filter(m => 
+      m.status !== 'completed' && (m.player1Id === member.id || m.player2Id === member.id)
+    )
+    
     standings.set(member.id, {
       playerId: member.id,
       playerName: formatDisplayName(member, groupMembers, useFirstNamesOnly),
@@ -308,6 +315,7 @@ const calculateStandings = (
       wins: 0,
       draws: 0,
       losses: 0,
+      gamesLeft: pendingMatches.length,
       ipponsScored: 0,
       ipponsAgainst: 0,
       results: new Map(),
@@ -2360,6 +2368,7 @@ function StandingsView({
                       <th className="text-center text-[#b8d4ec] p-2 font-medium">W</th>
                       {!group?.isNonBogu && <th className="text-center text-[#b8d4ec] p-2 font-medium">D</th>}
                       <th className="text-center text-[#b8d4ec] p-2 font-medium">L</th>
+                      <th className="text-center text-[#b8d4ec] p-2 font-medium">Left</th>
                       {!group?.isNonBogu && <th className="text-center text-[#b8d4ec] p-2 font-medium">Ippons</th>}
                       {groupMembers.map(m => (
                         <th key={m.id} className="text-center text-[#b8d4ec] p-2 font-medium text-xs">
@@ -2377,6 +2386,7 @@ function StandingsView({
                         <td className="p-2 text-center text-green-400">{standing.wins}</td>
                         {!group?.isNonBogu && <td className="p-2 text-center text-[#b8d4ec]">{standing.draws}</td>}
                         <td className="p-2 text-center text-red-400">{standing.losses}</td>
+                        <td className="p-2 text-center text-slate-400">{standing.gamesLeft > 0 ? standing.gamesLeft : '-'}</td>
                         {!group?.isNonBogu && (
                           <td className="p-2 text-center text-[#b8d4ec]">
                             {standing.ipponsScored}-{standing.ipponsAgainst}
@@ -3003,7 +3013,19 @@ function CourtkeeperPortal({
       }
     })
     
-    toast.success(winner === 'draw' ? 'Match ended in draw' : `${winner === 'player1' ? 'AKA' : 'SHIRO'} wins!`)
+    // Show next match toast
+    toast('Starting Next Match...', {
+      icon: '⚔️',
+      duration: 3000,
+      style: {
+        background: '#1e3a5f',
+        color: '#fff',
+        border: '2px solid #f59e0b',
+        fontSize: '16px',
+        fontWeight: 'bold',
+        padding: '16px',
+      },
+    })
   }
 
   // Select a specific match to play next (override queue)
@@ -3070,6 +3092,28 @@ function CourtkeeperPortal({
     }
   }
 
+  // Reorder match in queue (drag and drop)
+  const reorderMatch = (draggedId: string, targetId: string) => {
+    if (draggedId === targetId) return
+    
+    setState(prev => {
+      if (!prev.currentTournament) return prev
+      const matches = [...prev.currentTournament.matches]
+      const draggedMatch = matches.find(m => m.id === draggedId)
+      const targetMatch = matches.find(m => m.id === targetId)
+      
+      if (!draggedMatch || !targetMatch) return prev
+      if (draggedMatch.groupId !== targetMatch.groupId) return prev // Only within same group
+      if (draggedMatch.status !== 'pending' || targetMatch.status !== 'pending') return prev
+      
+      // Swap orderIndex values
+      const tempOrder = draggedMatch.orderIndex
+      draggedMatch.orderIndex = targetMatch.orderIndex
+      targetMatch.orderIndex = tempOrder
+      
+      return { ...prev, currentTournament: { ...prev.currentTournament, matches } }
+    })
+  }
 
   // No tournament or not started
   if (!tournament || tournament.status !== 'in_progress') {
@@ -3124,6 +3168,8 @@ function CourtkeeperPortal({
   const [showGroupQueue, setShowGroupQueue] = useState(true)
   const [showWinModal, setShowWinModal] = useState(false)
   const [pendingWinner, setPendingWinner] = useState<'player1' | 'player2' | null>(null)
+  const [draggedMatchId, setDraggedMatchId] = useState<string | null>(null)
+  const [touchStartY, setTouchStartY] = useState<number | null>(null)
   
   // Detect when someone wins and show modal
   useEffect(() => {
@@ -3519,16 +3565,25 @@ function CourtkeeperPortal({
 
       {/* Win Confirmation Modal */}
       {showWinModal && pendingWinner && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center p-4">
-          <div className="bg-[#1a2535] rounded-2xl p-6 max-w-sm w-full text-center border border-slate-700">
-            <div className="text-5xl mb-4">🏆</div>
-            <h2 className="text-2xl font-bold text-white mb-2">
+        <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
+          <div className={`rounded-2xl p-6 max-w-sm w-full text-center border-2 ${
+            pendingWinner === 'player1' 
+              ? 'bg-gradient-to-b from-red-950/90 to-[#1a2535] border-red-500/50' 
+              : 'bg-gradient-to-b from-slate-700/90 to-[#1a2535] border-slate-400/50'
+          }`}>
+            <div className="text-5xl mb-3">🏆</div>
+            <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${
+              pendingWinner === 'player1' ? 'bg-red-500 text-white' : 'bg-slate-300 text-slate-900'
+            }`}>
+              {pendingWinner === 'player1' ? 'AKA' : 'SHIRO'}
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-1">
               {pendingWinner === 'player1' 
                 ? (player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : 'AKA')
                 : (player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : 'SHIRO')
-              } wins!
+              }
             </h2>
-            <p className="text-slate-400 mb-6">Complete match?</p>
+            <p className="text-slate-400 text-lg mb-5">wins!</p>
             <div className="space-y-2">
               <button
                 onClick={confirmWin}
@@ -3666,12 +3721,58 @@ function CourtkeeperPortal({
                       const isCurrentlyPlaying = match.id === currentMatch?.id
                       const isSharedGroup = (state.sharedGroups || []).includes(groupId)
                       const isLiveOnOtherCourt = match.status === 'in_progress' && !isCurrentlyPlaying
+                      const canDrag = match.status === 'pending' && !isCurrentlyPlaying && !isLiveOnOtherCourt
+                      const isDragging = draggedMatchId === match.id
+                      const isDragTarget = draggedMatchId && draggedMatchId !== match.id && canDrag
                       
                       return (
-                        <button
+                        <div
                           key={match.id}
-                          onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt) { selectMatch(match.id); setShowQueue(false) } }}
-                          className={`w-full p-2 rounded-lg mb-1 text-xs transition-all ${
+                          draggable={canDrag}
+                          onDragStart={(e) => {
+                            if (!canDrag) return
+                            setDraggedMatchId(match.id)
+                            e.dataTransfer.effectAllowed = 'move'
+                          }}
+                          onDragEnd={() => setDraggedMatchId(null)}
+                          onDragOver={(e) => {
+                            if (!isDragTarget) return
+                            e.preventDefault()
+                            e.dataTransfer.dropEffect = 'move'
+                          }}
+                          onDrop={(e) => {
+                            e.preventDefault()
+                            if (draggedMatchId && isDragTarget) {
+                              reorderMatch(draggedMatchId, match.id)
+                            }
+                            setDraggedMatchId(null)
+                          }}
+                          onTouchStart={(e) => {
+                            if (!canDrag) return
+                            setTouchStartY(e.touches[0].clientY)
+                            setDraggedMatchId(match.id)
+                          }}
+                          onTouchMove={(e) => {
+                            if (!draggedMatchId || touchStartY === null) return
+                            const touch = e.touches[0]
+                            const target = document.elementFromPoint(touch.clientX, touch.clientY)
+                            const matchEl = target?.closest('[data-match-id]')
+                            if (matchEl) {
+                              const targetId = matchEl.getAttribute('data-match-id')
+                              if (targetId && targetId !== draggedMatchId) {
+                                reorderMatch(draggedMatchId, targetId)
+                              }
+                            }
+                          }}
+                          onTouchEnd={() => {
+                            setDraggedMatchId(null)
+                            setTouchStartY(null)
+                          }}
+                          data-match-id={match.id}
+                          onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
+                          className={`w-full p-2 rounded-lg mb-1 text-xs transition-all cursor-pointer select-none ${
+                            isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400' :
+                            isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
                             isCurrentlyPlaying ? 'bg-emerald-900/30 border border-emerald-600' 
                             : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
                             : isSelected ? 'bg-amber-900/30 border border-amber-500'
@@ -3679,6 +3780,9 @@ function CourtkeeperPortal({
                           }`}
                         >
                           <div className="flex items-center">
+                            {canDrag && !isSelected && !isCurrentlyPlaying && (
+                              <span className="text-slate-600 mr-2 cursor-grab">☰</span>
+                            )}
                             {isCurrentlyPlaying && (
                               <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold mr-2">
                                 LIVE{isSharedGroup ? ` ${selectedCourt}` : ''}
@@ -3698,7 +3802,7 @@ function CourtkeeperPortal({
                               {mp2 ? formatDisplayName(mp2, state.members, state.useFirstNamesOnly) : '?'}
                             </span>
                           </div>
-                        </button>
+                        </div>
                       )
                     })}
                   </div>
