@@ -1450,7 +1450,7 @@ function MembersTab({
       <div className="bg-[#1e1e2a] border border-white/5 rounded-xl md:rounded-2xl overflow-hidden">
         {/* Mobile Member Cards */}
         <div className="md:hidden divide-y divide-white/5">
-          {filteredMembers.slice(0, 20).map((member, idx) => {
+          {filteredMembers.slice(0, 20).map((member) => {
             const group = getGroupById(member.group)
             return (
               <div key={member.id} className="p-4 flex items-center gap-3">
@@ -1480,7 +1480,7 @@ function MembersTab({
           </div>
 
           <div className="divide-y divide-white/5">
-            {filteredMembers.map((member, idx) => {
+            {filteredMembers.map((member) => {
               const group = getGroupById(member.group)
               return (
                 <div key={member.id} className="px-5 py-4 flex items-center gap-4 hover:bg-zinc-800/30 transition cursor-pointer">
@@ -1642,7 +1642,7 @@ function GuestsTab({
           {guests.length === 0 ? (
             <div className="p-8 text-center text-zinc-500">No guests added yet</div>
           ) : (
-            guests.map((guest, idx) => {
+            guests.map((guest) => {
               const group = getGroupById(guest.group)
               return (
                 <div key={guest.id} className="px-5 py-4 flex items-center gap-4 hover:bg-zinc-800/30 transition">
