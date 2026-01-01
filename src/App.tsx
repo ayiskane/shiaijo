@@ -1484,8 +1484,8 @@ function AdminPortal({
                         const year = 2025
                         demoHistory.push({
                           id: generateId(),
-                          name: \`Renbu Monthly Shiai - \${month} \${year}\`,
-                          date: \`\${year}-\${String(11 - idx).padStart(2, '0')}-15\`,
+                          name: `Renbu Monthly Shiai - ${month} ${year}`,
+                          date: `${year}-${String(11 - idx).padStart(2, '0')}-15`,
                           month,
                           year,
                           results: [
