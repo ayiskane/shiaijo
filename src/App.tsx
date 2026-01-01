@@ -1942,20 +1942,40 @@ function TournamentManager({
                   <span className="text-xs text-[#6b8fad]">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
                 </div>
                 
-                {/* Right: Court toggle */}
-                <div className="flex rounded-lg overflow-hidden border border-[#1e3a5f]">
-                  <button
-                    className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'A' ? 'bg-amber-600 text-white' : 'bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]'}`}
-                    onClick={() => setGroupCourt(groupId, 'A')}
+                {/* Right: Group settings */}
+                <div className="flex items-center gap-2">
+                  <select
+                    value={groupMatches[0]?.timerDuration || 180}
+                    onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
+                    className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
                   >
-                    A
-                  </button>
-                  <button
-                    className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'B' ? 'bg-[#1e3a5f] text-white' : 'bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]/50'}`}
-                    onClick={() => setGroupCourt(groupId, 'B')}
+                    <option value={120}>2m</option>
+                    <option value={180}>3m</option>
+                    <option value={240}>4m</option>
+                    <option value={300}>5m</option>
+                  </select>
+                  <select
+                    value={groupMatches[0]?.matchType || 'sanbon'}
+                    onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
+                    className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
                   >
-                    B
-                  </button>
+                    <option value="sanbon">三本</option>
+                    <option value="ippon">一本</option>
+                  </select>
+                  <div className="flex rounded-lg overflow-hidden border border-[#1e3a5f]">
+                    <button
+                      className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'A' ? 'bg-amber-600 text-white' : 'bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]'}`}
+                      onClick={() => setGroupCourt(groupId, 'A')}
+                    >
+                      A
+                    </button>
+                    <button
+                      className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'B' ? 'bg-[#1e3a5f] text-white' : 'bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]'}`}
+                      onClick={() => setGroupCourt(groupId, 'B')}
+                    >
+                      B
+                    </button>
+                  </div>
                 </div>
               </div>
             </CardHeader>
