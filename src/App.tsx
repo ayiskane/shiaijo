@@ -514,48 +514,53 @@ export default function App() {
 
   if (portal === 'select') {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-[#1a1a24] via-[#13131a] to-[#1a1a24] flex items-center justify-center p-4">
+      <div className="min-h-screen bg-[#13131a] flex items-center justify-center p-4">
         <Toaster theme="dark" position="top-center" />
-        <div className="max-w-lg w-full space-y-6">
-          <div className="text-center mb-8">
-            <img 
-              src="/renbu-logo.png" 
-              alt="Renbu Kendo" 
-              className="w-32 h-32 mx-auto mb-6 drop-shadow-lg"
-            />
-            <h1 className="text-4xl font-bold text-white mb-2">Renbu Monthly Shiai</h1>
-            <p className="text-zinc-300">Select your portal</p>
+        <div className="max-w-md w-full space-y-8">
+          {/* Logo & Title */}
+          <div className="text-center">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
+              <Layers className="w-10 h-10 text-white" />
+            </div>
+            <h1 className="text-3xl font-bold text-white mb-2">Shiaijo</h1>
+            <p className="text-zinc-500">Tournament Manager</p>
           </div>
           
-          <Card 
-            className="bg-zinc-800 border-2 border-zinc-700 cursor-pointer hover:border-orange-500 hover:bg-zinc-700/80 transition-all duration-200"
-            onClick={() => setPortal('admin')}
-          >
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-3">
-                <Settings className="w-6 h-6 text-orange-500" />
-                Admin Portal
-              </CardTitle>
-              <CardDescription className="text-zinc-300">
-                Manage members, groups, and tournament setup
-              </CardDescription>
-            </CardHeader>
-          </Card>
-          
-          <Card 
-            className="bg-zinc-800 border-2 border-zinc-700 cursor-pointer hover:border-orange-500 hover:bg-zinc-700/80 transition-all duration-200"
-            onClick={() => setPortal('courtkeeper')}
-          >
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-3">
-                <Swords className="w-6 h-6 text-orange-500" />
-                Courtkeeper Portal
-              </CardTitle>
-              <CardDescription className="text-zinc-300">
-                Run matches, keep score, and manage timer
-              </CardDescription>
-            </CardHeader>
-          </Card>
+          {/* Portal Cards */}
+          <div className="space-y-4">
+            <button 
+              onClick={() => setPortal('admin')}
+              className="w-full bg-[#1e1e2a] border border-white/5 rounded-2xl p-5 text-left hover:border-orange-500/50 hover:bg-[#252532] transition-all duration-200 group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center group-hover:from-orange-500/30 group-hover:to-orange-600/20 transition-colors">
+                  <Settings className="w-6 h-6 text-orange-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Admin Portal</h2>
+                  <p className="text-sm text-zinc-500">Manage members, groups & tournament</p>
+                </div>
+              </div>
+            </button>
+            
+            <button 
+              onClick={() => setPortal('courtkeeper')}
+              className="w-full bg-[#1e1e2a] border border-white/5 rounded-2xl p-5 text-left hover:border-purple-500/50 hover:bg-[#252532] transition-all duration-200 group"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-purple-500/20 to-purple-600/10 flex items-center justify-center group-hover:from-purple-500/30 group-hover:to-purple-600/20 transition-colors">
+                  <Swords className="w-6 h-6 text-purple-500" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-semibold text-white">Courtkeeper Portal</h2>
+                  <p className="text-sm text-zinc-500">Run matches & keep score</p>
+                </div>
+              </div>
+            </button>
+          </div>
+
+          {/* Footer */}
+          <p className="text-center text-xs text-zinc-600">Renbu Kendo Club</p>
         </div>
       </div>
     )
