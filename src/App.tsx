@@ -180,6 +180,7 @@ interface AppState {
   courtBSelectedMatch: string | null
   courtAGroupOrder: string[]  // Custom group order for Court A queue
   courtBGroupOrder: string[]  // Custom group order for Court B queue
+  sharedGroups: string[]  // Groups that run on both courts simultaneously
   groups: Group[]
   guestRegistry: Member[]
   currentTournament: Tournament | null
@@ -444,6 +445,7 @@ const defaultState: AppState = {
   courtBSelectedMatch: null,
   courtAGroupOrder: [],
   courtBGroupOrder: [],
+  sharedGroups: [],
   groups: defaultGroups,
   guestRegistry: [],
   currentTournament: null,
@@ -1811,8 +1813,10 @@ function TournamentManager({
 
   const setGroupCourt = (groupId: string, court: 'A' | 'B') => {
     if (!tournament) return
+    // Remove from shared groups when assigning to specific court
     setState(prev => ({
       ...prev,
+      sharedGroups: prev.sharedGroups.filter(g => g !== groupId),
       currentTournament: {
         ...tournament,
         matches: (tournament.matches || []).map(m => 
@@ -1821,6 +1825,31 @@ function TournamentManager({
       }
     }))
     toast.success(`All ${getGroupById(groupId)?.name || 'group'} matches moved to Court ${court}`)
+  }
+
+  const toggleSharedGroup = (groupId: string) => {
+    const isCurrentlyShared = state.sharedGroups.includes(groupId)
+    if (isCurrentlyShared) {
+      // Remove from shared - assign all to Court A
+      setState(prev => ({
+        ...prev,
+        sharedGroups: prev.sharedGroups.filter(g => g !== groupId),
+        currentTournament: {
+          ...tournament!,
+          matches: (tournament!.matches || []).map(m => 
+            m.groupId === groupId && m.status === 'pending' ? { ...m, court: 'A' } : m
+          )
+        }
+      }))
+      toast.success(`${getGroupById(groupId)?.name} now on Court A only`)
+    } else {
+      // Add to shared groups
+      setState(prev => ({
+        ...prev,
+        sharedGroups: [...prev.sharedGroups, groupId]
+      }))
+      toast.success(`${getGroupById(groupId)?.name} shared between both courts`)
+    }
   }
 
   // Update individual match settings (timer, match type)
@@ -2097,10 +2126,12 @@ function TournamentManager({
         const group = getGroupById(groupId)
         const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
         const totalGroups = (tournament.groupOrder || []).length
-        const isCourtA = groupMatches[0]?.court === 'A'
+        const isShared = state.sharedGroups.includes(groupId)
+        const isCourtA = !isShared && groupMatches[0]?.court === 'A'
+        const isCourtB = !isShared && groupMatches[0]?.court === 'B'
         
         return (
-          <Card key={groupId} className={`border-l-2 ${isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'}`}>
+          <Card key={groupId} className={`border-l-2 ${isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'}`}>
             <CardHeader className="p-2 pb-1">
               {/* Row 1: Group name and progress */}
               <div className="flex items-center gap-2">
@@ -2108,8 +2139,10 @@ function TournamentManager({
                   <button onClick={() => moveGroupOrder(groupId, 'up')} disabled={gIdx === 0} className="px-1 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▲</button>
                   <button onClick={() => moveGroupOrder(groupId, 'down')} disabled={gIdx === totalGroups - 1} className="px-1 py-0.5 text-[10px] rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30">▼</button>
                 </div>
-                <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
-                  {isCourtA ? 'A' : 'B'}
+                <span className={`px-1.5 h-6 rounded flex items-center justify-center text-xs font-bold ${
+                  isShared ? 'bg-emerald-500 text-white' : isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
+                }`}>
+                  {isShared ? 'A+B' : isCourtA ? 'A' : 'B'}
                 </span>
                 <span className="text-white font-medium text-sm">{group?.name || groupId}</span>
                 {group?.isNonBogu && <span className="text-[9px] px-1 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
@@ -2140,7 +2173,11 @@ function TournamentManager({
                     onClick={() => setGroupCourt(groupId, 'A')}
                   >A</button>
                   <button
-                    className={`px-2 py-0.5 text-[10px] font-bold ${!isCourtA ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    className={`px-2 py-0.5 text-[10px] font-bold ${isShared ? 'bg-emerald-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    onClick={() => toggleSharedGroup(groupId)}
+                  >A+B</button>
+                  <button
+                    className={`px-2 py-0.5 text-[10px] font-bold ${isCourtB ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                     onClick={() => setGroupCourt(groupId, 'B')}
                   >B</button>
                 </div>
@@ -2669,8 +2706,16 @@ function CourtkeeperPortal({
   
   const tournament = state.currentTournament
   
-  const courtAMatches = tournament?.matches?.filter(m => m.court === 'A') || []
-  const courtBMatches = tournament?.matches?.filter(m => m.court === 'B') || []
+  // Shared groups run on both courts - pending matches available to either
+  const sharedGroups = state.sharedGroups || []
+  
+  // Court matches include: assigned to this court OR shared group pending matches
+  const courtAMatches = tournament?.matches?.filter(m => 
+    m.court === 'A' || (sharedGroups.includes(m.groupId) && m.status === 'pending')
+  ) || []
+  const courtBMatches = tournament?.matches?.filter(m => 
+    m.court === 'B' || (sharedGroups.includes(m.groupId) && m.status === 'pending')
+  ) || []
   
   // Get group order for queue display (use tournament groups or custom order)
   const courtAGroupOrder = state.courtAGroupOrder.length > 0 
@@ -2747,10 +2792,29 @@ function CourtkeeperPortal({
   }
 
   const toggleTimer = () => {
-    if (selectedCourt === 'A') {
-      setState(prev => ({ ...prev, timerRunningA: !prev.timerRunningA }))
+    const matchId = currentMatch?.id
+    
+    // When starting timer, lock match to this court
+    if (matchId && !timerRunning) {
+      setState(prev => {
+        if (!prev.currentTournament) return prev
+        const updatedMatches = prev.currentTournament.matches.map(m => 
+          m.id === matchId ? { ...m, court: selectedCourt, status: 'in_progress' as const } : m
+        )
+        return {
+          ...prev,
+          currentTournament: { ...prev.currentTournament, matches: updatedMatches },
+          timerRunningA: selectedCourt === 'A' ? true : prev.timerRunningA,
+          timerRunningB: selectedCourt === 'B' ? true : prev.timerRunningB,
+        }
+      })
     } else {
-      setState(prev => ({ ...prev, timerRunningB: !prev.timerRunningB }))
+      // Just toggle timer
+      if (selectedCourt === 'A') {
+        setState(prev => ({ ...prev, timerRunningA: !prev.timerRunningA }))
+      } else {
+        setState(prev => ({ ...prev, timerRunningB: !prev.timerRunningB }))
+      }
     }
   }
 
@@ -2821,6 +2885,7 @@ function CourtkeeperPortal({
           return {
             ...m,
             status: 'in_progress' as const,
+            court: selectedCourt,  // Lock to current court when match starts
             player1Score: player === 'player1' ? [...m.player1Score, scoreType] : m.player1Score,
             player2Score: player === 'player2' ? [...m.player2Score, scoreType] : m.player2Score,
           }
@@ -2854,6 +2919,7 @@ function CourtkeeperPortal({
           return {
             ...m,
             status: 'in_progress' as const,
+            court: selectedCourt,  // Lock to current court when match starts
             player1Hansoku: player === 'player1' ? newHansoku : m.player1Hansoku,
             player2Hansoku: player === 'player2' ? newHansoku : m.player2Hansoku,
           }
@@ -2981,6 +3047,32 @@ function CourtkeeperPortal({
       setState(prev => ({ ...prev, courtAGroupOrder: currentOrder }))
     } else {
       setState(prev => ({ ...prev, courtBGroupOrder: currentOrder }))
+    }
+  }
+
+  const toggleSharedGroupCK = (groupId: string) => {
+    const isCurrentlyShared = (state.sharedGroups || []).includes(groupId)
+    if (isCurrentlyShared) {
+      // Remove from shared - assign all pending to current court
+      setState(prev => {
+        if (!prev.currentTournament) return prev
+        const updatedMatches = prev.currentTournament.matches.map(m => 
+          m.groupId === groupId && m.status === 'pending' ? { ...m, court: selectedCourt } : m
+        )
+        return {
+          ...prev,
+          sharedGroups: (prev.sharedGroups || []).filter(g => g !== groupId),
+          currentTournament: { ...prev.currentTournament, matches: updatedMatches }
+        }
+      })
+      toast.success(`Group now on Court ${selectedCourt} only`)
+    } else {
+      // Add to shared groups
+      setState(prev => ({
+        ...prev,
+        sharedGroups: [...(prev.sharedGroups || []), groupId]
+      }))
+      toast.success(`Group shared between both courts`)
     }
   }
 
@@ -3395,12 +3487,22 @@ function CourtkeeperPortal({
                   {groupOrder.map((groupId, gIdx) => {
                     const groupInfo = getGroupById(groupId)
                     const groupMatchCount = pendingMatches.filter(m => m.groupId === groupId).length
+                    const isShared = (state.sharedGroups || []).includes(groupId)
                     if (groupMatchCount === 0) return null
                     return (
                       <div key={groupId} className="flex items-center justify-between text-xs py-1">
-                        <span className="text-slate-300">{groupInfo?.name}</span>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${isShared ? 'bg-emerald-500 text-white' : selectedCourt === 'A' ? 'bg-amber-500/30 text-amber-400' : 'bg-blue-500/30 text-blue-400'}`}>
+                            {isShared ? 'A+B' : selectedCourt}
+                          </span>
+                          <span className="text-slate-300">{groupInfo?.name}</span>
+                        </div>
                         <div className="flex items-center gap-1">
-                          <span className="text-slate-500">{groupMatchCount} left</span>
+                          <span className="text-slate-500">{groupMatchCount}</span>
+                          <button
+                            onClick={() => toggleSharedGroupCK(groupId)}
+                            className={`px-1.5 h-5 rounded text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                          >{isShared ? '✓A+B' : 'A+B'}</button>
                           <button
                             onClick={() => moveGroupInQueue(groupId, 'up')}
                             disabled={gIdx === 0}
@@ -3438,7 +3540,10 @@ function CourtkeeperPortal({
                 
                 return (
                   <div key={groupId} className="mb-2">
-                    <div className="px-1 py-1">
+                    <div className="px-1 py-1 flex items-center gap-1">
+                      {(state.sharedGroups || []).includes(groupId) && (
+                        <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-600 text-white font-bold">A+B</span>
+                      )}
                       <span className="text-slate-500 text-[10px] font-medium">{groupInfo?.name}</span>
                     </div>
                     {groupMatches.map((match) => {
