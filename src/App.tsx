@@ -1899,43 +1899,36 @@ function TournamentManager({
                     return (
                       <div 
                         key={match.id}
-                        className={`flex items-center gap-3 p-3 rounded-lg ${
+                        className={`p-2 sm:p-3 rounded-lg ${
                           match.status === 'completed' ? 'bg-slate-700/20' :
-                          match.status === 'in_progress' ? 'bg-emerald-900/20 border border-emerald-800' :
+                          match.status === 'in_progress' ? 'bg-emerald-900/20 border border-emerald-700' :
                           'bg-slate-800/40'
                         }`}
                       >
-                        <span className="text-slate-400 w-6">#{idx + 1}</span>
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          className={`px-3 py-1 h-7 font-bold ${match.court === 'A' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
-                          onClick={() => swapMatchCourt(match.id)}
-                          title="Click to switch court"
-                        >
-                          Court {match.court}
-                        </Button>
-                        <div className="flex-1 flex items-center justify-center gap-2">
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
-                            <span className={`${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'} font-medium`}>
-                              {p1?.firstName || '?'} {p1?.lastName || '?'}
-                            </span>
-                            {match.status !== 'pending' && !match.isHantei && (
-                              <span className="text-red-400 font-mono text-sm">({match.player1Score.length})</span>
-                            )}
+                        <div className="flex items-center gap-2">
+                          {/* Match number and court badge */}
+                          <span className="text-slate-500 text-xs w-5">#{idx + 1}</span>
+                          <button
+                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'}`}
+                            onClick={() => swapMatchCourt(match.id)}
+                          >
+                            {match.court}
+                          </button>
+                          
+                          {/* Players - stacked on mobile, inline on desktop */}
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-1 text-sm">
+                              <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                              <span className={`truncate ${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'}`}>
+                                {p1?.firstName || '?'}
+                              </span>
+                              <span className="text-slate-500 mx-1">vs</span>
+                              <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
+                              <span className={`truncate ${match.winner === 'player2' ? 'text-slate-200 font-semibold' : 'text-white'}`}>
+                                {p2?.firstName || '?'}
+                              </span>
+                            </div>
                           </div>
-                          <span className="text-slate-400 mx-3">vs</span>
-                          <div className="flex items-center gap-2">
-                            <span className="w-3 h-3 rounded-full bg-white inline-block"></span>
-                            <span className={`${match.winner === 'player2' ? 'text-slate-200 font-semibold' : 'text-white'} font-medium`}>
-                              {p2?.firstName || '?'} {p2?.lastName || '?'}
-                            </span>
-                            {match.status !== 'pending' && !match.isHantei && (
-                              <span className="text-slate-300 font-mono text-sm">({match.player2Score.length})</span>
-                            )}
-                          </div>
-                        </div>
                         {(tournament.status === 'setup' || (tournament.status === 'in_progress' && match.status === 'pending')) && (
                           <div className="flex gap-1">
                             <Button size="icon" variant="ghost" className="h-8 w-8 h-8 w-8" onClick={() => swapMatchCourt(match.id)} title="Swap court">
