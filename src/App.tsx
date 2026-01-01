@@ -1985,6 +1985,8 @@ function TournamentManager({
                   {groupMatches.map((match, idx) => {
                     const p1 = getMemberById(match.player1Id)
                     const p2 = getMemberById(match.player2Id)
+                    const timerMins = Math.floor((match.timerDuration || 180) / 60)
+                    const isIppon = match.matchType === 'ippon'
                     return (
                       <div 
                         key={match.id}
@@ -1995,16 +1997,14 @@ function TournamentManager({
                         }`}
                       >
                         <div className="flex items-center gap-2">
-                          {/* Match number and court badge */}
                           <span className="text-[#6b8fad] text-xs w-5">#{idx + 1}</span>
                           <button
-                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-amber-600 text-white' : 'bg-[#1e3a5f] text-white'}`}
+                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-amber-600' : 'bg-[#1e3a5f]'}`}
                             onClick={() => swapMatchCourt(match.id)}
                           >
                             {match.court}
                           </button>
                           
-                          {/* Players - stacked on mobile, inline on desktop */}
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1 text-sm">
                               <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
@@ -2018,18 +2018,51 @@ function TournamentManager({
                               </span>
                             </div>
                           </div>
+                          
+                          {/* Match settings for pending matches */}
+                          {match.status === 'pending' && (
+                            <div className="flex items-center gap-1">
+                              <select
+                                value={match.timerDuration || 180}
+                                onChange={(e) => updateMatchSettings(match.id, 'timerDuration', parseInt(e.target.value))}
+                                className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#8fb3d1] w-12"
+                              >
+                                <option value={120}>2m</option>
+                                <option value={180}>3m</option>
+                                <option value={240}>4m</option>
+                                <option value={300}>5m</option>
+                              </select>
+                              <select
+                                value={match.matchType || 'sanbon'}
+                                onChange={(e) => updateMatchSettings(match.id, 'matchType', e.target.value)}
+                                className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#8fb3d1] w-12"
+                              >
+                                <option value="sanbon">三本</option>
+                                <option value="ippon">一本</option>
+                              </select>
+                            </div>
+                          )}
                         </div>
-                        {/* Status indicators */}
-                        {match.status === 'completed' && (
-                          <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-[#243a52]/50 text-[#b8d4ec]' : 'bg-[#243a52] text-[#8fb3d1]'}`}>
-                            {match.winner === 'draw' ? 'Draw' : 
-                             match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}` :
-                             `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}`}
+                        
+                        {/* Status row */}
+                        <div className="flex items-center justify-between mt-1">
+                          <span className="text-[10px] text-[#6b8fad]">
+                            {match.status === 'completed' && match.actualDuration ? 
+                              `${Math.floor(match.actualDuration / 60)}:${(match.actualDuration % 60).toString().padStart(2, '0')}` : 
+                              `${timerMins}m · ${isIppon ? '一本' : '三本'}`
+                            }
                           </span>
-                        )}
-                        {match.status === 'in_progress' && (
-                          <span className="text-xs px-2 py-0.5 rounded bg-emerald-600 text-white animate-pulse">Live</span>
-                        )}
+                          {match.status === 'completed' && (
+                            <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/30 text-red-400' : match.winner === 'player2' ? 'bg-blue-900/30 text-blue-200' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}>
+                              {match.winner === 'draw' ? 'Draw' : 
+                               match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}` :
+                               `Win ${match.isHantei ? '(判定)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}`}
+                            </span>
+                          )}
+                          {match.status === 'in_progress' && (
+                            <span className="text-xs px-2 py-0.5 rounded bg-emerald-600 text-white animate-pulse">Live</span>
+                          )}
+                        </div>
                       </div>
                     )
                   })}
