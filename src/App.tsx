@@ -1313,6 +1313,20 @@ function GroupsManager({
     }))
   }
 
+  const moveGroup = (groupId: string, direction: 'up' | 'down') => {
+    setState(prev => {
+      const groups = [...prev.groups]
+      const idx = groups.findIndex(g => g.id === groupId)
+      if (idx === -1) return prev
+      
+      const newIdx = direction === 'up' ? idx - 1 : idx + 1
+      if (newIdx < 0 || newIdx >= groups.length) return prev
+      
+      [groups[idx], groups[newIdx]] = [groups[newIdx], groups[idx]]
+      return { ...prev, groups }
+    })
+  }
+
   const addGroup = () => {
     if (!newGroupName.trim()) {
       toast.error('Enter a group name')
@@ -1369,8 +1383,31 @@ function GroupsManager({
               return (
                 <div 
                   key={group.id}
-                  className="flex items-center gap-4 p-4 bg-slate-800/40 rounded-lg"
+                  className="flex items-center gap-3 p-4 bg-slate-800/40 rounded-lg"
                 >
+                  {/* Order indicator and move buttons */}
+                  <div className="flex flex-col items-center gap-0.5">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-5 w-5 text-slate-400 hover:text-white"
+                      onClick={() => moveGroup(group.id, 'up')}
+                      disabled={state.groups.indexOf(group) === 0}
+                    >
+                      <ChevronLeft className="w-3 h-3 rotate-90" />
+                    </Button>
+                    <span className="text-xs text-slate-500 font-mono">{state.groups.indexOf(group) + 1}</span>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-5 w-5 text-slate-400 hover:text-white"
+                      onClick={() => moveGroup(group.id, 'down')}
+                      disabled={state.groups.indexOf(group) === state.groups.length - 1}
+                    >
+                      <ChevronRight className="w-3 h-3 rotate-90" />
+                    </Button>
+                  </div>
+                  
                   {editingGroup?.id === group.id ? (
                     <Input
                       value={editingGroup.name}
