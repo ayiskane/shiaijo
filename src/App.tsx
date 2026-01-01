@@ -110,6 +110,10 @@ interface PlayerStanding {
 
 interface AppState {
   members: Member[]
+  courtASelectedMatch: string | null  // Override queue with this match
+  courtBSelectedMatch: string | null
+  courtAGroupOrder: string[]  // Custom group order for Court A queue
+  courtBGroupOrder: string[]  // Custom group order for Court B queue
   groups: Group[]
   guestRegistry: Member[]
   currentTournament: Tournament | null
