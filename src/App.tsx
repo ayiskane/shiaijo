@@ -947,27 +947,20 @@ function AdminPortal({
     <div className="min-h-screen bg-slate-950">
       <Toaster theme="dark" position="top-center" />
       
-      <header className="bg-slate-900/95 border-b border-slate-800 px-4 py-3">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
+      <header className="bg-slate-900 border-b border-slate-800">
+        {/* Top bar */}
+        <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             <MobileNav />
-            <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
-            <div className="flex items-center gap-3">
-              <h1 className="text-lg font-semibold text-white">Admin Portal</h1>
-              <Badge className="bg-orange-600/20 text-orange-400 border border-orange-600/30 text-xs">
-                {state.members.filter(m => m.isParticipating).length} participating
-              </Badge>
-            </div>
+            <img src="/renbu-logo.png" alt="Renbu" className="w-7 h-7 sm:w-8 sm:h-8" />
+            <span className="text-white font-semibold text-sm sm:text-base">Admin</span>
           </div>
-          <div className="flex items-center gap-2">
-            <Button 
-              variant="ghost" 
-              size="icon"
-              className="h-8 w-8 text-slate-400 hover:text-white"
+          <div className="flex items-center gap-1">
+            <button 
+              className="p-2 text-slate-500 hover:text-white rounded-lg hover:bg-slate-800"
               onClick={async () => {
                 const saved = await loadFromStorage()
                 if (saved) {
-                  // Ensure tournament has all required properties
                   let tournament = saved.currentTournament
                   if (tournament) {
                     tournament = {
@@ -985,53 +978,48 @@ function AdminPortal({
                     currentTournament: tournament,
                     history: saved.history || prev.history,
                   }))
-                  toast.success('Data synced from server')
+                  toast.success('Synced')
                 }
               }}
               title="Sync data"
             >
               <RefreshCw className="w-4 h-4" />
-            </Button>
-            <Button 
-              variant="ghost" 
-              size="sm" 
+            </button>
+            <button 
               onClick={onSwitchPortal}
-              className="text-slate-400 hover:text-white text-sm"
+              className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
             >
-              Switch Portal
-            </Button>
+              <span className="hidden sm:inline">Switch Portal</span>
+              <span className="sm:hidden">Switch</span>
+            </button>
           </div>
         </div>
         
-        {/* Desktop Tabs - Guests moved next to Members */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 hidden md:block">
-          <TabsList className="bg-slate-800/50 p-1 gap-1">
-            <TabsTrigger value="members" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
-              <Users className="w-4 h-4 mr-2" />
-              Members
-            </TabsTrigger>
-            <TabsTrigger value="guests" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
-              <UserPlus className="w-4 h-4 mr-2" />
-              Guests
-            </TabsTrigger>
-            <TabsTrigger value="groups" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
-              <Filter className="w-4 h-4 mr-2" />
-              Groups
-            </TabsTrigger>
-            <TabsTrigger value="tournament" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
-              <Trophy className="w-4 h-4 mr-2" />
-              Tournament
-            </TabsTrigger>
-            <TabsTrigger value="standings" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
-              <Table className="w-4 h-4 mr-2" />
-              Standings
-            </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
-              <History className="w-4 h-4 mr-2" />
-              History
-            </TabsTrigger>
-          </TabsList>
-        </Tabs>
+        {/* Desktop Tabs */}
+        <div className="hidden md:block px-4 pb-2">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="bg-slate-800/50 p-1 gap-0.5">
+              <TabsTrigger value="members" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
+                Members
+              </TabsTrigger>
+              <TabsTrigger value="guests" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
+                Guests
+              </TabsTrigger>
+              <TabsTrigger value="groups" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
+                Groups
+              </TabsTrigger>
+              <TabsTrigger value="tournament" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
+                Tournament
+              </TabsTrigger>
+              <TabsTrigger value="standings" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
+                Standings
+              </TabsTrigger>
+              <TabsTrigger value="history" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
+                History
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </div>
       </header>
 
       <main className="p-4 max-w-7xl mx-auto">
