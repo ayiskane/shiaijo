@@ -602,6 +602,7 @@ function AdminPortal({
   getGroupById: (id: string) => Group | undefined
 }) {
   const [activeTab, setActiveTab] = useState('members')
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState<string>('all')
   const [sortBy, setSortBy] = useState<'name' | 'group'>('name')
