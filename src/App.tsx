@@ -781,13 +781,9 @@ function AdminPortal({
   }
 
   const refreshTournamentParticipants = () => {
-    if (!state.currentTournament) {
-      toast.error('No tournament to refresh')
-      return
-    }
+    if (!state.currentTournament) return
     
-    try {
-      const participants = state.members.filter(m => m.isParticipating)
+    const participants = state.members.filter(m => m.isParticipating)
     const participantsByGroup = new Map<string, Member[]>()
     participants.forEach(p => {
       const existing = participantsByGroup.get(p.group) || []
@@ -836,10 +832,6 @@ function AdminPortal({
     }))
     
     toast.success(`Tournament refreshed with ${allMatches.length} matches`)
-    } catch (error) {
-      console.error('Error refreshing tournament:', error)
-      toast.error('Failed to refresh tournament')
-    }
   }
 
   const archiveTournament = () => {
@@ -1729,7 +1721,7 @@ function TournamentManager({
                         </Badge>
                         <div className="flex-1 flex items-center justify-center gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+                            <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
                             <span className={`${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'} font-medium`}>
                               {p1?.firstName || '?'} {p1?.lastName || '?'}
                             </span>
@@ -1739,7 +1731,7 @@ function TournamentManager({
                           </div>
                           <span className="text-slate-400 mx-3">vs</span>
                           <div className="flex items-center gap-2">
-                            <span className="inline-block w-3 h-3 rounded-full bg-white"></span>
+                            <span className="w-3 h-3 rounded-full bg-white inline-block"></span>
                             <span className={`${match.winner === 'player2' ? 'text-slate-200 font-semibold' : 'text-white'} font-medium`}>
                               {p2?.firstName || '?'} {p2?.lastName || '?'}
                             </span>
@@ -2649,10 +2641,10 @@ function CourtkeeperPortal({
                     {isCurrent && <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />}
                   </div>
                   <div className="text-sm text-white text-center">
-                    <span className="inline-block w-2 h-2 rounded-full bg-red-500"></span>
+                    <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
                     <span className="font-medium ml-1">{p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.</span>
                     <span className="text-slate-400 mx-2">vs</span>
-                    <span className="inline-block w-2 h-2 rounded-full bg-white"></span>
+                    <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
                     <span className="font-medium ml-1">{p2?.firstName || '?'} {p2?.lastName?.charAt(0) || ''}.</span>
                   </div>
                   <div className="flex gap-1 mt-2 justify-center">
@@ -2693,12 +2685,12 @@ function CourtkeeperPortal({
                   const p2 = getMemberById(match.player2Id)
                   return (
                     <div key={match.id} className="p-2 bg-slate-700/20 rounded text-sm text-center">
-                      <span className="inline-block w-2 h-2 rounded-full bg-red-500"></span>
+                      <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
                       <span className={match.winner === 'player1' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
                         {p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.
                       </span>
                       <span className="text-slate-400 mx-2">vs</span>
-                      <span className="inline-block w-2 h-2 rounded-full bg-white"></span>
+                      <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
                       <span className={match.winner === 'player2' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
                         {p2?.firstName || '?'} {p2?.lastName?.charAt(0) || ''}.
                       </span>
@@ -2866,7 +2858,7 @@ function CourtkeeperPortal({
               <Card className="bg-slate-800 border-2 border-red-800">
                 <CardHeader className="pb-2 bg-red-900/30">
                   <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
-                    <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
+                    <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
                     AKA
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
@@ -2933,7 +2925,7 @@ function CourtkeeperPortal({
               <Card className="bg-slate-800 border-2 border-slate-400">
                 <CardHeader className="pb-2 bg-slate-700/30">
                   <CardTitle className="text-slate-200 text-center flex items-center justify-center gap-2">
-                    <span className="inline-block w-3 h-3 rounded-full bg-white"></span>
+                    <span className="w-3 h-3 rounded-full bg-white inline-block"></span>
                     SHIRO
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
