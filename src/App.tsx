@@ -10,7 +10,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
 import { Progress } from '@/components/ui/progress'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Toaster, toast } from 'sonner'
 import { 
@@ -55,12 +55,6 @@ interface Match {
   timerDuration: number  // in seconds
   actualDuration?: number  // recorded when match completes
   orderIndex: number
-}
-
-// Track which match is manually selected to override queue
-interface CourtState {
-  selectedMatchId: string | null  // If set, this match plays next instead of queue order
-  groupOrder: string[]  // Order of groups for this court's queue
 }
 
 interface Tournament {
@@ -582,7 +576,7 @@ export default function App() {
             </button>
           </div>
 
-          <p className="text-center text-xs text-[#4a6a8a]">Renbu Kendo Club</p>
+          <p className="text-center text-xs text-[#4a6a8a]">Renbu Dojo</p>
         </div>
       </div>
     )
@@ -2581,7 +2575,7 @@ function CourtkeeperPortal({
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
   const pendingMatches = selectedCourt === 'A' ? pendingMatchesA : pendingMatchesB
   const groupOrder = selectedCourt === 'A' ? courtAGroupOrder : courtBGroupOrder
-  const currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
+  // const currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
   
   const timerSeconds = selectedCourt === 'A' ? state.timerSecondsA : state.timerSecondsB
   const timerRunning = selectedCourt === 'A' ? state.timerRunningA : state.timerRunningB
@@ -2666,7 +2660,7 @@ function CourtkeeperPortal({
   const p2EffectiveScore = getEffectiveScore(p2Score, p1Hansoku)
 
   // Calculate max hansoku allowed (if opponent has points, max is 2 less per point)
-  const getMaxHansoku = (ownScore: number[], opponentScore: number[], opponentHansoku: number) => {
+  const getMaxHansoku = (_ownScore: number[], opponentScore: number[], opponentHansoku: number) => {
     // Base: 4 hansoku max if no one scored
     // Each opponent direct point reduces max by 2
     // Each pair of own hansoku (that gave opponent a point) also counts
