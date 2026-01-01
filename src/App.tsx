@@ -1722,7 +1722,7 @@ function TournamentManager({
                         <div className="flex-1 flex items-center justify-center gap-2">
                           <div className="flex items-center gap-2">
                             <span className="inline-block w-4 h-4 rounded bg-red-500"></span>
-                            <span className={`${match.winner === 'player1' ? 'text-emerald-400 font-semibold' : 'text-white'} font-medium`}>
+                            <span className={`${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'} font-medium`}>
                               {p1?.firstName || '?'} {p1?.lastName || '?'}
                             </span>
                             {match.status !== 'pending' && !match.isHantei && (
@@ -1732,7 +1732,7 @@ function TournamentManager({
                           <span className="text-slate-400 mx-3">vs</span>
                           <div className="flex items-center gap-2">
                             <span className="inline-block w-4 h-4 rounded bg-blue-500"></span>
-                            <span className={`${match.winner === 'player2' ? 'text-emerald-400 font-semibold' : 'text-white'} font-medium`}>
+                            <span className={`${match.winner === 'player2' ? 'text-blue-400 font-semibold' : 'text-white'} font-medium`}>
                               {p2?.firstName || '?'} {p2?.lastName || '?'}
                             </span>
                             {match.status !== 'pending' && !match.isHantei && (
@@ -1754,7 +1754,7 @@ function TournamentManager({
                           </div>
                         )}
                         {match.status === 'completed' && (
-                          <Badge variant="outline" className={match.winner === 'player1' ? 'border-red-600 text-red-400' : match.winner === 'player2' ? 'border-blue-500 text-blue-400' : 'border-slate-600'}>
+                          <Badge variant="outline" className={match.winner === 'player1' ? 'border-red-600 bg-red-950/50 text-red-400' : match.winner === 'player2' ? 'border-blue-600 bg-blue-950/50 text-blue-400' : 'border-slate-600'}>
                             {match.winner === 'draw' ? 'Draw' : 
                              match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}` :
                              `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}`}
