@@ -879,14 +879,16 @@ function AdminPortal({
     toast.success('Tournament archived to history')
   }
 
+  const [mobileNavOpen, setMobileNavOpen] = useState(false)
+
   const MobileNav = () => (
-    <Sheet>
+    <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
       <SheetTrigger asChild>
         <Button variant="outline" size="icon" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700 md:hidden">
           <Menu className="w-6 h-6" />
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
+      <SheetContent side="left" className="bg-slate-900 border-slate-700">
         <SheetHeader>
           <SheetTitle className="text-white">Navigation</SheetTitle>
         </SheetHeader>
@@ -896,7 +898,10 @@ function AdminPortal({
               key={tab}
               variant={activeTab === tab ? 'default' : 'ghost'}
               className="justify-start"
-              onClick={() => setActiveTab(tab)}
+              onClick={() => {
+                setActiveTab(tab)
+                setMobileNavOpen(false)
+              }}
             >
               {tab === 'members' && <Users className="w-4 h-4 mr-2" />}
               {tab === 'guests' && <UserPlus className="w-4 h-4 mr-2" />}
