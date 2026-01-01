@@ -397,7 +397,14 @@ export default function App() {
 
   useEffect(() => {
     const load = async () => {
-      const saved = await loadFromStorage()
+      // Try to load from Firebase first, with retries
+      let saved = null
+      for (let i = 0; i < 3; i++) {
+        saved = await loadFromStorage()
+        if (saved && saved.members && saved.members.length > 0) break
+        await new Promise(r => setTimeout(r, 500)) // Wait 500ms between retries
+      }
+      
       if (saved) {
         setState({
           ...defaultState,
@@ -413,6 +420,7 @@ export default function App() {
           timerSecondsB: saved.timerSecondsB ?? 0,
           timerRunningA: saved.timerRunningA ?? false,
           timerRunningB: saved.timerRunningB ?? false,
+          lastUpdated: saved.lastUpdated || Date.now(),
         })
       }
       setLoading(false)
@@ -475,7 +483,10 @@ export default function App() {
     return () => { if (timerRefB.current) clearInterval(timerRefB.current) }
   }, [state.timerRunningB, state.timerTarget])
 
-  const getMemberById = useCallback((id: string) => state.members.find(m => m.id === id), [state.members])
+  const getMemberById = useCallback((id: string) => {
+    if (!id) return undefined
+    return state.members.find(m => m.id === id)
+  }, [state.members])
   const getGroupById = useCallback((id: string) => state.groups.find(g => g.id === id), [state.groups])
 
   if (loading) {
