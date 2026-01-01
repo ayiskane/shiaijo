@@ -2691,7 +2691,7 @@ function CourtkeeperPortal({
           <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-amber-600' : 'bg-zinc-600/30 border-2 border-zinc-400'}`}>
             <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-zinc-200'}`} />
             <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-zinc-200'}`}>
-              {winnerPlayer?.firstName} {winnerPlayer?.lastName}
+              {winnerPlayer ? formatDisplayName(winnerPlayer, state.members, state.useFirstNamesOnly) : '?'}
             </p>
             <p className="text-zinc-300 mt-2">{winnerColor === 'red' ? 'AKA' : 'SHIRO'} Wins!</p>
           </div>
@@ -2829,7 +2829,7 @@ function CourtkeeperPortal({
                     AKA
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
-                    {player1?.firstName || '?'} {player1?.lastName || '?'}
+                    {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '?'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
@@ -2896,7 +2896,7 @@ function CourtkeeperPortal({
                     SHIRO
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
-                    {player2?.firstName || '?'} {player2?.lastName || '?'}
+                    {player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : '?'}
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-4">
