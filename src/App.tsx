@@ -13,6 +13,41 @@ import { Progress } from '@/components/ui/progress'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Toaster, toast } from 'sonner'
+
+// Renbu Dojo Logo SVG Component
+const RenbuLogo = ({ size = 48, glow = false, className = '' }: { size?: number; glow?: boolean; className?: string }) => (
+  <svg 
+    width={size} 
+    height={size} 
+    viewBox="0 0 100 100" 
+    className={className}
+    style={glow ? { filter: 'drop-shadow(0 0 8px rgba(249, 115, 22, 0.6)) drop-shadow(0 0 20px rgba(249, 115, 22, 0.4))' } : {}}
+  >
+    {/* Outer circle */}
+    <circle cx="50" cy="50" r="46" fill="none" stroke="#f97316" strokeWidth="3" />
+    
+    {/* Inner decorative ring */}
+    <circle cx="50" cy="50" r="38" fill="none" stroke="#f97316" strokeWidth="1.5" opacity="0.6" />
+    
+    {/* Center circle */}
+    <circle cx="50" cy="50" r="8" fill="#f97316" />
+    
+    {/* 8 Shinai arranged radially */}
+    {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+      <g key={i} transform={`rotate(${angle} 50 50)`}>
+        {/* Shinai shaft */}
+        <rect x="48" y="12" width="4" height="30" fill="#f97316" rx="1" />
+        {/* Shinai tip (sakigawa) */}
+        <rect x="47" y="8" width="6" height="6" fill="#f97316" rx="2" />
+        {/* Tsuba (guard) */}
+        <rect x="46" y="40" width="8" height="3" fill="#f97316" rx="1" />
+      </g>
+    ))}
+    
+    {/* Center kanji-style mark */}
+    <text x="50" y="54" textAnchor="middle" fill="#0a1017" fontSize="10" fontWeight="bold" fontFamily="serif">連</text>
+  </svg>
+)
 import { 
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
@@ -538,7 +573,7 @@ export default function App() {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <div className="w-20 h-20 mx-auto mb-6 rounded-2xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/30">
-              <img src="/renbu-logo.png" alt="Renbu" className="w-12 h-12" />
+              <RenbuLogo size={48} glow />
             </div>
             <h1 className="text-3xl font-bold text-white mb-2">Shiaijo</h1>
             <p className="text-[#6b8fad]">Tournament Manager</p>
@@ -2885,7 +2920,7 @@ function CourtkeeperPortal({
             <CardTitle className="text-white text-center">No Active Tournament</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <img src="/renbu-logo.png" alt="Renbu" className="w-20 h-20 mx-auto opacity-50" />
+            <RenbuLogo size={80} className="mx-auto opacity-50" />
             <p className="text-[#b8d4ec]">
               {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament generated yet'}
             </p>
@@ -2932,7 +2967,7 @@ function CourtkeeperPortal({
       <header className="bg-[#0f1a24] border-b border-[#1e3a5f] p-3">
         <div className="flex items-center justify-between max-w-2xl mx-auto">
           <div className="flex items-center gap-2">
-            <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
+            <RenbuLogo size={32} glow />
             <span className="font-bold">Courtkeeper</span>
           </div>
           <div className="flex items-center gap-2">
