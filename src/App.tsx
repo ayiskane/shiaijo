@@ -954,12 +954,22 @@ function AdminPortal({
               onClick={async () => {
                 const saved = await loadFromStorage()
                 if (saved) {
+                  // Ensure tournament has all required properties
+                  let tournament = saved.currentTournament
+                  if (tournament) {
+                    tournament = {
+                      ...tournament,
+                      matches: tournament.matches || [],
+                      groups: tournament.groups || [],
+                      groupOrder: tournament.groupOrder || [],
+                    }
+                  }
                   setState(prev => ({
                     ...prev,
                     members: saved.members || prev.members,
                     groups: saved.groups || prev.groups,
                     guestRegistry: saved.guestRegistry || prev.guestRegistry,
-                    currentTournament: saved.currentTournament,
+                    currentTournament: tournament,
                     history: saved.history || prev.history,
                   }))
                   toast.success('Data synced from server')
@@ -1517,7 +1527,7 @@ function TournamentManager({
     }))
   }
 
-  if (!tournament) {
+  if (!tournament || !tournament.groupOrder) {
     return (
       <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
         <CardHeader>
@@ -1698,9 +1708,9 @@ function TournamentManager({
       </Card>
 
       {/* Match Schedule by Group with Court Assignment */}
-      {tournament.groupOrder.map(groupId => {
+      {(tournament.groupOrder || []).map(groupId => {
         const group = getGroupById(groupId)
-        const groupMatches = tournament.matches.filter(m => m.groupId === groupId)
+        const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
         
         return (
           <Card key={groupId} className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
