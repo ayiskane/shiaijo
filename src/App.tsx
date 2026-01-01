@@ -2722,11 +2722,11 @@ function CourtkeeperPortal({
             <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
           </DialogHeader>
           <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-red-600' : 'bg-slate-600/30 border-2 border-blue-600'}`}>
-            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-white'}`} />
-            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-white'}`}>
+            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-400'}`} />
+            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
               {winnerPlayer?.firstName} {winnerPlayer?.lastName}
             </p>
-            <p className="text-slate-300 mt-2">{winnerColor === 'red' ? '◆ Red (Aka)' : '◆ Blue (Shiro)'} Wins!</p>
+            <p className="text-slate-300 mt-2">{winnerColor === 'red' ? '◆ AKA' : '◆ SHIRO'} Wins!</p>
           </div>
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setShowWinnerPrompt({ show: false, winner: null })}>
@@ -2858,8 +2858,8 @@ function CourtkeeperPortal({
               <Card className="bg-slate-800 border-2 border-red-800">
                 <CardHeader className="pb-2 bg-red-900/30">
                   <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
-                    <span className="text-2xl">◆</span>
-                    Red (Aka)
+                    <span className="inline-block w-4 h-4 rounded bg-blue-500"></span>
+                    AKA
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
                     {player1?.firstName || '?'} {player1?.lastName || '?'}
@@ -2873,7 +2873,7 @@ function CourtkeeperPortal({
                       onClick={() => completeMatch('player1')}
                     >
                       <Award className="w-8 h-8 mr-2" />
-                      Red Wins
+                      AKA Wins
                     </Button>
                   ) : (
                     <>
@@ -2925,8 +2925,8 @@ function CourtkeeperPortal({
               <Card className="bg-slate-800 border-2 border-blue-700">
                 <CardHeader className="pb-2 bg-slate-600/30">
                   <CardTitle className="text-white text-center flex items-center justify-center gap-2">
-                    <span className="text-2xl">◆</span>
-                    Blue (Shiro)
+                    <span className="inline-block w-4 h-4 rounded bg-blue-500"></span>
+                    SHIRO
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
                     {player2?.firstName || '?'} {player2?.lastName || '?'}
@@ -2940,7 +2940,7 @@ function CourtkeeperPortal({
                       onClick={() => completeMatch('player2')}
                     >
                       <Award className="w-8 h-8 mr-2" />
-                      White Wins
+                      SHIRO Wins
                     </Button>
                   ) : (
                     <>
@@ -2999,7 +2999,7 @@ function CourtkeeperPortal({
                       onClick={() => completeMatch('player1')}
                       className="bg-red-700 hover:bg-red-600 h-14"
                     >
-                      ◆ Red Wins
+                      ◆ AKA Wins
                     </Button>
                     <Button
                       size="lg"
@@ -3014,7 +3014,7 @@ function CourtkeeperPortal({
                       onClick={() => completeMatch('player2')}
                       className="bg-slate-600/50 hover:bg-slate-500 h-14"
                     >
-                      ◆ White Wins
+                      ◆ SHIRO Wins
                     </Button>
                   </div>
                 </CardContent>
