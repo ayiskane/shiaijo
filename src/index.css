@@ -4,24 +4,25 @@
 
 @layer base {
   :root {
-    --background: 240 10% 6%;
-    --foreground: 0 0% 98%;
-    --card: 240 8% 12%;
-    --card-foreground: 0 0% 98%;
-    --popover: 240 8% 12%;
-    --popover-foreground: 0 0% 98%;
+    /* Navy + Orange Renbu Theme */
+    --background: 210 30% 5%;
+    --foreground: 210 20% 95%;
+    --card: 210 35% 10%;
+    --card-foreground: 210 20% 95%;
+    --popover: 210 35% 10%;
+    --popover-foreground: 210 20% 95%;
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 98%;
-    --secondary: 240 6% 16%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 240 6% 16%;
-    --muted-foreground: 240 5% 65%;
-    --accent: 240 6% 18%;
-    --accent-foreground: 0 0% 98%;
+    --secondary: 210 50% 25%;
+    --secondary-foreground: 210 20% 95%;
+    --muted: 210 30% 15%;
+    --muted-foreground: 210 20% 55%;
+    --accent: 210 40% 20%;
+    --accent-foreground: 210 20% 95%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
-    --border: 240 6% 20%;
-    --input: 240 6% 16%;
+    --border: 210 40% 20%;
+    --input: 210 35% 15%;
     --ring: 25 95% 53%;
     --radius: 0.75rem;
   }
@@ -37,7 +38,7 @@
   }
   
   body {
-    @apply bg-[#0f0f14] text-foreground antialiased;
+    @apply bg-[#0a1017] text-foreground antialiased;
     min-height: 100vh;
   }
 
@@ -51,15 +52,15 @@
   }
 
   ::-webkit-scrollbar-track {
-    background: #16161d;
+    background: #0f1a24;
   }
 
   ::-webkit-scrollbar-thumb {
-    background: #333;
+    background: #1e3a5f;
     border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background: #444;
+    background: #2a4a6f;
   }
 }
