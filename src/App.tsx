@@ -940,7 +940,7 @@ function AdminPortal({
       </header>
 
       {/* Mobile Sidebar */}
-      <aside className={`fixed top-0 left-0 h-full w-72 bg-[#1a1a24] z-50 md:hidden flex flex-col transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+      <aside className={`fixed top-0 left-0 h-full w-72 bg-[#1a1a24] z-50 md:hidden flex flex-col transform transition-transform duration-300 ${mobileMenuOpen ? 'tranzinc-x-0' : '-tranzinc-x-full'}`}>
         <div className="p-4 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
@@ -1115,7 +1115,7 @@ function AdminPortal({
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -tranzinc-y-1/2 text-zinc-500" />
                 <input 
                   type="text" 
                   placeholder="Search..." 
@@ -2203,7 +2203,7 @@ function TournamentManager({
                               </span>
                               <span className="text-zinc-500 mx-1">vs</span>
                               <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
-                              <span className={`truncate ${match.winner === 'player2' ? 'text-slate-200 font-semibold' : 'text-white'}`}>
+                              <span className={`truncate ${match.winner === 'player2' ? 'text-zinc-200 font-semibold' : 'text-white'}`}>
                                 {p2?.firstName || '?'}
                               </span>
                             </div>
@@ -3070,7 +3070,7 @@ function CourtkeeperPortal({
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-2">
-          <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-slate-200'}`}>
+          <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-zinc-200'}`}>
             Court {court} ({pendingMatches.length} pending)
           </h3>
         </div>
@@ -3179,8 +3179,8 @@ function CourtkeeperPortal({
             <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
           </DialogHeader>
           <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-amber-600' : 'bg-zinc-600/30 border-2 border-zinc-400'}`}>
-            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-slate-200'}`} />
-            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-slate-200'}`}>
+            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-zinc-200'}`} />
+            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-zinc-200'}`}>
               {winnerPlayer?.firstName} {winnerPlayer?.lastName}
             </p>
             <p className="text-zinc-300 mt-2">{winnerColor === 'red' ? 'AKA' : 'SHIRO'} Wins!</p>
@@ -3381,7 +3381,7 @@ function CourtkeeperPortal({
               {/* Player 2 (White/Shiro) */}
               <Card className="bg-zinc-800 border-2 border-zinc-400">
                 <CardHeader className="pb-2 bg-zinc-700/30">
-                  <CardTitle className="text-slate-200 text-center flex items-center justify-center gap-2">
+                  <CardTitle className="text-zinc-200 text-center flex items-center justify-center gap-2">
                     <span className="w-3 h-3 rounded-full bg-white inline-block"></span>
                     SHIRO
                   </CardTitle>
