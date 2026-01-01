@@ -1,27 +1,62 @@
-# Renbu Monthly Shiai - Kendo Tournament Manager
+# Shiaijo - Kendo Tournament Manager
 
-A full-featured kendo tournament management application with dual portals for admins and courtkeepers, real-time synchronization, and mobile-responsive design.
+A full-featured kendo tournament management application built for Renbu Dojo's monthly shiai. Features dual portals for admins and scorekeepers, real-time synchronization, and a mobile-first design.
 
 ## Features
 
 ### Admin Portal
-- **Member Management**: Add individual members, bulk import via CSV, or register guests
-- **Auto-grouping**: Members are automatically assigned to groups (A-E, F-J, K-O, P-T, U-Z) based on last name
-- **Guest Registry**: Persistent registry for recurring guests from other dojos
-- **Tournament Generation**: Round-robin tournament with optimized match ordering for maximum rest time
-- **Live Dashboard**: View participant counts, match schedules, and tournament progress
+
+#### Member Management
+- Add individual members or bulk import via CSV
+- Automatic grouping by last name (A-E, F-J, K-O, P-T, U-Z)
+- Toggle participation status for each member
+- First name display mode for privacy
+- Guest registry for recurring visitors from other dojos
+
+#### Group Management
+- Create custom groups with drag-and-drop reordering
+- Non-bogu (Hantei) mode for groups without armor
+- Edit mode to show/hide edit and delete buttons
+- Court assignment based on group position (odd = Court A, even = Court B)
+
+#### Tournament Management
+- Round-robin tournament generation with optimized rest time
+- Configurable timer options (1:00 - 5:00)
+- Sanbon (first to 2) or Ippon (first to 1) match types
+- Per-group and per-match settings
+- Refresh participants without losing completed match results
+- Match history and results archive
 
 ### Courtkeeper Portal
-- **Live Timer**: Configurable match duration with start/pause/reset controls
-- **Dual Scoreboard**: Track scores for both players with Men, Kote, Do, Tsuki, and Hansoku
-- **Score Undo**: Remove the last scored point for either player
-- **Match Queue**: Visual match queue with status indicators
-- **Auto-advance**: Automatically moves to the next match upon completion
+
+#### Live Scoring Interface
+- Score buttons for Men (M), Kote (K), Do (D), Tsuki (T)
+- Hansoku tracking with automatic point conversion (2 hansoku = 1 point)
+- Real-time score display with AKA (red) and SHIRO (white) sides
+- Undo functionality for score corrections
+
+#### Timer
+- Configurable duration with visual progress bar
+- Start/Pause/Reset controls
+- Visual alert when time expires
+
+#### Match Queue
+- Collapsible Group Queue for reordering
+- Match Queue with LIVE and NEXT indicators
+- Select upcoming matches manually
+- Move matches between courts
+
+#### UI Features
+- "Up Next" card showing the next scheduled match
+- Court A (amber) and Court B (blue) color coding
+- Mobile-optimized compact layout
+- Slide-out menu for queue access
 
 ### Technical Features
-- **Real-time Sync**: Uses shared storage API with 1-second polling for cross-device sync
-- **Mobile Responsive**: Automatic device detection with optimized layouts
-- **Offline Support**: LocalStorage fallback when storage API is unavailable
+- Real-time sync across devices using shared storage API
+- LocalStorage fallback for offline usage
+- Mobile-responsive design
+- Dark mode interface
 
 ## Tech Stack
 
@@ -29,97 +64,30 @@ A full-featured kendo tournament management application with dual portals for ad
 - **Build Tool**: Vite
 - **Styling**: Tailwind CSS
 - **Components**: shadcn/ui
-- **Notifications**: Sonner (toasts)
+- **Icons**: Lucide React
+- **Notifications**: Sonner
 
 ## Getting Started
 
-### Prerequisites
-- Node.js 18+
-- pnpm (recommended) or npm
-
-### Installation
-
-\`\`\`bash
-# Clone or download the project
-cd renbu-shiai
-
+```bash
 # Install dependencies
 pnpm install
 
 # Start development server
 pnpm dev
-\`\`\`
 
-The app will be available at \`http://localhost:5173\`
-
-### Production Build
-
-\`\`\`bash
+# Build for production
 pnpm build
-\`\`\`
-
-Built files will be in the \`dist\` directory.
+```
 
 ## Deployment
 
-### Vercel (Recommended)
-1. Push your code to GitHub/GitLab/Bitbucket
-2. Import the repository in [Vercel](https://vercel.com)
-3. Vercel will auto-detect Vite and configure everything
-4. Click Deploy
+Deploy to Vercel, Netlify, or any static hosting:
 
-Or use the CLI:
-\`\`\`bash
-npx vercel
-\`\`\`
-
-### Firebase Hosting
-\`\`\`bash
-# Install Firebase CLI
-npm install -g firebase-tools
-
-# Login to Firebase
-firebase login
-
-# Initialize (select Hosting, use 'dist' as public directory)
-firebase init hosting
-
-# Deploy
+```bash
 pnpm build
-firebase deploy
-\`\`\`
-
-### Netlify
-1. Push your code to GitHub/GitLab/Bitbucket
-2. Import the repository in [Netlify](https://netlify.com)
-3. Build settings are auto-configured via \`netlify.toml\`
-4. Click Deploy
-
-Or drag-and-drop the \`dist\` folder to [Netlify Drop](https://app.netlify.com/drop)
-
-## Usage
-
-### Tournament Setup Flow
-1. **Add Members**: Use the Members tab to add participants
-2. **Select Participants**: Check members participating today
-3. **Generate Tournament**: Creates optimized round-robin schedule
-4. **Start Tournament**: Begin the competition
-5. **Switch to Courtkeeper**: Run matches on another device
-
-### CSV Import Format
-
-\`\`\`csv
-FirstName,LastName
-John,Smith
-Jane,Doe
-\`\`\`
-
-Or with group:
-\`\`\`csv
-FirstName,LastName,Group
-John,Smith,A
-Jane,Doe,B
-\`\`\`
+# Upload the 'dist' folder
+```
 
 ## License
 
