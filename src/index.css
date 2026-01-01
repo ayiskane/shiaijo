@@ -4,24 +4,24 @@
 
 @layer base {
   :root {
-    --background: 222 47% 6%;
+    --background: 222 47% 5%;
     --foreground: 210 40% 98%;
-    --card: 222 47% 8%;
+    --card: 222 47% 7%;
     --card-foreground: 210 40% 98%;
-    --popover: 222 47% 8%;
+    --popover: 222 47% 7%;
     --popover-foreground: 210 40% 98%;
     --primary: 25 95% 53%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 217 33% 17%;
+    --secondary: 217 33% 12%;
     --secondary-foreground: 210 40% 98%;
-    --muted: 217 33% 17%;
+    --muted: 217 33% 12%;
     --muted-foreground: 215 20% 65%;
-    --accent: 25 95% 53%;
+    --accent: 217 33% 15%;
     --accent-foreground: 210 40% 98%;
     --destructive: 0 84% 60%;
     --destructive-foreground: 210 40% 98%;
-    --border: 217 33% 20%;
-    --input: 217 33% 17%;
+    --border: 217 33% 18%;
+    --input: 217 33% 15%;
     --ring: 25 95% 53%;
     --radius: 0.75rem;
   }
@@ -32,25 +32,36 @@
     @apply border-border;
   }
   
+  html {
+    color-scheme: dark;
+  }
+  
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "rlig" 1, "calt" 1;
+    background: linear-gradient(to bottom right, hsl(222 47% 5%), hsl(222 47% 7%), hsl(222 47% 5%));
+    min-height: 100vh;
+  }
+
+  /* Force dark mode on all inputs */
+  input, select, textarea {
+    color-scheme: dark;
+    background-color: hsl(217 33% 12%) !important;
+    color: hsl(210 40% 98%) !important;
   }
 
   /* Custom scrollbar */
   ::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+    width: 6px;
+    height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: hsl(222 47% 8%);
-    border-radius: 4px;
+    background: hsl(222 47% 7%);
   }
 
   ::-webkit-scrollbar-thumb {
     background: hsl(217 33% 25%);
-    border-radius: 4px;
+    border-radius: 3px;
   }
 
   ::-webkit-scrollbar-thumb:hover {
@@ -59,55 +70,13 @@
 }
 
 @layer components {
-  /* Glowing focus states */
-  .focus-ring {
-    @apply focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:ring-offset-2 focus:ring-offset-slate-900;
+  /* Force button colors */
+  button {
+    color: inherit;
   }
 
-  /* Smooth card hover */
-  .card-hover {
-    @apply transition-all duration-200 hover:shadow-lg hover:shadow-orange-500/5 hover:border-slate-600;
-  }
-
-  /* Button press effect */
-  .btn-press {
-    @apply active:scale-[0.98] transition-transform;
-  }
-
-  /* Gradient text */
-  .gradient-text {
-    @apply bg-gradient-to-r from-orange-400 to-orange-600 bg-clip-text text-transparent;
-  }
-
-  /* Glass effect */
-  .glass {
-    @apply bg-slate-800/40 backdrop-blur-md border border-slate-700/50;
-  }
-}
-
-@layer utilities {
-  /* Animation utilities */
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.4s ease-out;
-  }
-
-  @keyframes slideUp {
-    from { opacity: 0; transform: translateY(16px); }
-    to { opacity: 1; transform: translateY(0); }
-  }
-
-  /* Better text rendering */
-  .text-sharp {
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
+  /* Badge styling */
+  [data-slot="badge"] {
+    background-color: hsl(217 33% 15%);
   }
 }
