@@ -1702,18 +1702,6 @@ function GroupsManager({
     }))
   }
 
-  const moveGroupPosition = (groupId: string, direction: 'up' | 'down') => {
-    setState(prev => {
-      const groups = [...prev.groups]
-      const idx = groups.findIndex(g => g.id === groupId)
-      if (idx === -1) return prev
-      const newIdx = direction === 'up' ? idx - 1 : idx + 1
-      if (newIdx < 0 || newIdx >= groups.length) return prev
-      ;[groups[idx], groups[newIdx]] = [groups[newIdx], groups[idx]]
-      return { ...prev, groups }
-    })
-  }
-
   const reorderGroups = (draggedId: string, targetId: string) => {
     if (draggedId === targetId) return
     setState(prev => {
@@ -2063,25 +2051,6 @@ function TournamentManager({
   // Track dragged group in tournament
   const [draggedTournamentGroupId, setDraggedTournamentGroupId] = useState<string | null>(null)
 
-  // Reorder groups in tournament
-  const moveGroupOrder = (groupId: string, direction: 'up' | 'down') => {
-    if (!tournament || !tournament.groupOrder) return
-    const currentOrder = [...tournament.groupOrder]
-    const idx = currentOrder.indexOf(groupId)
-    if (idx === -1) return
-    
-    const newIdx = direction === 'up' ? idx - 1 : idx + 1
-    if (newIdx < 0 || newIdx >= currentOrder.length) return
-    
-    // Swap
-    [currentOrder[idx], currentOrder[newIdx]] = [currentOrder[newIdx], currentOrder[idx]]
-    
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, groupOrder: currentOrder }
-    }))
-  }
-
   const reorderTournamentGroups = (draggedId: string, targetId: string) => {
     if (!tournament || !tournament.groupOrder || draggedId === targetId) return
     const currentOrder = [...tournament.groupOrder]
@@ -2322,10 +2291,9 @@ function TournamentManager({
       </Card>
 
       {/* Match Schedule by Group with Court Assignment */}
-      {(tournament.groupOrder || []).map((groupId, gIdx) => {
+      {(tournament.groupOrder || []).map((groupId) => {
         const group = getGroupById(groupId)
         const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
-        const totalGroups = (tournament.groupOrder || []).length
         const isShared = state.sharedGroups.includes(groupId)
         const isCourtA = !isShared && groupMatches[0]?.court === 'A'
         const isCourtB = !isShared && groupMatches[0]?.court === 'B'
