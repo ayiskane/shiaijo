@@ -1064,7 +1064,7 @@ function AdminPortal({
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -tranzinc-y-1/2 text-[#6b8fad]" />
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#6b8fad]" />
                 <input 
                   type="text" 
                   placeholder="Search..." 
