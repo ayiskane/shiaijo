@@ -2778,12 +2778,53 @@ function CourtkeeperPortal({
       return m
     })
 
+    // Clear selected match so queue resumes normally
     setState(prev => ({
       ...prev,
-      currentTournament: { ...tournament, matches: updatedMatches }
+      currentTournament: { ...tournament, matches: updatedMatches },
+      courtASelectedMatch: selectedCourt === 'A' ? null : prev.courtASelectedMatch,
+      courtBSelectedMatch: selectedCourt === 'B' ? null : prev.courtBSelectedMatch,
     }))
     
     toast.success(winner === 'draw' ? 'Match ended in draw' : `${winner === 'player1' ? 'AKA' : 'SHIRO'} wins!`)
+  }
+
+  // Select a specific match to play next (override queue)
+  const selectMatch = (matchId: string) => {
+    if (selectedCourt === 'A') {
+      setState(prev => ({ ...prev, courtASelectedMatch: matchId }))
+    } else {
+      setState(prev => ({ ...prev, courtBSelectedMatch: matchId }))
+    }
+    toast.success('Match selected - will start next')
+  }
+
+  // Clear selected match (resume normal queue)
+  const clearSelectedMatch = () => {
+    if (selectedCourt === 'A') {
+      setState(prev => ({ ...prev, courtASelectedMatch: null }))
+    } else {
+      setState(prev => ({ ...prev, courtBSelectedMatch: null }))
+    }
+  }
+
+  // Move group up/down in queue order
+  const moveGroupInQueue = (groupId: string, direction: 'up' | 'down') => {
+    const currentOrder = selectedCourt === 'A' ? [...courtAGroupOrder] : [...courtBGroupOrder]
+    const idx = currentOrder.indexOf(groupId)
+    if (idx === -1) return
+    
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= currentOrder.length) return
+    
+    // Swap
+    [currentOrder[idx], currentOrder[newIdx]] = [currentOrder[newIdx], currentOrder[idx]]
+    
+    if (selectedCourt === 'A') {
+      setState(prev => ({ ...prev, courtAGroupOrder: currentOrder }))
+    } else {
+      setState(prev => ({ ...prev, courtBGroupOrder: currentOrder }))
+    }
   }
 
   // Render score display with circled letters
