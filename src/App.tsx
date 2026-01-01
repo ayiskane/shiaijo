@@ -1754,34 +1754,28 @@ function TournamentManager({
         
         return (
           <Card key={groupId} className={`border ${groupMatches[0]?.court === 'A' ? 'border-red-800/30' : 'border-slate-700/30'}`}>
-            <CardHeader className="p-3 sm:p-4">
-              <div className="flex items-center gap-2 sm:gap-3">
-                {/* Court badge - compact */}
-                <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-lg flex items-center justify-center font-bold text-lg sm:text-xl ${groupMatches[0]?.court === 'A' ? 'bg-amber-600 text-white' : 'bg-slate-600 text-white'}`}>
-                  {groupMatches[0]?.court || 'A'}
+            <CardHeader className="p-3">
+              <div className="flex items-center justify-between">
+                {/* Left: Group info */}
+                <div className="flex items-center gap-2">
+                  <span className={`px-2 py-1 rounded text-xs font-semibold ${groupMatches[0]?.court === 'A' ? 'bg-amber-600/20 text-amber-400 border border-amber-600/30' : 'bg-slate-600/20 text-slate-400 border border-slate-600/30'}`}>
+                    {groupMatches[0]?.court || 'A'}
+                  </span>
+                  <span className="text-white font-medium">{group?.name || groupId}</span>
+                  {group?.isNonBogu && <span className="text-[10px] px-1.5 py-0.5 bg-orange-900/40 text-orange-300 rounded">判定</span>}
+                  <span className="text-xs text-slate-500">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
                 </div>
                 
-                {/* Group name and progress */}
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className="text-white font-semibold truncate">{group?.name || groupId}</span>
-                    {group?.isNonBogu && <span className="text-[10px] px-1.5 py-0.5 bg-orange-900/50 text-orange-300 rounded">判定</span>}
-                  </div>
-                  <div className="text-xs text-slate-400 mt-0.5">
-                    {groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length} completed
-                  </div>
-                </div>
-                
-                {/* Court switch - simplified */}
-                <div className="flex gap-1">
+                {/* Right: Court toggle */}
+                <div className="flex rounded-lg overflow-hidden border border-slate-700">
                   <button
-                    className={`w-8 h-8 rounded text-xs font-bold ${groupMatches[0]?.court === 'A' ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-red-900/50'}`}
+                    className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'A' ? 'bg-amber-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700'}`}
                     onClick={() => setGroupCourt(groupId, 'A')}
                   >
                     A
                   </button>
                   <button
-                    className={`w-8 h-8 rounded text-xs font-bold ${groupMatches[0]?.court === 'B' ? 'bg-slate-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-700/50'}`}
+                    className={`px-3 py-1 text-xs font-medium transition-colors ${groupMatches[0]?.court === 'B' ? 'bg-slate-600 text-white' : 'bg-slate-800 text-slate-400 hover:bg-slate-700/50'}`}
                     onClick={() => setGroupCourt(groupId, 'B')}
                   >
                     B
