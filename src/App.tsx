@@ -985,55 +985,56 @@ function AdminPortal({
 
       <main className="p-4 max-w-7xl mx-auto">
         {activeTab === 'members' && (
-          <div className="space-y-4">
-            <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
-              <CardContent className="p-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
-                    <Input
-                      className="pl-10 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
-                      placeholder="Search members..."
-                      value={searchQuery}
-                      onChange={e => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Select value={filterGroup} onValueChange={setFilterGroup}>
-                    <SelectTrigger className="w-full md:w-40 bg-slate-700/50 border-slate-600 bg-slate-800/40 hover:bg-slate-600/50">
-                      <SelectValue placeholder="Filter group" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700/50 border-slate-600 bg-slate-800/40 hover:bg-slate-600/50">
-                      <SelectItem value="all">All Groups</SelectItem>
-                      {state.groups.map(g => (
-                        <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <Select value={sortBy} onValueChange={(v: 'name' | 'group') => setSortBy(v)}>
-                    <SelectTrigger className="w-full md:w-40 bg-slate-700/50 border-slate-600 bg-slate-800/40 hover:bg-slate-600/50">
-                      <SelectValue placeholder="Sort by" />
-                    </SelectTrigger>
-                    <SelectContent className="bg-slate-700/50 border-slate-600 bg-slate-800/40 hover:bg-slate-600/50">
-                      <SelectItem value="name">Sort by Name</SelectItem>
-                      <SelectItem value="group">Sort by Group</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </CardContent>
-            </Card>
+          <div className="space-y-6">
+            {/* Search and Filter Bar */}
+            <div className="flex flex-col lg:flex-row gap-4">
+              <div className="flex-1 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <Input
+                  className="pl-10 bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 h-10"
+                  placeholder="Search members..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                />
+              </div>
+              <div className="flex gap-3">
+                <Select value={filterGroup} onValueChange={setFilterGroup}>
+                  <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 h-10">
+                    <SelectValue placeholder="All Groups" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="all">All Groups</SelectItem>
+                    {state.groups.map(g => (
+                      <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Select value={sortBy} onValueChange={(v: 'name' | 'group') => setSortBy(v)}>
+                  <SelectTrigger className="w-[140px] bg-slate-800/50 border-slate-700 h-10">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-700">
+                    <SelectItem value="name">Sort by Name</SelectItem>
+                    <SelectItem value="group">Sort by Group</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
 
-            <div className="flex flex-wrap gap-2">
+            {/* Action Buttons - Organized in groups */}
+            <div className="flex flex-wrap items-center gap-3">
+              {/* Primary Actions */}
               <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
                 <DialogTrigger asChild>
-                  <Button className="bg-orange-600 hover:bg-orange-700">
+                  <Button className="bg-orange-600 hover:bg-orange-700 h-9">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Member
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
+                <DialogContent className="bg-slate-900 border-slate-700">
                   <DialogHeader>
                     <DialogTitle className="text-white">Add Member</DialogTitle>
-                    <DialogDescription className="text-slate-300">Add a new member to the roster</DialogDescription>
+                    <DialogDescription className="text-slate-400">Add a new member to the roster</DialogDescription>
                   </DialogHeader>
                   <AddMemberForm 
                     groups={state.groups} 
@@ -1047,15 +1048,15 @@ function AdminPortal({
 
               <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" className="border-slate-600 bg-slate-800/40 hover:bg-slate-600/50">
+                  <Button variant="outline" className="border-slate-700 bg-slate-800/50 hover:bg-slate-700 h-9">
                     <FileSpreadsheet className="w-4 h-4 mr-2" />
                     Import CSV
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
+                <DialogContent className="bg-slate-900 border-slate-700">
                   <DialogHeader>
                     <DialogTitle className="text-white">Import from CSV</DialogTitle>
-                    <DialogDescription className="text-slate-300">
+                    <DialogDescription className="text-slate-400">
                       Format: FirstName,LastName,GroupID (one per line)
                     </DialogDescription>
                   </DialogHeader>
@@ -1066,53 +1067,61 @@ function AdminPortal({
                 </DialogContent>
               </Dialog>
 
-              <Separator orientation="vertical" className="h-9 bg-slate-600/50 hidden md:block" />
+              <div className="h-6 w-px bg-slate-700 hidden sm:block" />
 
+              {/* Selection Actions */}
               <div className="flex flex-wrap gap-2">
-                {state.groups.map(g => (
+                {state.groups.slice(0, 4).map(g => (
                   <Button 
                     key={g.id}
                     variant="outline" 
                     size="sm"
-                    className="border-slate-700"
+                    className="border-slate-700 bg-slate-800/30 hover:bg-slate-700 h-8 text-xs"
                     onClick={() => selectByGroup(g.id)}
                   >
-                    Select {g.name}
+                    {g.name}
                   </Button>
                 ))}
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={deselectAll}
+                  className="h-8 text-xs text-slate-400 hover:text-white"
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" />
+                  Reset
+                </Button>
               </div>
 
-              <Button variant="ghost" className="h-8 w-8 w-4 h-4 mr-2" size="sm" onClick={deselectAll}>
-                <RefreshCw />
-                Reset All
-              </Button>
+              <div className="h-6 w-px bg-slate-700 hidden sm:block" />
 
+              {/* Utility Actions */}
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="border-emerald-700 text-emerald-400 hover:bg-emerald-900/20"
+                className="border-emerald-800 text-emerald-400 bg-emerald-950/30 hover:bg-emerald-900/50 h-8"
                 onClick={() => {
                   const testMembers = generateTestMembers()
                   setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
                   toast.success(`Added ${testMembers.length} test members`)
                 }}
               >
-                <Plus className="w-4 h-4 mr-2" />
-                Load Test Data
+                <Plus className="w-3 h-3 mr-1" />
+                Test Data
               </Button>
 
               <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-red-700/60 text-red-400 bg-red-900/20 hover:bg-red-800/40 hover:border-red-600">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Clear All Members
+                  <Button variant="outline" size="sm" className="border-red-900 text-red-400 bg-red-950/30 hover:bg-red-900/50 h-8">
+                    <Trash2 className="w-3 h-3 mr-1" />
+                    Clear All
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
+                <DialogContent className="bg-slate-900 border-slate-700">
                   <DialogHeader>
                     <DialogTitle className="text-white">Clear All Members?</DialogTitle>
-                    <DialogDescription className="text-slate-300">
-                      This will permanently delete all {state.members.length} members from the roster. This action cannot be undone.
+                    <DialogDescription className="text-slate-400">
+                      This will permanently delete all {state.members.length} members. This cannot be undone.
                     </DialogDescription>
                   </DialogHeader>
                   <DialogFooter>
@@ -1123,37 +1132,39 @@ function AdminPortal({
               </Dialog>
             </div>
 
-            <Card className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
+            {/* Members List */}
+            <Card className="bg-slate-800/30 border-slate-700/50">
               <CardContent className="p-0">
-                <ScrollArea className="h-[60vh] pr-2">
+                <ScrollArea className="h-[calc(100vh-320px)]">
                   <div className="divide-y divide-slate-800">
                     {filteredMembers.map(member => {
                        const group = getGroupById(member.group)
                        return (
                          <div 
                            key={member.id}
-                           className="flex items-center gap-4 p-4 hover:bg-slate-800/40"
+                           className="flex items-center gap-4 px-4 py-3 hover:bg-slate-800/50 transition-colors"
                          >
                            <Checkbox
                              checked={member.isParticipating}
                              onCheckedChange={() => toggleParticipation(member.id)}
+                             className="border-slate-600"
                            />
                            <div className="flex-1 min-w-0">
                              <div className="flex items-center gap-2">
-                               <span className="text-white font-medium truncate">
+                               <span className="text-white font-medium">
                                  {member.lastName}, {member.firstName}
                                </span>
                                {member.isGuest && (
-                                 <Badge variant="secondary" className="bg-purple-900 text-purple-200">Guest</Badge>
+                                 <Badge className="bg-purple-900/50 text-purple-300 text-[10px] px-1.5 py-0">Guest</Badge>
                                )}
                              </div>
                              {member.guestDojo && (
-                               <span className="text-sm text-slate-400">{member.guestDojo}</span>
+                               <span className="text-xs text-slate-500">{member.guestDojo}</span>
                              )}
                            </div>
                            <Badge 
                              variant="outline" 
-                             className={`${group?.isNonBogu ? 'border-orange-500 text-orange-400' : 'border-slate-600 text-slate-300'}`}
+                             className={`text-xs ${group?.isNonBogu ? 'border-orange-600 text-orange-400 bg-orange-950/30' : 'border-slate-600 text-slate-400'}`}
                            >
                              {group?.name || member.group}
                            </Badge>
@@ -1161,7 +1172,7 @@ function AdminPortal({
                              variant="ghost"
                              size="icon"
                              onClick={() => deleteMember(member.id)}
-                             className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                             className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-950/30"
                            >
                              <Trash2 className="w-4 h-4" />
                            </Button>
@@ -1169,7 +1180,11 @@ function AdminPortal({
                        )
                      })}
                     {filteredMembers.length === 0 && (
-                      <div className="p-8 text-center text-slate-400">No members found</div>
+                      <div className="p-12 text-center text-slate-500">
+                        <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                        <p>No members found</p>
+                        <p className="text-sm mt-1">Add members or load test data to get started</p>
+                      </div>
                     )}
                   </div>
                 </ScrollArea>
