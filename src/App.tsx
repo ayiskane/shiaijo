@@ -619,7 +619,7 @@ export default function App() {
             <div className="w-20 h-20 mx-auto mb-6 flex items-center justify-center">
               <RenbuLogo size={80} glow />
             </div>
-            <h1 className="text-3xl font-bold text-white mb-2">Shiaijo</h1>
+            <h1 className="text-4xl font-bold text-white mb-2" style={{ fontFamily: '"sicyubi-fudegyosho", "Yuji Syuku", serif' }}>試合場</h1>
             <p className="text-[#6b8fad]">Tournament Manager</p>
           </div>
           
@@ -1052,7 +1052,7 @@ function AdminPortal({
             </div>
             {!sidebarCollapsed && (
               <div>
-                <h1 className="font-bold">Shiaijo</h1>
+                <h1 className="font-bold text-xl" style={{ fontFamily: '"sicyubi-fudegyosho", "Yuji Syuku", serif' }}>試合場</h1>
                 <p className="text-xs text-[#6b8fad]">Admin Portal</p>
               </div>
             )}
@@ -1173,7 +1173,7 @@ function AdminPortal({
                   <RenbuLogo size={32} glow />
                 </div>
                 <div>
-                  <h1 className="font-bold text-white">Shiaijo</h1>
+                  <h1 className="font-bold text-white text-lg" style={{ fontFamily: '"sicyubi-fudegyosho", "Yuji Syuku", serif' }}>試合場</h1>
                   <p className="text-xs text-[#6b8fad]">Admin Portal</p>
                 </div>
               </div>
@@ -1217,7 +1217,7 @@ function AdminPortal({
           <div className="w-8 h-8 rounded-xl flex items-center justify-center">
             <RenbuLogo size={28} glow />
           </div>
-          <span className="font-semibold">Shiaijo</span>
+          <span className="font-semibold text-lg" style={{ fontFamily: '"sicyubi-fudegyosho", "Yuji Syuku", serif' }}>試合場</span>
         </div>
         <button 
           onClick={async () => {
