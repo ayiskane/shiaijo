@@ -2993,365 +2993,399 @@ function CourtkeeperPortal({
   }
 
   return (
-    <div className="min-h-screen bg-[#0a1017] text-white">
-      <Toaster theme="dark" position="top-center" />
+    <div className="min-h-screen bg-gradient-to-b from-slate-100 to-slate-200">
+      <Toaster theme="light" position="top-center" />
       
-      {/* Header */}
-      <header className="bg-[#0f1a24] border-b border-[#1e3a5f] p-3">
-        <div className="flex items-center justify-between max-w-2xl mx-auto">
-          <div className="flex items-center gap-2">
-            <RenbuLogo size={32} glow />
-            <span className="font-bold">Courtkeeper</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Button
-              size="sm"
-              variant={selectedCourt === 'A' ? 'default' : 'outline'}
-              onClick={() => setSelectedCourt('A')}
-              className={selectedCourt === 'A' ? 'bg-amber-600' : 'border-[#2a4a6f]'}
-            >
-              Court A
-            </Button>
-            <Button
-              size="sm"
-              variant={selectedCourt === 'B' ? 'default' : 'outline'}
-              onClick={() => setSelectedCourt('B')}
-              className={selectedCourt === 'B' ? 'bg-[#1e3a5f]' : 'border-[#2a4a6f]'}
-            >
-              Court B
-            </Button>
-            <Button variant="ghost" size="sm" onClick={onSwitchPortal}>
-              <ArrowLeftRight className="w-4 h-4" />
-            </Button>
+      {/* Header - Blue gradient like LiveScore */}
+      <header className="bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white shadow-lg">
+        <div className="max-w-2xl mx-auto px-4 py-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <RenbuLogo size={36} glow />
+              <div>
+                <h1 className="font-bold text-lg">Courtkeeper</h1>
+                <p className="text-blue-200 text-xs">Live Scoring</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setSelectedCourt('A')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  selectedCourt === 'A' 
+                    ? 'bg-white text-blue-700 shadow-md' 
+                    : 'bg-blue-500/30 text-white hover:bg-blue-500/50'
+                }`}
+              >
+                Court A
+              </button>
+              <button
+                onClick={() => setSelectedCourt('B')}
+                className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all ${
+                  selectedCourt === 'B' 
+                    ? 'bg-white text-blue-700 shadow-md' 
+                    : 'bg-blue-500/30 text-white hover:bg-blue-500/50'
+                }`}
+              >
+                Court B
+              </button>
+              <button 
+                onClick={onSwitchPortal}
+                className="p-2 rounded-full bg-blue-500/30 hover:bg-blue-500/50 transition-colors"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="max-w-2xl mx-auto p-4 space-y-3">
-        {/* Match Header */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <span className={`px-3 py-1.5 rounded-lg font-bold text-sm ${selectedCourt === 'A' ? 'bg-amber-600' : 'bg-[#1e3a5f]'}`}>
-              Court {selectedCourt}
-            </span>
-            <span className="text-[#8fb3d1] text-sm">{group?.name || 'Unknown'}</span>
-            {group?.isNonBogu && <span className="text-[10px] px-2 py-0.5 rounded bg-orange-600/20 text-orange-400">判定</span>}
-          </div>
-          {!group?.isNonBogu && (
+      <main className="max-w-2xl mx-auto p-4 space-y-4">
+        {/* Current Match Card */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          {/* Match Header Bar */}
+          <div className={`px-4 py-2 flex items-center justify-between ${
+            selectedCourt === 'A' ? 'bg-amber-500' : 'bg-blue-600'
+          } text-white`}>
             <div className="flex items-center gap-2">
-              <select 
-                value={timerDuration} 
-                onChange={(e) => updateMatchSettings('timerDuration', parseInt(e.target.value))}
-                className="bg-[#1a2d42] border border-[#2a4a6f] rounded px-2 py-1 text-xs"
-              >
-                <option value={120}>2 min</option>
-                <option value={180}>3 min</option>
-                <option value={240}>4 min</option>
-                <option value={300}>5 min</option>
-              </select>
-              <select 
-                value={matchType} 
-                onChange={(e) => updateMatchSettings('matchType', e.target.value)}
-                className="bg-[#1a2d42] border border-[#2a4a6f] rounded px-2 py-1 text-xs"
-              >
-                <option value="sanbon">三本</option>
-                <option value="ippon">一本</option>
-              </select>
+              <span className="font-bold">Court {selectedCourt}</span>
+              <span className="text-white/70">•</span>
+              <span className="text-white/90">{group?.name || 'No Group'}</span>
+              {group?.isNonBogu && (
+                <span className="text-xs px-2 py-0.5 rounded-full bg-white/20">判定</span>
+              )}
             </div>
-          )}
+            {!group?.isNonBogu && (
+              <div className="flex items-center gap-2">
+                <select 
+                  value={timerDuration} 
+                  onChange={(e) => updateMatchSettings('timerDuration', parseInt(e.target.value))}
+                  className="bg-white/20 border-0 rounded-lg px-2 py-1 text-xs text-white"
+                >
+                  <option value={120} className="text-gray-900">2 min</option>
+                  <option value={180} className="text-gray-900">3 min</option>
+                  <option value={240} className="text-gray-900">4 min</option>
+                  <option value={300} className="text-gray-900">5 min</option>
+                </select>
+                <select 
+                  value={matchType} 
+                  onChange={(e) => updateMatchSettings('matchType', e.target.value)}
+                  className="bg-white/20 border-0 rounded-lg px-2 py-1 text-xs text-white"
+                >
+                  <option value="sanbon" className="text-gray-900">三本</option>
+                  <option value="ippon" className="text-gray-900">一本</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Players Section */}
+          <div className="p-4">
+            {/* Player 1 - AKA */}
+            <div className="flex items-center justify-between py-4 border-b border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-red-500 flex items-center justify-center text-white font-bold text-sm">
+                  赤
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800 text-lg">
+                    {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '—'}
+                  </p>
+                  <p className="text-xs text-slate-400">AKA</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  {renderScoreDisplay(p1Score, p2Hansoku)}
+                </div>
+                <div className="text-slate-300 text-sm">
+                  {renderHansokuIndicator(p1Hansoku, p1MaxHansoku)}
+                </div>
+              </div>
+            </div>
+
+            {/* Timer - Center display */}
+            {!group?.isNonBogu && (
+              <div className="py-6 text-center">
+                <div className={`text-5xl font-mono font-bold ${
+                  timerSeconds >= timerDuration ? 'text-red-500' : 'text-slate-800'
+                }`}>
+                  {formatTime(timerSeconds)}
+                </div>
+                <div className="w-full h-1.5 bg-slate-100 rounded-full mt-3 overflow-hidden">
+                  <div 
+                    className={`h-full transition-all rounded-full ${
+                      timerSeconds >= timerDuration ? 'bg-red-500' : 'bg-blue-500'
+                    }`}
+                    style={{ width: `${Math.min((timerSeconds / timerDuration) * 100, 100)}%` }}
+                  />
+                </div>
+                <p className="text-slate-400 text-sm mt-2">
+                  {timerSeconds >= timerDuration ? 'Time!' : `of ${formatTime(timerDuration)}`}
+                </p>
+              </div>
+            )}
+
+            {/* Player 2 - SHIRO */}
+            <div className="flex items-center justify-between py-4 border-t border-slate-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-slate-100 border-2 border-slate-300 flex items-center justify-center text-slate-600 font-bold text-sm">
+                  白
+                </div>
+                <div>
+                  <p className="font-semibold text-slate-800 text-lg">
+                    {player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : '—'}
+                  </p>
+                  <p className="text-xs text-slate-400">SHIRO</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1">
+                  {renderScoreDisplay(p2Score, p1Hansoku)}
+                </div>
+                <div className="text-slate-300 text-sm">
+                  {renderHansokuIndicator(p2Hansoku, p2MaxHansoku)}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Player 1 - AKA */}
-        <div className="bg-gradient-to-r from-red-950/80 to-red-900/40 rounded-lg border border-red-800/50 p-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-red-500"></div>
-              <span className="font-semibold text-red-300">AKA</span>
-            </div>
-            <span className="text-lg font-bold">
-              {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '?'}
-            </span>
-          </div>
-          
-          {/* Score & Hansoku Row */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex-1 min-h-[28px]">
-              {renderScoreDisplay(p1Score, p2Hansoku)}
-            </div>
-            <div className="flex items-center gap-1 text-[#6b8fad]">
-              {renderHansokuIndicator(p1Hansoku, p1MaxHansoku)}
-            </div>
-          </div>
-          
-          {/* Controls */}
-          {!currentMatch?.isHantei ? (
-            <div className="space-y-2">
-              <div className="grid grid-cols-4 gap-1.5">
+        {/* Score Buttons */}
+        {!currentMatch?.isHantei && (
+          <div className="bg-white rounded-2xl shadow-lg p-4 space-y-4">
+            {/* AKA Score Buttons */}
+            <div>
+              <p className="text-xs font-medium text-red-500 mb-2 uppercase tracking-wide">AKA Score</p>
+              <div className="grid grid-cols-4 gap-2">
                 {scoreTypes.slice(0, 4).map(type => (
                   <button
-                    key={type.id}
+                    key={`p1-${type.id}`}
                     onClick={() => addScore('player1', type.id)}
                     disabled={p1EffectiveScore >= winTarget}
-                    className="h-11 text-base font-bold bg-[#1e3a5f] hover:bg-[#2a4a6f] rounded-lg disabled:opacity-40 transition-colors"
+                    className="h-12 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                   >
                     {type.letter}
                   </button>
                 ))}
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => addHansoku('player1')}
                   disabled={p1Hansoku >= p1MaxHansoku}
-                  className="flex-1 h-9 text-sm bg-amber-700/80 hover:bg-amber-600 rounded-lg disabled:opacity-40 transition-colors"
+                  className="flex-1 h-10 rounded-xl text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-40 transition-colors"
                 >
                   Hansoku △
                 </button>
                 <button
                   onClick={() => removeLastScore('player1')}
                   disabled={p1Score.length === 0}
-                  className="px-4 h-9 text-sm bg-[#1a2d42] hover:bg-[#243a50] rounded-lg border border-[#2a4a6f] disabled:opacity-40 transition-colors"
+                  className="px-4 h-10 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 transition-colors"
                 >
                   Undo
                 </button>
               </div>
             </div>
-          ) : (
-            <button
-              onClick={() => completeMatch('player1')}
-              className="w-full h-12 text-base font-semibold bg-red-700 hover:bg-red-600 rounded-lg flex items-center justify-center gap-2"
-            >
-              <Award className="w-5 h-5" />
-              AKA Wins (判定)
-            </button>
-          )}
-        </div>
 
-        {/* Player 2 - SHIRO */}
-        <div className="bg-gradient-to-r from-slate-800/80 to-slate-700/40 rounded-lg border border-slate-600/50 p-3">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
-              <span className="font-semibold text-slate-300">SHIRO</span>
-            </div>
-            <span className="text-lg font-bold">
-              {player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : '?'}
-            </span>
-          </div>
-          
-          {/* Score & Hansoku Row */}
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex-1 min-h-[28px]">
-              {renderScoreDisplay(p2Score, p1Hansoku)}
-            </div>
-            <div className="flex items-center gap-1 text-[#6b8fad]">
-              {renderHansokuIndicator(p2Hansoku, p2MaxHansoku)}
-            </div>
-          </div>
-          
-          {/* Controls */}
-          {!currentMatch?.isHantei ? (
-            <div className="space-y-2">
-              <div className="grid grid-cols-4 gap-1.5">
+            {/* SHIRO Score Buttons */}
+            <div>
+              <p className="text-xs font-medium text-slate-500 mb-2 uppercase tracking-wide">SHIRO Score</p>
+              <div className="grid grid-cols-4 gap-2">
                 {scoreTypes.slice(0, 4).map(type => (
                   <button
-                    key={type.id}
+                    key={`p2-${type.id}`}
                     onClick={() => addScore('player2', type.id)}
                     disabled={p2EffectiveScore >= winTarget}
-                    className="h-11 text-base font-bold bg-[#1e3a5f] hover:bg-[#2a4a6f] rounded-lg disabled:opacity-40 transition-colors"
+                    className="h-12 rounded-xl font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
                   >
                     {type.letter}
                   </button>
                 ))}
               </div>
-              <div className="flex gap-1.5">
+              <div className="flex gap-2 mt-2">
                 <button
                   onClick={() => addHansoku('player2')}
                   disabled={p2Hansoku >= p2MaxHansoku}
-                  className="flex-1 h-9 text-sm bg-amber-700/80 hover:bg-amber-600 rounded-lg disabled:opacity-40 transition-colors"
+                  className="flex-1 h-10 rounded-xl text-sm font-medium bg-amber-100 text-amber-700 hover:bg-amber-200 disabled:opacity-40 transition-colors"
                 >
                   Hansoku △
                 </button>
                 <button
                   onClick={() => removeLastScore('player2')}
                   disabled={p2Score.length === 0}
-                  className="px-4 h-9 text-sm bg-[#1a2d42] hover:bg-[#243a50] rounded-lg border border-[#2a4a6f] disabled:opacity-40 transition-colors"
+                  className="px-4 h-10 rounded-xl text-sm font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 disabled:opacity-40 transition-colors"
                 >
                   Undo
                 </button>
               </div>
             </div>
-          ) : (
+          </div>
+        )}
+
+        {/* Hantei Buttons */}
+        {currentMatch?.isHantei && (
+          <div className="bg-white rounded-2xl shadow-lg p-4 space-y-3">
+            <p className="text-center text-slate-500 text-sm">判定 - Judge Decision</p>
             <button
-              onClick={() => completeMatch('player2')}
-              className="w-full h-12 text-base font-semibold bg-slate-600 hover:bg-slate-500 rounded-lg flex items-center justify-center gap-2"
+              onClick={() => completeMatch('player1')}
+              className="w-full h-14 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-sm flex items-center justify-center gap-2"
             >
               <Award className="w-5 h-5" />
-              SHIRO Wins (判定)
+              AKA Wins
             </button>
-          )}
-        </div>
+            <button
+              onClick={() => completeMatch('player2')}
+              className="w-full h-14 rounded-xl font-bold text-slate-700 bg-slate-200 hover:bg-slate-300 transition-colors shadow-sm flex items-center justify-center gap-2"
+            >
+              <Award className="w-5 h-5" />
+              SHIRO Wins
+            </button>
+          </div>
+        )}
 
-        {/* Timer - Only show for bogu matches */}
+        {/* Timer Controls */}
         {!group?.isNonBogu && (
-          <div className={`rounded-lg p-4 ${timerSeconds >= timerDuration ? 'bg-red-950/50 border border-red-600' : 'bg-[#0f1a24]'}`}>
-            <div className="text-center">
-              <div className={`text-5xl font-mono font-bold tracking-wider ${timerSeconds >= timerDuration ? 'text-red-400' : 'text-white'}`}>
-                {formatTime(timerSeconds)}
-              </div>
-              <div className="w-full h-1 bg-[#1e3a5f] rounded-full mt-3 overflow-hidden">
-                <div 
-                  className={`h-full transition-all ${timerSeconds >= timerDuration ? 'bg-red-500' : 'bg-emerald-500'}`}
-                  style={{ width: `${Math.min((timerSeconds / timerDuration) * 100, 100)}%` }}
-                />
-              </div>
-              <p className="text-[#6b8fad] text-xs mt-2">
-                {timerSeconds >= timerDuration ? 'Time expired!' : `Target: ${formatTime(timerDuration)}`}
-              </p>
-            </div>
-            <div className="flex justify-center gap-3 mt-3">
-              <button
-                onClick={toggleTimer}
-                className={`px-6 py-2 rounded-lg font-medium flex items-center gap-2 ${
-                  timerRunning 
-                    ? 'bg-amber-600 hover:bg-amber-500' 
-                    : 'bg-emerald-600 hover:bg-emerald-500'
-                }`}
-              >
-                {timerRunning ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                {timerRunning ? 'Pause' : 'Start'}
-              </button>
-              <button
-                onClick={resetTimer}
-                className="px-4 py-2 rounded-lg font-medium bg-[#1a2d42] hover:bg-[#243a50] border border-[#2a4a6f] flex items-center gap-2"
-              >
-                <RotateCcw className="w-4 h-4" />
-                Reset
-              </button>
-            </div>
+          <div className="flex gap-3 justify-center">
+            <button
+              onClick={toggleTimer}
+              className={`px-8 py-3 rounded-full font-medium shadow-lg flex items-center gap-2 transition-all ${
+                timerRunning 
+                  ? 'bg-amber-500 hover:bg-amber-600 text-white' 
+                  : 'bg-emerald-500 hover:bg-emerald-600 text-white'
+              }`}
+            >
+              {timerRunning ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5" />}
+              {timerRunning ? 'Pause' : 'Start'}
+            </button>
+            <button
+              onClick={resetTimer}
+              className="px-6 py-3 rounded-full font-medium bg-white shadow-lg text-slate-600 hover:bg-slate-50 flex items-center gap-2 transition-colors"
+            >
+              <RotateCcw className="w-5 h-5" />
+              Reset
+            </button>
           </div>
         )}
 
         {/* Match Complete Buttons */}
         {!currentMatch?.isHantei && (
-          <div className="grid grid-cols-3 gap-2 pt-1">
+          <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => completeMatch('player1')}
               disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
-              className="py-3 rounded-lg font-semibold bg-red-800/80 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="py-3 rounded-xl font-semibold text-white bg-red-500 hover:bg-red-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
               AKA Wins
             </button>
             <button
               onClick={() => completeMatch('draw')}
-              className="py-3 rounded-lg font-semibold bg-[#1a2d42] hover:bg-[#243a50] border border-[#2a4a6f] transition-colors"
+              className="py-3 rounded-xl font-semibold text-slate-600 bg-white hover:bg-slate-50 border border-slate-200 transition-colors shadow-sm"
             >
               Draw
             </button>
             <button
               onClick={() => completeMatch('player2')}
               disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
-              className="py-3 rounded-lg font-semibold bg-slate-700/80 hover:bg-slate-600 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+              className="py-3 rounded-xl font-semibold text-slate-700 bg-slate-200 hover:bg-slate-300 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm"
             >
               SHIRO Wins
             </button>
           </div>
         )}
 
-
-        {/* Queue Panel */}
-        <Card className="bg-[#0f1a24] border-[#1e3a5f]">
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-lg text-white">Match Queue</CardTitle>
-              {(selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB) && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={clearSelectedMatch}
-                  className="text-xs border-amber-500 text-amber-400"
-                >
-                  Clear Selection
-                </Button>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        {/* Match Queue */}
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
+          <div className="px-4 py-3 border-b border-slate-100 flex items-center justify-between">
+            <h2 className="font-semibold text-slate-800">Match Queue</h2>
+            {(selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB) && (
+              <button 
+                onClick={clearSelectedMatch}
+                className="text-xs px-3 py-1 rounded-full bg-amber-100 text-amber-700 hover:bg-amber-200 transition-colors"
+              >
+                Clear Selection
+              </button>
+            )}
+          </div>
+          
+          <div className="divide-y divide-slate-100">
             {groupOrder.map((groupId, gIdx) => {
               const groupInfo = getGroupById(groupId)
               const groupMatches = pendingMatches.filter(m => m.groupId === groupId)
               if (groupMatches.length === 0) return null
               
               return (
-                <div key={groupId} className="border border-[#1e3a5f] rounded-lg overflow-hidden">
+                <div key={groupId}>
                   {/* Group Header */}
-                  <div className="bg-[#1e3a5f]/30 px-3 py-2 flex items-center justify-between">
-                    <span className="font-medium text-[#b8d4ec]">{groupInfo?.name || groupId}</span>
+                  <div className="px-4 py-2 bg-slate-50 flex items-center justify-between">
+                    <span className="font-medium text-slate-600 text-sm">{groupInfo?.name || groupId}</span>
                     <div className="flex gap-1">
                       <button
                         onClick={() => moveGroupInQueue(groupId, 'up')}
                         disabled={gIdx === 0}
-                        className="px-2 py-1 text-xs rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30"
+                        className="w-6 h-6 rounded text-xs bg-white border border-slate-200 text-slate-400 disabled:opacity-30 hover:bg-slate-100"
                       >
                         ▲
                       </button>
                       <button
                         onClick={() => moveGroupInQueue(groupId, 'down')}
                         disabled={gIdx === groupOrder.length - 1}
-                        className="px-2 py-1 text-xs rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30"
+                        className="w-6 h-6 rounded text-xs bg-white border border-slate-200 text-slate-400 disabled:opacity-30 hover:bg-slate-100"
                       >
                         ▼
                       </button>
                     </div>
                   </div>
                   
-                  {/* Group Matches */}
-                  <div className="p-2 space-y-1">
-                    {groupMatches.map((match) => {
-                      const mp1 = getMemberById(match.player1Id)
-                      const mp2 = getMemberById(match.player2Id)
-                      const isSelected = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
-                      const isCurrentlyPlaying = match.id === currentMatch?.id
-                      
-                      return (
-                        <button
-                          key={match.id}
-                          onClick={() => !isCurrentlyPlaying && selectMatch(match.id)}
-                          className={`w-full p-2 rounded text-left text-sm transition-colors ${
-                            isCurrentlyPlaying 
-                              ? 'bg-emerald-900/30 border border-emerald-600 cursor-default' 
-                              : isSelected 
-                                ? 'bg-amber-900/30 border border-amber-500'
-                                : 'bg-[#142130] hover:bg-[#1a2d42]'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2">
-                            {isCurrentlyPlaying && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white">NOW</span>}
-                            {isSelected && !isCurrentlyPlaying && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-600 text-white">NEXT</span>}
-                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                            <span className="text-white truncate">{mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}</span>
-                            <span className="text-[#6b8fad] text-xs">vs</span>
-                            <span className="w-2 h-2 rounded-full bg-white"></span>
-                            <span className="text-white truncate">{mp2 ? formatDisplayName(mp2, state.members, state.useFirstNamesOnly) : '?'}</span>
-                          </div>
-                        </button>
-                      )
-                    })}
-                  </div>
+                  {/* Matches */}
+                  {groupMatches.map((match) => {
+                    const mp1 = getMemberById(match.player1Id)
+                    const mp2 = getMemberById(match.player2Id)
+                    const isSelected = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
+                    const isCurrentlyPlaying = match.id === currentMatch?.id
+                    
+                    return (
+                      <button
+                        key={match.id}
+                        onClick={() => !isCurrentlyPlaying && selectMatch(match.id)}
+                        className={`w-full px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition-colors ${
+                          isCurrentlyPlaying ? 'bg-emerald-50' : isSelected ? 'bg-amber-50' : ''
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          {isCurrentlyPlaying && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500 text-white font-medium">LIVE</span>
+                          )}
+                          {isSelected && !isCurrentlyPlaying && (
+                            <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-500 text-white font-medium">NEXT</span>
+                          )}
+                          <span className="text-slate-800 font-medium">
+                            {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="text-slate-400 text-xs">vs</span>
+                          <span className="text-slate-800 font-medium">
+                            {mp2 ? formatDisplayName(mp2, state.members, state.useFirstNamesOnly) : '?'}
+                          </span>
+                        </div>
+                      </button>
+                    )
+                  })}
                 </div>
               )
             })}
             
             {pendingMatches.length === 0 && (
-              <div className="text-center py-4 text-[#6b8fad]">
+              <div className="text-center py-8 text-slate-400">
                 No pending matches
               </div>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </main>
     </div>
   )
 }
+
 
 
 // Type declaration for window.storage
