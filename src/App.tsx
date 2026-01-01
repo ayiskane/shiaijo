@@ -335,8 +335,12 @@ const sanitizeMatch = (match: Match): Match => ({
   ...match,
   player1Score: match.player1Score || [],
   player2Score: match.player2Score || [],
+  player1Hansoku: match.player1Hansoku || 0,
+  player2Hansoku: match.player2Hansoku || 0,
   status: match.status || 'pending',
   winner: match.winner || null,
+  matchType: match.matchType || 'sanbon',
+  timerDuration: match.timerDuration || 180,
 })
 
 const sanitizeTournament = (tournament: Tournament | null): Tournament | null => {
