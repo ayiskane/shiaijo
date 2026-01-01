@@ -3178,6 +3178,97 @@ function CourtkeeperPortal({
             </Button>
           </div>
         )}
+
+        {/* Queue Panel */}
+        <Card className="bg-[#0f1a24] border-[#1e3a5f]">
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-lg text-white">Match Queue</CardTitle>
+              {(selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB) && (
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={clearSelectedMatch}
+                  className="text-xs border-amber-500 text-amber-400"
+                >
+                  Clear Selection
+                </Button>
+              )}
+            </div>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            {groupOrder.map((groupId, gIdx) => {
+              const groupInfo = getGroupById(groupId)
+              const groupMatches = pendingMatches.filter(m => m.groupId === groupId)
+              if (groupMatches.length === 0) return null
+              
+              return (
+                <div key={groupId} className="border border-[#1e3a5f] rounded-lg overflow-hidden">
+                  {/* Group Header */}
+                  <div className="bg-[#1e3a5f]/30 px-3 py-2 flex items-center justify-between">
+                    <span className="font-medium text-[#b8d4ec]">{groupInfo?.name || groupId}</span>
+                    <div className="flex gap-1">
+                      <button
+                        onClick={() => moveGroupInQueue(groupId, 'up')}
+                        disabled={gIdx === 0}
+                        className="px-2 py-1 text-xs rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        onClick={() => moveGroupInQueue(groupId, 'down')}
+                        disabled={gIdx === groupOrder.length - 1}
+                        className="px-2 py-1 text-xs rounded bg-[#142130] text-[#8fb3d1] disabled:opacity-30"
+                      >
+                        ▼
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Group Matches */}
+                  <div className="p-2 space-y-1">
+                    {groupMatches.map((match, mIdx) => {
+                      const mp1 = getMemberById(match.player1Id)
+                      const mp2 = getMemberById(match.player2Id)
+                      const isSelected = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
+                      const isCurrentlyPlaying = match.id === currentMatch?.id
+                      
+                      return (
+                        <button
+                          key={match.id}
+                          onClick={() => !isCurrentlyPlaying && selectMatch(match.id)}
+                          className={`w-full p-2 rounded text-left text-sm transition-colors ${
+                            isCurrentlyPlaying 
+                              ? 'bg-emerald-900/30 border border-emerald-600 cursor-default' 
+                              : isSelected 
+                                ? 'bg-amber-900/30 border border-amber-500'
+                                : 'bg-[#142130] hover:bg-[#1a2d42]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2">
+                            {isCurrentlyPlaying && <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-600 text-white">NOW</span>}
+                            {isSelected && !isCurrentlyPlaying && <span className="text-[10px] px-1.5 py-0.5 rounded bg-amber-600 text-white">NEXT</span>}
+                            <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                            <span className="text-white truncate">{mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}</span>
+                            <span className="text-[#6b8fad] text-xs">vs</span>
+                            <span className="w-2 h-2 rounded-full bg-white"></span>
+                            <span className="text-white truncate">{mp2 ? formatDisplayName(mp2, state.members, state.useFirstNamesOnly) : '?'}</span>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                </div>
+              )
+            })}
+            
+            {pendingMatches.length === 0 && (
+              <div className="text-center py-4 text-[#6b8fad]">
+                No pending matches
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </main>
     </div>
   )
