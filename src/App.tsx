@@ -2655,11 +2655,20 @@ function CourtkeeperPortal({
               const matchGroup = getGroupById(match.groupId)
               const isCurrent = match.status === 'in_progress' || idx === 0
               
+              const isDragging = draggedMatch === match.id
               return (
                 <div
                   key={match.id}
-                  className={`p-3 rounded-lg ${
-                    isCurrent ? 'bg-amber-900/20 border-l-4 border-amber-500' : 'bg-[#142130]'
+                  draggable
+                  onDragStart={() => handleDragStart(match.id)}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDrop={() => handleDrop(idx, court)}
+                  className={`p-3 rounded-lg cursor-grab active:cursor-grabbing transition-all ${
+                    isDragging ? 'opacity-50 scale-95' : ''
+                  } ${
+                    isCurrent 
+                      ? court === 'A' ? 'bg-amber-900/20 border-l-4 border-amber-500' : 'bg-[#1e3a5f]/30 border-l-4 border-[#1e3a5f]'
+                      : 'bg-[#142130] hover:bg-[#1a2d42] border-l-4 border-transparent'
                   }`}
                 >
                   <div className="flex items-center gap-2 mb-1">
