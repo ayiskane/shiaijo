@@ -2708,15 +2708,15 @@ function CourtkeeperPortal({
   
   const tournament = state.currentTournament
   
-  // Shared groups run on both courts - pending matches available to either
+  // Shared groups run on both courts - show pending AND in_progress matches
   const sharedGroups = state.sharedGroups || []
   
-  // Court matches include: assigned to this court OR shared group pending matches
+  // Court matches include: assigned to this court OR shared group (pending/in_progress)
   const courtAMatches = tournament?.matches?.filter(m => 
-    m.court === 'A' || (sharedGroups.includes(m.groupId) && m.status === 'pending')
+    m.court === 'A' || (sharedGroups.includes(m.groupId) && m.status !== 'completed')
   ) || []
   const courtBMatches = tournament?.matches?.filter(m => 
-    m.court === 'B' || (sharedGroups.includes(m.groupId) && m.status === 'pending')
+    m.court === 'B' || (sharedGroups.includes(m.groupId) && m.status !== 'completed')
   ) || []
   
   // Get group order for queue display (use tournament groups or custom order)
@@ -2860,18 +2860,13 @@ function CourtkeeperPortal({
   const p1EffectiveScore = getEffectiveScore(p1Score, p2Hansoku)
   const p2EffectiveScore = getEffectiveScore(p2Score, p1Hansoku)
 
-  // Calculate max hansoku allowed based on opponent's score
-  // If opponent has 0 points: you can have up to 4 hansoku
-  // If opponent has 1 point: you can have up to 2 hansoku (2 more = opponent wins)
-  // If opponent has 2 points: game over
-  const getMaxHansoku = (opponentEffectiveScore: number) => {
-    const pointsOpponentNeeds = winTarget - opponentEffectiveScore
-    if (pointsOpponentNeeds <= 0) return 0 // Game already over
-    return Math.min(4, pointsOpponentNeeds * 2)
-  }
-
-  const p1MaxHansoku = getMaxHansoku(p2EffectiveScore)
-  const p2MaxHansoku = getMaxHansoku(p1EffectiveScore)
+  // In kendo, max 4 hansoku per player (4th = hansoku-make = automatic loss)
+  // The button is disabled separately when game is over
+  const p1MaxHansoku = 4
+  const p2MaxHansoku = 4
+  
+  // Check if game is over (someone reached win target)
+  const gameOver = p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget
 
   const addScore = (player: 'player1' | 'player2', scoreType: number) => {
     const matchId = currentMatch?.id
@@ -3349,7 +3344,7 @@ function CourtkeeperPortal({
                   <button
                     key={`p1-${type.id}`}
                     onClick={() => addScore('player1', type.id)}
-                    disabled={p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget}
+                    disabled={gameOver}
                     className="h-14 rounded-lg border-2 border-red-500/50 text-red-400 hover:bg-red-500/20 disabled:opacity-30 flex items-center justify-center"
                   >
                     <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
@@ -3367,7 +3362,7 @@ function CourtkeeperPortal({
                 </button>
                 <button
                   onClick={() => addHansoku('player1')}
-                  disabled={p1Hansoku >= p1MaxHansoku || p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget}
+                  disabled={p1Hansoku >= p1MaxHansoku || gameOver}
                   className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
                 >
                   ▲
@@ -3389,7 +3384,7 @@ function CourtkeeperPortal({
                   <button
                     key={`p2-${type.id}`}
                     onClick={() => addScore('player2', type.id)}
-                    disabled={p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget}
+                    disabled={gameOver}
                     className="h-14 rounded-lg border-2 border-slate-500/50 text-slate-300 hover:bg-slate-500/20 disabled:opacity-30 flex items-center justify-center"
                   >
                     <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
@@ -3407,7 +3402,7 @@ function CourtkeeperPortal({
                 </button>
                 <button
                   onClick={() => addHansoku('player2')}
-                  disabled={p2Hansoku >= p2MaxHansoku || p1EffectiveScore >= winTarget || p2EffectiveScore >= winTarget}
+                  disabled={p2Hansoku >= p2MaxHansoku || gameOver}
                   className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
                 >
                   ▲
@@ -3500,7 +3495,7 @@ function CourtkeeperPortal({
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => completeMatch('player1')}
-              disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
+              disabled={!gameOver}
               className="py-2.5 rounded-lg font-bold text-xs bg-red-600/80 hover:bg-red-600 disabled:opacity-30"
             >
               AKA Wins
@@ -3513,7 +3508,7 @@ function CourtkeeperPortal({
             </button>
             <button
               onClick={() => completeMatch('player2')}
-              disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
+              disabled={!gameOver}
               className="py-2.5 rounded-lg font-bold text-xs bg-slate-500/80 hover:bg-slate-500 disabled:opacity-30"
             >
               SHIRO Wins
