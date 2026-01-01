@@ -2647,10 +2647,10 @@ function CourtkeeperPortal({
                   </div>
                   <div className="text-sm text-white text-center">
                     <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
-                    <span className="font-medium ml-1">{p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'} {p1?.lastName?.charAt(0) || ''}.</span>
+                    <span className="font-medium ml-1">{p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}</span>
                     <span className="text-[#8fb3d1] mx-2">vs</span>
                     <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
-                    <span className="font-medium ml-1">{p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'} {p2?.lastName?.charAt(0) || ''}.</span>
+                    <span className="font-medium ml-1">{p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}</span>
                   </div>
                   <div className="flex gap-1 mt-2 justify-center">
                     <Button 
@@ -2692,12 +2692,12 @@ function CourtkeeperPortal({
                     <div key={match.id} className="p-2 bg-[#243a52]/20 rounded text-sm text-center">
                       <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
                       <span className={match.winner === 'player1' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
-                        {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'} {p1?.lastName?.charAt(0) || ''}.
+                        {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}
                       </span>
                       <span className="text-[#8fb3d1] mx-2">vs</span>
                       <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
                       <span className={match.winner === 'player2' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
-                        {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'} {p2?.lastName?.charAt(0) || ''}.
+                        {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}
                       </span>
                       <span className="text-[#b8d4ec] ml-2">
                         {match.isHantei ? '(判定)' : `${(match.player1Score || []).length}-${(match.player2Score || []).length}`}
