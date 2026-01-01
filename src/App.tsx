@@ -535,7 +535,7 @@ export default function App() {
             </button>
           </div>
 
-          <p className="text-center text-xs text-zinc-600">Renbu Kendo Club</p>
+          <p className="text-center text-xs text-[#4a6a8a]">Renbu Kendo Club</p>
         </div>
       </div>
     )
@@ -1060,7 +1060,7 @@ function AdminPortal({
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -tranzinc-y-1/2 text-[#6b8fad]" />
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#6b8fad]" />
                 <input 
                   type="text" 
                   placeholder="Search..." 
@@ -2042,14 +2042,14 @@ function StandingsView({
                         )}
                         {groupMembers.map(m => {
                           if (m.id === standing.playerId) {
-                            return <td key={m.id} className="p-2 text-center text-zinc-600">-</td>
+                            return <td key={m.id} className="p-2 text-center text-[#4a6a8a]">-</td>
                           }
                           const result = standing.results.get(m.id)
                           let className = 'p-2 text-center '
                           if (result === 'W') className += 'text-green-400 bg-green-900/20'
                           else if (result === 'L') className += 'text-red-400 bg-red-900/20'
                           else if (result === 'D') className += 'text-[#b8d4ec] bg-[#243a52]/50'
-                          else className += 'text-zinc-600'
+                          else className += 'text-[#4a6a8a]'
                           return <td key={m.id} className={className}>{result || '-'}</td>
                         })}
                       </tr>
@@ -2697,7 +2697,7 @@ function CourtkeeperPortal({
             </Button>
             <Button 
               onClick={() => completeMatch(showWinnerPrompt.winner!)}
-              className={winnerColor === 'red' ? 'bg-amber-600 hover:bg-red-700' : 'bg-[#1e3a5f]/50 hover:bg-zinc-500'}
+              className={winnerColor === 'red' ? 'bg-amber-600 hover:bg-red-700' : 'bg-[#1e3a5f] hover:bg-[#2a4a6f]'}
             >
               Complete Match
             </Button>
@@ -2735,7 +2735,7 @@ function CourtkeeperPortal({
               size="sm"
               variant={selectedCourt === 'B' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('B')}
-              className={selectedCourt === 'B' ? 'bg-[#1e3a5f]/50 hover:bg-zinc-500' : 'border-[#2a4a6f]'}
+              className={selectedCourt === 'B' ? 'bg-[#1e3a5f] hover:bg-[#2a4a6f]' : 'border-[#2a4a6f]'}
             >
               Court B
             </Button>
@@ -2762,7 +2762,7 @@ function CourtkeeperPortal({
               <div className="flex justify-center gap-4 mt-4">
                 <Button
                   onClick={() => setSelectedCourt(selectedCourt === 'A' ? 'B' : 'A')}
-                  className={selectedCourt === 'A' ? 'bg-[#1e3a5f]/50 hover:bg-zinc-500' : 'bg-amber-600 hover:bg-red-700'}
+                  className={selectedCourt === 'A' ? 'bg-[#1e3a5f] hover:bg-[#2a4a6f]' : 'bg-amber-600 hover:bg-red-700'}
                 >
                   Switch to Court {selectedCourt === 'A' ? 'B' : 'A'}
                 </Button>
@@ -2899,7 +2899,7 @@ function CourtkeeperPortal({
                   {isHantei ? (
                     <Button
                       size="lg"
-                      className="w-full h-24 text-2xl bg-[#1e3a5f]/50 hover:bg-zinc-500"
+                      className="w-full h-24 text-2xl bg-[#1e3a5f] hover:bg-[#2a4a6f]"
                       onClick={() => completeMatch('player2')}
                     >
                       <Award className="w-8 h-8 mr-2" />
@@ -2975,7 +2975,7 @@ function CourtkeeperPortal({
                     <Button
                       size="lg"
                       onClick={() => completeMatch('player2')}
-                      className="bg-[#1e3a5f]/50 hover:bg-zinc-500 h-14"
+                      className="bg-[#1e3a5f] hover:bg-[#2a4a6f] h-14"
                     >
                       SHIRO Wins
                     </Button>
