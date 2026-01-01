@@ -1400,6 +1400,9 @@ function GroupsManager({
                       <ChevronLeft className="w-3 h-3 rotate-90" />
                     </Button>
                     <span className="text-xs text-slate-500 font-mono">{state.groups.indexOf(group) + 1}</span>
+                    <Badge className={state.groups.indexOf(group) % 2 === 0 ? 'bg-red-900/50 text-red-300 text-[10px] px-1' : 'bg-slate-600/50 text-slate-300 text-[10px] px-1'}>
+                      {state.groups.indexOf(group) % 2 === 0 ? 'A' : 'B'}
+                    </Badge>
                     <Button
                       size="icon"
                       variant="ghost"
