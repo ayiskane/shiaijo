@@ -2786,28 +2786,29 @@ function CourtkeeperPortal({
   const p2MaxHansoku = getMaxHansoku(p2Score, p1Score, p2Hansoku)
 
   const addScore = (player: 'player1' | 'player2', scoreType: number) => {
-    if (!tournament || !currentMatch) return
+    const matchId = currentMatch?.id
+    if (!matchId) return
 
-    const updatedMatches = tournament.matches.map(m => {
-      if (m.id === currentMatch.id) {
-        return {
-          ...m,
-          status: 'in_progress' as const,
-          player1Score: player === 'player1' ? [...m.player1Score, scoreType] : m.player1Score,
-          player2Score: player === 'player2' ? [...m.player2Score, scoreType] : m.player2Score,
+    setState(prev => {
+      if (!prev.currentTournament) return prev
+      const updatedMatches = prev.currentTournament.matches.map(m => {
+        if (m.id === matchId) {
+          return {
+            ...m,
+            status: 'in_progress' as const,
+            player1Score: player === 'player1' ? [...m.player1Score, scoreType] : m.player1Score,
+            player2Score: player === 'player2' ? [...m.player2Score, scoreType] : m.player2Score,
+          }
         }
-      }
-      return m
+        return m
+      })
+      return { ...prev, currentTournament: { ...prev.currentTournament, matches: updatedMatches } }
     })
-
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, matches: updatedMatches }
-    }))
   }
 
   const addHansoku = (player: 'player1' | 'player2') => {
-    if (!tournament || !currentMatch) return
+    const matchId = currentMatch?.id
+    if (!matchId) return
     
     const currentHansoku = player === 'player1' ? p1Hansoku : p2Hansoku
     const maxHansoku = player === 'player1' ? p1MaxHansoku : p2MaxHansoku
@@ -2819,27 +2820,23 @@ function CourtkeeperPortal({
 
     const newHansoku = currentHansoku + 1
     const opponent = player === 'player1' ? 'player2' : 'player1'
-    
-    // Note: Points from hansoku are calculated in getEffectiveScore (2 hansoku = 1 point)
     const givesPoint = newHansoku % 2 === 0
 
-    const updatedMatches = tournament.matches.map(m => {
-      if (m.id === currentMatch.id) {
-        const update: Partial<Match> = {
-          status: 'in_progress' as const,
-          player1Hansoku: player === 'player1' ? newHansoku : m.player1Hansoku,
-          player2Hansoku: player === 'player2' ? newHansoku : m.player2Hansoku,
+    setState(prev => {
+      if (!prev.currentTournament) return prev
+      const updatedMatches = prev.currentTournament.matches.map(m => {
+        if (m.id === matchId) {
+          return {
+            ...m,
+            status: 'in_progress' as const,
+            player1Hansoku: player === 'player1' ? newHansoku : m.player1Hansoku,
+            player2Hansoku: player === 'player2' ? newHansoku : m.player2Hansoku,
+          }
         }
-        
-        return { ...m, ...update }
-      }
-      return m
+        return m
+      })
+      return { ...prev, currentTournament: { ...prev.currentTournament, matches: updatedMatches } }
     })
-
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, matches: updatedMatches }
-    }))
 
     if (givesPoint) {
       toast.success(`Hansoku! Point awarded to ${opponent === 'player1' ? 'AKA' : 'SHIRO'}`)
@@ -2847,62 +2844,51 @@ function CourtkeeperPortal({
   }
 
   const removeLastScore = (player: 'player1' | 'player2') => {
-    if (!tournament || !currentMatch) return
+    const matchId = currentMatch?.id
+    if (!matchId) return
     const scores = player === 'player1' ? p1Score : p2Score
     if (scores.length === 0) return
 
-    const lastScore = scores[scores.length - 1]
-    
-    const updatedMatches = tournament.matches.map(m => {
-      if (m.id === currentMatch.id) {
-        const update: Partial<Match> = {}
-        
-        if (player === 'player1') {
-          update.player1Score = m.player1Score.slice(0, -1)
-          // If it was a hansoku point, also reduce opponent's hansoku count
-          if (lastScore === 5) {
-            update.player2Hansoku = Math.max(0, (m.player2Hansoku || 0) - 2)
-          }
-        } else {
-          update.player2Score = m.player2Score.slice(0, -1)
-          if (lastScore === 5) {
-            update.player1Hansoku = Math.max(0, (m.player1Hansoku || 0) - 2)
+    setState(prev => {
+      if (!prev.currentTournament) return prev
+      const updatedMatches = prev.currentTournament.matches.map(m => {
+        if (m.id === matchId) {
+          return {
+            ...m,
+            player1Score: player === 'player1' ? m.player1Score.slice(0, -1) : m.player1Score,
+            player2Score: player === 'player2' ? m.player2Score.slice(0, -1) : m.player2Score,
           }
         }
-        
-        return { ...m, ...update }
-      }
-      return m
+        return m
+      })
+      return { ...prev, currentTournament: { ...prev.currentTournament, matches: updatedMatches } }
     })
-
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, matches: updatedMatches }
-    }))
   }
 
   const completeMatch = (winner: 'player1' | 'player2' | 'draw') => {
-    if (!tournament || !currentMatch) return
+    const matchId = currentMatch?.id
+    if (!matchId) return
 
-    const updatedMatches = tournament.matches.map(m => {
-      if (m.id === currentMatch.id) {
-        return {
-          ...m,
-          status: 'completed' as const,
-          winner: winner === 'draw' ? 'draw' : winner,
-          actualDuration: timerSeconds,
+    setState(prev => {
+      if (!prev.currentTournament) return prev
+      const updatedMatches = prev.currentTournament.matches.map(m => {
+        if (m.id === matchId) {
+          return {
+            ...m,
+            status: 'completed' as const,
+            winner: winner === 'draw' ? 'draw' : winner,
+            actualDuration: timerSeconds,
+          }
         }
+        return m
+      })
+      return {
+        ...prev,
+        currentTournament: { ...prev.currentTournament, matches: updatedMatches },
+        courtASelectedMatch: selectedCourt === 'A' ? null : prev.courtASelectedMatch,
+        courtBSelectedMatch: selectedCourt === 'B' ? null : prev.courtBSelectedMatch,
       }
-      return m
     })
-
-    // Clear selected match so queue resumes normally
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, matches: updatedMatches },
-      courtASelectedMatch: selectedCourt === 'A' ? null : prev.courtASelectedMatch,
-      courtBSelectedMatch: selectedCourt === 'B' ? null : prev.courtBSelectedMatch,
-    }))
     
     toast.success(winner === 'draw' ? 'Match ended in draw' : `${winner === 'player1' ? 'AKA' : 'SHIRO'} wins!`)
   }
