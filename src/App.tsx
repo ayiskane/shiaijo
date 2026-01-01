@@ -117,6 +117,26 @@ interface AppState {
 // Utility functions
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
+// Helper to format member display name
+const formatDisplayName = (member: Member, allMembers: Member[], useFirstNamesOnly: boolean): string => {
+  if (!useFirstNamesOnly) {
+    return `${member.lastName}, ${member.firstName}`
+  }
+  
+  // Check if there are multiple people with the same first name
+  const sameFirstName = allMembers.filter(m => 
+    m.firstName.toLowerCase() === member.firstName.toLowerCase() && m.id !== member.id
+  )
+  
+  if (sameFirstName.length > 0) {
+    // Add last name initial for disambiguation
+    return `${member.firstName} ${member.lastName[0]}.`
+  }
+  
+  return member.firstName
+}
+
+
 // Test data generation
 
 
