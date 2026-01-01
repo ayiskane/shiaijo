@@ -14,59 +14,61 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Toaster, toast } from 'sonner'
 
-// Renbu Dojo Logo SVG Component
+// Renbu Dojo Logo SVG Component - Black lines with orange glow
 const RenbuLogo = ({ size = 48, glow = false, className = '' }: { size?: number; glow?: boolean; className?: string }) => (
   <svg 
     width={size} 
     height={size} 
     viewBox="0 0 100 100" 
     className={className}
-    style={glow ? { filter: 'drop-shadow(0 0 10px rgba(249, 115, 22, 0.7)) drop-shadow(0 0 25px rgba(249, 115, 22, 0.5))' } : {}}
+    style={glow ? { filter: 'drop-shadow(0 0 8px rgba(249, 115, 22, 0.9)) drop-shadow(0 0 16px rgba(249, 115, 22, 0.6)) drop-shadow(0 0 24px rgba(249, 115, 22, 0.3))' } : {}}
   >
-    {/* Outer circle */}
-    <circle cx="50" cy="50" r="46" fill="none" stroke="#f97316" strokeWidth="2.5" />
+    {/* Orange glow background circle */}
+    {glow && <circle cx="50" cy="50" r="44" fill="rgba(249, 115, 22, 0.15)" />}
     
-    {/* Inner decorative ring */}
-    <circle cx="50" cy="50" r="38" fill="none" stroke="#f97316" strokeWidth="1" opacity="0.5" />
+    {/* Outer circle - black stroke */}
+    <circle cx="50" cy="50" r="42" fill="none" stroke="#0a0a0a" strokeWidth="4" />
     
-    {/* Center circle */}
-    <circle cx="50" cy="50" r="6" fill="#f97316" />
+    {/* Center circle - black fill */}
+    <circle cx="50" cy="50" r="6" fill="#0a0a0a" />
     
-    {/* 8 Shinai arranged radially - explicit for each angle */}
-    <g transform="rotate(0 50 50)">
-      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
-      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
-    </g>
-    <g transform="rotate(45 50 50)">
-      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
-      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
-    </g>
-    <g transform="rotate(90 50 50)">
-      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
-      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
-    </g>
-    <g transform="rotate(135 50 50)">
-      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
-      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
-    </g>
-    <g transform="rotate(180 50 50)">
-      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
-      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
-    </g>
-    <g transform="rotate(225 50 50)">
-      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
-      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
-    </g>
-    <g transform="rotate(270 50 50)">
-      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
-      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
-    </g>
-    <g transform="rotate(315 50 50)">
-      <rect x="48.5" y="14" width="3" height="24" fill="#f97316" rx="1" />
-      <ellipse cx="50" cy="11" rx="3" ry="4" fill="#f97316" />
+    {/* 8 Spokes with end circles - black */}
+    <g stroke="#0a0a0a" strokeWidth="3" fill="#0a0a0a">
+      {/* Spoke 0° (up) */}
+      <line x1="50" y1="44" x2="50" y2="16" />
+      <circle cx="50" cy="12" r="5" />
+      
+      {/* Spoke 45° */}
+      <line x1="54.2" y1="45.8" x2="74" y2="26" />
+      <circle cx="76.9" cy="23.1" r="5" />
+      
+      {/* Spoke 90° (right) */}
+      <line x1="56" y1="50" x2="84" y2="50" />
+      <circle cx="88" cy="50" r="5" />
+      
+      {/* Spoke 135° */}
+      <line x1="54.2" y1="54.2" x2="74" y2="74" />
+      <circle cx="76.9" cy="76.9" r="5" />
+      
+      {/* Spoke 180° (down) */}
+      <line x1="50" y1="56" x2="50" y2="84" />
+      <circle cx="50" cy="88" r="5" />
+      
+      {/* Spoke 225° */}
+      <line x1="45.8" y1="54.2" x2="26" y2="74" />
+      <circle cx="23.1" cy="76.9" r="5" />
+      
+      {/* Spoke 270° (left) */}
+      <line x1="44" y1="50" x2="16" y2="50" />
+      <circle cx="12" cy="50" r="5" />
+      
+      {/* Spoke 315° */}
+      <line x1="45.8" y1="45.8" x2="26" y2="26" />
+      <circle cx="23.1" cy="23.1" r="5" />
     </g>
   </svg>
 )
+
 import { 
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
