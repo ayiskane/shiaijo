@@ -18,7 +18,7 @@ import {
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   ChevronLeft, ChevronRight, Menu, Swords, UserPlus, FileSpreadsheet,
-  Circle, AlertCircle, CheckCircle2, Flag, Table, History, RefreshCw,
+  Circle, CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Timer, Award
 } from 'lucide-react'
 
