@@ -1158,10 +1158,10 @@ function AdminPortal({
                              {group?.name || member.group}
                            </Badge>
                            <Button
-                             variant="ghost" className="h-8 w-8"
+                             variant="ghost"
                              size="icon"
                              onClick={() => deleteMember(member.id)}
-                             className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                             className="h-8 w-8 text-red-400 hover:text-red-300 hover:bg-red-900/20"
                            >
                              <Trash2 className="w-4 h-4" />
                            </Button>
@@ -1320,20 +1320,20 @@ function GroupsManager({
                     <div className="flex gap-1">
                       <Button
                         size="icon"
-                        variant="ghost" className="h-8 w-8"
+                        variant="ghost"
                         onClick={() => {
                           updateGroup(group.id, { name: editingGroup.name })
                           setEditingGroup(null)
                         }}
-                        className="text-green-400 hover:text-green-300"
+                        className="h-8 w-8 text-green-400 hover:text-green-300"
                       >
                         <CheckCircle2 className="w-4 h-4" />
                       </Button>
                       <Button
                         size="icon"
-                        variant="ghost" className="h-8 w-8"
+                        variant="ghost"
                         onClick={() => setEditingGroup(null)}
-                        className="text-slate-300"
+                        className="h-8 w-8 text-slate-300"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -1342,17 +1342,17 @@ function GroupsManager({
                     <div className="flex gap-1">
                       <Button
                         size="icon"
-                        variant="ghost" className="h-8 w-8"
+                        variant="ghost"
                         onClick={() => setEditingGroup(group)}
-                        className="text-slate-300 hover:text-white"
+                        className="h-8 w-8 text-slate-300 hover:text-white"
                       >
                         <Edit2 className="w-4 h-4" />
                       </Button>
                       <Button
                         size="icon"
-                        variant="ghost" className="h-8 w-8"
+                        variant="ghost"
                         onClick={() => deleteGroup(group.id)}
-                        className="text-red-400 hover:text-red-300"
+                        className="h-8 w-8 text-red-400 hover:text-red-300"
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
@@ -2001,9 +2001,9 @@ function HistoryView({
               </div>
               <Button
                 size="icon"
-                variant="ghost" className="h-8 w-8"
+                variant="ghost"
                 onClick={() => deleteHistoryEntry(entry.id)}
-                className="text-red-400 hover:text-red-300"
+                className="h-8 w-8 text-red-400 hover:text-red-300"
               >
                 <Trash2 className="w-4 h-4" />
               </Button>
