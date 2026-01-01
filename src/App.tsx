@@ -1700,8 +1700,8 @@ function TournamentManager({
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:gap-4">
-            <div className="bg-red-900/30 border border-red-800/50 rounded-lg p-2 sm:p-3 text-center">
-              <div className="text-xl sm:text-2xl font-bold text-red-400">{courtAMatches.length}</div>
+            <div className="bg-amber-900/20 border border-amber-700/30 rounded-lg p-2 sm:p-3 text-center">
+              <div className="text-xl sm:text-2xl font-bold text-amber-400">{courtAMatches.length}</div>
               <div className="text-xs sm:text-sm text-slate-400">Court A</div>
             </div>
             <div className="bg-slate-700/30 border border-slate-700/50 rounded-lg p-2 sm:p-3 text-center">
