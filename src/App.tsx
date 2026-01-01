@@ -882,7 +882,7 @@ function AdminPortal({
   const MobileNav = () => (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="secondary" size="icon" className="md:hidden">
+        <Button variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" size="icon" className="md:hidden">
           <Menu className="w-6 h-6" />
         </Button>
       </SheetTrigger>
@@ -927,7 +927,7 @@ function AdminPortal({
             </Badge>
           </div>
           <Button 
-              variant="secondary" 
+              variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" 
               size="sm"
               onClick={async () => {
                 const saved = await loadFromStorage()
@@ -947,7 +947,7 @@ function AdminPortal({
             >
               <RefreshCw className="w-4 h-4" />
             </Button>
-            <Button variant="secondary" size="sm" onClick={onSwitchPortal}>
+            <Button variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" size="sm" onClick={onSwitchPortal}>
             Switch Portal
           </Button>
         </div>
@@ -955,27 +955,27 @@ function AdminPortal({
         {/* Desktop Tabs - Guests moved next to Members */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 hidden md:block">
           <TabsList className="bg-slate-700/50">
-            <TabsTrigger value="members" className="data-[state=active]:bg-orange-600">
+            <TabsTrigger value="members" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               <Users className="w-4 h-4 mr-2" />
               Members
             </TabsTrigger>
-            <TabsTrigger value="guests" className="data-[state=active]:bg-orange-600">
+            <TabsTrigger value="guests" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               <UserPlus className="w-4 h-4 mr-2" />
               Guests
             </TabsTrigger>
-            <TabsTrigger value="groups" className="data-[state=active]:bg-orange-600">
+            <TabsTrigger value="groups" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               <Filter className="w-4 h-4 mr-2" />
               Groups
             </TabsTrigger>
-            <TabsTrigger value="tournament" className="data-[state=active]:bg-orange-600">
+            <TabsTrigger value="tournament" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               <Trophy className="w-4 h-4 mr-2" />
               Tournament
             </TabsTrigger>
-            <TabsTrigger value="standings" className="data-[state=active]:bg-orange-600">
+            <TabsTrigger value="standings" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               <Table className="w-4 h-4 mr-2" />
               Standings
             </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-orange-600">
+            <TabsTrigger value="history" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
               <History className="w-4 h-4 mr-2" />
               History
             </TabsTrigger>
@@ -1082,7 +1082,7 @@ function AdminPortal({
                 ))}
               </div>
 
-              <Button variant="secondary" size="sm" onClick={deselectAll}>
+              <Button variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" size="sm" onClick={deselectAll}>
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset All
               </Button>
@@ -1103,7 +1103,7 @@ function AdminPortal({
 
               <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
                 <DialogTrigger asChild>
-                  <Button variant="outline" size="sm" className="border-red-800 text-red-400 hover:bg-red-900/20">
+                  <Button variant="outline" size="sm" className="border-red-700/60 text-red-400 bg-red-900/20 hover:bg-red-800/40 hover:border-red-600">
                     <Trash2 className="w-4 h-4 mr-2" />
                     Clear All Members
                   </Button>
@@ -1125,7 +1125,7 @@ function AdminPortal({
 
             <Card className="bg-slate-700/50/40 border-slate-700/50 backdrop-blur-sm">
               <CardContent className="p-0">
-                <ScrollArea className="h-[60vh]">
+                <ScrollArea className="h-[60vh] pr-2">
                   <div className="divide-y divide-slate-800">
                     {filteredMembers.map(member => {
                        const group = getGroupById(member.group)
@@ -1144,7 +1144,7 @@ function AdminPortal({
                                  {member.lastName}, {member.firstName}
                                </span>
                                {member.isGuest && (
-                                 <Badge variant="secondary" className="bg-purple-900 text-purple-200">Guest</Badge>
+                                 <Badge variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" className="bg-purple-900 text-purple-200">Guest</Badge>
                                )}
                              </div>
                              {member.guestDojo && (
@@ -1158,7 +1158,7 @@ function AdminPortal({
                              {group?.name || member.group}
                            </Badge>
                            <Button
-                             variant="secondary"
+                             variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
                              size="icon"
                              onClick={() => deleteMember(member.id)}
                              className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
@@ -1320,7 +1320,7 @@ function GroupsManager({
                     <div className="flex gap-1">
                       <Button
                         size="icon"
-                        variant="secondary"
+                        variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
                         onClick={() => {
                           updateGroup(group.id, { name: editingGroup.name })
                           setEditingGroup(null)
@@ -1331,7 +1331,7 @@ function GroupsManager({
                       </Button>
                       <Button
                         size="icon"
-                        variant="secondary"
+                        variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
                         onClick={() => setEditingGroup(null)}
                         className="text-slate-300"
                       >
@@ -1342,7 +1342,7 @@ function GroupsManager({
                     <div className="flex gap-1">
                       <Button
                         size="icon"
-                        variant="secondary"
+                        variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
                         onClick={() => setEditingGroup(group)}
                         className="text-slate-300 hover:text-white"
                       >
@@ -1350,7 +1350,7 @@ function GroupsManager({
                       </Button>
                       <Button
                         size="icon"
-                        variant="secondary"
+                        variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
                         onClick={() => deleteGroup(group.id)}
                         className="text-red-400 hover:text-red-300"
                       >
@@ -1514,21 +1514,21 @@ function TournamentManager({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+            <div className="bg-slate-800/60 rounded-xl p-4 text-center border border-slate-700/50">
               <div className="text-3xl font-bold text-white">{state.members.length}</div>
               <div className="text-sm text-slate-300">Total Members</div>
             </div>
-            <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+            <div className="bg-slate-800/60 rounded-xl p-4 text-center border border-slate-700/50">
               <div className="text-3xl font-bold text-orange-400">
                 {state.members.filter(m => m.isParticipating).length}
               </div>
               <div className="text-sm text-slate-300">Participating</div>
             </div>
-            <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+            <div className="bg-slate-800/60 rounded-xl p-4 text-center border border-slate-700/50">
               <div className="text-3xl font-bold text-white">{state.groups.length}</div>
               <div className="text-sm text-slate-300">Groups</div>
             </div>
-            <div className="bg-slate-700/50 rounded-lg p-4 text-center">
+            <div className="bg-slate-800/60 rounded-xl p-4 text-center border border-slate-700/50">
               <div className="text-3xl font-bold text-emerald-400">
                 {(() => {
                   const participants = state.members.filter(m => m.isParticipating)
@@ -1631,7 +1631,7 @@ function TournamentManager({
             )}
             {tournament.status === 'in_progress' && !isComplete && (
               <>
-                <Badge variant="outline" className="border-emerald-500 text-emerald-400 px-4 py-2">
+                <Badge variant="outline" className="border-emerald-500/60 text-emerald-400 bg-emerald-900/20 px-4 py-2">
                   Tournament In Progress
                 </Badge>
                 <Button onClick={refreshTournamentParticipants} variant="outline" className="border-slate-600 bg-slate-700/50/40 hover:bg-slate-600/50">
@@ -1646,7 +1646,7 @@ function TournamentManager({
                 Archive & Complete
               </Button>
             )}
-            <Button variant="outline" onClick={clearTournament} className="border-red-800 text-red-400 hover:bg-red-900/20">
+            <Button variant="outline" onClick={clearTournament} className="border-red-700/60 text-red-400 bg-red-900/20 hover:bg-red-800/40 hover:border-red-600">
               <Trash2 className="w-4 h-4 mr-2" />
               Clear Tournament
             </Button>
@@ -1671,7 +1671,7 @@ function TournamentManager({
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-64">
+              <ScrollArea className="h-72 pr-2">
                 <div className="space-y-2">
                   {groupMatches.map((match, idx) => {
                     const p1 = getMemberById(match.player1Id)
@@ -1712,13 +1712,13 @@ function TournamentManager({
                         </div>
                         {(tournament.status === 'setup' || (tournament.status === 'in_progress' && match.status === 'pending')) && (
                           <div className="flex gap-1">
-                            <Button size="icon" variant="secondary" onClick={() => swapMatchCourt(match.id)} className="h-8 w-8" title="Swap court">
+                            <Button size="icon" variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" onClick={() => swapMatchCourt(match.id)} className="h-8 w-8" title="Swap court">
                               <ArrowLeftRight className="w-3 h-3" />
                             </Button>
-                            <Button size="icon" variant="secondary" onClick={() => moveMatchInQueue(match.id, 'up')} className="h-8 w-8">
+                            <Button size="icon" variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" onClick={() => moveMatchInQueue(match.id, 'up')} className="h-8 w-8">
                               <ChevronLeft className="w-3 h-3 rotate-90" />
                             </Button>
-                            <Button size="icon" variant="secondary" onClick={() => moveMatchInQueue(match.id, 'down')} className="h-8 w-8">
+                            <Button size="icon" variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" onClick={() => moveMatchInQueue(match.id, 'down')} className="h-8 w-8">
                               <ChevronRight className="w-3 h-3 rotate-90" />
                             </Button>
                           </div>
@@ -2001,7 +2001,7 @@ function HistoryView({
               </div>
               <Button
                 size="icon"
-                variant="secondary"
+                variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
                 onClick={() => deleteHistoryEntry(entry.id)}
                 className="text-red-400 hover:text-red-300"
               >
@@ -2311,7 +2311,7 @@ function GuestsManager({
             </Dialog>
           </div>
 
-          <ScrollArea className="h-64">
+          <ScrollArea className="h-72 pr-2">
             <div className="space-y-2">
               {state.guestRegistry.length === 0 ? (
                 <div className="text-center text-slate-400 py-8">No guests in registry</div>
@@ -2620,7 +2620,7 @@ function CourtkeeperPortal({
                   <div className="flex gap-1 mt-2 justify-center">
                     <Button 
                       size="sm" 
-                      variant="secondary" 
+                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" 
                       className="h-7 text-xs"
                       onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
                     >
@@ -2629,7 +2629,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="secondary" 
+                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" 
                       className="h-7 text-xs"
                       onClick={() => moveInQueue(match.id, 'up')}
                       disabled={idx === 0}
@@ -2638,7 +2638,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="secondary" 
+                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" 
                       className="h-7 text-xs"
                       onClick={() => moveInQueue(match.id, 'down')}
                       disabled={idx === pendingMatches.length - 1}
@@ -2749,7 +2749,7 @@ function CourtkeeperPortal({
             >
               Court B
             </Button>
-            <Button variant="secondary" size="sm" onClick={onSwitchPortal}>Exit</Button>
+            <Button variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" size="sm" onClick={onSwitchPortal}>Exit</Button>
           </div>
         </div>
       </header>
@@ -2793,7 +2793,7 @@ function CourtkeeperPortal({
                       {isHantei ? 'Hantei Match (3 min)' : 'Regular Match (3 min)'}
                     </span>
                   </div>
-                  <Badge variant="outline" className="border-slate-500 bg-slate-700/50/40 hover:bg-slate-600/50">
+                  <Badge variant="outline" className="border-slate-400/60 bg-slate-800/50 border border-slate-700/30 bg-slate-700/50/40 hover:bg-slate-600/50">
                     {group?.name || 'Unknown Group'}
                   </Badge>
                 </div>
