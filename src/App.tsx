@@ -916,19 +916,23 @@ function AdminPortal({
     <div className="min-h-screen bg-slate-950">
       <Toaster theme="dark" position="top-center" />
       
-      <header className="bg-slate-900 border-b border-slate-700/50 backdrop-blur-md px-4 py-3">
+      <header className="bg-slate-900/95 border-b border-slate-800 px-4 py-3">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <MobileNav />
             <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
-            <h1 className="text-xl font-bold text-white">Admin Portal</h1>
-            <Badge variant="outline" className="border-orange-500 text-orange-500">
-              {state.members.filter(m => m.isParticipating).length} participating
-            </Badge>
+            <div className="flex items-center gap-3">
+              <h1 className="text-lg font-semibold text-white">Admin Portal</h1>
+              <Badge className="bg-orange-600/20 text-orange-400 border border-orange-600/30 text-xs">
+                {state.members.filter(m => m.isParticipating).length} participating
+              </Badge>
+            </div>
           </div>
-          <Button 
-              variant="ghost" className="h-8 w-8" 
-              size="sm"
+          <div className="flex items-center gap-2">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="h-8 w-8 text-slate-400 hover:text-white"
               onClick={async () => {
                 const saved = await loadFromStorage()
                 if (saved) {
@@ -943,39 +947,45 @@ function AdminPortal({
                   toast.success('Data synced from server')
                 }
               }}
-              title="Sync data from server"
+              title="Sync data"
             >
               <RefreshCw className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" className="h-8 w-8" size="sm" onClick={onSwitchPortal}>
-            Switch Portal
-          </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={onSwitchPortal}
+              className="text-slate-400 hover:text-white text-sm"
+            >
+              Switch Portal
+            </Button>
+          </div>
         </div>
         
         {/* Desktop Tabs - Guests moved next to Members */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 hidden md:block">
-          <TabsList className="bg-slate-700/50">
-            <TabsTrigger value="members" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+          <TabsList className="bg-slate-800/50 p-1 gap-1">
+            <TabsTrigger value="members" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
               <Users className="w-4 h-4 mr-2" />
               Members
             </TabsTrigger>
-            <TabsTrigger value="guests" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="guests" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
               <UserPlus className="w-4 h-4 mr-2" />
               Guests
             </TabsTrigger>
-            <TabsTrigger value="groups" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="groups" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
               <Filter className="w-4 h-4 mr-2" />
               Groups
             </TabsTrigger>
-            <TabsTrigger value="tournament" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="tournament" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
               <Trophy className="w-4 h-4 mr-2" />
               Tournament
             </TabsTrigger>
-            <TabsTrigger value="standings" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="standings" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
               <Table className="w-4 h-4 mr-2" />
               Standings
             </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-orange-500 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-md">
+            <TabsTrigger value="history" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5">
               <History className="w-4 h-4 mr-2" />
               History
             </TabsTrigger>
