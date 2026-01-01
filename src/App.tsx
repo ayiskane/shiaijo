@@ -2680,12 +2680,12 @@ function CourtkeeperPortal({
                     <Badge variant="outline" className="text-xs border-[#4a7ab0] bg-[#142130] hover:bg-[#1e3a5f]">{matchGroup?.name || '?'}</Badge>
                     {isCurrent && <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />}
                   </div>
-                  <div className="text-sm text-white text-center">
-                    <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
-                    <span className="font-medium ml-1">{p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}</span>
-                    <span className="text-[#8fb3d1] mx-2">vs</span>
-                    <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
-                    <span className="font-medium ml-1">{p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}</span>
+                  <div className="flex items-center justify-center gap-2 text-sm">
+                    <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+                    <span className="font-medium text-white truncate max-w-[80px]">{p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}</span>
+                    <span className="text-[#6b8fad] text-xs">vs</span>
+                    <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
+                    <span className="font-medium text-white truncate max-w-[80px]">{p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}</span>
                   </div>
                   <div className="flex items-center justify-center gap-1 mt-2 opacity-60 hover:opacity-100 transition-opacity">
                     <button 
