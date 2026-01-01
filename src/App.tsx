@@ -781,9 +781,17 @@ function AdminPortal({
   }
 
   const refreshTournamentParticipants = () => {
-    if (!state.currentTournament) return
+    if (!state.currentTournament) {
+      toast.error('No active tournament')
+      return
+    }
     
     const participants = state.members.filter(m => m.isParticipating)
+    if (participants.length < 2) {
+      toast.error('Need at least 2 participants')
+      return
+    }
+    
     const participantsByGroup = new Map<string, Member[]>()
     participants.forEach(p => {
       const existing = participantsByGroup.get(p.group) || []
@@ -819,6 +827,11 @@ function AdminPortal({
       })
     })
     
+    if (allMatches.length === 0) {
+      toast.error('No matches could be generated')
+      return
+    }
+    
     setState(prev => ({
       ...prev,
       currentTournament: {
@@ -831,7 +844,7 @@ function AdminPortal({
       currentMatchIndexB: 0,
     }))
     
-    toast.success(`Tournament refreshed with ${allMatches.length} matches`)
+    toast.success(`Refreshed with ${allMatches.length} matches`)
   }
 
   const archiveTournament = () => {
