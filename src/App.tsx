@@ -1656,7 +1656,7 @@ function TournamentManager({
 
   const completedMatches = (tournament.matches || []).filter(m => m.status === 'completed').length
   const totalMatches = (tournament.matches || []).length
-  const isComplete = completedMatches === totalMatches
+  const isComplete = totalMatches > 0 && completedMatches === totalMatches
   const courtAMatches = (tournament.matches || []).filter(m => m.court === 'A')
   const courtBMatches = (tournament.matches || []).filter(m => m.court === 'B')
 
