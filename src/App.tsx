@@ -882,7 +882,7 @@ function AdminPortal({
   const MobileNav = () => (
     <Sheet>
       <SheetTrigger asChild>
-        <Button variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" size="icon" className="md:hidden">
+        <Button variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700" size="icon" className="md:hidden">
           <Menu className="w-6 h-6" />
         </Button>
       </SheetTrigger>
@@ -916,7 +916,7 @@ function AdminPortal({
     <div className="min-h-screen bg-slate-950">
       <Toaster theme="dark" position="top-center" />
       
-      <header className="bg-slate-900/95 border-b border-slate-700/50 backdrop-blur-md px-4 py-3">
+      <header className="bg-slate-900 border-b border-slate-700/50 backdrop-blur-md px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <MobileNav />
@@ -927,7 +927,7 @@ function AdminPortal({
             </Badge>
           </div>
           <Button 
-              variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" 
+              variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700" 
               size="sm"
               onClick={async () => {
                 const saved = await loadFromStorage()
@@ -947,7 +947,7 @@ function AdminPortal({
             >
               <RefreshCw className="w-4 h-4" />
             </Button>
-            <Button variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" size="sm" onClick={onSwitchPortal}>
+            <Button variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700" size="sm" onClick={onSwitchPortal}>
             Switch Portal
           </Button>
         </div>
@@ -1026,7 +1026,7 @@ function AdminPortal({
             <div className="flex flex-wrap gap-2">
               <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
                 <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20">
+                  <Button className="bg-orange-600 hover:bg-orange-700">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Member
                   </Button>
@@ -1083,7 +1083,7 @@ function AdminPortal({
                 ))}
               </div>
 
-              <Button variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" size="sm" onClick={deselectAll}>
+              <Button variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700" size="sm" onClick={deselectAll}>
                 <RefreshCw className="w-4 h-4 mr-2" />
                 Reset All
               </Button>
@@ -1145,7 +1145,7 @@ function AdminPortal({
                                  {member.lastName}, {member.firstName}
                                </span>
                                {member.isGuest && (
-                                 <Badge variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700 bg-purple-900 text-purple-200">Guest</Badge>
+                                 <Badge variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700 bg-purple-900 text-purple-200">Guest</Badge>
                                )}
                              </div>
                              {member.guestDojo && (
@@ -1159,7 +1159,7 @@ function AdminPortal({
                              {group?.name || member.group}
                            </Badge>
                            <Button
-                             variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
+                             variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700"
                              size="icon"
                              onClick={() => deleteMember(member.id)}
                              className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
@@ -1275,7 +1275,7 @@ function GroupsManager({
               onChange={e => setNewGroupName(e.target.value)}
               className="bg-slate-800 border-slate-600 focus:border-orange-500"
             />
-            <Button onClick={addGroup} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20">
+            <Button onClick={addGroup} className="bg-orange-600 hover:bg-orange-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Group
             </Button>
@@ -1321,7 +1321,7 @@ function GroupsManager({
                     <div className="flex gap-1">
                       <Button
                         size="icon"
-                        variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
+                        variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700"
                         onClick={() => {
                           updateGroup(group.id, { name: editingGroup.name })
                           setEditingGroup(null)
@@ -1332,7 +1332,7 @@ function GroupsManager({
                       </Button>
                       <Button
                         size="icon"
-                        variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
+                        variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700"
                         onClick={() => setEditingGroup(null)}
                         className="text-slate-300"
                       >
@@ -1343,7 +1343,7 @@ function GroupsManager({
                     <div className="flex gap-1">
                       <Button
                         size="icon"
-                        variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
+                        variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700"
                         onClick={() => setEditingGroup(group)}
                         className="text-slate-300 hover:text-white"
                       >
@@ -1351,7 +1351,7 @@ function GroupsManager({
                       </Button>
                       <Button
                         size="icon"
-                        variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
+                        variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700"
                         onClick={() => deleteGroup(group.id)}
                         className="text-red-400 hover:text-red-300"
                       >
@@ -1515,21 +1515,21 @@ function TournamentManager({
           </div>
 
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-slate-800/60 rounded-xl p-4 text-center border border-slate-700/50">
+            <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
               <div className="text-3xl font-bold text-white">{state.members.length}</div>
               <div className="text-sm text-slate-300">Total Members</div>
             </div>
-            <div className="bg-slate-800/60 rounded-xl p-4 text-center border border-slate-700/50">
+            <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
               <div className="text-3xl font-bold text-orange-400">
                 {state.members.filter(m => m.isParticipating).length}
               </div>
               <div className="text-sm text-slate-300">Participating</div>
             </div>
-            <div className="bg-slate-800/60 rounded-xl p-4 text-center border border-slate-700/50">
+            <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
               <div className="text-3xl font-bold text-white">{state.groups.length}</div>
               <div className="text-sm text-slate-300">Groups</div>
             </div>
-            <div className="bg-slate-800/60 rounded-xl p-4 text-center border border-slate-700/50">
+            <div className="bg-slate-800/50 rounded-xl p-4 text-center border border-slate-700/50">
               <div className="text-3xl font-bold text-emerald-400">
                 {(() => {
                   const participants = state.members.filter(m => m.isParticipating)
@@ -1564,7 +1564,7 @@ function TournamentManager({
 
           <Button 
             onClick={() => generateTournament(selectedMonth, selectedYear)}
-            className="w-full bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20"
+            className="w-full bg-orange-600 hover:bg-orange-700"
           >
             <Trophy className="w-4 h-4 mr-2" />
             Generate Tournament
@@ -1620,7 +1620,7 @@ function TournamentManager({
           <div className="flex gap-2 flex-wrap">
             {tournament.status === 'setup' && (
               <>
-                <Button onClick={startTournament} className="bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/20">
+                <Button onClick={startTournament} className="bg-emerald-600 hover:bg-emerald-700">
                   <Play className="w-4 h-4 mr-2" />
                   Start Tournament
                 </Button>
@@ -1642,7 +1642,7 @@ function TournamentManager({
               </>
             )}
             {isComplete && (
-              <Button onClick={archiveTournament} className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20">
+              <Button onClick={archiveTournament} className="bg-orange-600 hover:bg-orange-700">
                 <History className="w-4 h-4 mr-2" />
                 Archive & Complete
               </Button>
@@ -1713,13 +1713,13 @@ function TournamentManager({
                         </div>
                         {(tournament.status === 'setup' || (tournament.status === 'in_progress' && match.status === 'pending')) && (
                           <div className="flex gap-1">
-                            <Button size="icon" variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" onClick={() => swapMatchCourt(match.id)} className="h-8 w-8" title="Swap court">
+                            <Button size="icon" variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700" onClick={() => swapMatchCourt(match.id)} className="h-8 w-8" title="Swap court">
                               <ArrowLeftRight className="w-3 h-3" />
                             </Button>
-                            <Button size="icon" variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" onClick={() => moveMatchInQueue(match.id, 'up')} className="h-8 w-8">
+                            <Button size="icon" variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700" onClick={() => moveMatchInQueue(match.id, 'up')} className="h-8 w-8">
                               <ChevronLeft className="w-3 h-3 rotate-90" />
                             </Button>
-                            <Button size="icon" variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" onClick={() => moveMatchInQueue(match.id, 'down')} className="h-8 w-8">
+                            <Button size="icon" variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700" onClick={() => moveMatchInQueue(match.id, 'down')} className="h-8 w-8">
                               <ChevronRight className="w-3 h-3 rotate-90" />
                             </Button>
                           </div>
@@ -2002,7 +2002,7 @@ function HistoryView({
               </div>
               <Button
                 size="icon"
-                variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700"
+                variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700"
                 onClick={() => deleteHistoryEntry(entry.id)}
                 className="text-red-400 hover:text-red-300"
               >
@@ -2083,7 +2083,7 @@ function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
       <DialogFooter>
         <Button 
           onClick={() => onImport(importText)}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20"
+          className="bg-orange-600 hover:bg-orange-700"
           disabled={!importText.trim()}
         >
           <Upload className="w-4 h-4 mr-2" />
@@ -2144,7 +2144,7 @@ function AddMemberForm({
       <DialogFooter>
         <Button 
           onClick={() => onAdd(firstName, lastName, group)}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20"
+          className="bg-orange-600 hover:bg-orange-700"
         >
           Add Member
         </Button>
@@ -2193,7 +2193,7 @@ function CSVImportForm({ onImport }: { onImport: (csv: string) => void }) {
       <DialogFooter>
         <Button 
           onClick={() => onImport(csvText)}
-          className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20"
+          className="bg-orange-600 hover:bg-orange-700"
           disabled={!csvText.trim()}
         >
           <Upload className="w-4 h-4 mr-2" />
@@ -2621,7 +2621,7 @@ function CourtkeeperPortal({
                   <div className="flex gap-1 mt-2 justify-center">
                     <Button 
                       size="sm" 
-                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700 h-7 text-xs"
+                      variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700 h-7 text-xs"
                       onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
                     >
                       <ArrowLeftRight className="w-3 h-3 mr-1" />
@@ -2629,7 +2629,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700 h-7 text-xs"
+                      variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700 h-7 text-xs"
                       onClick={() => moveInQueue(match.id, 'up')}
                       disabled={idx === 0}
                     >
@@ -2637,7 +2637,7 @@ function CourtkeeperPortal({
                     </Button>
                     <Button 
                       size="sm" 
-                      variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700 h-7 text-xs"
+                      variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700 h-7 text-xs"
                       onClick={() => moveInQueue(match.id, 'down')}
                       disabled={idx === pendingMatches.length - 1}
                     >
@@ -2705,7 +2705,7 @@ function CourtkeeperPortal({
             </Button>
             <Button 
               onClick={() => completeMatch(showWinnerPrompt.winner!)}
-              className={winnerColor === 'red' ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700' : 'bg-slate-600/50 hover:bg-slate-500'}
+              className={winnerColor === 'red' ? 'bg-red-600 hover:bg-red-700' : 'bg-slate-600/50 hover:bg-slate-500'}
             >
               Complete Match
             </Button>
@@ -2721,7 +2721,7 @@ function CourtkeeperPortal({
       <WinnerPromptDialog />
       
       {/* Header */}
-      <header className="bg-slate-900/95 border-b border-slate-700/50 backdrop-blur-md px-4 py-2">
+      <header className="bg-slate-900 border-b border-slate-700/50 backdrop-blur-md px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
@@ -2735,7 +2735,7 @@ function CourtkeeperPortal({
               size="sm"
               variant={selectedCourt === 'A' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('A')}
-              className={selectedCourt === 'A' ? 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700' : 'border-slate-600'}
+              className={selectedCourt === 'A' ? 'bg-red-600 hover:bg-red-700' : 'border-slate-600'}
             >
               Court A
             </Button>
@@ -2747,7 +2747,7 @@ function CourtkeeperPortal({
             >
               Court B
             </Button>
-            <Button variant="outline" className="bg-slate-800/60 border-slate-600 hover:bg-slate-700" size="sm" onClick={onSwitchPortal}>Exit</Button>
+            <Button variant="outline" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700" size="sm" onClick={onSwitchPortal}>Exit</Button>
           </div>
         </div>
       </header>
@@ -2770,7 +2770,7 @@ function CourtkeeperPortal({
               <div className="flex justify-center gap-4 mt-4">
                 <Button
                   onClick={() => setSelectedCourt(selectedCourt === 'A' ? 'B' : 'A')}
-                  className={selectedCourt === 'A' ? 'bg-slate-600/50 hover:bg-slate-500' : 'bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700'}
+                  className={selectedCourt === 'A' ? 'bg-slate-600/50 hover:bg-slate-500' : 'bg-red-600 hover:bg-red-700'}
                 >
                   Switch to Court {selectedCourt === 'A' ? 'B' : 'A'}
                 </Button>
@@ -2810,7 +2810,7 @@ function CourtkeeperPortal({
                   <Button
                     size="lg"
                     onClick={toggleTimer}
-                    className={timerRunning ? 'bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20' : 'bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 shadow-lg shadow-emerald-500/20'}
+                    className={timerRunning ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'}
                   >
                     {timerRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
                     {timerRunning ? 'Pause' : 'Start'}
@@ -2840,7 +2840,7 @@ function CourtkeeperPortal({
                   {isHantei ? (
                     <Button
                       size="lg"
-                      className="w-full h-24 text-2xl bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600"
+                      className="w-full h-24 text-2xl bg-red-700 hover:bg-red-600"
                       onClick={() => completeMatch('player1')}
                     >
                       <Award className="w-8 h-8 mr-2" />
@@ -2968,7 +2968,7 @@ function CourtkeeperPortal({
                     <Button
                       size="lg"
                       onClick={() => completeMatch('player1')}
-                      className="bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 h-14"
+                      className="bg-red-700 hover:bg-red-600 h-14"
                     >
                       ● Red Wins
                     </Button>
@@ -3011,12 +3011,12 @@ function CourtkeeperPortal({
         <Sheet>
           <SheetTrigger asChild>
             <Button 
-              className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 shadow-lg shadow-orange-500/20 shadow-lg"
+              className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-orange-600 hover:bg-orange-700 shadow-lg"
             >
               <Menu className="w-6 h-6" />
             </Button>
           </SheetTrigger>
-          <SheetContent side="bottom" className="bg-slate-900/95 border-slate-600 backdrop-blur-md h-[70vh]">
+          <SheetContent side="bottom" className="bg-slate-900 border-slate-600 backdrop-blur-md h-[70vh]">
             <SheetHeader>
               <SheetTitle className="text-white">Match Queues</SheetTitle>
             </SheetHeader>
