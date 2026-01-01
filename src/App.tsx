@@ -1819,16 +1819,17 @@ function TournamentManager({
                               </span>
                             </div>
                           </div>
-                        {/* Match reorder controls removed */}
+                        </div>
+                        {/* Status indicators */}
                         {match.status === 'completed' && (
                           <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/50 text-red-400' : match.winner === 'player2' ? 'bg-slate-700/50 text-slate-300' : 'bg-slate-700 text-slate-400'}`}>
                             {match.winner === 'draw' ? 'Draw' : 
                              match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}` :
                              `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}`}
-                          </Badge>
+                          </span>
                         )}
                         {match.status === 'in_progress' && (
-                          <Badge className="bg-emerald-600 animate-pulse">Live</Badge>
+                          <span className="text-xs px-2 py-0.5 rounded bg-emerald-600 text-white animate-pulse">Live</span>
                         )}
                       </div>
                     )
