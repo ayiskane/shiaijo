@@ -137,6 +137,8 @@ interface Tournament {
   matches: Match[]
   groups: string[]
   groupOrder: string[]
+  timerOptions: number[]  // Available timer durations in seconds
+  defaultTimerDuration: number  // Default timer duration
 }
 
 interface TournamentHistory {
@@ -866,6 +868,8 @@ function AdminPortal({
       matches: allMatches,
       groups: [...participantsByGroup.keys()],
       groupOrder,
+      timerOptions: [120, 180, 240, 300],
+      defaultTimerDuration: 180,
     }
     
     setState(prev => ({ 
@@ -1984,6 +1988,42 @@ function TournamentManager({
             </div>
           </div>
 
+          {/* Timer Settings */}
+          <div className="bg-[#1e3a5f]/20 rounded-lg p-3 border border-white/5">
+            <div className="flex items-center justify-between mb-2">
+              <span className="text-sm text-[#b8d4ec]">Timer Options</span>
+              <span className="text-xs text-slate-500">Available durations for matches</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {[60, 90, 120, 150, 180, 240, 300].map(secs => {
+                const isSelected = (tournament.timerOptions || [120, 180, 240, 300]).includes(secs)
+                return (
+                  <button
+                    key={secs}
+                    onClick={() => {
+                      const current = tournament.timerOptions || [120, 180, 240, 300]
+                      const newOptions = isSelected 
+                        ? current.filter(t => t !== secs)
+                        : [...current, secs].sort((a, b) => a - b)
+                      if (newOptions.length === 0) return // Don't allow empty
+                      setState(prev => ({
+                        ...prev,
+                        currentTournament: { ...tournament, timerOptions: newOptions }
+                      }))
+                    }}
+                    className={`px-3 py-1 rounded text-xs font-medium transition-all ${
+                      isSelected 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-slate-700/50 text-slate-400 hover:bg-slate-700'
+                    }`}
+                  >
+                    {Math.floor(secs / 60)}:{(secs % 60).toString().padStart(2, '0')}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+
           <div className="flex gap-2 flex-wrap">
             {tournament.status === 'setup' && (
               <>
@@ -2049,10 +2089,9 @@ function TournamentManager({
                     onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
                     className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
                   >
-                    <option value={120}>2m</option>
-                    <option value={180}>3m</option>
-                    <option value={240}>4m</option>
-                    <option value={300}>5m</option>
+                    {(tournament.timerOptions || [120, 180, 240, 300]).map(secs => (
+                      <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
+                    ))}
                   </select>
                   <select
                     value={groupMatches[0]?.matchType || 'sanbon'}
@@ -2127,10 +2166,9 @@ function TournamentManager({
                                 onChange={(e) => updateMatchSettings(match.id, 'timerDuration', parseInt(e.target.value))}
                                 className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#8fb3d1] w-12"
                               >
-                                <option value={120}>2m</option>
-                                <option value={180}>3m</option>
-                                <option value={240}>4m</option>
-                                <option value={300}>5m</option>
+                                {(tournament.timerOptions || [120, 180, 240, 300]).map(secs => (
+                                  <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
+                                ))}
                               </select>
                               <select
                                 value={match.matchType || 'sanbon'}
@@ -3045,10 +3083,11 @@ function CourtkeeperPortal({
                 onChange={(e) => updateMatchSettings('timerDuration', parseInt(e.target.value))}
                 className="bg-slate-800 border-0 rounded px-2 py-1 text-xs text-slate-300"
               >
-                <option value={120}>2:00</option>
-                <option value={180}>3:00</option>
-                <option value={240}>4:00</option>
-                <option value={300}>5:00</option>
+                {(tournament?.timerOptions || [120, 180, 240, 300]).map(secs => (
+                  <option key={secs} value={secs}>
+                    {Math.floor(secs / 60)}:{(secs % 60).toString().padStart(2, '0')}
+                  </option>
+                ))}
               </select>
               <select 
                 value={matchType} 
