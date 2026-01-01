@@ -3171,14 +3171,21 @@ function CourtkeeperPortal({
   const [draggedMatchId, setDraggedMatchId] = useState<string | null>(null)
   const [touchStartY, setTouchStartY] = useState<number | null>(null)
   
-  // Detect when someone wins and show modal
+  // Detect when someone wins and show modal, or close if score undone
   useEffect(() => {
-    if (p1EffectiveScore >= winTarget && !showWinModal) {
+    const p1Wins = p1EffectiveScore >= winTarget
+    const p2Wins = p2EffectiveScore >= winTarget
+    
+    if (p1Wins && !showWinModal) {
       setPendingWinner('player1')
       setShowWinModal(true)
-    } else if (p2EffectiveScore >= winTarget && !showWinModal) {
+    } else if (p2Wins && !showWinModal) {
       setPendingWinner('player2')
       setShowWinModal(true)
+    } else if (showWinModal && !p1Wins && !p2Wins) {
+      // Score was undone (possibly from another device) - close modal
+      setShowWinModal(false)
+      setPendingWinner(null)
     }
   }, [p1EffectiveScore, p2EffectiveScore, winTarget, showWinModal])
 
@@ -3368,13 +3375,13 @@ function CourtkeeperPortal({
           </div>
           
           {/* Hansoku indicator - fixed layout, always centered */}
-          <div className="flex items-center justify-center mt-2 pt-2 border-t border-slate-700/30 text-[10px]">
-            <div className="w-12 flex justify-end">
-              {p1Hansoku % 2 === 1 && <span className="text-yellow-400">▲</span>}
+          <div className="flex items-center justify-center mt-2 pt-2 border-t border-slate-700/30">
+            <div className="w-16 flex justify-end">
+              {p1Hansoku % 2 === 1 && <span className="text-yellow-400 text-xl drop-shadow-[0_0_4px_rgba(250,204,21,0.5)]">▲</span>}
             </div>
-            <span className="text-slate-600 mx-2">Hansoku</span>
-            <div className="w-12 flex justify-start">
-              {p2Hansoku % 2 === 1 && <span className="text-yellow-400">▲</span>}
+            <span className="text-slate-500 mx-3 text-xs">Hansoku</span>
+            <div className="w-16 flex justify-start">
+              {p2Hansoku % 2 === 1 && <span className="text-yellow-400 text-xl drop-shadow-[0_0_4px_rgba(250,204,21,0.5)]">▲</span>}
             </div>
           </div>
         </div>
@@ -3566,11 +3573,17 @@ function CourtkeeperPortal({
       {/* Win Confirmation Modal */}
       {showWinModal && pendingWinner && (
         <div className="fixed inset-0 bg-black/85 z-50 flex items-center justify-center p-4">
-          <div className={`rounded-2xl p-6 max-w-sm w-full text-center border-2 ${
+          <div className={`rounded-2xl p-6 max-w-sm w-full text-center border-2 relative ${
             pendingWinner === 'player1' 
               ? 'bg-gradient-to-b from-red-950/90 to-[#1a2535] border-red-500/50' 
               : 'bg-gradient-to-b from-slate-700/90 to-[#1a2535] border-slate-400/50'
           }`}>
+            <button
+              onClick={() => { setShowWinModal(false); setPendingWinner(null) }}
+              className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center"
+            >
+              ✕
+            </button>
             <div className="text-5xl mb-3">🏆</div>
             <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${
               pendingWinner === 'player1' ? 'bg-red-500 text-white' : 'bg-slate-300 text-slate-900'
