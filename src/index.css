@@ -6,9 +6,9 @@
   :root {
     --background: 240 10% 6%;
     --foreground: 0 0% 98%;
-    --card: 240 8% 11%;
+    --card: 240 8% 12%;
     --card-foreground: 0 0% 98%;
-    --popover: 240 8% 11%;
+    --popover: 240 8% 12%;
     --popover-foreground: 0 0% 98%;
     --primary: 25 95% 53%;
     --primary-foreground: 0 0% 98%;
@@ -37,23 +37,21 @@
   }
   
   body {
-    @apply bg-[#13131a] text-foreground antialiased;
+    @apply bg-[#0f0f14] text-foreground antialiased;
     min-height: 100vh;
   }
 
-  /* Force dark mode on all inputs */
   input, select, textarea {
     color-scheme: dark;
   }
 
-  /* Custom scrollbar */
   ::-webkit-scrollbar {
     width: 6px;
     height: 6px;
   }
 
   ::-webkit-scrollbar-track {
-    background: #1a1a24;
+    background: #16161d;
   }
 
   ::-webkit-scrollbar-thumb {
@@ -63,53 +61,5 @@
 
   ::-webkit-scrollbar-thumb:hover {
     background: #444;
-  }
-}
-
-@layer components {
-  /* Sidebar navigation active state */
-  .nav-active {
-    background: linear-gradient(90deg, rgba(249, 115, 22, 0.15) 0%, transparent 100%);
-    border-left: 3px solid #f97316;
-  }
-
-  /* Glow effects */
-  .glow-orange {
-    box-shadow: 0 0 20px rgba(249, 115, 22, 0.3);
-  }
-
-  .glow-purple {
-    box-shadow: 0 0 20px rgba(168, 85, 247, 0.2);
-  }
-
-  .glow-green {
-    box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
-  }
-
-  /* Card hover effect */
-  .card-hover:hover {
-    background: #252532;
-    border-color: rgba(255, 255, 255, 0.1);
-  }
-
-  /* Avatar ring effects */
-  .avatar-ring-orange {
-    box-shadow: 0 0 0 2px #1e1e2a, 0 0 0 4px #f97316;
-  }
-
-  .avatar-ring-purple {
-    box-shadow: 0 0 0 2px #1e1e2a, 0 0 0 4px #a855f7;
-  }
-
-  .avatar-ring-cyan {
-    box-shadow: 0 0 0 2px #1e1e2a, 0 0 0 4px #06b6d4;
-  }
-
-  .avatar-ring-green {
-    box-shadow: 0 0 0 2px #1e1e2a, 0 0 0 4px #22c55e;
-  }
-
-  .avatar-ring-pink {
-    box-shadow: 0 0 0 2px #1e1e2a, 0 0 0 4px #ec4899;
   }
 }
