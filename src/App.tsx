@@ -2603,11 +2603,11 @@ function CourtkeeperPortal({
   const player2 = currentMatch ? getMemberById(currentMatch.player2Id) : null
 
   const scoreTypes = [
-    { id: 1, name: 'Men', short: 'M', color: 'bg-[#2e4a65] hover:bg-[#243a52]' },
-    { id: 2, name: 'Kote', short: 'K', color: 'bg-green-600 hover:bg-green-700' },
-    { id: 3, name: 'Do', short: 'D', color: 'bg-[#1e3a5f] hover:bg-[#162d4a]' },
+    { id: 1, name: 'Men', short: 'M', color: 'bg-[#1e3a5f] hover:bg-[#2a4a6f]' },
+    { id: 2, name: 'Kote', short: 'K', color: 'bg-emerald-600 hover:bg-emerald-700' },
+    { id: 3, name: 'Do', short: 'D', color: 'bg-[#1e3a5f] hover:bg-[#2a4a6f]' },
     { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600 hover:bg-cyan-700' },
-    { id: 5, name: 'Hansoku', short: 'H', color: 'bg-yellow-600 hover:bg-yellow-700' },
+    { id: 5, name: 'Hansoku', short: 'H', color: 'bg-amber-600 hover:bg-amber-700' },
   ]
 
   // Render queue for a court
