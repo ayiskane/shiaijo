@@ -1752,6 +1752,25 @@ function TournamentManager({
     toast.success(`Updated ${field} for all ${getGroupById(groupId)?.name || 'group'} matches`)
   }
 
+  // Reorder groups in tournament
+  const moveGroupOrder = (groupId: string, direction: 'up' | 'down') => {
+    if (!tournament || !tournament.groupOrder) return
+    const currentOrder = [...tournament.groupOrder]
+    const idx = currentOrder.indexOf(groupId)
+    if (idx === -1) return
+    
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= currentOrder.length) return
+    
+    // Swap
+    [currentOrder[idx], currentOrder[newIdx]] = [currentOrder[newIdx], currentOrder[idx]]
+    
+    setState(prev => ({
+      ...prev,
+      currentTournament: { ...tournament, groupOrder: currentOrder }
+    }))
+  }
+
     if (!tournament || !tournament.groupOrder) {
     return (
       <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
