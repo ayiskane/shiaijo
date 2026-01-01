@@ -2518,7 +2518,7 @@ function AddMemberForm({
 function CourtkeeperPortal({ 
   state, 
   setState, 
-  isMobile,
+  isMobile: _isMobile,
   onSwitchPortal,
   getMemberById,
   getGroupById
@@ -2575,7 +2575,7 @@ function CourtkeeperPortal({
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
   const pendingMatches = selectedCourt === 'A' ? pendingMatchesA : pendingMatchesB
   const groupOrder = selectedCourt === 'A' ? courtAGroupOrder : courtBGroupOrder
-  // const currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
+  // const _currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
   
   const timerSeconds = selectedCourt === 'A' ? state.timerSecondsA : state.timerSecondsB
   const timerRunning = selectedCourt === 'A' ? state.timerRunningA : state.timerRunningB
