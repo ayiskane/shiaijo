@@ -781,9 +781,13 @@ function AdminPortal({
   }
 
   const refreshTournamentParticipants = () => {
-    if (!state.currentTournament) return
+    if (!state.currentTournament) {
+      toast.error('No tournament to refresh')
+      return
+    }
     
-    const participants = state.members.filter(m => m.isParticipating)
+    try {
+      const participants = state.members.filter(m => m.isParticipating)
     const participantsByGroup = new Map<string, Member[]>()
     participants.forEach(p => {
       const existing = participantsByGroup.get(p.group) || []
@@ -832,6 +836,10 @@ function AdminPortal({
     }))
     
     toast.success(`Tournament refreshed with ${allMatches.length} matches`)
+    } catch (error) {
+      console.error('Error refreshing tournament:', error)
+      toast.error('Failed to refresh tournament')
+    }
   }
 
   const archiveTournament = () => {
@@ -1641,7 +1649,7 @@ function TournamentManager({
               <div className="text-sm text-slate-300">Court A Matches</div>
             </div>
             <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-3">
-              <div className="text-2xl font-bold text-blue-400">{courtBMatches.length}</div>
+              <div className="text-2xl font-bold text-slate-200">{courtBMatches.length}</div>
               <div className="text-sm text-slate-300">Court B Matches</div>
             </div>
           </div>
@@ -1721,7 +1729,7 @@ function TournamentManager({
                         </Badge>
                         <div className="flex-1 flex items-center justify-center gap-2">
                           <div className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 rounded bg-red-500"></span>
+                            <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
                             <span className={`${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'} font-medium`}>
                               {p1?.firstName || '?'} {p1?.lastName || '?'}
                             </span>
@@ -1731,8 +1739,8 @@ function TournamentManager({
                           </div>
                           <span className="text-slate-400 mx-3">vs</span>
                           <div className="flex items-center gap-2">
-                            <span className="inline-block w-4 h-4 rounded bg-blue-500"></span>
-                            <span className={`${match.winner === 'player2' ? 'text-blue-400 font-semibold' : 'text-white'} font-medium`}>
+                            <span className="inline-block w-3 h-3 rounded-full bg-white"></span>
+                            <span className={`${match.winner === 'player2' ? 'text-slate-200 font-semibold' : 'text-white'} font-medium`}>
                               {p2?.firstName || '?'} {p2?.lastName || '?'}
                             </span>
                             {match.status !== 'pending' && !match.isHantei && (
@@ -1754,7 +1762,7 @@ function TournamentManager({
                           </div>
                         )}
                         {match.status === 'completed' && (
-                          <Badge variant="outline" className={match.winner === 'player1' ? 'border-red-600 bg-red-950/50 text-red-400' : match.winner === 'player2' ? 'border-blue-600 bg-blue-950/50 text-blue-400' : 'border-slate-600'}>
+                          <Badge variant="outline" className={match.winner === 'player1' ? 'border-red-600 bg-red-950/50 text-red-400' : match.winner === 'player2' ? 'border-slate-400 bg-blue-950/50 text-slate-200' : 'border-slate-600'}>
                             {match.winner === 'draw' ? 'Draw' : 
                              match.winner === 'player1' ? `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}` :
                              `Win ${match.isHantei ? '(判定)' : match.player1Score.length + '-' + match.player2Score.length}`}
@@ -2613,7 +2621,7 @@ function CourtkeeperPortal({
     return (
       <div className="space-y-2">
         <div className="flex items-center justify-between mb-2">
-          <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-blue-400'}`}>
+          <h3 className={`font-semibold ${court === 'A' ? 'text-red-400' : 'text-slate-200'}`}>
             Court {court} ({pendingMatches.length} pending)
           </h3>
         </div>
@@ -2637,14 +2645,14 @@ function CourtkeeperPortal({
                 >
                   <div className="flex items-center gap-2 mb-1">
                     <span className="text-slate-400 text-xs">#{idx + 1}</span>
-                    <Badge variant="outline" className="text-xs border-blue-700 bg-slate-800/40 hover:bg-slate-600/50">{matchGroup?.name || '?'}</Badge>
+                    <Badge variant="outline" className="text-xs border-slate-400 bg-slate-800/40 hover:bg-slate-600/50">{matchGroup?.name || '?'}</Badge>
                     {isCurrent && <Circle className="w-3 h-3 text-emerald-500 animate-pulse ml-auto" />}
                   </div>
                   <div className="text-sm text-white text-center">
-                    <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-500"></span>
+                    <span className="inline-block w-2 h-2 rounded-full bg-red-500"></span>
                     <span className="font-medium ml-1">{p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.</span>
                     <span className="text-slate-400 mx-2">vs</span>
-                    <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500"></span>
+                    <span className="inline-block w-2 h-2 rounded-full bg-white"></span>
                     <span className="font-medium ml-1">{p2?.firstName || '?'} {p2?.lastName?.charAt(0) || ''}.</span>
                   </div>
                   <div className="flex gap-1 mt-2 justify-center">
@@ -2685,12 +2693,12 @@ function CourtkeeperPortal({
                   const p2 = getMemberById(match.player2Id)
                   return (
                     <div key={match.id} className="p-2 bg-slate-700/20 rounded text-sm text-center">
-                      <span className="inline-block w-2.5 h-2.5 rounded-sm bg-red-500"></span>
+                      <span className="inline-block w-2 h-2 rounded-full bg-red-500"></span>
                       <span className={match.winner === 'player1' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
                         {p1?.firstName || '?'} {p1?.lastName?.charAt(0) || ''}.
                       </span>
                       <span className="text-slate-400 mx-2">vs</span>
-                      <span className="inline-block w-2.5 h-2.5 rounded-sm bg-blue-500"></span>
+                      <span className="inline-block w-2 h-2 rounded-full bg-white"></span>
                       <span className={match.winner === 'player2' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
                         {p2?.firstName || '?'} {p2?.lastName?.charAt(0) || ''}.
                       </span>
@@ -2721,9 +2729,9 @@ function CourtkeeperPortal({
           <DialogHeader>
             <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
           </DialogHeader>
-          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-red-600' : 'bg-slate-600/30 border-2 border-blue-600'}`}>
-            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-400'}`} />
-            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-blue-400'}`}>
+          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-red-600' : 'bg-slate-600/30 border-2 border-slate-400'}`}>
+            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-red-400' : 'text-slate-200'}`} />
+            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-red-400' : 'text-slate-200'}`}>
               {winnerPlayer?.firstName} {winnerPlayer?.lastName}
             </p>
             <p className="text-slate-300 mt-2">{winnerColor === 'red' ? 'AKA' : 'SHIRO'} Wins!</p>
@@ -2820,7 +2828,7 @@ function CourtkeeperPortal({
                       {isHantei ? 'Hantei Match (3 min)' : 'Regular Match (3 min)'}
                     </span>
                   </div>
-                  <Badge variant="outline" className="border-blue-600/60 bg-slate-800/50 border border-slate-700/30 bg-slate-800/40 hover:bg-slate-600/50">
+                  <Badge variant="outline" className="border-slate-400/60 bg-slate-800/50 border border-slate-700/30 bg-slate-800/40 hover:bg-slate-600/50">
                     {group?.name || 'Unknown Group'}
                   </Badge>
                 </div>
@@ -2844,7 +2852,7 @@ function CourtkeeperPortal({
                     {timerRunning ? <Pause className="w-5 h-5 mr-2 w-5 h-5 mr-2" /> : <Play />}
                     {timerRunning ? 'Pause' : 'Start'}
                   </Button>
-                  <Button size="lg" variant="outline" onClick={resetTimer} className="border-blue-700 bg-slate-800/40 hover:bg-slate-600/50">
+                  <Button size="lg" variant="outline" onClick={resetTimer} className="border-slate-400 bg-slate-800/40 hover:bg-slate-600/50">
                     <RotateCcw className="w-5 h-5 mr-2" />
                     Reset
                   </Button>
@@ -2858,7 +2866,7 @@ function CourtkeeperPortal({
               <Card className="bg-slate-800 border-2 border-red-800">
                 <CardHeader className="pb-2 bg-red-900/30">
                   <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
-                    <span className="inline-block w-4 h-4 rounded bg-red-500"></span>
+                    <span className="inline-block w-3 h-3 rounded-full bg-red-500"></span>
                     AKA
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
@@ -2922,10 +2930,10 @@ function CourtkeeperPortal({
               </Card>
 
               {/* Player 2 (White/Shiro) */}
-              <Card className="bg-slate-800 border-2 border-blue-700">
-                <CardHeader className="pb-2 bg-blue-900/30">
-                  <CardTitle className="text-blue-400 text-center flex items-center justify-center gap-2">
-                    <span className="inline-block w-4 h-4 rounded bg-blue-500"></span>
+              <Card className="bg-slate-800 border-2 border-slate-400">
+                <CardHeader className="pb-2 bg-slate-700/30">
+                  <CardTitle className="text-slate-200 text-center flex items-center justify-center gap-2">
+                    <span className="inline-block w-3 h-3 rounded-full bg-white"></span>
                     SHIRO
                   </CardTitle>
                   <CardDescription className="text-center text-white text-lg font-semibold">
