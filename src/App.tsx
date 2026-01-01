@@ -704,7 +704,7 @@ function AdminPortal({
     toast.success(`${newMembers.length} members imported`)
   }
 
-  const generateTournament = (selectedMonth: string, selectedYear: number) => {
+  const generateTournament = (selectedMonth: string, selectedYear: number, date: string) => {
     const participants = state.members.filter(m => m.isParticipating)
     
     const participantsByGroup = new Map<string, Member[]>()
@@ -749,7 +749,7 @@ function AdminPortal({
     const tournament: Tournament = {
       id: generateId(),
       name: `Renbu Monthly Shiai - ${selectedMonth} ${selectedYear}`,
-      date: new Date().toISOString().split('T')[0],
+      date: date,
       month: selectedMonth,
       year: selectedYear,
       status: 'setup',
@@ -1611,12 +1611,13 @@ function TournamentManager({
   setState: React.Dispatch<React.SetStateAction<AppState>>
   getMemberById: (id: string) => Member | undefined
   getGroupById: (id: string) => Group | undefined
-  generateTournament: (month: string, year: number) => void
+  generateTournament: (month: string, year: number, date: string) => void
   refreshTournamentParticipants: () => void
   archiveTournament: () => void
 }) {
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()])
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const tournament = state.currentTournament
 
   const startTournament = () => {
@@ -1757,7 +1758,7 @@ function TournamentManager({
           </div>
 
           <Button 
-            onClick={() => generateTournament(selectedMonth, selectedYear)}
+            onClick={() => generateTournament(selectedMonth, selectedYear, selectedDate)}
             className="w-full bg-orange-600 hover:bg-orange-700"
           >
             <Trophy className="w-4 h-4 mr-2" />
