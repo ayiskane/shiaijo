@@ -1582,6 +1582,49 @@ function TournamentManager({
     }))
   }
 
+  const setGroupCourt = (groupId: string, court: 'A' | 'B') => {
+    if (!tournament) return
+    setState(prev => ({
+      ...prev,
+      currentTournament: {
+        ...tournament,
+        matches: (tournament.matches || []).map(m => 
+          m.groupId === groupId ? { ...m, court } : m
+        )
+      }
+    }))
+    toast.success(`All ${getGroupById(groupId)?.name || 'group'} matches moved to Court ${court}`)
+  }
+
+  const moveGroupOrder = (groupId: string, direction: 'up' | 'down') => {
+    if (!tournament) return
+    const groupOrder = [...(tournament.groupOrder || [])]
+    const idx = groupOrder.indexOf(groupId)
+    if (idx === -1) return
+    
+    const newIdx = direction === 'up' ? idx - 1 : idx + 1
+    if (newIdx < 0 || newIdx >= groupOrder.length) return
+    
+    const temp = groupOrder[idx]
+    groupOrder[idx] = groupOrder[newIdx]
+    groupOrder[newIdx] = temp
+    
+    // Reassign courts based on new order
+    const updatedMatches = (tournament.matches || []).map(m => {
+      const newGroupIdx = groupOrder.indexOf(m.groupId)
+      return { ...m, court: newGroupIdx % 2 === 0 ? 'A' : 'B' as 'A' | 'B' }
+    })
+    
+    setState(prev => ({
+      ...prev,
+      currentTournament: {
+        ...tournament,
+        groupOrder,
+        matches: updatedMatches
+      }
+    }))
+  }
+
   const moveMatchInQueue = (matchId: string, direction: 'up' | 'down') => {
     if (!tournament) return
     const matches = [...tournament.matches]
@@ -1787,14 +1830,62 @@ function TournamentManager({
         
         return (
           <Card key={groupId} className="bg-slate-800/40 border-slate-700/50 backdrop-blur-sm">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                {group?.name || groupId}
-                {group?.isNonBogu && <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>}
-                <Badge variant="outline" className="border-slate-600 text-slate-300 ml-auto">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-3">
+                {/* Group reorder controls */}
+                <div className="flex flex-col gap-0.5">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-5 w-5 text-slate-400 hover:text-white"
+                    onClick={() => moveGroupOrder(groupId, 'up')}
+                    disabled={(tournament.groupOrder || []).indexOf(groupId) === 0}
+                  >
+                    <ChevronLeft className="w-3 h-3 rotate-90" />
+                  </Button>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    className="h-5 w-5 text-slate-400 hover:text-white"
+                    onClick={() => moveGroupOrder(groupId, 'down')}
+                    disabled={(tournament.groupOrder || []).indexOf(groupId) === (tournament.groupOrder || []).length - 1}
+                  >
+                    <ChevronRight className="w-3 h-3 rotate-90" />
+                  </Button>
+                </div>
+                
+                <CardTitle className="text-white flex items-center gap-2 flex-1">
+                  {group?.name || groupId}
+                  {group?.isNonBogu && <Badge className="bg-orange-900 text-orange-200">Hantei</Badge>}
+                </CardTitle>
+                
+                {/* Court assignment for entire group */}
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-slate-400">Court:</span>
+                  <div className="flex gap-1">
+                    <Button
+                      size="sm"
+                      variant={groupMatches[0]?.court === 'A' ? 'default' : 'outline'}
+                      className={`h-7 px-3 ${groupMatches[0]?.court === 'A' ? 'bg-red-600 hover:bg-red-700' : 'border-red-600 text-red-400 hover:bg-red-900/30'}`}
+                      onClick={() => setGroupCourt(groupId, 'A')}
+                    >
+                      A
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant={groupMatches[0]?.court === 'B' ? 'default' : 'outline'}
+                      className={`h-7 px-3 ${groupMatches[0]?.court === 'B' ? 'bg-blue-600 hover:bg-blue-700' : 'border-blue-600 text-blue-400 hover:bg-blue-900/30'}`}
+                      onClick={() => setGroupCourt(groupId, 'B')}
+                    >
+                      B
+                    </Button>
+                  </div>
+                </div>
+                
+                <Badge variant="outline" className="border-slate-600 text-slate-300">
                   {groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}
                 </Badge>
-              </CardTitle>
+              </div>
             </CardHeader>
             <CardContent>
               <ScrollArea className="h-72 pr-2">
@@ -1812,9 +1903,15 @@ function TournamentManager({
                         }`}
                       >
                         <span className="text-slate-400 w-6">#{idx + 1}</span>
-                        <Badge className={match.court === 'A' ? 'bg-red-900 text-red-200' : 'bg-blue-900 text-blue-200'}>
-                          {match.court}
-                        </Badge>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className={`px-3 py-1 h-7 font-bold ${match.court === 'A' ? 'bg-red-600 hover:bg-red-700 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+                          onClick={() => swapMatchCourt(match.id)}
+                          title="Click to switch court"
+                        >
+                          Court {match.court}
+                        </Button>
                         <div className="flex-1 flex items-center justify-center gap-2">
                           <div className="flex items-center gap-2">
                             <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
