@@ -944,7 +944,7 @@ function AdminPortal({
       </header>
 
       {/* Mobile Sidebar */}
-      <aside className={`fixed top-0 left-0 h-full w-72 bg-[#1a1a24] z-50 md:hidden flex flex-col transform transition-transform duration-300 ${mobileMenuOpen ? 'tranzinc-x-0' : '-tranzinc-x-full'}`}>
+      <aside className={`fixed top-0 left-0 h-full w-72 bg-[#1a1a24] z-50 md:hidden flex flex-col transform transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
         <div className="p-4 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center shadow-lg shadow-orange-500/20">
@@ -1119,7 +1119,7 @@ function AdminPortal({
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -tranzinc-y-1/2 text-zinc-500" />
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
                 <input 
                   type="text" 
                   placeholder="Search..." 
