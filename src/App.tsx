@@ -1180,37 +1180,25 @@ function AdminPortal({
                        return (
                          <div 
                            key={member.id}
-                           className="flex items-center gap-4 px-4 py-3 hover:bg-slate-800/50 transition-colors"
+                           className="flex items-center gap-2 sm:gap-3 px-3 py-2.5 hover:bg-slate-800/30"
                          >
                            <Checkbox
                              checked={member.isParticipating}
                              onCheckedChange={() => toggleParticipation(member.id)}
-                             className="border-slate-600"
+                             className="border-slate-600 h-5 w-5"
                            />
                            <div className="flex-1 min-w-0">
-                             <div className="flex items-center gap-2">
-                               <span className="text-white font-medium">
-                                 {member.lastName}, {member.firstName}
-                               </span>
-                               {member.isGuest && (
-                                 <Badge className="bg-purple-900/50 text-purple-300 text-[10px] px-1.5 py-0">Guest</Badge>
-                               )}
-                             </div>
-                             {member.guestDojo && (
-                               <span className="text-xs text-slate-500">{member.guestDojo}</span>
-                             )}
+                             <span className="text-white text-sm">
+                               {member.lastName}, {member.firstName}
+                               {member.isGuest && <span className="text-purple-400 text-xs ml-1">•</span>}
+                             </span>
                            </div>
-                           <Badge 
-                             variant="outline" 
-                             className={`text-xs ${group?.isNonBogu ? 'border-orange-600 text-orange-400 bg-orange-950/30' : 'border-slate-600 text-slate-400'}`}
-                           >
+                           <span className={`text-xs px-2 py-0.5 rounded ${group?.isNonBogu ? 'bg-orange-900/40 text-orange-400' : 'bg-slate-800 text-slate-400'}`}>
                              {group?.name || member.group}
-                           </Badge>
-                           <Button
-                             variant="ghost"
-                             size="icon"
+                           </span>
+                           <button
                              onClick={() => deleteMember(member.id)}
-                             className="h-8 w-8 text-slate-500 hover:text-red-400 hover:bg-red-950/30"
+                             className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-950/30"
                            >
                              <Trash2 className="w-4 h-4" />
                            </Button>
