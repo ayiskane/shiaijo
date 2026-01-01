@@ -927,7 +927,7 @@ function AdminPortal({
             </Badge>
           </div>
           <Button 
-              variant="ghost" className="h-8 w-8late-700" 
+              variant="ghost" className="h-8 w-8" 
               size="sm"
               onClick={async () => {
                 const saved = await loadFromStorage()
@@ -947,7 +947,7 @@ function AdminPortal({
             >
               <RefreshCw className="w-4 h-4" />
             </Button>
-            <Button variant="ghost" className="h-8 w-8late-700" size="sm" onClick={onSwitchPortal}>
+            <Button variant="ghost" className="h-8 w-8" size="sm" onClick={onSwitchPortal}>
             Switch Portal
           </Button>
         </div>
@@ -992,11 +992,10 @@ function AdminPortal({
                   <div className="flex-1 relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300" />
                     <Input
-                      className="bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
+                      className="pl-10 bg-slate-800 border-slate-600 text-white placeholder:text-slate-400"
                       placeholder="Search members..."
                       value={searchQuery}
                       onChange={e => setSearchQuery(e.target.value)}
-                      className="pl-10 bg-slate-800 border-slate-600 text-white"
                     />
                   </div>
                   <Select value={filterGroup} onValueChange={setFilterGroup}>
@@ -1083,8 +1082,8 @@ function AdminPortal({
                 ))}
               </div>
 
-              <Button variant="ghost" className="h-8 w-8late-700" size="sm" onClick={deselectAll}>
-                <RefreshCw className="w-4 h-4 mr-2" />
+              <Button variant="ghost" className="h-8 w-8 w-4 h-4 mr-2" size="sm" onClick={deselectAll}>
+                <RefreshCw />
                 Reset All
               </Button>
 
@@ -1145,7 +1144,7 @@ function AdminPortal({
                                  {member.lastName}, {member.firstName}
                                </span>
                                {member.isGuest && (
-                                 <Badge variant="ghost" className="h-8 w-8late-700 bg-purple-900 text-purple-200">Guest</Badge>
+                                 <Badge variant="secondary" className="bg-purple-900 text-purple-200">Guest</Badge>
                                )}
                              </div>
                              {member.guestDojo && (
@@ -1159,7 +1158,7 @@ function AdminPortal({
                              {group?.name || member.group}
                            </Badge>
                            <Button
-                             variant="ghost" className="h-8 w-8late-700"
+                             variant="ghost" className="h-8 w-8"
                              size="icon"
                              onClick={() => deleteMember(member.id)}
                              className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
@@ -1321,7 +1320,7 @@ function GroupsManager({
                     <div className="flex gap-1">
                       <Button
                         size="icon"
-                        variant="ghost" className="h-8 w-8late-700"
+                        variant="ghost" className="h-8 w-8"
                         onClick={() => {
                           updateGroup(group.id, { name: editingGroup.name })
                           setEditingGroup(null)
@@ -1332,7 +1331,7 @@ function GroupsManager({
                       </Button>
                       <Button
                         size="icon"
-                        variant="ghost" className="h-8 w-8late-700"
+                        variant="ghost" className="h-8 w-8"
                         onClick={() => setEditingGroup(null)}
                         className="text-slate-300"
                       >
@@ -1343,7 +1342,7 @@ function GroupsManager({
                     <div className="flex gap-1">
                       <Button
                         size="icon"
-                        variant="ghost" className="h-8 w-8late-700"
+                        variant="ghost" className="h-8 w-8"
                         onClick={() => setEditingGroup(group)}
                         className="text-slate-300 hover:text-white"
                       >
@@ -1351,7 +1350,7 @@ function GroupsManager({
                       </Button>
                       <Button
                         size="icon"
-                        variant="ghost" className="h-8 w-8late-700"
+                        variant="ghost" className="h-8 w-8"
                         onClick={() => deleteGroup(group.id)}
                         className="text-red-400 hover:text-red-300"
                       >
@@ -1713,13 +1712,13 @@ function TournamentManager({
                         </div>
                         {(tournament.status === 'setup' || (tournament.status === 'in_progress' && match.status === 'pending')) && (
                           <div className="flex gap-1">
-                            <Button size="icon" variant="ghost" className="h-8 w-8late-700" onClick={() => swapMatchCourt(match.id)} className="h-8 w-8" title="Swap court">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 h-8 w-8" onClick={() => swapMatchCourt(match.id)} title="Swap court">
                               <ArrowLeftRight className="w-3 h-3" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8late-700" onClick={() => moveMatchInQueue(match.id, 'up')} className="h-8 w-8">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 h-8 w-8" onClick={() => moveMatchInQueue(match.id, 'up')}>
                               <ChevronLeft className="w-3 h-3 rotate-90" />
                             </Button>
-                            <Button size="icon" variant="ghost" className="h-8 w-8late-700" onClick={() => moveMatchInQueue(match.id, 'down')} className="h-8 w-8">
+                            <Button size="icon" variant="ghost" className="h-8 w-8 h-8 w-8" onClick={() => moveMatchInQueue(match.id, 'down')}>
                               <ChevronRight className="w-3 h-3 rotate-90" />
                             </Button>
                           </div>
@@ -2002,7 +2001,7 @@ function HistoryView({
               </div>
               <Button
                 size="icon"
-                variant="ghost" className="h-8 w-8late-700"
+                variant="ghost" className="h-8 w-8"
                 onClick={() => deleteHistoryEntry(entry.id)}
                 className="text-red-400 hover:text-red-300"
               >
@@ -2747,7 +2746,7 @@ function CourtkeeperPortal({
             >
               Court B
             </Button>
-            <Button variant="ghost" className="h-8 w-8late-700" size="sm" onClick={onSwitchPortal}>Exit</Button>
+            <Button variant="ghost" className="h-8 w-8" size="sm" onClick={onSwitchPortal}>Exit</Button>
           </div>
         </div>
       </header>
@@ -2812,7 +2811,7 @@ function CourtkeeperPortal({
                     onClick={toggleTimer}
                     className={timerRunning ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'}
                   >
-                    {timerRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+                    {timerRunning ? <Pause className="w-5 h-5 mr-2 w-5 h-5 mr-2" /> : <Play />}
                     {timerRunning ? 'Pause' : 'Start'}
                   </Button>
                   <Button size="lg" variant="outline" onClick={resetTimer} className="border-slate-500 bg-slate-800/40 hover:bg-slate-600/50">
