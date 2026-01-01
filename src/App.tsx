@@ -575,11 +575,9 @@ export default function App() {
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a1017] flex flex-col items-center justify-center">
-        <img 
-          src="/renbu-logo.png" 
-          alt="Renbu Kendo" 
-          className="w-24 h-24 mb-6 animate-pulse"
-        />
+        <div className="mb-6 animate-pulse">
+          <RenbuLogo size={96} glow />
+        </div>
         <div className="text-white text-xl">Loading...</div>
       </div>
     )
@@ -1002,7 +1000,7 @@ function AdminPortal({
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
-              <img src="/renbu-logo.png" alt="Renbu" className="w-6 h-6" />
+              <RenbuLogo size={24} glow />
             </div>
             {!sidebarCollapsed && (
               <div>
@@ -1093,7 +1091,7 @@ function AdminPortal({
             <div className="p-4 border-b border-white/5">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-                  <img src="/renbu-logo.png" alt="Renbu" className="w-6 h-6" />
+                  <RenbuLogo size={24} glow />
                 </div>
                 <div>
                   <h1 className="font-bold text-white">Shiaijo</h1>
@@ -1137,7 +1135,7 @@ function AdminPortal({
         </Sheet>
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
-            <img src="/renbu-logo.png" alt="Renbu" className="w-5 h-5" />
+            <RenbuLogo size={20} glow />
           </div>
           <span className="font-semibold">Shiaijo</span>
         </div>
