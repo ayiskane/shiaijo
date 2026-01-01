@@ -2417,7 +2417,7 @@ function CourtkeeperPortal({
   getGroupById: (id: string) => Group | undefined
 }) {
   const [selectedCourt, setSelectedCourt] = useState<'A' | 'B'>('A')
-  const [showWinnerPrompt, setShowWinnerPrompt] = useState<{show: boolean, winner: 'player1' | 'player2' | null}>({show: false, winner: null})
+  const [lastMatchId, setLastMatchId] = useState<string | null>(null)
   
   const tournament = state.currentTournament
   
@@ -2430,15 +2430,34 @@ function CourtkeeperPortal({
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
   const currentMatches = selectedCourt === 'A' ? courtAMatches : courtBMatches
   
-  // Safe accessors for scores (handles undefined from storage)
-  const p1Score = currentMatch?.player1Score || []
-  const p2Score = currentMatch?.player2Score || []
-  
   const timerSeconds = selectedCourt === 'A' ? state.timerSecondsA : state.timerSecondsB
   const timerRunning = selectedCourt === 'A' ? state.timerRunningA : state.timerRunningB
   
   const group = currentMatch ? getGroupById(currentMatch.groupId) : null
-  const isHantei = currentMatch?.isHantei || false
+  const player1 = currentMatch ? getMemberById(currentMatch.player1Id) : null
+  const player2 = currentMatch ? getMemberById(currentMatch.player2Id) : null
+  
+  // Safe accessors
+  const p1Score = currentMatch?.player1Score || []
+  const p2Score = currentMatch?.player2Score || []
+  const p1Hansoku = currentMatch?.player1Hansoku || 0
+  const p2Hansoku = currentMatch?.player2Hansoku || 0
+  const matchType = currentMatch?.matchType || 'sanbon'
+  const timerDuration = currentMatch?.timerDuration || 180
+  const winTarget = matchType === 'sanbon' ? 2 : 1
+
+  // Auto-reset timer when match changes
+  useEffect(() => {
+    if (currentMatch && currentMatch.id !== lastMatchId) {
+      setLastMatchId(currentMatch.id)
+      // Reset timer for new match
+      if (selectedCourt === 'A') {
+        setState(prev => ({ ...prev, timerSecondsA: 0, timerRunningA: false }))
+      } else {
+        setState(prev => ({ ...prev, timerSecondsB: 0, timerRunningB: false }))
+      }
+    }
+  }, [currentMatch?.id, selectedCourt])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -2462,20 +2481,64 @@ function CourtkeeperPortal({
     }
   }
 
+  // Update match settings (timer duration, match type)
+  const updateMatchSettings = (field: 'timerDuration' | 'matchType', value: number | string) => {
+    if (!tournament || !currentMatch) return
+    const updatedMatches = tournament.matches.map(m => 
+      m.id === currentMatch.id ? { ...m, [field]: value } : m
+    )
+    setState(prev => ({
+      ...prev,
+      currentTournament: { ...tournament, matches: updatedMatches }
+    }))
+  }
+
+  // Score type definitions with circled letters
+  const scoreTypes = [
+    { id: 1, name: 'Men', letter: 'M', circle: 'Ⓜ' },
+    { id: 2, name: 'Kote', letter: 'K', circle: 'Ⓚ' },
+    { id: 3, name: 'Do', letter: 'D', circle: 'Ⓓ' },
+    { id: 4, name: 'Tsuki', letter: 'T', circle: 'Ⓣ' },
+    { id: 5, name: 'Hansoku', letter: 'H', circle: 'Ⓗ' }, // Point from opponent's 2 hansoku
+  ]
+
+  // Calculate effective points (including hansoku-derived points)
+  const getEffectiveScore = (scores: number[], opponentHansoku: number) => {
+    const directPoints = scores.length
+    const hansokuPoints = Math.floor(opponentHansoku / 2)
+    return directPoints + hansokuPoints
+  }
+
+  const p1EffectiveScore = getEffectiveScore(p1Score, p2Hansoku)
+  const p2EffectiveScore = getEffectiveScore(p2Score, p1Hansoku)
+
+  // Calculate max hansoku allowed (if opponent has points, max is 2 less per point)
+  const getMaxHansoku = (ownScore: number[], opponentScore: number[], opponentHansoku: number) => {
+    // Base: 4 hansoku max if no one scored
+    // Each opponent direct point reduces max by 2
+    // Each pair of own hansoku (that gave opponent a point) also counts
+    const opponentDirectPoints = opponentScore.length
+    const hansokuPointsGiven = Math.floor(opponentHansoku / 2)
+    const totalOpponentPoints = opponentDirectPoints + hansokuPointsGiven
+    
+    if (totalOpponentPoints >= 2) return 0 // Opponent already won
+    if (totalOpponentPoints === 1) return 1 // Can only get 1 more (2 would give opponent win)
+    return 4 // No restrictions yet
+  }
+
+  const p1MaxHansoku = getMaxHansoku(p1Score, p2Score, p1Hansoku)
+  const p2MaxHansoku = getMaxHansoku(p2Score, p1Score, p2Hansoku)
+
   const addScore = (player: 'player1' | 'player2', scoreType: number) => {
     if (!tournament || !currentMatch) return
 
-    const updatedMatches = (tournament.matches || []).map(m => {
+    const updatedMatches = tournament.matches.map(m => {
       if (m.id === currentMatch.id) {
-        const newScore = player === 'player1' 
-          ? [...m.player1Score, scoreType]
-          : [...m.player2Score, scoreType]
-        
         return {
           ...m,
           status: 'in_progress' as const,
-          player1Score: player === 'player1' ? newScore : m.player1Score,
-          player2Score: player === 'player2' ? newScore : m.player2Score,
+          player1Score: player === 'player1' ? [...m.player1Score, scoreType] : m.player1Score,
+          player2Score: player === 'player2' ? [...m.player2Score, scoreType] : m.player2Score,
         }
       }
       return m
@@ -2485,34 +2548,43 @@ function CourtkeeperPortal({
       ...prev,
       currentTournament: { ...tournament, matches: updatedMatches }
     }))
+  }
+
+  const addHansoku = (player: 'player1' | 'player2') => {
+    if (!tournament || !currentMatch) return
     
-    // Check for winner after scoring
-    const updatedMatch = updatedMatches.find(m => m.id === currentMatch.id)
-    if (updatedMatch) {
-      const p1Score = (updatedMatch.player1Score || []).length
-      const p2Score = (updatedMatch.player2Score || []).length
-      if (p1Score >= 2) {
-        setShowWinnerPrompt({ show: true, winner: 'player1' })
-      } else if (p2Score >= 2) {
-        setShowWinnerPrompt({ show: true, winner: 'player2' })
-      }
+    const currentHansoku = player === 'player1' ? p1Hansoku : p2Hansoku
+    const maxHansoku = player === 'player1' ? p1MaxHansoku : p2MaxHansoku
+    
+    if (currentHansoku >= maxHansoku) {
+      toast.error(`Maximum hansoku reached for this player`)
+      return
     }
-  }
 
-  const removeScore = (player: 'player1' | 'player2', index: number) => {
-    if (!tournament || !currentMatch) return
+    const newHansoku = currentHansoku + 1
+    const opponent = player === 'player1' ? 'player2' : 'player1'
+    
+    // Check if this hansoku gives opponent a point (every 2nd hansoku)
+    const givesPoint = newHansoku % 2 === 0
 
-    const updatedMatches = (tournament.matches || []).map(m => {
+    const updatedMatches = tournament.matches.map(m => {
       if (m.id === currentMatch.id) {
-        return {
-          ...m,
-          player1Score: player === 'player1' 
-            ? m.player1Score.filter((_, i) => i !== index) 
-            : m.player1Score,
-          player2Score: player === 'player2' 
-            ? m.player2Score.filter((_, i) => i !== index) 
-            : m.player2Score,
+        const update: Partial<Match> = {
+          status: 'in_progress' as const,
+          player1Hansoku: player === 'player1' ? newHansoku : m.player1Hansoku,
+          player2Hansoku: player === 'player2' ? newHansoku : m.player2Hansoku,
         }
+        
+        // Add hansoku-derived point to opponent's score
+        if (givesPoint) {
+          if (opponent === 'player1') {
+            update.player1Score = [...m.player1Score, 5] // 5 = Hansoku point
+          } else {
+            update.player2Score = [...m.player2Score, 5]
+          }
+        }
+        
+        return { ...m, ...update }
       }
       return m
     })
@@ -2521,76 +2593,98 @@ function CourtkeeperPortal({
       ...prev,
       currentTournament: { ...tournament, matches: updatedMatches }
     }))
+
+    if (givesPoint) {
+      toast.success(`Hansoku! Point awarded to ${opponent === 'player1' ? 'AKA' : 'SHIRO'}`)
+    }
   }
 
-  const undoScore = (player: 'player1' | 'player2') => {
+  const removeLastScore = (player: 'player1' | 'player2') => {
     if (!tournament || !currentMatch) return
-    const scores = player === 'player1' ? currentMatch.player1Score : currentMatch.player2Score
-    if (scores.length > 0) {
-      removeScore(player, scores.length - 1)
-    }
+    const scores = player === 'player1' ? p1Score : p2Score
+    if (scores.length === 0) return
+
+    const lastScore = scores[scores.length - 1]
+    
+    const updatedMatches = tournament.matches.map(m => {
+      if (m.id === currentMatch.id) {
+        const update: Partial<Match> = {}
+        
+        if (player === 'player1') {
+          update.player1Score = m.player1Score.slice(0, -1)
+          // If it was a hansoku point, also reduce opponent's hansoku count
+          if (lastScore === 5) {
+            update.player2Hansoku = Math.max(0, (m.player2Hansoku || 0) - 2)
+          }
+        } else {
+          update.player2Score = m.player2Score.slice(0, -1)
+          if (lastScore === 5) {
+            update.player1Hansoku = Math.max(0, (m.player1Hansoku || 0) - 2)
+          }
+        }
+        
+        return { ...m, ...update }
+      }
+      return m
+    })
+
+    setState(prev => ({
+      ...prev,
+      currentTournament: { ...tournament, matches: updatedMatches }
+    }))
   }
 
   const completeMatch = (winner: 'player1' | 'player2' | 'draw') => {
     if (!tournament || !currentMatch) return
 
-    const updatedMatches = (tournament.matches || []).map(m => {
+    const updatedMatches = tournament.matches.map(m => {
       if (m.id === currentMatch.id) {
-        return { ...m, status: 'completed' as const, winner }
+        return {
+          ...m,
+          status: 'completed' as const,
+          winner: winner === 'draw' ? 'draw' : winner,
+          actualDuration: timerSeconds,
+        }
       }
       return m
     })
 
     setState(prev => ({
       ...prev,
-      currentTournament: { ...tournament, matches: updatedMatches },
-      timerSecondsA: selectedCourt === 'A' ? 0 : prev.timerSecondsA,
-      timerSecondsB: selectedCourt === 'B' ? 0 : prev.timerSecondsB,
-      timerRunningA: selectedCourt === 'A' ? false : prev.timerRunningA,
-      timerRunningB: selectedCourt === 'B' ? false : prev.timerRunningB,
+      currentTournament: { ...tournament, matches: updatedMatches }
     }))
-
-    setShowWinnerPrompt({ show: false, winner: null })
-    toast.success('Match completed!')
+    
+    toast.success(winner === 'draw' ? 'Match ended in draw' : `${winner === 'player1' ? 'AKA' : 'SHIRO'} wins!`)
   }
 
-  const swapMatchToCourt = (matchId: string, newCourt: 'A' | 'B') => {
-    if (!tournament) return
-    setState(prev => ({
-      ...prev,
-      currentTournament: {
-        ...tournament,
-        matches: (tournament.matches || []).map(m => 
-          m.id === matchId ? { ...m, court: newCourt } : m
-        )
-      }
-    }))
-    toast.success(`Match moved to Court ${newCourt}`)
+  // Render score display with circled letters
+  const renderScoreDisplay = (scores: number[], opponentHansoku: number) => {
+    const hansokuPoints = Math.floor(opponentHansoku / 2)
+    const allPoints = [
+      ...scores.map(s => scoreTypes.find(t => t.id === s)),
+      ...Array(hansokuPoints).fill(scoreTypes.find(t => t.id === 5))
+    ].filter(Boolean)
+    
+    return (
+      <div className="flex items-center gap-1">
+        {allPoints.map((type, i) => (
+          <span key={i} className="text-2xl">{type?.circle}</span>
+        ))}
+        {allPoints.length === 0 && <span className="text-[#6b8fad] text-sm">No points</span>}
+      </div>
+    )
   }
 
-  const moveInQueue = (matchId: string, direction: 'up' | 'down') => {
-    if (!tournament) return
-    const courtMatches = currentMatches.filter(m => m.status === 'pending')
-    const idx = courtMatches.findIndex(m => m.id === matchId)
-    if (idx === -1) return
-    
-    const newIdx = direction === 'up' ? idx - 1 : idx + 1
-    if (newIdx < 0 || newIdx >= courtMatches.length) return
-    
-    const allMatches = [...tournament.matches]
-    const match1 = allMatches.find(m => m.id === matchId)!
-    const match2Idx = allMatches.findIndex(m => m.id === courtMatches[newIdx].id)
-    
-    if (match1 && match2Idx !== -1) {
-      const tempOrder = match1.orderIndex
-      match1.orderIndex = allMatches[match2Idx].orderIndex
-      allMatches[match2Idx].orderIndex = tempOrder
-    }
-    
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, matches: allMatches }
-    }))
+  // Render hansoku indicator
+  const renderHansokuIndicator = (count: number, max: number) => {
+    return (
+      <div className="flex items-center gap-1">
+        {Array(count).fill(0).map((_, i) => (
+          <span key={i} className="text-amber-500">△</span>
+        ))}
+        {count < max && <span className="text-[#4a6a8a]">△</span>}
+      </div>
+    )
   }
 
   // No tournament or not started
@@ -2605,9 +2699,9 @@ function CourtkeeperPortal({
           <CardContent className="text-center space-y-4">
             <img src="/renbu-logo.png" alt="Renbu" className="w-20 h-20 mx-auto opacity-50" />
             <p className="text-[#b8d4ec]">
-              {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament has been generated yet'}
+              {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament generated yet'}
             </p>
-            <Button onClick={onSwitchPortal} variant="outline" className="border-orange-500 text-orange-500 hover:bg-orange-500/10">
+            <Button onClick={onSwitchPortal} variant="outline" className="border-orange-500 text-orange-400">
               Go to Admin Portal
             </Button>
           </CardContent>
@@ -2616,208 +2710,49 @@ function CourtkeeperPortal({
     )
   }
 
-  const player1 = currentMatch ? getMemberById(currentMatch.player1Id) : null
-  const player2 = currentMatch ? getMemberById(currentMatch.player2Id) : null
-
-  const scoreTypes = [
-    { id: 1, name: 'Men', short: 'M', color: 'bg-[#1e3a5f] hover:bg-[#2a4a6f]' },
-    { id: 2, name: 'Kote', short: 'K', color: 'bg-emerald-600 hover:bg-emerald-700' },
-    { id: 3, name: 'Do', short: 'D', color: 'bg-[#1e3a5f] hover:bg-[#2a4a6f]' },
-    { id: 4, name: 'Tsuki', short: 'T', color: 'bg-cyan-600 hover:bg-cyan-700' },
-    { id: 5, name: 'Hansoku', short: 'H', color: 'bg-amber-600 hover:bg-amber-700' },
-  ]
-
-  // Render queue for a court
-  // Drag and drop for match reordering
-  const [draggedMatch, setDraggedMatch] = useState<string | null>(null)
-  
-  const handleDragStart = (matchId: string) => setDraggedMatch(matchId)
-  
-  const handleDrop = (targetIdx: number, court: 'A' | 'B') => {
-    if (!draggedMatch || !tournament) return
-    const courtMatches = court === 'A' ? courtAMatches : courtBMatches
-    const pendingMatches = courtMatches.filter(m => m.status !== 'completed').sort((a, b) => a.orderIndex - b.orderIndex)
-    const draggedIdx = pendingMatches.findIndex(m => m.id === draggedMatch)
-    if (draggedIdx === -1 || draggedIdx === targetIdx) { setDraggedMatch(null); return }
-    const newOrder = [...pendingMatches]
-    const [removed] = newOrder.splice(draggedIdx, 1)
-    newOrder.splice(targetIdx, 0, removed)
-    const updatedMatches = tournament.matches.map(m => {
-      const newIdx = newOrder.findIndex(nm => nm.id === m.id)
-      return newIdx !== -1 ? { ...m, orderIndex: newIdx } : m
-    })
-    setState(prev => ({ ...prev, currentTournament: { ...tournament, matches: updatedMatches } }))
-    setDraggedMatch(null)
-  }
-
-  const renderCourtQueue = (court: 'A' | 'B', matches: Match[]) => {
-    const pendingMatches = matches.filter(m => m.status !== 'completed').sort((a, b) => a.orderIndex - b.orderIndex)
-    const completedMatches = matches.filter(m => m.status === 'completed')
-    
+  // No current match
+  if (!currentMatch) {
     return (
-      <div className="space-y-3">
-        <div className="flex items-center gap-2">
-          <div className={`w-3 h-3 rounded-full ${court === 'A' ? 'bg-amber-500' : 'bg-[#1e3a5f]'}`}></div>
-          <h3 className={`font-semibold ${court === 'A' ? 'text-amber-400' : 'text-[#7ab0e0]'}`}>
-            Court {court}
-          </h3>
-          <span className="text-[#6b8fad] text-sm">({pendingMatches.length})</span>
-        </div>
-        <ScrollArea className="h-[280px]">
-          <div className="space-y-2 pr-2">
-            {pendingMatches.length === 0 && (
-              <div className="text-[#6b8fad] text-sm text-center py-8 bg-[#142130]/50 rounded-lg border border-dashed border-[#2a4a6f]">
-                No pending matches
-              </div>
-            )}
-            {pendingMatches.map((match, idx) => {
-              const p1 = getMemberById(match.player1Id)
-              const p2 = getMemberById(match.player2Id)
-              const matchGroup = getGroupById(match.groupId)
-              const isCurrent = match.status === 'in_progress' || idx === 0
-              
-              const isDragging = draggedMatch === match.id
-              return (
-                <div
-                  key={match.id}
-                  draggable
-                  onDragStart={() => handleDragStart(match.id)}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDrop={() => handleDrop(idx, court)}
-                  className={`p-3 rounded-lg cursor-grab active:cursor-grabbing transition-all ${
-                    isDragging ? 'opacity-50 scale-95' : ''
-                  } ${
-                    isCurrent 
-                      ? court === 'A' ? 'bg-amber-900/20 border-l-4 border-amber-500' : 'bg-[#1e3a5f]/30 border-l-4 border-[#1e3a5f]'
-                      : 'bg-[#142130] hover:bg-[#1a2d42] border-l-4 border-transparent'
-                  }`}
-                >
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-[#8fb3d1] text-xs">#{idx + 1}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded bg-[#1e3a5f]/30 text-[#8fb3d1]">{matchGroup?.name || '?'}</span>
-                    {isCurrent && <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-auto ${court === 'A' ? 'bg-amber-500/20 text-amber-400' : 'bg-[#1e3a5f]/50 text-[#7ab0e0]'}`}>NOW</span>}
-                  </div>
-                  <div className="flex items-center justify-center gap-2 text-sm">
-                    <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
-                    <span className="font-medium text-white truncate max-w-[80px]">{p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}</span>
-                    <span className="text-[#6b8fad] text-xs">vs</span>
-                    <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
-                    <span className="font-medium text-white truncate max-w-[80px]">{p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}</span>
-                  </div>
-                  <div className="flex items-center justify-center gap-1 mt-2 opacity-60 hover:opacity-100 transition-opacity">
-                    <button 
-                      className="px-2 py-1 text-[10px] rounded bg-[#1e3a5f]/50 hover:bg-[#1e3a5f] text-[#8fb3d1] transition-colors"
-                      onClick={() => swapMatchToCourt(match.id, court === 'A' ? 'B' : 'A')}
-                    >
-                      → {court === 'A' ? 'B' : 'A'}
-                    </button>
-                    <button 
-                      className="px-2 py-1 text-[10px] rounded bg-[#1e3a5f]/50 hover:bg-[#1e3a5f] text-[#8fb3d1] transition-colors disabled:opacity-30"
-                      onClick={() => moveInQueue(match.id, 'up')}
-                      disabled={idx === 0}
-                    >
-                      ▲
-                    </button>
-                    <button 
-                      className="px-2 py-1 text-[10px] rounded bg-[#1e3a5f]/50 hover:bg-[#1e3a5f] text-[#8fb3d1] transition-colors disabled:opacity-30"
-                      onClick={() => moveInQueue(match.id, 'down')}
-                      disabled={idx === pendingMatches.length - 1}
-                    >
-                      ▼
-                    </button>
-                  </div>
-                </div>
-              )
-            })}
-            {completedMatches.length > 0 && (
-              <>
-                <Separator className="my-2 bg-[#1e3a5f]" />
-                <p className="text-xs text-[#8fb3d1]">Completed ({completedMatches.length})</p>
-                {completedMatches.slice(-5).reverse().map(match => {
-                  const p1 = getMemberById(match.player1Id)
-                  const p2 = getMemberById(match.player2Id)
-                  return (
-                    <div key={match.id} className="p-2 bg-[#243a52]/20 rounded text-sm text-center">
-                      <span className="w-2 h-2 rounded-full bg-red-500 inline-block"></span>
-                      <span className={match.winner === 'player1' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
-                        {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}
-                      </span>
-                      <span className="text-[#8fb3d1] mx-2">vs</span>
-                      <span className="w-2 h-2 rounded-full bg-white inline-block"></span>
-                      <span className={match.winner === 'player2' ? 'text-emerald-400 font-semibold ml-1' : 'text-white ml-1'}>
-                        {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}
-                      </span>
-                      <span className="text-[#b8d4ec] ml-2">
-                        {match.isHantei ? '(判定)' : `${(match.player1Score || []).length}-${(match.player2Score || []).length}`}
-                      </span>
-                    </div>
-                  )
-                })}
-              </>
-            )}
-          </div>
-        </ScrollArea>
+      <div className="min-h-screen bg-[#0a1017] flex items-center justify-center p-4">
+        <Toaster theme="dark" position="top-center" />
+        <Card className="bg-[#0f1a24] border-[#1e3a5f] max-w-md w-full">
+          <CardHeader>
+            <CardTitle className="text-white text-center">All Matches Complete!</CardTitle>
+          </CardHeader>
+          <CardContent className="text-center space-y-4">
+            <Trophy className="w-16 h-16 text-amber-500 mx-auto" />
+            <p className="text-[#b8d4ec]">Court {selectedCourt} has no more matches</p>
+            <div className="flex gap-2 justify-center">
+              <Button onClick={() => setSelectedCourt(selectedCourt === 'A' ? 'B' : 'A')} className="bg-[#1e3a5f]">
+                Switch to Court {selectedCourt === 'A' ? 'B' : 'A'}
+              </Button>
+              <Button onClick={onSwitchPortal} variant="outline" className="border-orange-500 text-orange-400">
+                Admin Portal
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     )
   }
 
-  // Winner Prompt Dialog
-  const WinnerPromptDialog = () => {
-    if (!showWinnerPrompt.show || !showWinnerPrompt.winner || !currentMatch) return null
-    
-    const winnerPlayer = showWinnerPrompt.winner === 'player1' ? player1 : player2
-    const winnerColor = showWinnerPrompt.winner === 'player1' ? 'red' : 'white'
-    
-    return (
-      <Dialog open={showWinnerPrompt.show} onOpenChange={() => setShowWinnerPrompt({ show: false, winner: null })}>
-        <DialogContent className="bg-[#0f1a24] border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]">
-          <DialogHeader>
-            <DialogTitle className="text-white text-center text-2xl">Match Winner!</DialogTitle>
-          </DialogHeader>
-          <div className={`p-8 rounded-lg text-center ${winnerColor === 'red' ? 'bg-red-900/30 border-2 border-amber-600' : 'bg-[#2e4a65]/30 border-2 border-[#4a7ab0]'}`}>
-            <Award className={`w-16 h-16 mx-auto mb-4 ${winnerColor === 'red' ? 'text-amber-400' : 'text-[#7ab0e0]'}`} />
-            <p className={`text-3xl font-bold ${winnerColor === 'red' ? 'text-amber-400' : 'text-[#7ab0e0]'}`}>
-              {winnerPlayer ? formatDisplayName(winnerPlayer, state.members, state.useFirstNamesOnly) : '?'}
-            </p>
-            <p className="text-[#b8d4ec] mt-2">{winnerColor === 'red' ? 'AKA' : 'SHIRO'} Wins!</p>
-          </div>
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setShowWinnerPrompt({ show: false, winner: null })}>
-              Continue Match
-            </Button>
-            <Button 
-              onClick={() => completeMatch(showWinnerPrompt.winner!)}
-              className={winnerColor === 'red' ? 'bg-amber-600 hover:bg-amber-700' : 'bg-[#1e3a5f] hover:bg-[#2a4a6f] text-white'}
-            >
-              Complete Match
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    )
-  }
-
   return (
-    <div className="min-h-screen bg-[#0a1017]">
+    <div className="min-h-screen bg-[#0a1017] text-white">
       <Toaster theme="dark" position="top-center" />
-      <WinnerPromptDialog />
       
       {/* Header */}
-      <header className="bg-[#0f1a24] border-b border-white/5 backdrop-blur-md px-4 py-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-3">
+      <header className="bg-[#0f1a24] border-b border-[#1e3a5f] p-3">
+        <div className="flex items-center justify-between max-w-2xl mx-auto">
+          <div className="flex items-center gap-2">
             <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
-            <h1 className="text-xl font-bold text-white">Courtkeeper</h1>
-            <Badge className={selectedCourt === 'A' ? 'bg-amber-600' : 'bg-[#1e3a5f]'}>
-              Court {selectedCourt}
-            </Badge>
+            <span className="font-bold">Courtkeeper</span>
           </div>
           <div className="flex items-center gap-2">
             <Button
               size="sm"
               variant={selectedCourt === 'A' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('A')}
-              className={selectedCourt === 'A' ? 'bg-amber-600 hover:bg-amber-700' : 'border-[#2a4a6f]'}
+              className={selectedCourt === 'A' ? 'bg-amber-600' : 'border-[#2a4a6f]'}
             >
               Court A
             </Button>
@@ -2825,294 +2760,259 @@ function CourtkeeperPortal({
               size="sm"
               variant={selectedCourt === 'B' ? 'default' : 'outline'}
               onClick={() => setSelectedCourt('B')}
-              className={selectedCourt === 'B' ? 'bg-[#1e3a5f] hover:bg-[#2a4a6f] text-white' : 'border-[#2a4a6f]'}
+              className={selectedCourt === 'B' ? 'bg-[#1e3a5f]' : 'border-[#2a4a6f]'}
             >
               Court B
             </Button>
-            <Button variant="ghost" className="h-8 w-8" size="sm" onClick={onSwitchPortal}>Exit</Button>
+            <Button variant="ghost" size="sm" onClick={onSwitchPortal}>
+              <ArrowLeftRight className="w-4 h-4" />
+            </Button>
           </div>
         </div>
       </header>
 
-      <main className={`p-4 ${!isMobile ? 'mr-80' : ''}`}>
-        {!currentMatch ? (
-          <Card className="bg-[#1a2d42] border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]">
-            <CardContent className="p-8 text-center">
-              <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-              <p className="text-white text-xl">
-                {currentMatches.length === 0 
-                  ? `No matches assigned to Court ${selectedCourt}`
-                  : `All Court ${selectedCourt} matches complete!`}
-              </p>
-              <p className="text-[#b8d4ec] mt-2">
-                {currentMatches.length === 0 
-                  ? "Matches may be assigned to the other court"
-                  : "Switch to the other court or view results"}
-              </p>
-              <div className="flex justify-center gap-4 mt-4">
-                <Button
-                  onClick={() => setSelectedCourt(selectedCourt === 'A' ? 'B' : 'A')}
-                  className={selectedCourt === 'A' ? 'bg-[#1e3a5f] hover:bg-[#2a4a6f] text-white' : 'bg-amber-600 hover:bg-amber-700'}
-                >
-                  Switch to Court {selectedCourt === 'A' ? 'B' : 'A'}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <>
-            {/* Timer Section */}
-            <Card className={`bg-[#1a2d42] border-2 mb-4 ${
-              timerSeconds >= state.timerTarget ? 'border-amber-600 animate-pulse' : 'border-[#1e3a5f]'
-            }`}>
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Timer className="w-5 h-5 text-[#b8d4ec]" />
-                    <span className="text-[#b8d4ec]">
-                      {isHantei ? 'Hantei Match (3 min)' : 'Regular Match (3 min)'}
-                    </span>
-                  </div>
-                  <Badge variant="outline" className="border-[#4a7ab0]/60 bg-[#1e3a5f]/30 border border-[#1e3a5f]/30 bg-[#142130] hover:bg-[#1e3a5f]">
-                    {group?.name || 'Unknown Group'}
-                  </Badge>
-                </div>
-                <div className="text-center my-4">
-                  <div className={`text-7xl font-mono font-bold ${
-                    timerSeconds >= state.timerTarget ? 'text-red-500' : 'text-white'
-                  }`}>
-                    {formatTime(timerSeconds)}
-                  </div>
-                  <Progress 
-                    value={(timerSeconds / state.timerTarget) * 100} 
-                    className="mt-3"
-                  />
-                </div>
-                <div className="flex justify-center gap-4">
-                  <Button
-                    size="lg"
-                    onClick={toggleTimer}
-                    className={timerRunning ? 'bg-orange-600 hover:bg-orange-700' : 'bg-emerald-600 hover:bg-emerald-700'}
-                  >
-                    {timerRunning ? <Pause className="w-5 h-5 mr-2 w-5 h-5 mr-2" /> : <Play />}
-                    {timerRunning ? 'Pause' : 'Start'}
-                  </Button>
-                  <Button size="lg" variant="outline" onClick={resetTimer} className="border-[#4a7ab0] bg-[#142130] hover:bg-[#1e3a5f]">
-                    <RotateCcw className="w-5 h-5 mr-2" />
-                    Reset
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Scoring Section */}
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              {/* Player 1 (Red/Aka) */}
-              <Card className="bg-[#1a2d42] border-2 border-red-800">
-                <CardHeader className="pb-2 bg-red-900/30">
-                  <CardTitle className="text-red-400 text-center flex items-center justify-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-red-500 inline-block"></span>
-                    AKA
-                  </CardTitle>
-                  <CardDescription className="text-center text-white text-lg font-semibold">
-                    {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '?'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  {isHantei ? (
-                    <Button
-                      size="lg"
-                      className="w-full h-24 text-2xl bg-red-700 hover:bg-red-600"
-                      onClick={() => completeMatch('player1')}
-                    >
-                      <Award className="w-8 h-8 mr-2" />
-                      AKA Wins
-                    </Button>
-                  ) : (
-                    <>
-                      <div className="text-center mb-4">
-                        <div className="text-6xl font-bold text-white">{p1Score.length}</div>
-                        <div className="flex justify-center gap-1 mt-2 min-h-[32px] flex-wrap">
-                          {p1Score.map((s, i) => {
-                            const scoreType = scoreTypes.find(t => t.id === s)
-                            return (
-                              <Badge 
-                                key={i} 
-                                className={`${scoreType?.color || 'bg-[#1e3a5f]'} cursor-pointer`}
-                                onClick={() => removeScore('player1', i)}
-                              >
-                                {scoreType?.short || '?'}
-                                <X className="w-3 h-3 ml-1" />
-                              </Badge>
-                            )
-                          })}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {scoreTypes.map(type => (
-                          <Button
-                            key={type.id}
-                            size="lg"
-                            className={`${type.color} h-14 text-lg font-bold`}
-                            onClick={() => addScore('player1', type.id)}
-                          >
-                            {type.short}
-                          </Button>
-                        ))}
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          className="border-[#2a4a6f] h-14"
-                          onClick={() => undoScore('player1')}
-                          disabled={p1Score.length === 0}
-                        >
-                          Undo
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
-
-              {/* Player 2 (White/Shiro) */}
-              <Card className="bg-[#1a2d42] border-2 border-[#4a7ab0]">
-                <CardHeader className="pb-2 bg-[#243a52]/30">
-                  <CardTitle className="text-blue-100 text-center flex items-center justify-center gap-2">
-                    <span className="w-3 h-3 rounded-full bg-white inline-block"></span>
-                    SHIRO
-                  </CardTitle>
-                  <CardDescription className="text-center text-white text-lg font-semibold">
-                    {player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : '?'}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  {isHantei ? (
-                    <Button
-                      size="lg"
-                      className="w-full h-24 text-2xl bg-[#1e3a5f] hover:bg-[#2a4a6f]"
-                      onClick={() => completeMatch('player2')}
-                    >
-                      <Award className="w-8 h-8 mr-2" />
-                      SHIRO Wins
-                    </Button>
-                  ) : (
-                    <>
-                      <div className="text-center mb-4">
-                        <div className="text-6xl font-bold text-white">{p2Score.length}</div>
-                        <div className="flex justify-center gap-1 mt-2 min-h-[32px] flex-wrap">
-                          {p2Score.map((s, i) => {
-                            const scoreType = scoreTypes.find(t => t.id === s)
-                            return (
-                              <Badge 
-                                key={i} 
-                                className={`${scoreType?.color || 'bg-[#1e3a5f]'} cursor-pointer`}
-                                onClick={() => removeScore('player2', i)}
-                              >
-                                {scoreType?.short || '?'}
-                                <X className="w-3 h-3 ml-1" />
-                              </Badge>
-                            )
-                          })}
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-3 gap-2">
-                        {scoreTypes.map(type => (
-                          <Button
-                            key={type.id}
-                            size="lg"
-                            className={`${type.color} h-14 text-lg font-bold`}
-                            onClick={() => addScore('player2', type.id)}
-                          >
-                            {type.short}
-                          </Button>
-                        ))}
-                        <Button
-                          size="lg"
-                          variant="outline"
-                          className="border-[#2a4a6f] h-14"
-                          onClick={() => undoScore('player2')}
-                          disabled={p2Score.length === 0}
-                        >
-                          Undo
-                        </Button>
-                      </div>
-                    </>
-                  )}
-                </CardContent>
-              </Card>
+      <main className="max-w-2xl mx-auto p-4 space-y-4">
+        {/* Match Info Bar */}
+        <div className="bg-[#142130] rounded-xl p-4 border border-[#1e3a5f]">
+          <div className="flex items-center justify-between flex-wrap gap-2">
+            <div className="flex items-center gap-3">
+              <span className={`px-3 py-1 rounded-lg font-bold ${selectedCourt === 'A' ? 'bg-amber-600' : 'bg-[#1e3a5f]'}`}>
+                Court {selectedCourt}
+              </span>
+              <span className="px-3 py-1 rounded-lg bg-[#1e3a5f]/50 text-[#b8d4ec]">
+                {group?.name || 'Unknown'}
+              </span>
             </div>
+            <div className="flex items-center gap-2">
+              <select 
+                value={timerDuration} 
+                onChange={(e) => updateMatchSettings('timerDuration', parseInt(e.target.value))}
+                className="bg-[#1e3a5f]/50 border border-[#2a4a6f] rounded px-2 py-1 text-sm"
+              >
+                <option value={180}>3 min</option>
+                <option value={240}>4 min</option>
+                <option value={300}>5 min</option>
+                <option value={120}>2 min</option>
+              </select>
+              <select 
+                value={matchType} 
+                onChange={(e) => updateMatchSettings('matchType', e.target.value)}
+                className="bg-[#1e3a5f]/50 border border-[#2a4a6f] rounded px-2 py-1 text-sm"
+              >
+                <option value="sanbon">Sanbon</option>
+                <option value="ippon">Ippon</option>
+              </select>
+            </div>
+          </div>
+        </div>
 
-            {/* Match Actions */}
-            {!isHantei && (
-              <Card className="bg-[#1a2d42] border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]">
-                <CardContent className="p-4">
-                  <div className="grid grid-cols-3 gap-2">
+        {/* Player 1 (AKA/Red) */}
+        <div className="bg-red-900/30 rounded-xl overflow-hidden border-2 border-red-800">
+          <div className="bg-red-900/50 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-red-500"></span>
+                <span className="font-bold text-lg text-red-200">AKA</span>
+              </div>
+              <span className="text-xl font-bold text-white">
+                {player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : '?'}
+              </span>
+            </div>
+          </div>
+          <div className="p-4 space-y-4">
+            {/* Score Display */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                {renderScoreDisplay(p1Score, p2Hansoku)}
+              </div>
+              <div className="border-l border-red-800/50 pl-4">
+                {renderHansokuIndicator(p1Hansoku, p1MaxHansoku)}
+              </div>
+            </div>
+            
+            {/* Score Buttons */}
+            {!currentMatch?.isHantei && (
+              <>
+                <div className="grid grid-cols-4 gap-2">
+                  {scoreTypes.slice(0, 4).map(type => (
                     <Button
-                      size="lg"
-                      onClick={() => completeMatch('player1')}
-                      className="bg-red-700 hover:bg-red-600 h-14"
+                      key={type.id}
+                      onClick={() => addScore('player1', type.id)}
+                      disabled={p1EffectiveScore >= winTarget}
+                      className="h-14 text-lg font-bold bg-[#1e3a5f] hover:bg-[#2a4a6f]"
                     >
-                      AKA Wins
+                      {type.letter}
                     </Button>
-                    <Button
-                      size="lg"
-                      onClick={() => completeMatch('draw')}
-                      variant="outline"
-                      className="border-[#2a4a6f] h-14"
-                    >
-                      Draw
-                    </Button>
-                    <Button
-                      size="lg"
-                      onClick={() => completeMatch('player2')}
-                      className="bg-[#1e3a5f] hover:bg-[#2a4a6f] h-14"
-                    >
-                      SHIRO Wins
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => addHansoku('player1')}
+                    disabled={p1Hansoku >= p1MaxHansoku}
+                    className="flex-1 h-12 bg-amber-700 hover:bg-amber-600"
+                  >
+                    Hansoku △
+                  </Button>
+                  <Button
+                    onClick={() => removeLastScore('player1')}
+                    disabled={p1Score.length === 0}
+                    variant="outline"
+                    className="h-12 border-[#2a4a6f]"
+                  >
+                    Undo
+                  </Button>
+                </div>
+              </>
             )}
-          </>
+            
+            {/* Hantei Button */}
+            {currentMatch?.isHantei && (
+              <Button
+                onClick={() => completeMatch('player1')}
+                className="w-full h-16 text-xl bg-red-700 hover:bg-red-600"
+              >
+                <Award className="w-6 h-6 mr-2" />
+                AKA Wins (判定)
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Player 2 (SHIRO/White) */}
+        <div className="bg-[#1e3a5f]/30 rounded-xl overflow-hidden border-2 border-[#4a7ab0]">
+          <div className="bg-[#1e3a5f]/50 px-4 py-3">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="w-3 h-3 rounded-full bg-white"></span>
+                <span className="font-bold text-lg text-blue-200">SHIRO</span>
+              </div>
+              <span className="text-xl font-bold text-white">
+                {player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : '?'}
+              </span>
+            </div>
+          </div>
+          <div className="p-4 space-y-4">
+            {/* Score Display */}
+            <div className="flex items-center justify-between">
+              <div className="flex-1">
+                {renderScoreDisplay(p2Score, p1Hansoku)}
+              </div>
+              <div className="border-l border-[#4a7ab0]/50 pl-4">
+                {renderHansokuIndicator(p2Hansoku, p2MaxHansoku)}
+              </div>
+            </div>
+            
+            {/* Score Buttons */}
+            {!currentMatch?.isHantei && (
+              <>
+                <div className="grid grid-cols-4 gap-2">
+                  {scoreTypes.slice(0, 4).map(type => (
+                    <Button
+                      key={type.id}
+                      onClick={() => addScore('player2', type.id)}
+                      disabled={p2EffectiveScore >= winTarget}
+                      className="h-14 text-lg font-bold bg-[#1e3a5f] hover:bg-[#2a4a6f]"
+                    >
+                      {type.letter}
+                    </Button>
+                  ))}
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    onClick={() => addHansoku('player2')}
+                    disabled={p2Hansoku >= p2MaxHansoku}
+                    className="flex-1 h-12 bg-amber-700 hover:bg-amber-600"
+                  >
+                    Hansoku △
+                  </Button>
+                  <Button
+                    onClick={() => removeLastScore('player2')}
+                    disabled={p2Score.length === 0}
+                    variant="outline"
+                    className="h-12 border-[#2a4a6f]"
+                  >
+                    Undo
+                  </Button>
+                </div>
+              </>
+            )}
+            
+            {/* Hantei Button */}
+            {currentMatch?.isHantei && (
+              <Button
+                onClick={() => completeMatch('player2')}
+                className="w-full h-16 text-xl bg-[#1e3a5f] hover:bg-[#2a4a6f]"
+              >
+                <Award className="w-6 h-6 mr-2" />
+                SHIRO Wins (判定)
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* Timer */}
+        <Card className={`bg-[#142130] border-2 ${timerSeconds >= timerDuration ? 'border-red-600 animate-pulse' : 'border-[#1e3a5f]'}`}>
+          <CardContent className="p-4">
+            <div className="text-center">
+              <div className={`text-6xl font-mono font-bold ${timerSeconds >= timerDuration ? 'text-red-500' : 'text-white'}`}>
+                {formatTime(timerSeconds)}
+              </div>
+              <Progress value={(timerSeconds / timerDuration) * 100} className="mt-3" />
+              <p className="text-[#6b8fad] text-sm mt-2">
+                {timerSeconds >= timerDuration ? 'Time expired!' : `Target: ${formatTime(timerDuration)}`}
+              </p>
+            </div>
+            <div className="flex justify-center gap-4 mt-4">
+              <Button
+                size="lg"
+                onClick={toggleTimer}
+                className={timerRunning ? 'bg-amber-600 hover:bg-amber-700' : 'bg-emerald-600 hover:bg-emerald-700'}
+              >
+                {timerRunning ? <Pause className="w-5 h-5 mr-2" /> : <Play className="w-5 h-5 mr-2" />}
+                {timerRunning ? 'Pause' : 'Start'}
+              </Button>
+              <Button size="lg" variant="outline" onClick={resetTimer} className="border-[#2a4a6f]">
+                <RotateCcw className="w-5 h-5 mr-2" />
+                Reset
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Match Complete Buttons */}
+        {!currentMatch?.isHantei && (
+          <div className="grid grid-cols-3 gap-2">
+            <Button
+              size="lg"
+              onClick={() => completeMatch('player1')}
+              className="bg-red-700 hover:bg-red-600 h-14"
+              disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
+            >
+              AKA Wins
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => completeMatch('draw')}
+              variant="outline"
+              className="border-[#2a4a6f] h-14"
+            >
+              Draw
+            </Button>
+            <Button
+              size="lg"
+              onClick={() => completeMatch('player2')}
+              className="bg-[#1e3a5f] hover:bg-[#2a4a6f] h-14"
+              disabled={p1EffectiveScore < winTarget && p2EffectiveScore < winTarget}
+            >
+              SHIRO Wins
+            </Button>
+          </div>
         )}
       </main>
-
-      {/* Court Queue Sidebar (Desktop) */}
-      {!isMobile && (
-        <aside className="fixed right-0 top-0 w-80 h-screen bg-[#0f1a24] border-l border-[#1e3a5f] pt-14 overflow-y-auto">
-          <div className="p-4 space-y-6">
-            {renderCourtQueue('A', courtAMatches)}
-            <Separator className="bg-[#1e3a5f]" />
-            {renderCourtQueue('B', courtBMatches)}
-          </div>
-        </aside>
-      )}
-
-      {/* Court Queue Sheet (Mobile) */}
-      {isMobile && (
-        <Sheet>
-          <SheetTrigger asChild>
-            <Button 
-              className="fixed bottom-4 right-4 rounded-full w-14 h-14 bg-orange-600 hover:bg-orange-700 shadow-lg"
-            >
-              <Menu className="w-6 h-6" />
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="bottom" className="bg-[#0f1a24] border-[#2a4a6f] backdrop-blur-md h-[70vh]">
-            <SheetHeader>
-              <SheetTitle className="text-white">Match Queues</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4 space-y-4 overflow-y-auto">
-              {renderCourtQueue('A', courtAMatches)}
-              <Separator className="bg-[#1e3a5f]" />
-              {renderCourtQueue('B', courtBMatches)}
-            </div>
-          </SheetContent>
-        </Sheet>
-      )}
     </div>
   )
 }
+
 
 // Type declaration for window.storage
 declare global {
