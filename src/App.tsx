@@ -911,345 +911,375 @@ function AdminPortal({
   // MobileNav inlined to prevent re-mounting on every render
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-[#0f0f14] text-white">
       <Toaster theme="dark" position="top-center" />
-      
-      <header className="bg-slate-900 border-b border-slate-800">
-        {/* Top bar */}
-        <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
-          <div className="flex items-center gap-2 sm:gap-3">
-            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-              <SheetTrigger asChild>
-                <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg md:hidden">
-                  <Menu className="w-5 h-5" />
-                </button>
-              </SheetTrigger>
-              <SheetContent side="left" className="bg-slate-900 border-slate-700 w-64">
-                <SheetHeader>
-                  <SheetTitle className="text-white text-left">Menu</SheetTitle>
-                </SheetHeader>
-                <div className="flex flex-col gap-1 mt-4">
-                  {['members', 'guests', 'groups', 'tournament', 'standings', 'history'].map(tab => (
-                    <button
-                      key={tab}
-                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm ${activeTab === tab ? 'bg-orange-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
-                      onClick={() => {
-                        setActiveTab(tab)
-                        setMobileNavOpen(false)
-                      }}
-                    >
-                      {tab === 'members' && <Users className="w-4 h-4" />}
-                      {tab === 'guests' && <UserPlus className="w-4 h-4" />}
-                      {tab === 'groups' && <Filter className="w-4 h-4" />}
-                      {tab === 'tournament' && <Trophy className="w-4 h-4" />}
-                      {tab === 'standings' && <Table className="w-4 h-4" />}
-                      {tab === 'history' && <History className="w-4 h-4" />}
-                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                    </button>
-                  ))}
+
+      {/* Desktop Sidebar */}
+      <aside className={`hidden md:flex flex-col fixed h-full bg-[#16161d] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
+        <div className="p-4 border-b border-white/5">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center flex-shrink-0">
+              <Layers className="w-5 h-5 text-white" />
+            </div>
+            {!sidebarCollapsed && (
+              <div>
+                <h1 className="font-bold">Shiaijo</h1>
+                <p className="text-xs text-zinc-500">Admin Portal</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <button 
+          onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+          className="absolute -right-3 top-20 w-6 h-6 bg-zinc-800 border border-zinc-700 rounded-full flex items-center justify-center hover:bg-zinc-700 transition z-10"
+        >
+          <ChevronLeft className={`w-3 h-3 text-zinc-400 transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
+        </button>
+
+        {!sidebarCollapsed && (
+          <div className="p-4 border-b border-white/5">
+            <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs text-zinc-500 uppercase tracking-wider">Session</span>
+                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-2xl font-bold">{state.members.filter(m => m.isParticipating).length}</span>
+                <span className="text-zinc-500 text-sm">participating</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <nav className="flex-1 py-4 overflow-y-auto">
+          {!sidebarCollapsed && <p className="px-4 mb-2 text-xs text-zinc-500 uppercase tracking-wider">Menu</p>}
+          {[
+            { id: 'members', icon: Users, label: 'Members' },
+            { id: 'guests', icon: UserPlus, label: 'Guests' },
+            { id: 'groups', icon: Filter, label: 'Groups' },
+            { id: 'tournament', icon: Trophy, label: 'Tournament', badge: state.currentTournament?.status === 'in_progress' ? 'Live' : null },
+            { id: 'standings', icon: Table, label: 'Standings' },
+            { id: 'history', icon: History, label: 'History' },
+          ].map(item => (
+            <button
+              key={item.id}
+              onClick={() => setActiveTab(item.id)}
+              title={sidebarCollapsed ? item.label : undefined}
+              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
+                activeTab === item.id 
+                  ? 'text-orange-400 bg-gradient-to-r from-orange-500/10 to-transparent border-l-2 border-orange-500' 
+                  : 'text-zinc-400 hover:text-white hover:bg-white/5'
+              }`}
+            >
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === item.id ? 'bg-orange-500/20' : 'bg-zinc-800'}`}>
+                <item.icon className="w-5 h-5" />
+              </div>
+              {!sidebarCollapsed && (
+                <>
+                  <span className="font-medium">{item.label}</span>
+                  {item.badge && (
+                    <span className="ml-auto px-2 py-0.5 text-xs rounded-full bg-green-500/20 text-green-400 border border-green-500/30">{item.badge}</span>
+                  )}
+                </>
+              )}
+            </button>
+          ))}
+        </nav>
+
+        <div className="p-4 border-t border-white/5">
+          <button 
+            onClick={onSwitchPortal}
+            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 rounded-xl flex items-center justify-center gap-2 font-medium transition ${sidebarCollapsed ? 'px-0' : ''}`}
+          >
+            <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
+            {!sidebarCollapsed && <span>Courtkeeper</span>}
+          </button>
+        </div>
+      </aside>
+
+      {/* Mobile Header */}
+      <header className="fixed top-0 left-0 right-0 h-14 bg-[#16161d] border-b border-white/5 flex items-center justify-between px-4 z-30 md:hidden">
+        <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+          <SheetTrigger asChild>
+            <button className="p-2 text-zinc-400 hover:text-white">
+              <Menu className="w-6 h-6" />
+            </button>
+          </SheetTrigger>
+          <SheetContent side="left" className="bg-[#16161d] border-zinc-800 w-72 p-0">
+            <div className="p-4 border-b border-white/5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+                  <Layers className="w-5 h-5 text-white" />
                 </div>
-              </SheetContent>
-            </Sheet>
-            <img src="/renbu-logo.png" alt="Renbu" className="w-7 h-7 sm:w-8 sm:h-8" />
-            <span className="text-white font-semibold text-sm sm:text-base">Admin</span>
+                <div>
+                  <h1 className="font-bold text-white">Shiaijo</h1>
+                  <p className="text-xs text-zinc-500">Admin Portal</p>
+                </div>
+              </div>
+            </div>
+            <nav className="py-4">
+              {[
+                { id: 'members', icon: Users, label: 'Members' },
+                { id: 'guests', icon: UserPlus, label: 'Guests' },
+                { id: 'groups', icon: Filter, label: 'Groups' },
+                { id: 'tournament', icon: Trophy, label: 'Tournament' },
+                { id: 'standings', icon: Table, label: 'Standings' },
+                { id: 'history', icon: History, label: 'History' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-3 ${
+                    activeTab === item.id 
+                      ? 'text-orange-400 bg-orange-500/10 border-l-2 border-orange-500' 
+                      : 'text-zinc-400 hover:text-white'
+                  }`}
+                >
+                  <item.icon className="w-5 h-5" />
+                  <span>{item.label}</span>
+                </button>
+              ))}
+            </nav>
+            <div className="p-4 border-t border-white/5">
+              <button 
+                onClick={() => { setMobileNavOpen(false); onSwitchPortal(); }}
+                className="w-full py-3 px-4 text-sm bg-gradient-to-r from-purple-600 to-purple-700 rounded-xl flex items-center justify-center gap-2 font-medium text-white"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
+                <span>Courtkeeper</span>
+              </button>
+            </div>
+          </SheetContent>
+        </Sheet>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-orange-500 to-orange-600 flex items-center justify-center">
+            <Layers className="w-4 h-4 text-white" />
           </div>
-          <div className="flex items-center gap-1">
-            <button 
-              className="p-2 text-slate-500 hover:text-white rounded-lg hover:bg-slate-800"
-              onClick={async () => {
-                const saved = await loadFromStorage()
-                if (saved) {
-                  let tournament = saved.currentTournament
-                  if (tournament) {
-                    tournament = {
-                      ...tournament,
-                      matches: tournament.matches || [],
-                      groups: tournament.groups || [],
-                      groupOrder: tournament.groupOrder || [],
-                    }
-                  }
-                  setState(prev => ({
-                    ...prev,
-                    members: saved.members || prev.members,
-                    groups: saved.groups || prev.groups,
-                    guestRegistry: saved.guestRegistry || prev.guestRegistry,
-                    currentTournament: tournament,
-                    history: saved.history || prev.history,
-                  }))
-                  toast.success('Synced')
-                }
-              }}
-              title="Sync data"
-            >
-              <RefreshCw className="w-4 h-4" />
-            </button>
-            <button 
-              onClick={onSwitchPortal}
-              className="px-2 py-1.5 sm:px-3 sm:py-2 text-xs sm:text-sm text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg"
-            >
-              <span className="hidden sm:inline">Switch Portal</span>
-              <span className="sm:hidden">Switch</span>
-            </button>
-          </div>
+          <span className="font-semibold">Shiaijo</span>
         </div>
-        
-        {/* Desktop Tabs */}
-        <div className="hidden md:block px-4 pb-2">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="bg-slate-800/50 p-1 gap-0.5">
-              <TabsTrigger value="members" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Members
-              </TabsTrigger>
-              <TabsTrigger value="guests" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Guests
-              </TabsTrigger>
-              <TabsTrigger value="groups" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Groups
-              </TabsTrigger>
-              <TabsTrigger value="tournament" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Tournament
-              </TabsTrigger>
-              <TabsTrigger value="standings" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                Standings
-              </TabsTrigger>
-              <TabsTrigger value="history" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-slate-400 px-3 py-1.5 text-sm">
-                History
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-        </div>
+        <button 
+          onClick={async () => {
+            const saved = await loadFromStorage()
+            if (saved) {
+              setState(prev => ({ ...prev, ...saved }))
+              toast.success('Synced')
+            }
+          }}
+          className="p-2 text-zinc-400 hover:text-white"
+        >
+          <RefreshCw className="w-5 h-5" />
+        </button>
       </header>
 
-      <main className="p-4 max-w-7xl mx-auto">
-        {activeTab === 'members' && (
-          <div className="space-y-3 sm:space-y-4">
-            {/* Participant count summary */}
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-slate-400">{state.members.length} members</span>
-              <span className="text-orange-400 font-medium">{state.members.filter(m => m.isParticipating).length} participating</span>
+      {/* Main Content */}
+      <main className={`pt-14 md:pt-0 transition-all duration-300 ${sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-64'}`}>
+        <div className="p-4 md:p-6">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <p className="text-zinc-500 text-sm mb-1 hidden md:block">Welcome back</p>
+              <h2 className="text-xl md:text-2xl font-bold capitalize">{activeTab}</h2>
             </div>
-            
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
-              <Input
-                className="pl-9 h-9 bg-slate-800/50 border-slate-700/50 text-white placeholder:text-slate-500 text-sm"
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-              />
-            </div>
-            
-            {/* Filters row */}
-            <div className="flex gap-2">
-              <Select value={filterGroup} onValueChange={setFilterGroup}>
-                <SelectTrigger className="flex-1 h-9 bg-slate-800/50 border-slate-700/50 text-sm">
-                  <SelectValue placeholder="All Groups" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="all">All Groups</SelectItem>
-                  {state.groups.map(g => (
-                    <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Select value={sortBy} onValueChange={(v: 'name' | 'group') => setSortBy(v)}>
-                <SelectTrigger className="w-28 h-9 bg-slate-800/50 border-slate-700/50 text-sm">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="name">By Name</SelectItem>
-                  <SelectItem value="group">By Group</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Action Buttons - Compact for mobile */}
-            <div className="space-y-3">
-              {/* Primary row */}
-              <div className="flex gap-2">
-                <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-orange-600 hover:bg-orange-700 h-8 text-sm flex-1 sm:flex-none">
-                      <Plus className="w-4 h-4 mr-1" />
-                      Add
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-slate-900 border-slate-700">
-                    <DialogHeader>
-                      <DialogTitle className="text-white">Add Member</DialogTitle>
-                      <DialogDescription className="text-slate-400">Add a new member to the roster</DialogDescription>
-                    </DialogHeader>
-                    <AddMemberForm 
-                      groups={state.groups} 
-                      onAdd={(fn, ln, g) => {
-                        addMember(fn, ln, g)
-                        setShowAddMember(false)
-                      }} 
-                    />
-                  </DialogContent>
-                </Dialog>
-
-                <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" className="border-slate-700 bg-slate-800/40 h-8 text-sm">
-                      <FileSpreadsheet className="w-4 h-4 sm:mr-1" />
-                      <span className="hidden sm:inline">Import</span>
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="bg-slate-900 border-slate-700">
-                    <DialogHeader>
-                      <DialogTitle className="text-white">Import from CSV</DialogTitle>
-                      <DialogDescription className="text-slate-400">
-                        Format: FirstName,LastName,GroupID (one per line)
-                      </DialogDescription>
-                    </DialogHeader>
-                    <CSVImportForm onImport={(csv) => {
-                      handleCSVImport(csv)
-                      setShowBulkAdd(false)
-                    }} />
-                  </DialogContent>
-                </Dialog>
-                
-                <button 
-                  onClick={deselectAll}
-                  className="px-2 h-8 text-slate-500 hover:text-white hover:bg-slate-800 rounded text-sm"
-                >
-                  Reset
-                </button>
+            <div className="hidden md:flex items-center gap-3">
+              <div className="relative">
+                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500" />
+                <input 
+                  type="text" 
+                  placeholder="Search..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-64 bg-zinc-800/50 border border-zinc-700/50 rounded-xl pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500/50"
+                />
               </div>
-              
-              {/* Quick select row */}
-              <div className="flex flex-wrap gap-1.5">
+              <button 
+                onClick={async () => {
+                  const saved = await loadFromStorage()
+                  if (saved) {
+                    let tournament = saved.currentTournament
+                    if (tournament) {
+                      tournament = { ...tournament, matches: tournament.matches || [], groups: tournament.groups || [], groupOrder: tournament.groupOrder || [] }
+                    }
+                    setState(prev => ({ ...prev, members: saved.members || prev.members, groups: saved.groups || prev.groups, guestRegistry: saved.guestRegistry || prev.guestRegistry, currentTournament: tournament, history: saved.history || prev.history }))
+                    toast.success('Synced')
+                  }
+                }}
+                className="p-2.5 text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-xl transition"
+              >
+                <RefreshCw className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+
+          {/* Members Tab */}
+          {activeTab === 'members' && (
+            <div className="space-y-4">
+              {/* Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
+                <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+                  <p className="text-zinc-500 text-xs mb-1">Total Members</p>
+                  <p className="text-2xl font-bold">{state.members.length}</p>
+                </div>
+                <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+                  <p className="text-zinc-500 text-xs mb-1">Participating</p>
+                  <p className="text-2xl font-bold text-green-400">{state.members.filter(m => m.isParticipating).length}</p>
+                </div>
+                <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+                  <p className="text-zinc-500 text-xs mb-1">Matches</p>
+                  <p className="text-2xl font-bold">{state.currentTournament?.matches?.length || 0}</p>
+                </div>
+                <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+                  <p className="text-zinc-500 text-xs mb-1">Completed</p>
+                  <p className="text-2xl font-bold text-orange-400">{state.currentTournament?.matches?.filter(m => m.status === 'completed').length || 0}</p>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="bg-[#1e1e28] border border-white/5 rounded-xl p-4">
+                <div className="flex flex-wrap gap-2">
+                  <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
+                    <DialogTrigger asChild>
+                      <Button className="bg-orange-600 hover:bg-orange-700">
+                        <Plus className="w-4 h-4 mr-2" />Add Member
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#1e1e28] border-zinc-800">
+                      <DialogHeader>
+                        <DialogTitle className="text-white">Add Member</DialogTitle>
+                      </DialogHeader>
+                      <AddMemberForm state={state} onAdd={addMember} onClose={() => setShowAddMember(false)} />
+                    </DialogContent>
+                  </Dialog>
+                  <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="border-zinc-700 text-zinc-300">
+                        <Upload className="w-4 h-4 mr-2" />Import CSV
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent className="bg-[#1e1e28] border-zinc-800">
+                      <DialogHeader>
+                        <DialogTitle className="text-white">Import Members</DialogTitle>
+                        <DialogDescription className="text-zinc-400">Paste CSV: FirstName,LastName,Group</DialogDescription>
+                      </DialogHeader>
+                      <BulkAddForm onImport={handleCSVImport} onClose={() => setShowBulkAdd(false)} />
+                    </DialogContent>
+                  </Dialog>
+                </div>
+                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/5">
+                  <span className="text-xs text-zinc-500 self-center">Quick select:</span>
+                  {state.groups.map(g => (
+                    <button key={g.id} onClick={() => selectByGroup(g.id)} className="px-3 py-1 text-xs rounded-lg bg-zinc-800 text-zinc-400 hover:bg-zinc-700">
+                      +{g.name}
+                    </button>
+                  ))}
+                  <button onClick={deselectAll} className="px-3 py-1 text-xs rounded-lg text-zinc-500 hover:text-zinc-300">Clear</button>
+                </div>
+              </div>
+
+              {/* Filter Pills */}
+              <div className="flex gap-2 overflow-x-auto pb-1">
+                <button 
+                  onClick={() => setFilterGroup('all')}
+                  className={`px-4 py-2 text-sm rounded-lg whitespace-nowrap ${filterGroup === 'all' ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-zinc-800 text-zinc-400'}`}
+                >All</button>
                 {state.groups.map(g => (
                   <button 
                     key={g.id}
-                    className="px-2.5 py-1 text-xs rounded bg-slate-800/50 text-slate-400 hover:bg-slate-700 hover:text-white border border-slate-700/50"
-                    onClick={() => selectByGroup(g.id)}
-                  >
-                    {g.name}
-                  </button>
+                    onClick={() => setFilterGroup(g.id)}
+                    className={`px-4 py-2 text-sm rounded-lg whitespace-nowrap ${filterGroup === g.id ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30' : 'bg-zinc-800 text-zinc-400'}`}
+                  >{g.name}</button>
                 ))}
               </div>
-            </div>
 
-            {/* Dev tools - hidden by default */}
-            <details className="text-sm">
-              <summary className="text-slate-500 cursor-pointer hover:text-slate-400">Dev tools</summary>
-              <div className="flex gap-2 mt-2">
-                <button 
-                  className="px-3 py-1.5 text-xs rounded bg-emerald-900/30 text-emerald-400 border border-emerald-800/50 hover:bg-emerald-900/50"
-                  onClick={() => {
-                    const testMembers = generateTestMembers()
-                    setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
-                    toast.success(`Added ${testMembers.length} test members`)
-                  }}
-                >
-                  + Test Data
-                </button>
-                <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
-                  <DialogTrigger asChild>
-                    <button className="px-3 py-1.5 text-xs rounded bg-red-900/30 text-red-400 border border-red-800/50 hover:bg-red-900/50">
-                      Clear All
-                    </button>
-                  </DialogTrigger>
-                <DialogContent className="bg-slate-900 border-slate-700">
-                  <DialogHeader>
-                    <DialogTitle className="text-white">Clear All Members?</DialogTitle>
-                    <DialogDescription className="text-slate-400">
-                      This will permanently delete all {state.members.length} members. This cannot be undone.
-                    </DialogDescription>
-                  </DialogHeader>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setShowClearConfirm(false)}>Cancel</Button>
-                    <Button variant="destructive" onClick={clearAllMembers}>Clear All</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-              </div>
-            </details>
-
-            {/* Members List */}
-            <Card className="bg-slate-800/30 border-slate-700/50">
-              <CardContent className="p-0">
-                <ScrollArea className="h-[calc(100vh-320px)]">
-                  <div className="divide-y divide-slate-800">
-                    {filteredMembers.map(member => {
-                       const group = getGroupById(member.group)
-                       return (
-                         <div 
-                           key={member.id}
-                           className="flex items-center gap-2 sm:gap-3 px-3 py-2.5 hover:bg-slate-800/30"
-                         >
-                           <Checkbox
-                             checked={member.isParticipating}
-                             onCheckedChange={() => toggleParticipation(member.id)}
-                             className="border-slate-600 h-5 w-5"
-                           />
-                           <div className="flex-1 min-w-0">
-                             <span className="text-white text-sm">
-                               {member.lastName}, {member.firstName}
-                               {member.isGuest && <span className="text-purple-400 text-xs ml-1">•</span>}
-                             </span>
-                           </div>
-                           <span className={`text-xs px-2 py-0.5 rounded ${group?.isNonBogu ? 'bg-orange-900/40 text-orange-400' : 'bg-slate-800 text-slate-400'}`}>
-                             {group?.name || member.group}
-                           </span>
-                           <button
-                             onClick={() => deleteMember(member.id)}
-                             className="p-1.5 text-slate-500 hover:text-red-400 hover:bg-red-950/30 rounded"
-                           >
-                             <Trash2 className="w-4 h-4" />
-                           </button>
-                         </div>
-                       )
-                     })}
-                    {filteredMembers.length === 0 && (
-                      <div className="p-12 text-center text-slate-500">
-                        <Users className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                        <p>No members found</p>
-                        <p className="text-sm mt-1">Add members or load test data to get started</p>
+              {/* Members List */}
+              <div className="bg-[#1e1e28] border border-white/5 rounded-xl overflow-hidden">
+                <div className="divide-y divide-white/5">
+                  {filteredMembers.map(member => {
+                    const group = getGroupById(member.group)
+                    return (
+                      <div key={member.id} className="px-4 py-3 flex items-center gap-3 hover:bg-white/5">
+                        <Checkbox 
+                          checked={member.isParticipating} 
+                          onCheckedChange={() => toggleParticipation(member.id)}
+                          className="data-[state=checked]:bg-orange-500 data-[state=checked]:border-orange-500"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium truncate">{member.lastName}, {member.firstName}</p>
+                          <p className="text-xs text-zinc-500">{group?.name || member.group}{member.isGuest && ' • Guest'}</p>
+                        </div>
+                        <span className={`w-2 h-2 rounded-full ${member.isParticipating ? 'bg-green-500' : 'bg-zinc-600'}`}></span>
+                        <button onClick={() => deleteMember(member.id)} className="p-1.5 text-zinc-500 hover:text-red-400 rounded">
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
-                    )}
-                  </div>
-                </ScrollArea>
-              </CardContent>
-            </Card>
-          </div>
-        )}
+                    )
+                  })}
+                </div>
+                <div className="px-4 py-3 border-t border-white/5 flex justify-between text-sm text-zinc-500">
+                  <span>{filteredMembers.length} members</span>
+                  <span className="text-orange-400">{state.members.filter(m => m.isParticipating).length} participating</span>
+                </div>
+              </div>
 
-        {activeTab === 'guests' && (
-          <GuestsManager
-            state={state}
-            onAddGuest={addGuestMember}
-            groups={state.groups}
-          />
-        )}
+              {/* Dev tools */}
+              <details className="text-sm">
+                <summary className="text-zinc-500 cursor-pointer">Dev tools</summary>
+                <div className="flex gap-2 mt-2">
+                  <button onClick={() => {
+                    const testMembers: Member[] = []
+                    const names = ['Tanaka', 'Suzuki', 'Yamada', 'Sato', 'Watanabe', 'Ito', 'Takahashi', 'Nakamura']
+                    for (let i = 0; i < 20; i++) {
+                      testMembers.push({ id: generateId(), firstName: names[i % names.length], lastName: 'Test' + i, group: state.groups[i % state.groups.length]?.id || 'group-a', isGuest: false, isParticipating: true })
+                    }
+                    setState(prev => ({ ...prev, members: [...prev.members, ...testMembers] }))
+                    toast.success('Added test data')
+                  }} className="px-3 py-1.5 text-xs rounded bg-emerald-900/30 text-emerald-400 border border-emerald-800/50">+ Test Data</button>
+                  <button onClick={() => setShowClearConfirm(true)} className="px-3 py-1.5 text-xs rounded bg-red-900/30 text-red-400 border border-red-800/50">Clear All</button>
+                </div>
+              </details>
+            </div>
+          )}
 
-        {activeTab === 'groups' && (
-          <GroupsManager state={state} setState={setState} />
-        )}
+          {/* Guests Tab */}
+          {activeTab === 'guests' && (
+            <GuestsTab state={state} setState={setState} onAddGuest={addGuestMember} getGroupById={getGroupById} />
+          )}
 
-        {activeTab === 'tournament' && (
-          <TournamentManager
-            state={state}
-            setState={setState}
-            getMemberById={getMemberById}
-            getGroupById={getGroupById}
-            generateTournament={generateTournament}
-            refreshTournamentParticipants={refreshTournamentParticipants}
-            archiveTournament={archiveTournament}
-          />
-        )}
+          {/* Groups Tab */}
+          {activeTab === 'groups' && (
+            <GroupsManager state={state} setState={setState} />
+          )}
 
-        {activeTab === 'standings' && (
-          <StandingsView state={state} getMemberById={getMemberById} getGroupById={getGroupById} />
-        )}
+          {/* Tournament Tab */}
+          {activeTab === 'tournament' && (
+            <TournamentManager state={state} setState={setState} getMemberById={getMemberById} getGroupById={getGroupById} />
+          )}
 
-        {activeTab === 'history' && (
-          <HistoryView state={state} setState={setState} />
-        )}
+          {/* Standings Tab */}
+          {activeTab === 'standings' && (
+            <StandingsView state={state} getMemberById={getMemberById} getGroupById={getGroupById} />
+          )}
+
+          {/* History Tab */}
+          {activeTab === 'history' && (
+            <HistoryView state={state} setState={setState} />
+          )}
+        </div>
       </main>
+
+      {/* Clear Confirm Dialog */}
+      <Dialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <DialogContent className="bg-[#1e1e28] border-zinc-800">
+          <DialogHeader>
+            <DialogTitle className="text-white">Clear All Members?</DialogTitle>
+            <DialogDescription className="text-zinc-400">This will remove all {state.members.length} members.</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowClearConfirm(false)} className="border-zinc-700">Cancel</Button>
+            <Button variant="destructive" onClick={clearAllMembers}>Clear All</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
