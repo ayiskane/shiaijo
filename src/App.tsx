@@ -6,7 +6,6 @@ import { Label } from '@/components/ui/label'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Separator } from '@/components/ui/separator'
@@ -17,7 +16,7 @@ import { Toaster, toast } from 'sonner'
 import { 
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
-  Menu, Swords, UserPlus, FileSpreadsheet,
+  Menu, Swords, UserPlus,
   Circle, CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Timer, Award, ChevronLeft, Layers
 } from 'lucide-react'
@@ -119,48 +118,7 @@ interface AppState {
 const generateId = () => Math.random().toString(36).substr(2, 9)
 
 // Test data generation
-const generateTestMembers = (): Member[] => {
-  const firstNames = [
-    'Kenji', 'Yuki', 'Takeshi', 'Haruto', 'Sota', 'Ren', 'Hiroshi', 'Daiki',
-    'Sakura', 'Aiko', 'Mei', 'Hana', 'Yui', 'Mika', 'Emi', 'Nana',
-    'James', 'Michael', 'David', 'Chris', 'Alex', 'Ryan', 'Kevin', 'Brian',
-    'Sarah', 'Emily', 'Jessica', 'Amanda', 'Nicole', 'Ashley', 'Rachel', 'Laura'
-  ]
-  const lastNames = [
-    'Tanaka', 'Yamamoto', 'Suzuki', 'Watanabe', 'Ito', 'Nakamura', 'Kobayashi', 'Kato',
-    'Yoshida', 'Yamada', 'Sasaki', 'Yamaguchi', 'Matsumoto', 'Inoue', 'Kimura', 'Hayashi',
-    'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Wilson'
-  ]
-  const groups = ['A', 'B', 'C', 'D', 'NonBogu']
-  
-  const members: Member[] = []
-  const usedNames = new Set<string>()
-  
-  // Generate 4-6 members per group
-  groups.forEach(groupId => {
-    const count = Math.floor(Math.random() * 3) + 4 // 4-6 members
-    for (let i = 0; i < count; i++) {
-      let firstName, lastName, fullName
-      do {
-        firstName = firstNames[Math.floor(Math.random() * firstNames.length)]
-        lastName = lastNames[Math.floor(Math.random() * lastNames.length)]
-        fullName = `${firstName} ${lastName}`
-      } while (usedNames.has(fullName))
-      
-      usedNames.add(fullName)
-      members.push({
-        id: generateId(),
-        firstName,
-        lastName,
-        group: groupId,
-        isGuest: false,
-        isParticipating: true, // Auto-select for tournament
-      })
-    }
-  })
-  
-  return members
-}
+
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -607,7 +565,7 @@ function AdminPortal({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<'name' | 'group'>('name')
+  const [sortBy] = useState<'name' | 'group'>('name')
   const [showAddMember, setShowAddMember] = useState(false)
   const [showBulkAdd, setShowBulkAdd] = useState(false)
   const [showClearConfirm, setShowClearConfirm] = useState(false)
@@ -1149,7 +1107,7 @@ function AdminPortal({
                       <DialogHeader>
                         <DialogTitle className="text-white">Add Member</DialogTitle>
                       </DialogHeader>
-                      <AddMemberForm state={state} onAdd={addMember} onClose={() => setShowAddMember(false)} />
+                      <AddMemberForm groups={state.groups} onAdd={addMember} />
                     </DialogContent>
                   </Dialog>
                   <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
@@ -1163,7 +1121,20 @@ function AdminPortal({
                         <DialogTitle className="text-white">Import Members</DialogTitle>
                         <DialogDescription className="text-zinc-400">Paste CSV: FirstName,LastName,Group</DialogDescription>
                       </DialogHeader>
-                      <BulkAddForm onImport={handleCSVImport} onClose={() => setShowBulkAdd(false)} />
+                      <div className="space-y-4">
+                        <textarea 
+                          className="w-full h-32 bg-zinc-800 border border-zinc-700 rounded-lg p-3 text-sm"
+                          placeholder="FirstName,LastName,Group&#10;John,Doe,Group A"
+                          id="csv-input"
+                        />
+                        <div className="flex justify-end gap-2">
+                          <Button variant="outline" onClick={() => setShowBulkAdd(false)} className="border-zinc-700">Cancel</Button>
+                          <Button onClick={() => { 
+                            const textarea = document.getElementById('csv-input') as HTMLTextAreaElement
+                            if (textarea) { handleCSVImport(textarea.value); setShowBulkAdd(false); }
+                          }} className="bg-orange-600 hover:bg-orange-700">Import</Button>
+                        </div>
+                      </div>
                     </DialogContent>
                   </Dialog>
                 </div>
@@ -1244,7 +1215,7 @@ function AdminPortal({
 
           {/* Guests Tab */}
           {activeTab === 'guests' && (
-            <GuestsTab state={state} setState={setState} onAddGuest={addGuestMember} getGroupById={getGroupById} />
+            <GuestsTab state={state} onAddGuest={addGuestMember} getGroupById={getGroupById} />
           )}
 
           {/* Groups Tab */}
@@ -1254,7 +1225,7 @@ function AdminPortal({
 
           {/* Tournament Tab */}
           {activeTab === 'tournament' && (
-            <TournamentManager state={state} setState={setState} getMemberById={getMemberById} getGroupById={getGroupById} />
+            <TournamentManager state={state} setState={setState} getMemberById={getMemberById} getGroupById={getGroupById} generateTournament={generateTournament} refreshTournamentParticipants={refreshTournamentParticipants} archiveTournament={archiveTournament} />
           )}
 
           {/* Standings Tab */}
@@ -1288,9 +1259,8 @@ function AdminPortal({
 
 
 // Guests Tab Component
-function GuestsTab({ state, setState, onAddGuest, getGroupById }: {
+function GuestsTab({ state, onAddGuest, getGroupById }: {
   state: AppState
-  setState: React.Dispatch<React.SetStateAction<AppState>>
   onAddGuest: (firstName: string, lastName: string, group: string, guestDojo?: string) => void
   getGroupById: (id: string) => Group | undefined
 }) {
@@ -1310,7 +1280,38 @@ function GuestsTab({ state, setState, onAddGuest, getGroupById }: {
             <DialogHeader>
               <DialogTitle className="text-white">Add Guest</DialogTitle>
             </DialogHeader>
-            <AddGuestForm state={state} onAdd={onAddGuest} onClose={() => setShowAddGuest(false)} />
+            <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                          <Label className="text-zinc-300">First Name</Label>
+                          <Input id="guest-first" className="bg-zinc-800 border-zinc-700" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-zinc-300">Last Name</Label>
+                          <Input id="guest-last" className="bg-zinc-800 border-zinc-700" />
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-zinc-300">Group</Label>
+                          <Select defaultValue={state.groups[0]?.id}>
+                            <SelectTrigger className="bg-zinc-800 border-zinc-700"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-zinc-800 border-zinc-700">
+                              {state.groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label className="text-zinc-300">Dojo (optional)</Label>
+                          <Input id="guest-dojo" className="bg-zinc-800 border-zinc-700" placeholder="Guest's home dojo" />
+                        </div>
+                        <div className="flex justify-end gap-2 pt-2">
+                          <Button variant="outline" onClick={() => setShowAddGuest(false)} className="border-zinc-700">Cancel</Button>
+                          <Button onClick={() => {
+                            const first = (document.getElementById('guest-first') as HTMLInputElement)?.value
+                            const last = (document.getElementById('guest-last') as HTMLInputElement)?.value
+                            const dojo = (document.getElementById('guest-dojo') as HTMLInputElement)?.value
+                            if (first && last) { onAddGuest(first, last, state.groups[0]?.id || '', dojo); setShowAddGuest(false); }
+                          }} className="bg-purple-600 hover:bg-purple-700">Add Guest</Button>
+                        </div>
+                      </div>
           </DialogContent>
         </Dialog>
       </div>
@@ -2320,7 +2321,7 @@ function AddMemberForm({
 }
 
 // CSV Import Form
-function CSVImportForm({ onImport }: { onImport: (csv: string) => void }) {
+: { onImport: (csv: string) => void }) {
   const [csvText, setCSVText] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -2371,11 +2372,7 @@ function CSVImportForm({ onImport }: { onImport: (csv: string) => void }) {
 }
 
 // Guests Manager
-function GuestsManager({ 
-  state, 
-  onAddGuest,
-  groups,
-}: { 
+: { 
   state: AppState
   onAddGuest: (firstName: string, lastName: string, group: string, guestDojo?: string) => void
   groups: Group[]
