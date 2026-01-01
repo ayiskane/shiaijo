@@ -2571,7 +2571,7 @@ function CourtkeeperPortal({
       ...prev,
       currentTournament: {
         ...tournament,
-        matches: tournament.matches.map(m => 
+        matches: (tournament.matches || []).map(m => 
           m.id === matchId ? { ...m, court: newCourt } : m
         )
       }
