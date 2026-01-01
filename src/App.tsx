@@ -17,7 +17,7 @@ import { Toaster, toast } from 'sonner'
 import { 
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
-  ChevronLeft, ChevronRight, Menu, Swords, UserPlus, FileSpreadsheet,
+  Menu, Swords, UserPlus, FileSpreadsheet,
   Circle, CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Timer, Award
 } from 'lucide-react'
@@ -1271,23 +1271,7 @@ function GroupsManager({
     }))
   }
 
-  const moveGroup = (groupId: string, direction: 'up' | 'down') => {
-    setState(prev => {
-      const groups = [...prev.groups]
-      const idx = groups.findIndex(g => g.id === groupId)
-      if (idx === -1) return prev
-      
-      const newIdx = direction === 'up' ? idx - 1 : idx + 1
-      if (newIdx < 0 || newIdx >= groups.length) return prev
-      
-      const temp = groups[idx]
-      groups[idx] = groups[newIdx]
-      groups[newIdx] = temp
-      return { ...prev, groups }
-    })
-  }
-
-  const addGroup = () => {
+    const addGroup = () => {
     if (!newGroupName.trim()) {
       toast.error('Enter a group name')
       return
