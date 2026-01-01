@@ -1512,7 +1512,7 @@ function TournamentManager({
       ...prev,
       currentTournament: {
         ...tournament,
-        matches: tournament.matches.map(m => 
+        matches: (tournament.matches || []).map(m => 
           m.id === matchId ? { ...m, court: m.court === 'A' ? 'B' : 'A' } : m
         )
       }
@@ -1636,11 +1636,11 @@ function TournamentManager({
     )
   }
 
-  const completedMatches = tournament.matches.filter(m => m.status === 'completed').length
-  const totalMatches = tournament.matches.length
+  const completedMatches = (tournament.matches || []).filter(m => m.status === 'completed').length
+  const totalMatches = (tournament.matches || []).length
   const isComplete = completedMatches === totalMatches
-  const courtAMatches = tournament.matches.filter(m => m.court === 'A')
-  const courtBMatches = tournament.matches.filter(m => m.court === 'B')
+  const courtAMatches = (tournament.matches || []).filter(m => m.court === 'A')
+  const courtBMatches = (tournament.matches || []).filter(m => m.court === 'B')
 
   return (
     <div className="space-y-4">
@@ -2476,7 +2476,7 @@ function CourtkeeperPortal({
   const addScore = (player: 'player1' | 'player2', scoreType: number) => {
     if (!tournament || !currentMatch) return
 
-    const updatedMatches = tournament.matches.map(m => {
+    const updatedMatches = (tournament.matches || []).map(m => {
       if (m.id === currentMatch.id) {
         const newScore = player === 'player1' 
           ? [...m.player1Score, scoreType]
@@ -2513,7 +2513,7 @@ function CourtkeeperPortal({
   const removeScore = (player: 'player1' | 'player2', index: number) => {
     if (!tournament || !currentMatch) return
 
-    const updatedMatches = tournament.matches.map(m => {
+    const updatedMatches = (tournament.matches || []).map(m => {
       if (m.id === currentMatch.id) {
         return {
           ...m,
@@ -2545,7 +2545,7 @@ function CourtkeeperPortal({
   const completeMatch = (winner: 'player1' | 'player2' | 'draw') => {
     if (!tournament || !currentMatch) return
 
-    const updatedMatches = tournament.matches.map(m => {
+    const updatedMatches = (tournament.matches || []).map(m => {
       if (m.id === currentMatch.id) {
         return { ...m, status: 'completed' as const, winner }
       }
