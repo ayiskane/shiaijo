@@ -907,41 +907,7 @@ function AdminPortal({
 
   const [mobileNavOpen, setMobileNavOpen] = useState(false)
 
-  const MobileNav = () => (
-    <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
-      <SheetTrigger asChild>
-        <Button variant="outline" size="icon" className="bg-slate-800/50 border-slate-600 hover:bg-slate-700 md:hidden">
-          <Menu className="w-6 h-6" />
-        </Button>
-      </SheetTrigger>
-      <SheetContent side="left" className="bg-slate-900 border-slate-700">
-        <SheetHeader>
-          <SheetTitle className="text-white">Navigation</SheetTitle>
-        </SheetHeader>
-        <div className="flex flex-col gap-2 mt-6">
-          {['members', 'guests', 'groups', 'tournament', 'standings', 'history'].map(tab => (
-            <Button
-              key={tab}
-              variant={activeTab === tab ? 'default' : 'ghost'}
-              className="justify-start"
-              onClick={() => {
-                setActiveTab(tab)
-                setMobileNavOpen(false)
-              }}
-            >
-              {tab === 'members' && <Users className="w-4 h-4 mr-2" />}
-              {tab === 'guests' && <UserPlus className="w-4 h-4 mr-2" />}
-              {tab === 'groups' && <Filter className="w-4 h-4 mr-2" />}
-              {tab === 'tournament' && <Trophy className="w-4 h-4 mr-2" />}
-              {tab === 'standings' && <Table className="w-4 h-4 mr-2" />}
-              {tab === 'history' && <History className="w-4 h-4 mr-2" />}
-              {tab.charAt(0).toUpperCase() + tab.slice(1)}
-            </Button>
-          ))}
-        </div>
-      </SheetContent>
-    </Sheet>
-  )
+  // MobileNav inlined to prevent re-mounting on every render
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -951,7 +917,38 @@ function AdminPortal({
         {/* Top bar */}
         <div className="flex items-center justify-between px-3 py-2 sm:px-4 sm:py-3">
           <div className="flex items-center gap-2 sm:gap-3">
-            <MobileNav />
+            <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+              <SheetTrigger asChild>
+                <button className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg md:hidden">
+                  <Menu className="w-5 h-5" />
+                </button>
+              </SheetTrigger>
+              <SheetContent side="left" className="bg-slate-900 border-slate-700 w-64">
+                <SheetHeader>
+                  <SheetTitle className="text-white text-left">Menu</SheetTitle>
+                </SheetHeader>
+                <div className="flex flex-col gap-1 mt-4">
+                  {['members', 'guests', 'groups', 'tournament', 'standings', 'history'].map(tab => (
+                    <button
+                      key={tab}
+                      className={`flex items-center gap-2 px-3 py-2 rounded-lg text-left text-sm ${activeTab === tab ? 'bg-orange-600 text-white' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}
+                      onClick={() => {
+                        setActiveTab(tab)
+                        setMobileNavOpen(false)
+                      }}
+                    >
+                      {tab === 'members' && <Users className="w-4 h-4" />}
+                      {tab === 'guests' && <UserPlus className="w-4 h-4" />}
+                      {tab === 'groups' && <Filter className="w-4 h-4" />}
+                      {tab === 'tournament' && <Trophy className="w-4 h-4" />}
+                      {tab === 'standings' && <Table className="w-4 h-4" />}
+                      {tab === 'history' && <History className="w-4 h-4" />}
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </SheetContent>
+            </Sheet>
             <img src="/renbu-logo.png" alt="Renbu" className="w-7 h-7 sm:w-8 sm:h-8" />
             <span className="text-white font-semibold text-sm sm:text-base">Admin</span>
           </div>
