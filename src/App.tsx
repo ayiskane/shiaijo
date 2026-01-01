@@ -499,21 +499,26 @@ export default function App() {
 
   if (portal === 'select') {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+      <div className="min-h-screen bg-gradient-to-b from-slate-900 via-slate-950 to-slate-900 flex items-center justify-center p-4">
         <Toaster theme="dark" position="top-center" />
         <div className="max-w-lg w-full space-y-6">
           <div className="text-center mb-8">
+            <img 
+              src="/renbu-logo.png" 
+              alt="Renbu Kendo" 
+              className="w-32 h-32 mx-auto mb-6 drop-shadow-lg"
+            />
             <h1 className="text-4xl font-bold text-white mb-2">Renbu Monthly Shiai</h1>
             <p className="text-slate-400">Select your portal</p>
           </div>
           
           <Card 
-            className="bg-slate-900 border-slate-800 cursor-pointer hover:border-amber-500 transition-colors"
+            className="bg-slate-900/80 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-800/80 transition-all duration-200"
             onClick={() => setPortal('admin')}
           >
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-3">
-                <Settings className="w-6 h-6 text-amber-500" />
+                <Settings className="w-6 h-6 text-orange-500" />
                 Admin Portal
               </CardTitle>
               <CardDescription className="text-slate-400">
@@ -523,12 +528,12 @@ export default function App() {
           </Card>
           
           <Card 
-            className="bg-slate-900 border-slate-800 cursor-pointer hover:border-emerald-500 transition-colors"
+            className="bg-slate-900/80 border-2 border-slate-700 cursor-pointer hover:border-orange-500 hover:bg-slate-800/80 transition-all duration-200"
             onClick={() => setPortal('courtkeeper')}
           >
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-3">
-                <Swords className="w-6 h-6 text-emerald-500" />
+                <Swords className="w-6 h-6 text-orange-500" />
                 Courtkeeper Portal
               </CardTitle>
               <CardDescription className="text-slate-400">
@@ -906,12 +911,13 @@ function AdminPortal({
     <div className="min-h-screen bg-slate-950">
       <Toaster theme="dark" position="top-center" />
       
-      <header className="bg-slate-900 border-b border-slate-800 px-4 py-3">
+      <header className="bg-slate-900 border-b border-slate-700 px-4 py-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <MobileNav />
+            <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
             <h1 className="text-xl font-bold text-white">Admin Portal</h1>
-            <Badge variant="outline" className="border-amber-500 text-amber-500">
+            <Badge variant="outline" className="border-orange-500 text-orange-500">
               {state.members.filter(m => m.isParticipating).length} participating
             </Badge>
           </div>
@@ -923,27 +929,27 @@ function AdminPortal({
         {/* Desktop Tabs - Guests moved next to Members */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4 hidden md:block">
           <TabsList className="bg-slate-800">
-            <TabsTrigger value="members" className="data-[state=active]:bg-amber-600">
+            <TabsTrigger value="members" className="data-[state=active]:bg-orange-600">
               <Users className="w-4 h-4 mr-2" />
               Members
             </TabsTrigger>
-            <TabsTrigger value="guests" className="data-[state=active]:bg-amber-600">
+            <TabsTrigger value="guests" className="data-[state=active]:bg-orange-600">
               <UserPlus className="w-4 h-4 mr-2" />
               Guests
             </TabsTrigger>
-            <TabsTrigger value="groups" className="data-[state=active]:bg-amber-600">
+            <TabsTrigger value="groups" className="data-[state=active]:bg-orange-600">
               <Filter className="w-4 h-4 mr-2" />
               Groups
             </TabsTrigger>
-            <TabsTrigger value="tournament" className="data-[state=active]:bg-amber-600">
+            <TabsTrigger value="tournament" className="data-[state=active]:bg-orange-600">
               <Trophy className="w-4 h-4 mr-2" />
               Tournament
             </TabsTrigger>
-            <TabsTrigger value="standings" className="data-[state=active]:bg-amber-600">
+            <TabsTrigger value="standings" className="data-[state=active]:bg-orange-600">
               <Table className="w-4 h-4 mr-2" />
               Standings
             </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-amber-600">
+            <TabsTrigger value="history" className="data-[state=active]:bg-orange-600">
               <History className="w-4 h-4 mr-2" />
               History
             </TabsTrigger>
@@ -993,7 +999,7 @@ function AdminPortal({
             <div className="flex flex-wrap gap-2">
               <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
                 <DialogTrigger asChild>
-                  <Button className="bg-amber-600 hover:bg-amber-700">
+                  <Button className="bg-orange-600 hover:bg-orange-700">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Member
                   </Button>
@@ -1242,7 +1248,7 @@ function GroupsManager({
               onChange={e => setNewGroupName(e.target.value)}
               className="bg-slate-800 border-slate-700"
             />
-            <Button onClick={addGroup} className="bg-amber-600 hover:bg-amber-700">
+            <Button onClick={addGroup} className="bg-orange-600 hover:bg-orange-700">
               <Plus className="w-4 h-4 mr-2" />
               Add Group
             </Button>
@@ -1487,7 +1493,7 @@ function TournamentManager({
               <div className="text-sm text-slate-400">Total Members</div>
             </div>
             <div className="bg-slate-800 rounded-lg p-4 text-center">
-              <div className="text-3xl font-bold text-amber-400">
+              <div className="text-3xl font-bold text-orange-400">
                 {state.members.filter(m => m.isParticipating).length}
               </div>
               <div className="text-sm text-slate-400">Participating</div>
@@ -1531,7 +1537,7 @@ function TournamentManager({
 
           <Button 
             onClick={() => generateTournament(selectedMonth, selectedYear)}
-            className="w-full bg-amber-600 hover:bg-amber-700"
+            className="w-full bg-orange-600 hover:bg-orange-700"
           >
             <Trophy className="w-4 h-4 mr-2" />
             Generate Tournament
@@ -1603,7 +1609,7 @@ function TournamentManager({
               </Badge>
             )}
             {isComplete && (
-              <Button onClick={archiveTournament} className="bg-amber-600 hover:bg-amber-700">
+              <Button onClick={archiveTournament} className="bg-orange-600 hover:bg-orange-700">
                 <History className="w-4 h-4 mr-2" />
                 Archive & Complete
               </Button>
@@ -1800,7 +1806,7 @@ function StandingsView({
                       <tr key={standing.playerId} className="border-b border-slate-800 hover:bg-slate-800/50">
                         <td className="p-2 text-slate-500">{idx + 1}</td>
                         <td className="p-2 text-white font-medium">{standing.playerName}</td>
-                        <td className="p-2 text-center text-amber-400 font-bold">{standing.points}</td>
+                        <td className="p-2 text-center text-orange-400 font-bold">{standing.points}</td>
                         <td className="p-2 text-center text-green-400">{standing.wins}</td>
                         {!group?.isNonBogu && <td className="p-2 text-center text-slate-400">{standing.draws}</td>}
                         <td className="p-2 text-center text-red-400">{standing.losses}</td>
@@ -1983,14 +1989,14 @@ function HistoryView({
                     {result.standings.slice(0, 3).map((s, idx) => (
                       <div key={idx} className="flex items-center gap-2">
                         <span className={`w-6 text-center font-bold ${
-                          idx === 0 ? 'text-amber-400' :
+                          idx === 0 ? 'text-orange-400' :
                           idx === 1 ? 'text-slate-300' :
                           'text-amber-700'
                         }`}>
                           {idx + 1}
                         </span>
                         <span className="text-white flex-1">{s.playerName}</span>
-                        <span className="text-amber-400">{s.points}pts</span>
+                        <span className="text-orange-400">{s.points}pts</span>
                       </div>
                     ))}
                   </div>
@@ -2044,7 +2050,7 @@ function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
       <DialogFooter>
         <Button 
           onClick={() => onImport(importText)}
-          className="bg-amber-600 hover:bg-amber-700"
+          className="bg-orange-600 hover:bg-orange-700"
           disabled={!importText.trim()}
         >
           <Upload className="w-4 h-4 mr-2" />
@@ -2105,7 +2111,7 @@ function AddMemberForm({
       <DialogFooter>
         <Button 
           onClick={() => onAdd(firstName, lastName, group)}
-          className="bg-amber-600 hover:bg-amber-700"
+          className="bg-orange-600 hover:bg-orange-700"
         >
           Add Member
         </Button>
@@ -2154,7 +2160,7 @@ function CSVImportForm({ onImport }: { onImport: (csv: string) => void }) {
       <DialogFooter>
         <Button 
           onClick={() => onImport(csvText)}
-          className="bg-amber-600 hover:bg-amber-700"
+          className="bg-orange-600 hover:bg-orange-700"
           disabled={!csvText.trim()}
         >
           <Upload className="w-4 h-4 mr-2" />
@@ -2677,9 +2683,10 @@ function CourtkeeperPortal({
       <WinnerPromptDialog />
       
       {/* Header */}
-      <header className="bg-slate-900 border-b border-slate-800 px-4 py-2">
+      <header className="bg-slate-900 border-b border-slate-700 px-4 py-2">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            <img src="/renbu-logo.png" alt="Renbu" className="w-8 h-8" />
             <h1 className="text-xl font-bold text-white">Courtkeeper</h1>
             <Badge className={selectedCourt === 'A' ? 'bg-red-600' : 'bg-blue-600'}>
               Court {selectedCourt}
@@ -2711,7 +2718,7 @@ function CourtkeeperPortal({
         {!currentMatch || currentMatches.length === 0 ? (
           <Card className="bg-slate-900 border-slate-800">
             <CardContent className="p-8 text-center">
-              <Trophy className="w-16 h-16 text-amber-500 mx-auto mb-4" />
+              <Trophy className="w-16 h-16 text-orange-500 mx-auto mb-4" />
               <p className="text-white text-xl">
                 {currentMatches.length === 0 
                   ? `No matches assigned to Court ${selectedCourt}`
