@@ -2256,21 +2256,6 @@ function AdminPortal({
           <ChevronLeft className={`w-3 h-3 text-[#8fb3d1] transition-transform ${sidebarCollapsed ? 'rotate-180' : ''}`} />
         </button>
 
-        {!sidebarCollapsed && (
-          <div className="p-4 border-b border-white/5">
-            <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs text-[#6b8fad] uppercase tracking-wider">Session</span>
-                <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
-              </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-2xl font-bold">{state.members.filter(m => m.isParticipating).length}</span>
-                <span className="text-[#6b8fad] text-sm">participating</span>
-              </div>
-            </div>
-          </div>
-        )}
-
         <nav className="flex-1 py-4 overflow-y-auto">
           {!sidebarCollapsed && <p className="px-4 mb-2 text-xs text-[#6b8fad] uppercase tracking-wider">Menu</p>}
           {(() => {
@@ -2462,8 +2447,8 @@ function AdminPortal({
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
             <div>
-              <p className="text-[#6b8fad] text-sm mb-1 hidden md:block">Welcome back</p>
-              <h2 className="text-xl md:text-2xl font-bold capitalize">{activeTab}</h2>
+              <p className="text-[#6b8fad] text-sm mb-1 hidden md:block">Welcome Back!</p>
+              <h2 className="text-xl md:text-2xl font-bold">ADMIN <span className="text-[#6b8fad]">&gt;&gt;</span> <span className="capitalize">{activeTab}</span></h2>
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="relative">
@@ -2557,6 +2542,9 @@ function AdminPortal({
                           <p className="text-white font-medium">{state.currentTournament.name}</p>
                           <p className="text-sm text-[#6b8fad]">
                             {state.currentTournament.date ? new Date(state.currentTournament.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : `${state.currentTournament.month} ${state.currentTournament.year}`}
+                          </p>
+                          <p className="text-sm text-orange-400 mt-1">
+                            {state.members.filter(m => m.isParticipating).length} participating
                           </p>
                         </div>
                         <Badge className={`${
