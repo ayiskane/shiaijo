@@ -3923,11 +3923,11 @@ const TournamentManager = memo(function TournamentManager({
               </div>
             </div>
 
-            {/* Court Assignment per Group */}
+            {/* Court Assignment & Group Order */}
             <div className="bg-[#1e3a5f]/20 rounded-lg p-2.5 border border-white/5">
-              <span className="text-xs text-[#8fb3d1] block mb-2">Court Assignment</span>
+              <span className="text-xs text-[#8fb3d1] block mb-2">Court Assignment & Order (drag to reorder)</span>
               <div className="space-y-1">
-                {(tournament.groupOrder || []).map(groupId => {
+                {(tournament.groupOrder || []).map((groupId, idx) => {
                   const group = getGroupById(groupId)
                   const isShared = state.sharedGroups.includes(groupId)
                   const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
@@ -3954,8 +3954,35 @@ const TournamentManager = memo(function TournamentManager({
                     }
                   }
                   
+                  const moveGroup = (direction: 'up' | 'down') => {
+                    const order = [...(tournament.groupOrder || [])]
+                    const newIdx = direction === 'up' ? idx - 1 : idx + 1
+                    if (newIdx < 0 || newIdx >= order.length) return
+                    [order[idx], order[newIdx]] = [order[newIdx], order[idx]]
+                    setState(prev => ({
+                      ...prev,
+                      currentTournament: prev.currentTournament ? { ...prev.currentTournament, groupOrder: order } : null
+                    }))
+                  }
+                  
                   return (
-                    <div key={groupId} className="flex items-center gap-2">
+                    <div key={groupId} className="flex items-center gap-1.5 py-0.5">
+                      <div className="flex flex-col">
+                        <button
+                          onClick={() => moveGroup('up')}
+                          disabled={idx === 0}
+                          className="text-slate-500 hover:text-slate-300 disabled:opacity-30 disabled:hover:text-slate-500"
+                        >
+                          <ChevronUp className="w-3 h-3" />
+                        </button>
+                        <button
+                          onClick={() => moveGroup('down')}
+                          disabled={idx === (tournament.groupOrder?.length || 0) - 1}
+                          className="text-slate-500 hover:text-slate-300 disabled:opacity-30 disabled:hover:text-slate-500"
+                        >
+                          <ChevronDown className="w-3 h-3" />
+                        </button>
+                      </div>
                       <span className="text-xs text-slate-300 flex-1 truncate">{group?.name}</span>
                       {group?.isNonBogu && (
                         <span className="text-[9px] px-1 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
@@ -4058,15 +4085,7 @@ const TournamentManager = memo(function TournamentManager({
             <ChevronDown className={`w-3.5 h-3.5 mr-1.5 transition-transform ${collapsedGroups.length === (tournament.groupOrder?.length || 0) ? '-rotate-90' : ''}`} />
             {collapsedGroups.length === (tournament.groupOrder?.length || 0) ? 'Expand All' : 'Collapse All'}
           </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setEditGroupOrder(!editGroupOrder)}
-            className={`h-8 ${editGroupOrder ? 'bg-amber-500/20 border-amber-500/50 text-amber-400' : 'border-[#1e3a5f] text-[#8fb3d1]'}`}
-          >
-            <Edit2 className="w-3.5 h-3.5 mr-1.5" />
-            {editGroupOrder ? 'Done Reordering' : 'Reorder Groups'}
-          </Button>
+
         </div>
       </div>
 
@@ -4090,7 +4109,7 @@ const TournamentManager = memo(function TournamentManager({
                 id={groupId}
                 isShared={isShared}
                 isCourtA={isCourtA}
-                showDragHandle={editGroupOrder}
+                showDragHandle={false}
               >
                 <CardHeader className={`p-3 ${isCollapsed ? 'pb-3' : 'pb-2'}`}>
                   {/* Row 1: collapse toggle, court badge, group name, edit, progress */}
