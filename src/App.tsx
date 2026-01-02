@@ -33,7 +33,7 @@ import {
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Award, ChevronLeft, ChevronRight, Pencil, Undo2, ChevronDown, ChevronUp, Heart, Clock,
+  ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Heart, Clock,
   Eye, Shield, Lock
 } from 'lucide-react'
 
