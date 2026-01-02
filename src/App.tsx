@@ -2443,7 +2443,7 @@ function AdminPortal({
                   <div className="flex items-center gap-4">
                     <ShiaijoLogo size={60} glow />
                     <div>
-                      <h2 className="text-2xl font-bold text-white">Welcome to 試合場</h2>
+                      <h2 className="text-2xl font-bold text-white">Welcome to <span style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span></h2>
                       <p className="text-[#6b8fad]">Shiai Manager</p>
                     </div>
                   </div>
