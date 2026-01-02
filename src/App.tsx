@@ -2389,15 +2389,15 @@ const AdminPortal = memo(function AdminPortal({
               <Menu className="w-6 h-6" />
             </button>
           </SheetTrigger>
-          <SheetContent side="left" className="bg-[#0f1a24] border-[#162d4a] w-72 p-0">
+          <SheetContent side="left" className="bg-[#0f1a24] border-[#162d4a] w-72 p-0 flex flex-col h-full">
             <div className="p-4 border-b border-white/5">
-              <div className="flex items-center gap-3">
+              <div className="flex items-center justify-center gap-3">
                 <ShiaijoLogo size={45} glow />
                 <span className="text-xl text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
               </div>
-              <p className="text-xs text-[#6b8fad] mt-2">Admin Portal</p>
+              <p className="text-xs text-[#6b8fad] mt-2 text-center">Admin Portal</p>
             </div>
-            <nav className="py-4">
+            <nav className="py-2 flex-1 overflow-y-auto">
               {[
                 { id: 'dashboard', icon: Home, label: 'Dashboard' },
                 { id: 'members', icon: Users, label: 'Members' },
@@ -2412,43 +2412,45 @@ const AdminPortal = memo(function AdminPortal({
                 <button
                   key={item.id}
                   onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
-                  className={`w-full flex items-center gap-3 px-4 py-3 ${
+                  className={`w-full flex items-center gap-3 px-4 py-2 ${
                     activeTab === item.id 
                       ? 'text-orange-400 bg-orange-500/10 border-l-2 border-orange-500' 
                       : 'text-[#8fb3d1] hover:text-white'
                   }`}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span>{item.label}</span>
+                  <item.icon className="w-4 h-4" />
+                  <span className="text-sm">{item.label}</span>
                 </button>
               ))}
             </nav>
-            <div className="p-4 border-t border-white/5 space-y-2">
-              <p className="text-xs text-[#6b8fad] uppercase tracking-wider mb-2">Switch Portal</p>
-              <button 
-                onClick={() => { setMobileNavOpen(false); onSwitchPortal('spectator'); }}
-                className="w-full py-2.5 px-4 text-sm bg-emerald-950/40 border border-emerald-500/30 rounded-lg flex items-center gap-2 text-emerald-300"
-              >
-                <Eye className="w-4 h-4" /> Spectator
-              </button>
-              <button 
-                onClick={() => { setMobileNavOpen(false); onSwitchPortal('courtkeeper'); }}
-                className="w-full py-2.5 px-4 text-sm bg-sky-950/40 border border-sky-500/30 rounded-lg flex items-center gap-2 text-sky-300"
-              >
-                <Swords className="w-4 h-4" /> Courtkeeper
-              </button>
-              <button 
-                onClick={() => { setMobileNavOpen(false); onSwitchPortal('volunteer'); }}
-                className="w-full py-2.5 px-4 text-sm bg-pink-950/40 border border-pink-500/30 rounded-lg flex items-center gap-2 text-pink-300"
-              >
-                <Heart className="w-4 h-4" /> Volunteer
-              </button>
-              <button 
-                onClick={() => { setMobileNavOpen(false); onSwitchPortal('select'); }}
-                className="w-full py-2.5 px-4 text-sm bg-[#1e3a5f]/50 border border-[#1e3a5f] rounded-lg flex items-center gap-2 text-[#8fb3d1]"
-              >
-                <Home className="w-4 h-4" /> Main Menu
-              </button>
+            <div className="p-3 border-t border-white/5 space-y-1.5 flex-shrink-0">
+              <p className="text-[10px] text-[#6b8fad] uppercase tracking-wider mb-1">Switch Portal</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                <button 
+                  onClick={() => { setMobileNavOpen(false); onSwitchPortal('spectator'); }}
+                  className="py-2 px-2 text-xs bg-emerald-950/40 border border-emerald-500/30 rounded-lg flex items-center justify-center gap-1.5 text-emerald-300"
+                >
+                  <Eye className="w-3.5 h-3.5" /> Spectator
+                </button>
+                <button 
+                  onClick={() => { setMobileNavOpen(false); onSwitchPortal('courtkeeper'); }}
+                  className="py-2 px-2 text-xs bg-sky-950/40 border border-sky-500/30 rounded-lg flex items-center justify-center gap-1.5 text-sky-300"
+                >
+                  <Swords className="w-3.5 h-3.5" /> Courtkeeper
+                </button>
+                <button 
+                  onClick={() => { setMobileNavOpen(false); onSwitchPortal('volunteer'); }}
+                  className="py-2 px-2 text-xs bg-pink-950/40 border border-pink-500/30 rounded-lg flex items-center justify-center gap-1.5 text-pink-300"
+                >
+                  <Heart className="w-3.5 h-3.5" /> Volunteer
+                </button>
+                <button 
+                  onClick={() => { setMobileNavOpen(false); onSwitchPortal('select'); }}
+                  className="py-2 px-2 text-xs bg-[#1e3a5f]/50 border border-[#1e3a5f] rounded-lg flex items-center justify-center gap-1.5 text-[#8fb3d1]"
+                >
+                  <Home className="w-3.5 h-3.5" /> Main
+                </button>
+              </div>
             </div>
           </SheetContent>
         </Sheet>
