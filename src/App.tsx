@@ -3741,19 +3741,39 @@ const TournamentManager = memo(function TournamentManager({
     })
   )
   
+  const handleDragStart = (event: { active: { id: string | number } }) => {
+    setActiveId(event.active.id as string)
+  }
+
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
+    setActiveId(null)
+    
     if (over && active.id !== over.id && tournament?.groupOrder) {
       const oldIndex = tournament.groupOrder.indexOf(active.id as string)
       const newIndex = tournament.groupOrder.indexOf(over.id as string)
       const newOrder = arrayMove(tournament.groupOrder, oldIndex, newIndex)
-      setState(prev => ({
-        ...prev,
-        currentTournament: prev.currentTournament ? {
-          ...prev.currentTournament,
-          groupOrder: newOrder
-        } : null
-      }))
+      
+      // Auto-stagger courts (A, B, A, B...) for non-shared groups
+      setState(prev => {
+        if (!prev.currentTournament) return prev
+        const sharedGroups = prev.sharedGroups || []
+        const updatedMatches = prev.currentTournament.matches.map(m => {
+          if (m.status !== 'pending') return m
+          if (sharedGroups.includes(m.groupId)) return m
+          const groupIdx = newOrder.indexOf(m.groupId)
+          const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
+          return { ...m, court: newCourt as 'A' | 'B' }
+        })
+        return {
+          ...prev,
+          currentTournament: {
+            ...prev.currentTournament,
+            groupOrder: newOrder,
+            matches: updatedMatches
+          }
+        }
+      })
     }
   }
 
