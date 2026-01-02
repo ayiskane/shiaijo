@@ -6111,30 +6111,26 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                     const isShared = (state.sharedGroups || []).includes(groupId)
                     if (groupMatchCount === 0) return null
                     return (
-                      <div key={groupId} className="flex items-center justify-between text-xs py-1">
-                        <div className="flex items-center gap-1.5">
-                          <span className={`px-1 py-0.5 rounded text-[9px] font-bold ${isShared ? 'bg-emerald-500 text-white' : selectedCourt === 'A' ? 'bg-amber-500/30 text-amber-400' : 'bg-blue-500/30 text-blue-400'}`}>
-                            {isShared ? 'A+B' : selectedCourt}
-                          </span>
-                          <span className="text-slate-300">{groupInfo?.name}</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <span className="text-slate-500">{groupMatchCount}</span>
-                          <button
-                            onClick={() => toggleSharedGroupCK(groupId)}
-                            className={`px-1.5 h-5 rounded text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                          >{isShared ? '✓A+B' : 'A+B'}</button>
-                          <button
-                            onClick={() => moveGroupInQueue(groupId, 'up')}
-                            disabled={gIdx === 0}
-                            className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
-                          >▲</button>
-                          <button
-                            onClick={() => moveGroupInQueue(groupId, 'down')}
-                            disabled={gIdx === groupOrder.length - 1}
-                            className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
-                          >▼</button>
-                        </div>
+                      <div key={groupId} className="flex items-center text-xs py-1.5 gap-2">
+                        <span className="text-slate-300 flex-1">{groupInfo?.name}</span>
+                        <span className="text-slate-500 text-[10px]">{groupMatchCount}</span>
+                        <button
+                          onClick={() => toggleSharedGroupCK(groupId)}
+                          className={`px-1.5 h-5 rounded text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                        >{isShared ? '✓A+B' : 'A+B'}</button>
+                        <button
+                          onClick={() => moveGroupInQueue(groupId, 'up')}
+                          disabled={gIdx === 0}
+                          className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
+                        >▲</button>
+                        <button
+                          onClick={() => moveGroupInQueue(groupId, 'down')}
+                          disabled={gIdx === groupOrder.length - 1}
+                          className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
+                        >▼</button>
+                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold min-w-[28px] text-center ${isShared ? 'bg-emerald-500 text-white' : selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+                          {isShared ? 'A+B' : selectedCourt}
+                        </span>
                       </div>
                     )
                   })}
