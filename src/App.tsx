@@ -2388,21 +2388,74 @@ const AdminPortal = memo(function AdminPortal({
           </SheetTrigger>
           <SheetContent side="left" className="bg-[#0f1a24] border-[#162d4a] w-72 p-0 flex flex-col h-full">
             <div className="p-4 border-b border-white/5">
-              <div className="flex items-center justify-center gap-3">
-                <ShiaijoLogo size={45} glow />
+              <div className="flex items-center justify-center gap-2">
+                <ShiaijoLogo size={40} glow />
                 <span className="text-xl text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
               </div>
-              <p className="text-xs text-[#6b8fad] mt-2 text-center">Admin Portal</p>
+              <div className="flex items-center justify-center gap-1.5 mt-2">
+                <Shield className="w-3 h-3 text-orange-400" />
+                <span className="text-[10px] text-orange-400 uppercase tracking-widest">Admin Portal</span>
+              </div>
             </div>
             <nav className="py-2 flex-1 overflow-y-auto">
+              {/* Dashboard */}
+              <button
+                onClick={() => { setActiveTab('dashboard'); setMobileNavOpen(false); }}
+                className={`w-full flex items-center gap-3 px-4 py-2 ${
+                  activeTab === 'dashboard' 
+                    ? 'text-orange-400 bg-orange-500/10 border-l-2 border-orange-500' 
+                    : 'text-[#8fb3d1] hover:text-white'
+                }`}
+              >
+                <Home className="w-4 h-4" />
+                <span className="text-sm">Dashboard</span>
+              </button>
+              
+              {/* Roster Group */}
+              <p className="px-4 py-1.5 text-[10px] text-[#6b8fad] uppercase tracking-wider mt-2">Roster</p>
               {[
-                { id: 'dashboard', icon: Home, label: 'Dashboard' },
                 { id: 'members', icon: Users, label: 'Members' },
                 { id: 'guests', icon: UserPlus, label: 'Guests' },
                 { id: 'groups', icon: Filter, label: 'Groups' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2 ${
+                    activeTab === item.id 
+                      ? 'text-orange-400 bg-orange-500/10 border-l-2 border-orange-500' 
+                      : 'text-[#8fb3d1] hover:text-white'
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span className="text-sm">{item.label}</span>
+                </button>
+              ))}
+              
+              {/* Shiai Group */}
+              <p className="px-4 py-1.5 text-[10px] text-[#6b8fad] uppercase tracking-wider mt-2">Shiai</p>
+              {[
                 { id: 'tournament', icon: Trophy, label: 'Tournament' },
                 { id: 'standings', icon: Table, label: 'Results' },
                 { id: 'history', icon: History, label: 'History' },
+              ].map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => { setActiveTab(item.id); setMobileNavOpen(false); }}
+                  className={`w-full flex items-center gap-3 px-4 py-2 ${
+                    activeTab === item.id 
+                      ? 'text-orange-400 bg-orange-500/10 border-l-2 border-orange-500' 
+                      : 'text-[#8fb3d1] hover:text-white'
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span className="text-sm">{item.label}</span>
+                </button>
+              ))}
+              
+              {/* Administrative Group */}
+              <p className="px-4 py-1.5 text-[10px] text-[#6b8fad] uppercase tracking-wider mt-2">Administrative</p>
+              {[
                 { id: 'volunteers', icon: Heart, label: 'Volunteers' },
                 { id: 'settings', icon: Settings, label: 'Settings' },
               ].map(item => (
