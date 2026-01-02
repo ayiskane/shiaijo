@@ -6166,10 +6166,10 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                       const mp1 = getMemberById(match.player1Id)
                       const mp2 = getMemberById(match.player2Id)
                       const isSelected = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
-                      const isCurrentlyPlaying = match.id === currentMatch?.id
                       const isSharedGroup = (state.sharedGroups || []).includes(groupId)
-                      const isLiveOnOtherCourt = match.status === 'in_progress' && !isCurrentlyPlaying
-                      const canDrag = match.status === 'pending' && !isCurrentlyPlaying && !isLiveOnOtherCourt
+                      const isLiveOnThisCourt = match.status === 'in_progress' && match.court === selectedCourt
+                      const isLiveOnOtherCourt = match.status === 'in_progress' && match.court !== selectedCourt
+                      const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt
                       const isDragging = draggedMatchId === match.id
                       const isDragTarget = draggedMatchId && draggedMatchId !== match.id && canDrag
                       const isDropTarget = dropTargetId === match.id
@@ -6199,11 +6199,11 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                             setDropTargetId(null)
                           }}
                           data-match-id={match.id}
-                          onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
+                          onClick={() => { if (!isLiveOnThisCourt && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
                           className={`relative w-full p-2 rounded-lg mb-1 text-xs cursor-pointer select-none transition-all duration-200 ease-out ${
                             isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400 z-50' :
                             isDropTarget ? 'translate-y-1 bg-slate-800/80' :
-                            isCurrentlyPlaying ? 'bg-emerald-900/30 border border-emerald-600' 
+                            isLiveOnThisCourt ? 'bg-emerald-900/30 border border-emerald-600' 
                             : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
                             : isSelected ? 'bg-amber-900/30 border border-amber-500'
                             : 'bg-slate-800/50 hover:bg-slate-800'
@@ -6214,7 +6214,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                             <div className="absolute -top-1.5 left-2 right-2 h-1 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-pulse" />
                           )}
                           <div className="flex items-center">
-                            {canDrag && !isSelected && !isCurrentlyPlaying && (
+                            {canDrag && !isSelected && !isLiveOnThisCourt && (
                               <span 
                                 className="text-slate-600 mr-2 cursor-grab active:cursor-grabbing p-2 -m-1"
                                 style={{ touchAction: 'none' }}
@@ -6247,9 +6247,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                                 }}
                               >☰</span>
                             )}
-                            {isCurrentlyPlaying && (
+                            {isLiveOnThisCourt && (
                               <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold mr-2">
-                                LIVE{isSharedGroup ? ` ${selectedCourt}` : ''}
+                                LIVE {selectedCourt}
                               </span>
                             )}
                             {isLiveOnOtherCourt && (
@@ -6257,7 +6257,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                                 LIVE {match.court}
                               </span>
                             )}
-                            {isSelected && !isCurrentlyPlaying && !isLiveOnOtherCourt && <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
+                            {isSelected && !isLiveOnThisCourt && !isLiveOnOtherCourt && <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
                             <span className="text-red-400 truncate flex-1 text-left">
                               {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
                             </span>
