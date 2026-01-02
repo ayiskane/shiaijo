@@ -5621,8 +5621,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     // First remove from shared if it was shared
     const wasShared = (state.sharedGroups || []).includes(groupId)
     
-    // Count how many matches will be moved
-    const matchesToMove = tournament?.matches?.filter(m => m.groupId === groupId && m.status === 'pending').length || 0
+    // Debug: show all matches in this group and their statuses
+    const groupMatches = tournament?.matches?.filter(m => m.groupId === groupId) || []
+    const matchStatuses = groupMatches.map(m => ({ id: m.id, status: m.status, court: m.court }))
+    console.log('Group matches:', matchStatuses)
+    
+    // Count how many matches will be moved (pending OR not yet started)
+    const matchesToMove = groupMatches.filter(m => m.status !== 'completed').length
     
     setState(prev => {
       if (!prev.currentTournament) return prev
@@ -5633,12 +5638,12 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       const clearA = courtAMatch?.groupId === groupId
       const clearB = courtBMatch?.groupId === groupId
       
+      // Move ALL non-completed matches (pending or in_progress that hasn't actually started)
       const updatedMatches = prev.currentTournament.matches.map(m => 
-        m.groupId === groupId && m.status === 'pending' ? { ...m, court: newCourt } : m
+        m.groupId === groupId && m.status !== 'completed' ? { ...m, court: newCourt } : m
       )
       
-      // Debug: Log what we're doing
-      console.log('switchGroupCourt:', { groupId, newCourt, matchesToMove, clearA, clearB, courtAMatch: courtAMatch?.id, courtBMatch: courtBMatch?.id })
+      console.log('switchGroupCourt:', { groupId, newCourt, matchesToMove, clearA, clearB })
       
       return {
         ...prev,
