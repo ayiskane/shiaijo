@@ -6200,8 +6200,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                           }}
                           data-match-id={match.id}
                           onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
-                          className={`relative w-full p-2 rounded-lg mb-1 text-xs transition-all cursor-pointer select-none ${
-                            isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400' :
+                          className={`relative w-full p-2 rounded-lg mb-1 text-xs cursor-pointer select-none transition-all duration-200 ease-out ${
+                            isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400 z-50' :
+                            isDropTarget ? 'translate-y-1 bg-slate-800/80' :
                             isCurrentlyPlaying ? 'bg-emerald-900/30 border border-emerald-600' 
                             : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
                             : isSelected ? 'bg-amber-900/30 border border-amber-500'
@@ -6210,7 +6211,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                         >
                           {/* Drop indicator bar */}
                           {isDropTarget && (
-                            <div className="absolute -top-1 left-0 right-0 h-1 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                            <div className="absolute -top-1.5 left-2 right-2 h-1 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-pulse" />
                           )}
                           <div className="flex items-center">
                             {canDrag && !isSelected && !isCurrentlyPlaying && (
