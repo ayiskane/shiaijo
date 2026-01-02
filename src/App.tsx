@@ -3468,16 +3468,22 @@ const GroupsManager = memo(function GroupsManager({
                   )}
                   
                   {/* Non-bogu toggle */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1.5">
                     {group.isNonBogu && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400">Hantei</span>
+                      <>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">Non-Bogu</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
+                      </>
                     )}
                     {editMode && (
-                      <Switch
-                        checked={group.isNonBogu}
-                        onCheckedChange={(checked) => updateGroup(group.id, { isNonBogu: checked })}
-                        className="scale-75"
-                      />
+                      <div className="flex items-center gap-1">
+                        <span className="text-[9px] text-[#6b8fad]">Non-Bogu</span>
+                        <Switch
+                          checked={group.isNonBogu}
+                          onCheckedChange={(checked) => updateGroup(group.id, { isNonBogu: checked })}
+                          className="scale-75"
+                        />
+                      </div>
                     )}
                   </div>
                   
