@@ -852,40 +852,34 @@ export default function App() {
           {/* Divider */}
           <div className="flex items-center my-4 md:my-5">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
-            <span className="px-3 md:px-4 text-[10px] md:text-xs text-[#3d5a78] uppercase tracking-widest">staff</span>
+            <span className="px-3 md:px-4 text-[10px] md:text-xs text-[#3d5a78] uppercase tracking-widest">Staff Portals</span>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
           </div>
           
-          {/* Admin, Courtkeeper & Volunteer Buttons - Glass style */}
-          <div className="space-y-2 md:space-y-3">
+          {/* Staff Portal Grid - 3 columns */}
+          <div className="grid grid-cols-3 gap-2 md:gap-3">
             <button 
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300"
+              className="py-4 md:py-5 px-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex flex-col items-center gap-2"
             >
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-6 flex justify-center"><Shield className="w-5 h-5" /></span>
-                <span className="w-36 text-left">Admin Portal{state.adminPassword && <Lock className="w-3 h-3 ml-2 opacity-60 inline" />}</span>
-              </span>
+              <Shield className="w-6 h-6 md:w-7 md:h-7" />
+              <span className="flex items-center gap-1">Admin{state.adminPassword && <Lock className="w-3 h-3 opacity-60" />}</span>
             </button>
             
             <button 
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300"
+              className="py-4 md:py-5 px-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex flex-col items-center gap-2"
             >
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-6 flex justify-center"><Swords className="w-5 h-5" /></span>
-                <span className="w-36 text-left">Courtkeeper Portal{state.courtkeeperPassword && <Lock className="w-3 h-3 ml-2 opacity-60 inline" />}</span>
-              </span>
+              <Swords className="w-6 h-6 md:w-7 md:h-7" />
+              <span className="flex items-center gap-1">Courtkeeper{state.courtkeeperPassword && <Lock className="w-3 h-3 opacity-60" />}</span>
             </button>
             
             <button 
               onClick={() => setPortal('volunteer')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300"
+              className="py-4 md:py-5 px-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex flex-col items-center gap-2"
             >
-              <span className="flex items-center justify-center gap-2">
-                <span className="w-6 flex justify-center"><Heart className="w-5 h-5" /></span>
-                <span className="w-36 text-left">Volunteer Portal</span>
-              </span>
+              <Heart className="w-6 h-6 md:w-7 md:h-7" />
+              <span>Volunteer</span>
             </button>
           </div>
           
