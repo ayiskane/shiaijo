@@ -826,17 +826,15 @@ export default function App() {
 
   if (portal === 'select') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-4 sm:p-5">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-4">
         <Toaster theme="dark" position="top-center" />
-        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl">
+        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-2xl p-5 sm:p-6 w-full max-w-[300px] shadow-2xl">
           {/* Logo */}
-          <div className="text-center mb-6">
-            <div className="flex justify-center mb-3">
-              <div className="transform scale-100 sm:scale-110 md:scale-125">
-                <ShiaijoLogo size={120} glow />
-              </div>
+          <div className="text-center mb-4">
+            <div className="flex justify-center mb-2">
+              <ShiaijoLogo size={90} glow />
             </div>
-            <p className="text-[#6b8fad] text-xs sm:text-sm tracking-widest uppercase">Shiai Manager</p>
+            <p className="text-[#6b8fad] text-[10px] tracking-widest uppercase">Shiai Manager</p>
           </div>
           
           {/* Spectator Button - Glass style */}
