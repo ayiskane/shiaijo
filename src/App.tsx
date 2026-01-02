@@ -5,17 +5,19 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities'
 
 // Drag Handle component for sortable items
-// Simple sortable group card - drag via handle only
+// Simple sortable group card - drag via handle only when enabled
 const SortableGroupCard = ({ 
   id, 
   children, 
   isShared, 
-  isCourtA
+  isCourtA,
+  showDragHandle = false
 }: { 
   id: string
   children: React.ReactNode
   isShared: boolean
   isCourtA: boolean
+  showDragHandle?: boolean
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({ id })
   
@@ -35,17 +37,19 @@ const SortableGroupCard = ({
         isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
       }`}
     >
-      {/* Drag Handle - only this element activates dragging */}
-      <div 
-        ref={setActivatorNodeRef}
-        {...attributes}
-        {...listeners}
-        className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors z-10"
-        style={{ touchAction: 'none' }}
-      >
-        <span className="text-lg">⋮⋮</span>
-      </div>
-      <div className="pl-6">
+      {/* Drag Handle - only shown when edit mode enabled */}
+      {showDragHandle && (
+        <div 
+          ref={setActivatorNodeRef}
+          {...attributes}
+          {...listeners}
+          className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors z-10"
+          style={{ touchAction: 'none' }}
+        >
+          <span className="text-lg">⋮⋮</span>
+        </div>
+      )}
+      <div className={showDragHandle ? "pl-6" : ""}>
         {children}
       </div>
     </Card>
@@ -2830,29 +2834,39 @@ const AdminPortal = memo(function AdminPortal({
 
               {/* Tournament Registration - only show if there's a tournament */}
               {state.currentTournament && (
-                <div className="bg-emerald-900/20 border border-emerald-700/30 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="flex items-center gap-2">
-                      <Trophy className="w-4 h-4 text-emerald-400" />
-                      <span className="text-sm font-medium text-emerald-400">Registering for: {state.currentTournament.name || 'Tournament'}</span>
+                <Card className="bg-emerald-950/30 border-emerald-700/40 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+                  <CardHeader className="p-4 pb-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                        <Trophy className="w-5 h-5 text-emerald-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-xs text-emerald-300/70 uppercase tracking-wide">Registering for</p>
+                        <p className="text-base font-semibold text-emerald-300">{state.currentTournament.name || 'Tournament'}</p>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-2xl font-bold text-emerald-400">{state.members.filter(m => m.isParticipating).length}</p>
+                        <p className="text-xs text-emerald-300/70">participating</p>
+                      </div>
                     </div>
-                    <span className="text-xs text-emerald-300">{state.members.filter(m => m.isParticipating).length} participating</span>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <span className="text-xs text-[#6b8fad] self-center">Quick select:</span>
-                    {state.groups.map(g => (
-                      <button key={g.id} onClick={() => selectByGroup(g.id)} className="px-3 py-1 text-xs rounded-lg bg-emerald-900/30 text-emerald-300 hover:bg-emerald-900/50 border border-emerald-700/30">
-                        +{g.name}
+                  </CardHeader>
+                  <CardContent className="px-4 pb-4 pt-0">
+                    <div className="flex flex-wrap gap-2">
+                      <span className="text-xs text-[#6b8fad] self-center">Quick select:</span>
+                      {state.groups.map(g => (
+                        <button key={g.id} onClick={() => selectByGroup(g.id)} className="px-3 py-1.5 text-xs rounded-lg bg-emerald-900/40 text-emerald-300 hover:bg-emerald-800/50 border border-emerald-700/40 transition-colors">
+                          +{g.name}
+                        </button>
+                      ))}
+                      <button onClick={() => state.members.forEach(m => !m.isParticipating && toggleParticipation(m.id))} className="px-3 py-1.5 text-xs rounded-lg bg-emerald-600 text-white hover:bg-emerald-700 transition-colors">
+                        Select All
                       </button>
-                    ))}
-                    <button onClick={() => state.members.forEach(m => !m.isParticipating && toggleParticipation(m.id))} className="px-3 py-1 text-xs rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
-                      Select All
-                    </button>
-                    <button onClick={deselectAll} className="px-3 py-1 text-xs rounded-lg text-emerald-300 hover:text-white border border-emerald-700/30">
-                      Clear All
-                    </button>
-                  </div>
-                </div>
+                      <button onClick={deselectAll} className="px-3 py-1.5 text-xs rounded-lg text-emerald-300 hover:text-white border border-emerald-700/40 transition-colors">
+                        Clear All
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
               )}
 
               {/* Search Bar */}
@@ -3553,6 +3567,7 @@ const TournamentManager = memo(function TournamentManager({
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
+  const [editGroupOrder, setEditGroupOrder] = useState(false)
   const tournament = state.currentTournament
   
   // DnD Kit sensors with touch delay for mobile
@@ -3961,6 +3976,20 @@ const TournamentManager = memo(function TournamentManager({
         </CardContent>
       </Card>
 
+      {/* Edit Group Order Toggle */}
+      <div className="flex items-center justify-between">
+        <span className="text-sm text-[#6b8fad]">{tournament.groupOrder?.length || 0} groups</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() => setEditGroupOrder(!editGroupOrder)}
+          className={`h-8 ${editGroupOrder ? 'bg-amber-500/20 border-amber-500/50 text-amber-400' : 'border-[#1e3a5f] text-[#8fb3d1]'}`}
+        >
+          <Edit2 className="w-3.5 h-3.5 mr-1.5" />
+          {editGroupOrder ? 'Done Reordering' : 'Reorder Groups'}
+        </Button>
+      </div>
+
       {/* Match Schedule by Group with Court Assignment */}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
         <SortableContext items={tournament.groupOrder || []} strategy={verticalListSortingStrategy}>
@@ -3981,6 +4010,7 @@ const TournamentManager = memo(function TournamentManager({
                 id={groupId}
                 isShared={isShared}
                 isCourtA={isCourtA}
+                showDragHandle={editGroupOrder}
               >
                 <CardHeader className="p-3 pb-2">
                   {/* Row 1: Drag handle, collapse toggle, court badge, group name, edit, progress */}
