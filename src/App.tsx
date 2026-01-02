@@ -1297,6 +1297,88 @@ function SpectatorPortal({
 }) {
   const tournament = state.currentTournament
   
+  // Helper to convert score IDs to names
+  const getScoreName = (scoreId: number) => {
+    switch(scoreId) {
+      case 1: return 'M'  // Men
+      case 2: return 'K'  // Kote
+      case 3: return 'D'  // Do
+      case 4: return 'T'  // Tsuki
+      case 5: return 'H'  // Hansoku
+      default: return '?'
+    }
+  }
+
+  const getScoreFullName = (scoreId: number) => {
+    switch(scoreId) {
+      case 1: return 'Men'
+      case 2: return 'Kote'
+      case 3: return 'Do'
+      case 4: return 'Tsuki'
+      case 5: return 'Hansoku'
+      default: return '?'
+    }
+  }
+
+  // Get upcoming matches for each court
+  const getQueueForCourt = (court: 'A' | 'B') => {
+    if (!tournament) return []
+    return tournament.matches
+      .filter(m => m.status === 'pending' && m.court === court)
+      .sort((a, b) => a.orderIndex - b.orderIndex)
+      .slice(0, 5)
+  }
+
+  // Get group standings
+  const getGroupStandings = (groupId: string) => {
+    if (!tournament) return []
+    const groupMatches = tournament.matches.filter(m => m.groupId === groupId)
+    const playerIds = new Set<string>()
+    groupMatches.forEach(m => {
+      playerIds.add(m.player1Id)
+      playerIds.add(m.player2Id)
+    })
+    
+    const standings = Array.from(playerIds).map(playerId => {
+      const player = getMemberById(playerId)
+      const playerMatches = groupMatches.filter(m => m.player1Id === playerId || m.player2Id === playerId)
+      const completed = playerMatches.filter(m => m.status === 'completed')
+      const pending = playerMatches.filter(m => m.status === 'pending')
+      const inProgress = playerMatches.filter(m => m.status === 'in_progress')
+      
+      let wins = 0, losses = 0, draws = 0, points = 0
+      completed.forEach(m => {
+        const isP1 = m.player1Id === playerId
+        const p1Score = m.player1Score.length
+        const p2Score = m.player2Score.length
+        const myScore = isP1 ? p1Score : p2Score
+        const oppScore = isP1 ? p2Score : p1Score
+        
+        if (myScore > oppScore) { wins++; points += 2 }
+        else if (myScore < oppScore) { losses++ }
+        else { draws++; points += 1 }
+      })
+      
+      return {
+        playerId,
+        playerName: player ? `${player.firstName} ${player.lastName}` : 'Unknown',
+        total: playerMatches.length,
+        completed: completed.length,
+        pending: pending.length,
+        inProgress: inProgress.length,
+        wins,
+        losses,
+        draws,
+        points
+      }
+    }).sort((a, b) => b.points - a.points || b.wins - a.wins)
+    
+    return standings
+  }
+
+  const courtAQueue = getQueueForCourt('A')
+  const courtBQueue = getQueueForCourt('B')
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017]">
       {/* Header */}
@@ -1325,7 +1407,12 @@ function SpectatorPortal({
             <Card className="bg-[#142130]/80 border-white/5">
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-white text-lg">Tournament Status</CardTitle>
+                  <div>
+                    <CardTitle className="text-white text-lg">{tournament.name}</CardTitle>
+                    <p className="text-xs text-[#6b8fad]">
+                      {tournament.date ? new Date(tournament.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : tournament.month}
+                    </p>
+                  </div>
                   {tournament.status === 'in_progress' && (
                     <Badge className="bg-green-500/20 text-green-400 border-green-500/30">
                       <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse mr-2"></span>
@@ -1337,7 +1424,7 @@ function SpectatorPortal({
               <CardContent>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div className="bg-[#0a1017]/50 rounded-xl p-4">
-                    <p className="text-3xl font-bold text-white">{tournament.matches?.filter(m => m.status === 'completed').length || 0}</p>
+                    <p className="text-3xl font-bold text-emerald-400">{tournament.matches?.filter(m => m.status === 'completed').length || 0}</p>
                     <p className="text-xs text-[#6b8fad]">Completed</p>
                   </div>
                   <div className="bg-[#0a1017]/50 rounded-xl p-4">
@@ -1378,11 +1465,17 @@ function SpectatorPortal({
                           <div className="flex-1 text-center">
                             <p className="text-white font-medium">{player1?.firstName} {player1?.lastName}</p>
                             <p className="text-3xl font-bold text-white mt-1">{match.player1Score.length}</p>
+                            <p className="text-xs text-[#6b8fad] mt-1">
+                              {match.player1Score.map(s => getScoreName(s)).join(' ') || '-'}
+                            </p>
                           </div>
                           <div className="px-4 text-[#4a6b8a]">VS</div>
                           <div className="flex-1 text-center">
                             <p className="text-white font-medium">{player2?.firstName} {player2?.lastName}</p>
                             <p className="text-3xl font-bold text-white mt-1">{match.player2Score.length}</p>
+                            <p className="text-xs text-[#6b8fad] mt-1">
+                              {match.player2Score.map(s => getScoreName(s)).join(' ') || '-'}
+                            </p>
                           </div>
                         </div>
                       </div>
@@ -1391,8 +1484,75 @@ function SpectatorPortal({
                 )}
               </CardContent>
             </Card>
+
+            {/* Match Queues */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Court A Queue */}
+              <Card className="bg-[#142130]/80 border-white/5 border-l-4 border-l-amber-500">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-white text-base flex items-center gap-2">
+                    <span className="w-6 h-6 rounded bg-amber-500 text-black text-xs font-bold flex items-center justify-center">A</span>
+                    Court A Queue
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {courtAQueue.length === 0 ? (
+                    <p className="text-[#6b8fad] text-sm text-center py-4">No upcoming matches</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {courtAQueue.map((match, idx) => {
+                        const p1 = getMemberById(match.player1Id)
+                        const p2 = getMemberById(match.player2Id)
+                        const group = getGroupById(match.groupId)
+                        return (
+                          <div key={match.id} className="flex items-center gap-2 text-sm bg-[#0a1017]/30 rounded-lg px-3 py-2">
+                            <span className="text-[#6b8fad] w-5">#{idx + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white truncate">{p1?.firstName} {p1?.lastName} vs {p2?.firstName} {p2?.lastName}</p>
+                              <p className="text-xs text-[#6b8fad]">{group?.name}</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Court B Queue */}
+              <Card className="bg-[#142130]/80 border-white/5 border-l-4 border-l-blue-500">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-white text-base flex items-center gap-2">
+                    <span className="w-6 h-6 rounded bg-blue-500 text-white text-xs font-bold flex items-center justify-center">B</span>
+                    Court B Queue
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {courtBQueue.length === 0 ? (
+                    <p className="text-[#6b8fad] text-sm text-center py-4">No upcoming matches</p>
+                  ) : (
+                    <div className="space-y-2">
+                      {courtBQueue.map((match, idx) => {
+                        const p1 = getMemberById(match.player1Id)
+                        const p2 = getMemberById(match.player2Id)
+                        const group = getGroupById(match.groupId)
+                        return (
+                          <div key={match.id} className="flex items-center gap-2 text-sm bg-[#0a1017]/30 rounded-lg px-3 py-2">
+                            <span className="text-[#6b8fad] w-5">#{idx + 1}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white truncate">{p1?.firstName} {p1?.lastName} vs {p2?.firstName} {p2?.lastName}</p>
+                              <p className="text-xs text-[#6b8fad]">{group?.name}</p>
+                            </div>
+                          </div>
+                        )
+                      })}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
             
-            {/* Recent Results */}
+            {/* Recent Results with Points */}
             <Card className="bg-[#142130]/80 border-white/5">
               <CardHeader>
                 <CardTitle className="text-white text-lg flex items-center gap-2">
@@ -1400,31 +1560,122 @@ function SpectatorPortal({
                   Recent Results
                 </CardTitle>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {tournament.matches?.filter(m => m.status === 'completed').slice(-5).reverse().map(match => {
+              <CardContent className="space-y-3">
+                {tournament.matches?.filter(m => m.status === 'completed').slice(-8).reverse().map(match => {
                   const player1 = getMemberById(match.player1Id)
                   const player2 = getMemberById(match.player2Id)
+                  const group = getGroupById(match.groupId)
                   const p1Score = match.player1Score.length
                   const p2Score = match.player2Score.length
-                  const winner = p1Score > p2Score ? player1 : p2Score > p1Score ? player2 : null
+                  const p1Won = p1Score > p2Score
+                  const p2Won = p2Score > p1Score
                   return (
-                    <div key={match.id} className="flex items-center justify-between bg-[#0a1017]/30 rounded-lg px-4 py-3">
-                      <div className="flex items-center gap-3">
-                        <span className={`font-medium ${p1Score > p2Score ? 'text-green-400' : 'text-white'}`}>
-                          {player1?.firstName} {player1?.lastName}
-                        </span>
-                        <span className="text-[#4a6b8a] text-sm">{p1Score} - {p2Score}</span>
-                        <span className={`font-medium ${p2Score > p1Score ? 'text-green-400' : 'text-white'}`}>
-                          {player2?.firstName} {player2?.lastName}
-                        </span>
+                    <div key={match.id} className="bg-[#0a1017]/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-xs text-[#6b8fad]">{group?.name}</span>
+                        {(p1Won || p2Won) && <CheckCircle2 className="w-4 h-4 text-green-400" />}
                       </div>
-                      {winner && <CheckCircle2 className="w-4 h-4 text-green-400" />}
+                      <div className="flex items-center justify-between">
+                        <div className="flex-1">
+                          <p className={`font-medium ${p1Won ? 'text-green-400' : 'text-white'}`}>
+                            {player1?.firstName} {player1?.lastName}
+                            {p1Won && <span className="ml-2 text-xs">👑</span>}
+                          </p>
+                          <div className="flex items-center gap-1 mt-1">
+                            {match.player1Score.map((s, i) => (
+                              <span key={i} className="px-1.5 py-0.5 bg-red-500/20 text-red-300 text-xs rounded">
+                                {getScoreFullName(s)}
+                              </span>
+                            ))}
+                            {match.player1Score.length === 0 && <span className="text-xs text-[#6b8fad]">-</span>}
+                          </div>
+                        </div>
+                        <div className="px-4 text-center">
+                          <span className="text-2xl font-bold text-white">{p1Score} - {p2Score}</span>
+                        </div>
+                        <div className="flex-1 text-right">
+                          <p className={`font-medium ${p2Won ? 'text-green-400' : 'text-white'}`}>
+                            {p2Won && <span className="mr-2 text-xs">👑</span>}
+                            {player2?.firstName} {player2?.lastName}
+                          </p>
+                          <div className="flex items-center gap-1 mt-1 justify-end">
+                            {match.player2Score.map((s, i) => (
+                              <span key={i} className="px-1.5 py-0.5 bg-blue-500/20 text-blue-300 text-xs rounded">
+                                {getScoreFullName(s)}
+                              </span>
+                            ))}
+                            {match.player2Score.length === 0 && <span className="text-xs text-[#6b8fad]">-</span>}
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )
                 })}
                 {tournament.matches?.filter(m => m.status === 'completed').length === 0 && (
                   <p className="text-[#6b8fad] text-center py-4">No completed matches yet</p>
                 )}
+              </CardContent>
+            </Card>
+
+            {/* Group Standings */}
+            <Card className="bg-[#142130]/80 border-white/5">
+              <CardHeader>
+                <CardTitle className="text-white text-lg flex items-center gap-2">
+                  <Table className="w-5 h-5 text-blue-400" />
+                  Group Standings
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-6">
+                  {(tournament.groupOrder || []).map(groupId => {
+                    const group = getGroupById(groupId)
+                    const standings = getGroupStandings(groupId)
+                    if (standings.length === 0) return null
+                    return (
+                      <div key={groupId}>
+                        <h3 className="text-white font-medium mb-3 flex items-center gap-2">
+                          <Filter className="w-4 h-4 text-[#6b8fad]" />
+                          {group?.name || groupId}
+                        </h3>
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-sm">
+                            <thead>
+                              <tr className="border-b border-white/10">
+                                <th className="text-left py-2 px-2 text-[#6b8fad] font-medium">#</th>
+                                <th className="text-left py-2 px-2 text-[#6b8fad] font-medium">Name</th>
+                                <th className="text-center py-2 px-1 text-[#6b8fad] font-medium">W</th>
+                                <th className="text-center py-2 px-1 text-[#6b8fad] font-medium">L</th>
+                                <th className="text-center py-2 px-1 text-[#6b8fad] font-medium">D</th>
+                                <th className="text-center py-2 px-1 text-[#6b8fad] font-medium">Pts</th>
+                                <th className="text-center py-2 px-2 text-[#6b8fad] font-medium">Matches</th>
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {standings.map((player, idx) => (
+                                <tr key={player.playerId} className="border-b border-white/5">
+                                  <td className="py-2 px-2 text-[#6b8fad]">{idx + 1}</td>
+                                  <td className="py-2 px-2 text-white">{player.playerName}</td>
+                                  <td className="py-2 px-1 text-center text-emerald-400">{player.wins}</td>
+                                  <td className="py-2 px-1 text-center text-red-400">{player.losses}</td>
+                                  <td className="py-2 px-1 text-center text-[#6b8fad]">{player.draws}</td>
+                                  <td className="py-2 px-1 text-center text-yellow-400 font-bold">{player.points}</td>
+                                  <td className="py-2 px-2 text-center">
+                                    <span className="text-emerald-400">{player.completed}</span>
+                                    <span className="text-[#4a6b8a]">/</span>
+                                    <span className="text-[#6b8fad]">{player.total}</span>
+                                    {player.inProgress > 0 && (
+                                      <span className="ml-1 text-orange-400 text-xs">(⚔️)</span>
+                                    )}
+                                  </td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                      </div>
+                    )
+                  })}
+                </div>
               </CardContent>
             </Card>
           </>
