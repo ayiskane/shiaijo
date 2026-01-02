@@ -6308,15 +6308,15 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                           return (
                             <div className="flex rounded overflow-hidden border border-slate-700">
                               <button
-                                onClick={() => switchGroupCourt(groupId, 'A')}
+                                onClick={(e) => { e.stopPropagation(); switchGroupCourt(groupId, 'A') }}
                                 className={`w-6 h-5 text-[9px] font-bold ${isOnA ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
                               >A</button>
                               <button
-                                onClick={() => toggleSharedGroupCK(groupId)}
+                                onClick={(e) => { e.stopPropagation(); toggleSharedGroupCK(groupId) }}
                                 className={`px-1 h-5 text-[8px] font-medium border-x border-slate-700 ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
                               >A+B</button>
                               <button
-                                onClick={() => switchGroupCourt(groupId, 'B')}
+                                onClick={(e) => { e.stopPropagation(); switchGroupCourt(groupId, 'B') }}
                                 className={`w-6 h-5 text-[9px] font-bold ${isOnB ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
                               >B</button>
                             </div>
