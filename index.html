@@ -50,6 +50,25 @@
         color-scheme: dark;
         font-family: 'Titillium Web', system-ui, -apple-system, sans-serif;
       }
+      
+      /* Mobile touch fixes */
+      button, a, [role="button"], .clickable {
+        touch-action: manipulation;
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+      
+      /* Prevent double-tap zoom on all interactive elements */
+      input, select, textarea {
+        touch-action: manipulation;
+      }
+      
+      /* Active state for better touch feedback */
+      button:active, a:active, [role="button"]:active {
+        opacity: 0.8;
+      }
     </style>
   </head>
   <body class="dark">
