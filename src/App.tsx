@@ -4,11 +4,7 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, v
 import { CSS } from '@dnd-kit/utilities'
 
 // Drag Handle component for sortable items
-const DragHandle = () => (
-  <span className="text-slate-500 cursor-grab active:cursor-grabbing text-sm select-none touch-none px-1">☰</span>
-)
-
-// Sortable Group Card wrapper component
+// Simple sortable group card - drag via handle only
 const SortableGroupCard = ({ 
   id, 
   children, 
@@ -22,9 +18,9 @@ const SortableGroupCard = ({
   isCourtA: boolean
   isCourtB: boolean
 }) => {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({ id })
   
-  const style = {
+  const style: React.CSSProperties = {
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
@@ -35,14 +31,24 @@ const SortableGroupCard = ({
     <Card 
       ref={setNodeRef} 
       style={style}
-      {...attributes}
-      {...listeners}
-      className={`border-l-2 transition-all touch-none ${
-        isDragging ? 'scale-[0.98] shadow-xl' :
+      className={`border-l-2 transition-all ${
+        isDragging ? 'scale-[0.98] shadow-xl ring-2 ring-amber-400' :
         isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
       }`}
     >
-      {children}
+      {/* Drag Handle - only this element activates dragging */}
+      <div 
+        ref={setActivatorNodeRef}
+        {...attributes}
+        {...listeners}
+        className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors z-10"
+        style={{ touchAction: 'none' }}
+      >
+        <span className="text-lg">⋮⋮</span>
+      </div>
+      <div className="pl-6">
+        {children}
+      </div>
     </Card>
   )
 }
@@ -3553,10 +3559,10 @@ const TournamentManager = memo(function TournamentManager({
   // DnD Kit sensors with touch delay for mobile
   const sensors = useSensors(
     useSensor(PointerSensor, {
-      activationConstraint: { distance: 8 }
+      activationConstraint: { distance: 10 }
     }),
     useSensor(TouchSensor, {
-      activationConstraint: { delay: 200, tolerance: 5 }
+      activationConstraint: { delay: 250, tolerance: 8 }
     }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates
@@ -3995,7 +4001,6 @@ const TournamentManager = memo(function TournamentManager({
                 <CardHeader className="p-3 pb-2">
                   {/* Row 1: Drag handle, collapse toggle, court badge, group name, edit, progress */}
                   <div className="flex items-center gap-1.5">
-                    <DragHandle />
                     <button 
                   onClick={() => setCollapsedGroups(prev => 
                     prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]
