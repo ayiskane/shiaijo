@@ -1950,6 +1950,7 @@ const SpectatorPortal = memo(function SpectatorPortal({
 const AdminPortal = memo(function AdminPortal({ 
   state, 
   setState, 
+  isMobile,
   onSwitchPortal,
   getMemberById,
   getGroupById
