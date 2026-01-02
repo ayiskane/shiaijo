@@ -2411,7 +2411,7 @@ const AdminPortal = memo(function AdminPortal({
                 
                 <NavGroup groupId="shiai" label="Shiai">
                   <NavItem id="tournament" icon={Trophy} label="Tournament" badge={tournamentBadge} badgeColor={state.currentTournament?.status === 'in_progress' ? 'green' : 'amber'} />
-                  <NavItem id="standings" icon={Table} label="Results" />
+                  <NavItem id="standings" icon={Table} label="Current Results" />
                   <NavItem id="history" icon={History} label="History" />
                 </NavGroup>
                 
@@ -2518,7 +2518,7 @@ const AdminPortal = memo(function AdminPortal({
               </button>
               {mobileNavGroups.includes('shiai') && [
                 { id: 'tournament', icon: Trophy, label: 'Tournament' },
-                { id: 'standings', icon: Table, label: 'Results' },
+                { id: 'standings', icon: Table, label: 'Current Results' },
                 { id: 'history', icon: History, label: 'History' },
               ].map(item => (
                 <button
@@ -2625,7 +2625,7 @@ const AdminPortal = memo(function AdminPortal({
                 <span className="text-orange-400">Admin Portal</span>
                 <ChevronRight className="w-4 h-4 text-[#6b8fad]" />
                 <span className="text-white">{
-                  activeTab === 'standings' ? 'Results' :
+                  activeTab === 'standings' ? 'Current Results' :
                   activeTab === 'dashboard' ? 'Dashboard' :
                   activeTab === 'members' ? 'Members' :
                   activeTab === 'guests' ? 'Guests' :
@@ -3521,6 +3521,8 @@ const TournamentManager = memo(function TournamentManager({
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
   const [showEditTournament, setShowEditTournament] = useState(false)
+  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const tournament = state.currentTournament
   
   // DnD Kit sensors with touch delay for mobile
@@ -4392,8 +4394,8 @@ const StandingsView = memo(function StandingsView({
       <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
         <CardContent className="p-8 text-center text-[#8fb3d1]">
           <Trophy className="w-12 h-12 mx-auto mb-4 opacity-50" />
-          <p>No tournament in progress</p>
-          <p className="text-sm mt-2">Generate a tournament to see standings</p>
+          <p>No active tournament</p>
+          <p className="text-sm mt-2">Generate a tournament to see results</p>
         </CardContent>
       </Card>
     )
