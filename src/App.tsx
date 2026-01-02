@@ -5622,13 +5622,32 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     const wasShared = (state.sharedGroups || []).includes(groupId)
     setState(prev => {
       if (!prev.currentTournament) return prev
+      
+      // Get all pending match IDs in this group
+      const groupMatchIds = prev.currentTournament.matches
+        .filter(m => m.groupId === groupId && m.status === 'pending')
+        .map(m => m.id)
+      
+      // Clear selected matches if they belong to this group and are being moved away
+      let newCourtASelected = prev.courtASelectedMatch
+      let newCourtBSelected = prev.courtBSelectedMatch
+      
+      if (newCourt === 'B' && newCourtASelected && groupMatchIds.includes(newCourtASelected)) {
+        newCourtASelected = null // Moving to B, clear A's selection
+      }
+      if (newCourt === 'A' && newCourtBSelected && groupMatchIds.includes(newCourtBSelected)) {
+        newCourtBSelected = null // Moving to A, clear B's selection
+      }
+      
       const updatedMatches = prev.currentTournament.matches.map(m => 
         m.groupId === groupId && m.status === 'pending' ? { ...m, court: newCourt } : m
       )
       return {
         ...prev,
         sharedGroups: wasShared ? (prev.sharedGroups || []).filter(g => g !== groupId) : prev.sharedGroups,
-        currentTournament: { ...prev.currentTournament, matches: updatedMatches }
+        currentTournament: { ...prev.currentTournament, matches: updatedMatches },
+        courtASelectedMatch: newCourtASelected,
+        courtBSelectedMatch: newCourtBSelected,
       }
     })
     toast.success(`Group moved to Court ${newCourt}`)
