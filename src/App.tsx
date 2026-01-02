@@ -3957,6 +3957,9 @@ const TournamentManager = memo(function TournamentManager({
                   return (
                     <div key={groupId} className="flex items-center gap-2">
                       <span className="text-xs text-slate-300 flex-1 truncate">{group?.name}</span>
+                      {group?.isNonBogu && (
+                        <span className="text-[9px] px-1 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
+                      )}
                       <div className="flex rounded overflow-hidden border border-slate-700">
                         <button
                           onClick={() => setGroupCourt('A')}
