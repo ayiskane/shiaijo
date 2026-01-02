@@ -881,7 +881,17 @@ export default function App() {
           
           {/* Footer */}
           <p className="text-center text-[10px] md:text-xs text-[#3d5a78] mt-6 md:mt-8">
-            Powered by <span className="text-orange-400">Renbu Dojo</span> <span style={{ fontFamily: 'ShiaijoCalligraphy, serif' }} className="text-orange-400">錬武道場</span>
+            Powered by{' '}
+            <a 
+              href="https://renbudojo.com/" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 transition-colors"
+            >
+              Renbu Dojo
+              <img src="/renbu-logo.png" alt="Renbu" className="w-4 h-4 inline-block" />
+              <span style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>錬武道場</span>
+            </a>
           </p>
         </div>
       </div>
