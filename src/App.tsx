@@ -2760,10 +2760,10 @@ const AdminPortal = memo(function AdminPortal({
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-[#142130] border-white/5 hover:border-orange-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('members')}>
                   <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
                       <Users className="w-6 h-6 text-orange-400" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-white font-medium">Manage Members</p>
                       <p className="text-xs text-[#6b8fad]">Add, edit, or remove members</p>
                     </div>
@@ -2771,10 +2771,10 @@ const AdminPortal = memo(function AdminPortal({
                 </Card>
                 <Card className="bg-[#142130] border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('groups')}>
                   <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
                       <Filter className="w-6 h-6 text-blue-400" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-white font-medium">Manage Groups</p>
                       <p className="text-xs text-[#6b8fad]">Configure rank groups</p>
                     </div>
@@ -2782,10 +2782,10 @@ const AdminPortal = memo(function AdminPortal({
                 </Card>
                 <Card className="bg-[#142130] border-white/5 hover:border-emerald-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('settings')}>
                   <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
                       <Settings className="w-6 h-6 text-emerald-400" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <p className="text-white font-medium">Settings</p>
                       <p className="text-xs text-[#6b8fad]">Passwords & preferences</p>
                     </div>
