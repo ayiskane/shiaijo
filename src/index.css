@@ -45,6 +45,24 @@
   input, select, textarea {
     color-scheme: dark;
   }
+  
+  /* Mobile touch improvements */
+  button, a, [role="button"], input[type="checkbox"], input[type="radio"], select {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* Ensure buttons respond immediately on mobile */
+  @media (hover: none) and (pointer: coarse) {
+    button, a, [role="button"] {
+      cursor: pointer;
+    }
+    
+    button:active, a:active, [role="button"]:active {
+      transform: scale(0.98);
+      opacity: 0.9;
+    }
+  }
 
   ::-webkit-scrollbar {
     width: 6px;
