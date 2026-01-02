@@ -6237,13 +6237,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-slate-400 text-xs">Court:</span>
                 <button
-                  onClick={() => { setSelectedCourt('A'); setShowQueue(false) }}
+                  onClick={() => { setSelectedCourt('A'); toast('Now viewing Court A', { icon: '🅰️', duration: 1500 }) }}
                   className={`px-4 py-1.5 rounded text-xs font-bold ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400'}`}
                 >
                   A
                 </button>
                 <button
-                  onClick={() => { setSelectedCourt('B'); setShowQueue(false) }}
+                  onClick={() => { setSelectedCourt('B'); toast('Now viewing Court B', { icon: '🅱️', duration: 1500 }) }}
                   className={`px-4 py-1.5 rounded text-xs font-bold ${selectedCourt === 'B' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'}`}
                 >
                   B
