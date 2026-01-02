@@ -33,7 +33,7 @@ import {
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Award, ChevronLeft, Undo2, ChevronDown, ChevronUp
+  ArrowLeftRight, Award, ChevronLeft, Undo2, ChevronDown, ChevronUp, Heart, Clock
 } from 'lucide-react'
 
 // Types
@@ -120,6 +120,25 @@ interface PlayerStanding {
   results: Map<string, 'W' | 'L' | 'D' | null>
 }
 
+interface VolunteerSignup {
+  id: string
+  tournamentId: string
+  tournamentName: string
+  date: string
+  hours: number
+  role: string
+  notes?: string
+}
+
+interface Volunteer {
+  id: string
+  firstName: string
+  lastName: string
+  email?: string
+  phone?: string
+  signups: VolunteerSignup[]
+}
+
 interface AppState {
   members: Member[]
   courtASelectedMatch: string | null  // Override queue with this match
@@ -143,6 +162,7 @@ interface AppState {
   useFirstNamesOnly: boolean
   adminPassword: string
   courtkeeperPassword: string
+  volunteers: Volunteer[]
 }
 
 // Utility functions
@@ -416,6 +436,7 @@ const defaultState: AppState = {
   useFirstNamesOnly: true,
   adminPassword: '',
   courtkeeperPassword: '',
+  volunteers: [],
 }
 
 // Device detection hook
@@ -1338,6 +1359,7 @@ function AdminPortal({
               { id: 'tournament', icon: Trophy, label: 'Tournament', badge: tournamentBadge, badgeColor: state.currentTournament?.status === 'in_progress' ? 'green' : 'amber' },
               { id: 'standings', icon: Table, label: 'Standings', badge: null },
               { id: 'history', icon: History, label: 'History', badge: null },
+              { id: 'volunteers', icon: Heart, label: 'Volunteers', badge: null },
               { id: 'settings', icon: Settings, label: 'Settings', badge: null },
             ]
           })().map(item => (
@@ -1406,6 +1428,7 @@ function AdminPortal({
                 { id: 'tournament', icon: Trophy, label: 'Tournament' },
                 { id: 'standings', icon: Table, label: 'Standings' },
                 { id: 'history', icon: History, label: 'History' },
+                { id: 'volunteers', icon: Heart, label: 'Volunteers' },
                 { id: 'settings', icon: Settings, label: 'Settings' },
               ].map(item => (
                 <button
@@ -1773,6 +1796,11 @@ function AdminPortal({
           {/* History Tab */}
           {activeTab === 'history' && (
             <HistoryView state={state} setState={setState} />
+          )}
+
+          {/* Volunteers Tab */}
+          {activeTab === 'volunteers' && (
+            <VolunteersTab state={state} setState={setState} />
           )}
 
           {/* Settings Tab */}
@@ -3259,6 +3287,387 @@ function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
           Import
         </Button>
       </DialogFooter>
+    </div>
+  )
+}
+
+// Volunteers Tab Component
+function VolunteersTab({ 
+  state, 
+  setState 
+}: { 
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+}) {
+  const [showAddVolunteer, setShowAddVolunteer] = useState(false)
+  const [newFirstName, setNewFirstName] = useState('')
+  const [newLastName, setNewLastName] = useState('')
+  const [newEmail, setNewEmail] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [editingVolunteer, setEditingVolunteer] = useState<string | null>(null)
+  const [showLogHours, setShowLogHours] = useState<string | null>(null)
+  const [logHours, setLogHours] = useState('')
+  const [logRole, setLogRole] = useState('')
+  const [logDate, setLogDate] = useState('')
+  const [logNotes, setLogNotes] = useState('')
+  const [searchQuery, setSearchQuery] = useState('')
+
+  const addVolunteer = () => {
+    if (!newFirstName.trim() || !newLastName.trim()) return
+    const volunteer: Volunteer = {
+      id: generateId(),
+      firstName: newFirstName.trim(),
+      lastName: newLastName.trim(),
+      email: newEmail.trim() || undefined,
+      phone: newPhone.trim() || undefined,
+      signups: []
+    }
+    setState(prev => ({ ...prev, volunteers: [...prev.volunteers, volunteer] }))
+    setNewFirstName('')
+    setNewLastName('')
+    setNewEmail('')
+    setNewPhone('')
+    setShowAddVolunteer(false)
+    toast.success('Volunteer added')
+  }
+
+  const deleteVolunteer = (id: string) => {
+    setState(prev => ({ ...prev, volunteers: prev.volunteers.filter(v => v.id !== id) }))
+    toast.success('Volunteer removed')
+  }
+
+  const logVolunteerHours = (volunteerId: string) => {
+    if (!logHours || !logDate) return
+    const signup: VolunteerSignup = {
+      id: generateId(),
+      tournamentId: state.currentTournament?.id || 'general',
+      tournamentName: state.currentTournament?.name || 'General Volunteering',
+      date: logDate,
+      hours: parseFloat(logHours),
+      role: logRole || 'General',
+      notes: logNotes || undefined
+    }
+    setState(prev => ({
+      ...prev,
+      volunteers: prev.volunteers.map(v => 
+        v.id === volunteerId 
+          ? { ...v, signups: [...v.signups, signup] }
+          : v
+      )
+    }))
+    setShowLogHours(null)
+    setLogHours('')
+    setLogRole('')
+    setLogDate('')
+    setLogNotes('')
+    toast.success('Hours logged')
+  }
+
+  const deleteSignup = (volunteerId: string, signupId: string) => {
+    setState(prev => ({
+      ...prev,
+      volunteers: prev.volunteers.map(v => 
+        v.id === volunteerId 
+          ? { ...v, signups: v.signups.filter(s => s.id !== signupId) }
+          : v
+      )
+    }))
+    toast.success('Entry removed')
+  }
+
+  const getTotalHours = (volunteer: Volunteer) => {
+    return volunteer.signups.reduce((sum, s) => sum + s.hours, 0)
+  }
+
+  const filteredVolunteers = state.volunteers.filter(v => 
+    `${v.firstName} ${v.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
+  )
+
+  const totalVolunteerHours = state.volunteers.reduce((sum, v) => sum + getTotalHours(v), 0)
+
+  return (
+    <div className="space-y-6">
+      {/* Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <Card className="bg-[#142130] border-white/5">
+          <CardContent className="p-4 text-center">
+            <Heart className="w-6 h-6 text-pink-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">{state.volunteers.length}</p>
+            <p className="text-xs text-[#6b8fad]">Volunteers</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-[#142130] border-white/5">
+          <CardContent className="p-4 text-center">
+            <Clock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">{totalVolunteerHours.toFixed(1)}</p>
+            <p className="text-xs text-[#6b8fad]">Total Hours</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-[#142130] border-white/5">
+          <CardContent className="p-4 text-center">
+            <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">
+              {state.volunteers.filter(v => getTotalHours(v) >= 10).length}
+            </p>
+            <p className="text-xs text-[#6b8fad]">10+ Hours</p>
+          </CardContent>
+        </Card>
+        <Card className="bg-[#142130] border-white/5">
+          <CardContent className="p-4 text-center">
+            <Award className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">
+              {state.volunteers.length > 0 ? Math.max(...state.volunteers.map(v => getTotalHours(v))).toFixed(1) : '0'}
+            </p>
+            <p className="text-xs text-[#6b8fad]">Top Hours</p>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Add Volunteer & Search */}
+      <Card className="bg-[#142130] border-white/5">
+        <CardHeader className="pb-3">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <CardTitle className="text-white flex items-center gap-2">
+              <Heart className="w-5 h-5 text-pink-400" />
+              Volunteer Registry
+            </CardTitle>
+            <Button onClick={() => setShowAddVolunteer(true)} className="bg-pink-600 hover:bg-pink-700">
+              <Plus className="w-4 h-4 mr-2" /> Add Volunteer
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b8fad]" />
+            <Input
+              placeholder="Search volunteers..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 bg-[#1a2d42] border-[#1e3a5f] text-white"
+            />
+          </div>
+
+          {filteredVolunteers.length === 0 ? (
+            <div className="text-center py-12">
+              <Heart className="w-12 h-12 text-[#3d5a78] mx-auto mb-3" />
+              <p className="text-[#6b8fad]">
+                {state.volunteers.length === 0 ? 'No volunteers yet' : 'No matching volunteers'}
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              {filteredVolunteers.map(volunteer => (
+                <div key={volunteer.id} className="bg-[#1a2d42]/50 rounded-xl p-4 border border-white/5">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
+                          <span className="text-pink-400 font-semibold">
+                            {volunteer.firstName[0]}{volunteer.lastName[0]}
+                          </span>
+                        </div>
+                        <div>
+                          <p className="text-white font-medium">{volunteer.firstName} {volunteer.lastName}</p>
+                          <div className="flex items-center gap-3 text-xs text-[#6b8fad]">
+                            {volunteer.email && <span>{volunteer.email}</span>}
+                            {volunteer.phone && <span>{volunteer.phone}</span>}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                        {getTotalHours(volunteer).toFixed(1)} hrs
+                      </Badge>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/30"
+                        onClick={() => setShowLogHours(volunteer.id)}
+                      >
+                        <Clock className="w-4 h-4" />
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                        onClick={() => deleteVolunteer(volunteer.id)}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+
+                  {/* Volunteer Hours History */}
+                  {volunteer.signups.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-white/5">
+                      <p className="text-xs text-[#6b8fad] mb-2">Volunteer History</p>
+                      <div className="space-y-2">
+                        {volunteer.signups.slice().reverse().slice(0, 5).map(signup => (
+                          <div key={signup.id} className="flex items-center justify-between bg-[#0f1a24]/50 rounded-lg px-3 py-2 text-sm">
+                            <div className="flex items-center gap-3">
+                              <span className="text-[#6b8fad]">
+                                {new Date(signup.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                              </span>
+                              <span className="text-white">{signup.role}</span>
+                              {signup.notes && <span className="text-[#6b8fad] text-xs">({signup.notes})</span>}
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <span className="text-emerald-400 font-medium">{signup.hours}h</span>
+                              <button 
+                                onClick={() => deleteSignup(volunteer.id, signup.id)}
+                                className="text-red-400/50 hover:text-red-400"
+                              >
+                                <X className="w-3 h-3" />
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                        {volunteer.signups.length > 5 && (
+                          <p className="text-xs text-[#6b8fad] text-center">
+                            +{volunteer.signups.length - 5} more entries
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Add Volunteer Dialog */}
+      <Dialog open={showAddVolunteer} onOpenChange={setShowAddVolunteer}>
+        <DialogContent className="bg-[#142130] border-[#1e3a5f] text-white">
+          <DialogHeader>
+            <DialogTitle>Add Volunteer</DialogTitle>
+            <DialogDescription className="text-[#6b8fad]">
+              Add a parent or volunteer to the registry
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>First Name *</Label>
+                <Input
+                  value={newFirstName}
+                  onChange={(e) => setNewFirstName(e.target.value)}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  placeholder="John"
+                />
+              </div>
+              <div>
+                <Label>Last Name *</Label>
+                <Input
+                  value={newLastName}
+                  onChange={(e) => setNewLastName(e.target.value)}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  placeholder="Doe"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Email</Label>
+              <Input
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                placeholder="john@example.com"
+              />
+            </div>
+            <div>
+              <Label>Phone</Label>
+              <Input
+                type="tel"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                placeholder="(555) 123-4567"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddVolunteer(false)}>Cancel</Button>
+            <Button onClick={addVolunteer} className="bg-pink-600 hover:bg-pink-700" disabled={!newFirstName.trim() || !newLastName.trim()}>
+              Add Volunteer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Log Hours Dialog */}
+      <Dialog open={showLogHours !== null} onOpenChange={() => setShowLogHours(null)}>
+        <DialogContent className="bg-[#142130] border-[#1e3a5f] text-white">
+          <DialogHeader>
+            <DialogTitle>Log Volunteer Hours</DialogTitle>
+            <DialogDescription className="text-[#6b8fad]">
+              Record volunteering time for {state.volunteers.find(v => v.id === showLogHours)?.firstName}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label>Date *</Label>
+              <Input
+                type="date"
+                value={logDate}
+                onChange={(e) => setLogDate(e.target.value)}
+                className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+              />
+            </div>
+            <div>
+              <Label>Hours *</Label>
+              <Input
+                type="number"
+                step="0.5"
+                min="0.5"
+                value={logHours}
+                onChange={(e) => setLogHours(e.target.value)}
+                className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                placeholder="2"
+              />
+            </div>
+            <div>
+              <Label>Role</Label>
+              <Select value={logRole} onValueChange={setLogRole}>
+                <SelectTrigger className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1">
+                  <SelectValue placeholder="Select role..." />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a2d42] border-[#1e3a5f]">
+                  <SelectItem value="Scorekeeper">Scorekeeper</SelectItem>
+                  <SelectItem value="Timer">Timer</SelectItem>
+                  <SelectItem value="Registration">Registration</SelectItem>
+                  <SelectItem value="Setup/Cleanup">Setup/Cleanup</SelectItem>
+                  <SelectItem value="Refreshments">Refreshments</SelectItem>
+                  <SelectItem value="Photography">Photography</SelectItem>
+                  <SelectItem value="General">General</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label>Notes</Label>
+              <Input
+                value={logNotes}
+                onChange={(e) => setLogNotes(e.target.value)}
+                className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                placeholder="Optional notes..."
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLogHours(null)}>Cancel</Button>
+            <Button 
+              onClick={() => showLogHours && logVolunteerHours(showLogHours)} 
+              className="bg-emerald-600 hover:bg-emerald-700"
+              disabled={!logHours || !logDate}
+            >
+              <Clock className="w-4 h-4 mr-2" /> Log Hours
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
