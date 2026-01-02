@@ -3416,8 +3416,11 @@ const GroupsManager = memo(function GroupsManager({
                   
                   {/* Non-bogu toggle */}
                   <div className="flex items-center gap-1.5">
-                    {group.isNonBogu && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
+                    {group.isNonBogu && !editMode && (
+                      <>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">Non-Bogu</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
+                      </>
                     )}
                     {editMode && (
                       <div className="flex items-center gap-1">
