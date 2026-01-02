@@ -3304,7 +3304,6 @@ function VolunteersTab({
   const [newLastName, setNewLastName] = useState('')
   const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
-  const [editingVolunteer, setEditingVolunteer] = useState<string | null>(null)
   const [showLogHours, setShowLogHours] = useState<string | null>(null)
   const [logHours, setLogHours] = useState('')
   const [logRole, setLogRole] = useState('')
