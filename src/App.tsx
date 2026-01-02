@@ -6195,17 +6195,10 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                             }
                             setDraggedMatchId(null)
                           }}
-                          onTouchStart={(e) => {
-                            if (!canDrag) return
-                            // Don't start drag if touching interactive elements
-                            const target = e.target as HTMLElement
-                            if (target.closest('button') || target.closest('select') || target.closest('input')) return
-                            setTouchStartY(e.touches[0].clientY)
-                            setDraggedMatchId(match.id)
-                          }}
                           onTouchMove={(e) => {
+                            // Only handle if we're already dragging (started from handle)
                             if (!draggedMatchId || touchStartY === null) return
-                            e.preventDefault() // Prevent scrolling while dragging
+                            e.preventDefault()
                             const touch = e.touches[0]
                             const target = document.elementFromPoint(touch.clientX, touch.clientY)
                             const matchEl = target?.closest('[data-match-id]')
@@ -6222,7 +6215,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                           }}
                           data-match-id={match.id}
                           onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
-                          style={{ touchAction: canDrag ? 'none' : 'auto' }}
                           className={`w-full p-2 rounded-lg mb-1 text-xs transition-all cursor-pointer select-none ${
                             isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400' :
                             isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
@@ -6234,7 +6226,15 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                         >
                           <div className="flex items-center">
                             {canDrag && !isSelected && !isCurrentlyPlaying && (
-                              <span className="text-slate-600 mr-2 cursor-grab">☰</span>
+                              <span 
+                                className="text-slate-600 mr-2 cursor-grab active:cursor-grabbing p-1 -m-1"
+                                style={{ touchAction: 'none' }}
+                                onTouchStart={(e) => {
+                                  e.stopPropagation()
+                                  setTouchStartY(e.touches[0].clientY)
+                                  setDraggedMatchId(match.id)
+                                }}
+                              >☰</span>
                             )}
                             {isCurrentlyPlaying && (
                               <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold mr-2">
