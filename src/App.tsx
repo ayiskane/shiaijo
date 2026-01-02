@@ -5161,14 +5161,15 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     ? state.courtBGroupOrder 
     : (tournament?.groups || []).filter(gId => courtBMatches.some(m => m.groupId === gId))
   
-  // Get pending matches sorted by group order then match order
-  // Excludes matches that are in_progress on a different court
-  const getSortedPendingMatches = (matches: Match[], groupOrder: string[], thisCourt: 'A' | 'B') => {
+  // Get pending/in-progress matches sorted by group order then match order
+  // Shows all non-completed matches including those in_progress on other courts
+  const getSortedPendingMatches = (matches: Match[], groupOrder: string[]) => {
     return matches
       .filter(m => m.status !== 'completed')
-      // Exclude matches that are in_progress but locked to the other court
-      .filter(m => !(m.status === 'in_progress' && m.court !== thisCourt))
       .sort((a, b) => {
+        // In-progress matches come first
+        if (a.status === 'in_progress' && b.status !== 'in_progress') return -1
+        if (b.status === 'in_progress' && a.status !== 'in_progress') return 1
         const aGroupIdx = groupOrder.indexOf(a.groupId)
         const bGroupIdx = groupOrder.indexOf(b.groupId)
         if (aGroupIdx !== bGroupIdx) return aGroupIdx - bGroupIdx
@@ -5176,8 +5177,8 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       })
   }
   
-  const pendingMatchesA = getSortedPendingMatches(courtAMatches, courtAGroupOrder, 'A')
-  const pendingMatchesB = getSortedPendingMatches(courtBMatches, courtBGroupOrder, 'B')
+  const pendingMatchesA = getSortedPendingMatches(courtAMatches, courtAGroupOrder)
+  const pendingMatchesB = getSortedPendingMatches(courtBMatches, courtBGroupOrder)
   
   // If a match is manually selected, use it; otherwise use first pending match
   const selectedMatchIdA = state.courtASelectedMatch
@@ -6405,13 +6406,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                               ><GripVertical className="w-4 h-4" /></span>
                             )}
                             {isLiveOnThisCourt && (
-                              <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold mr-2">
-                                LIVE {selectedCourt}
+                              <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+                                {selectedCourt}
                               </span>
                             )}
                             {isLiveOnOtherCourt && (
-                              <span className={`text-[8px] px-1 py-0.5 rounded font-bold mr-2 ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
-                                LIVE {match.court}
+                              <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+                                {match.court}
                               </span>
                             )}
                             {isSelected && !isLiveOnThisCourt && !isLiveOnOtherCourt && <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
@@ -6419,7 +6420,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                               {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
                             </span>
                             <span className="text-slate-500 px-2">vs</span>
-                            <span className="text-slate-300 truncate flex-1 text-right">
+                            <span className="text-slate-300 truncate flex-1 text-right pr-2">
                               {mp2 ? formatDisplayName(mp2, state.members, state.useFirstNamesOnly) : '?'}
                             </span>
                           </div>
