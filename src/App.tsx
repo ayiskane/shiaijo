@@ -747,7 +747,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
         <Toaster theme="dark" position="top-center" />
-        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-12 max-w-md w-full shadow-2xl">
+        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl">
           <button 
             onClick={() => { setPortal('select'); setPasswordInput(''); setPasswordError(false) }}
             className="text-[#6b8fad] hover:text-white text-sm mb-6 flex items-center gap-2"
@@ -788,7 +788,7 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
         <Toaster theme="dark" position="top-center" />
-        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-12 max-w-md w-full shadow-2xl">
+        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl">
           <button 
             onClick={() => { setPortal('select'); setPasswordInput(''); setPasswordError(false) }}
             className="text-[#6b8fad] hover:text-white text-sm mb-6 flex items-center gap-2"
@@ -828,11 +828,11 @@ export default function App() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
         <Toaster theme="dark" position="top-center" />
-        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-12 max-w-md w-full shadow-2xl">
+        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl">
           {/* Logo */}
           <div className="text-center mb-8">
             <div className="flex justify-center mb-4">
-              <ShiaijoLogo size={160} glow />
+              <ShiaijoLogo size={120} glow />
             </div>
             <p className="text-[#6b8fad] text-sm tracking-widest uppercase">Shiai Manager</p>
           </div>
@@ -840,7 +840,7 @@ export default function App() {
           {/* Spectator Button - Glass style */}
           <button 
             onClick={() => setPortal('spectator')}
-            className="w-full py-4 px-6 rounded-2xl text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 flex items-center justify-center gap-3 mb-4"
+            className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 flex items-center justify-center gap-3 mb-4"
           >
             <Eye className="w-5 h-5" /> Join as Spectator
           </button>
@@ -856,7 +856,7 @@ export default function App() {
           <div className="space-y-3">
             <button 
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
-              className="w-full py-4 px-6 rounded-2xl text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
               <Shield className="w-5 h-5" /> Admin Portal
               {state.adminPassword && <Lock className="w-4 h-4 ml-1 opacity-60" />}
@@ -864,7 +864,7 @@ export default function App() {
             
             <button 
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
-              className="w-full py-4 px-6 rounded-2xl text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
               <Swords className="w-5 h-5" /> Courtkeeper Portal
               {state.courtkeeperPassword && <Lock className="w-4 h-4 ml-1 opacity-60" />}
@@ -872,7 +872,7 @@ export default function App() {
             
             <button 
               onClick={() => setPortal('volunteer')}
-              className="w-full py-4 px-6 rounded-2xl text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
               <Heart className="w-5 h-5" /> Volunteer Portal
             </button>
@@ -1086,7 +1086,7 @@ function VolunteerPortal({
           <div className="flex items-center gap-3">
             <ShiaijoLogo size={36} glow />
             <div>
-              <h1 className="text-white font-semibold">Volunteer Portal</h1>
+              <h1 className="text-white font-semibold text-sm sm:text-base">Volunteer Portal</h1>
               <p className="text-xs text-[#6b8fad]">Log hours & sign up for events</p>
             </div>
           </div>
@@ -1165,7 +1165,7 @@ function VolunteerPortal({
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-2xl font-bold text-pink-400">
+                    <p className="text-lg sm:text-xl font-bold text-pink-400">
                       {currentVolunteer && getTotalTime(currentVolunteer).hours}h {currentVolunteer && getTotalTime(currentVolunteer).mins}m
                     </p>
                     <p className="text-xs text-[#6b8fad]">Total volunteer time</p>
@@ -1384,7 +1384,7 @@ function VolunteerPortal({
                   className="pl-10 bg-[#1a2d42] border-[#1e3a5f] text-white h-9 text-sm"
                 />
               </div>
-              <ScrollArea className="h-40 border border-[#1e3a5f] rounded-lg p-2">
+              <ScrollArea className="h-32 sm:h-40 border border-[#1e3a5f] rounded-lg p-2">
                 {state.members
                   .filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(memberSearchQuery.toLowerCase()))
                   .map(member => (
@@ -1532,7 +1532,7 @@ function SpectatorPortal({
           <div className="flex items-center gap-3">
             <ShiaijoLogo size={36} glow />
             <div>
-              <h1 className="text-white font-semibold">Live Tournament</h1>
+              <h1 className="text-white font-semibold text-sm sm:text-base">Live Tournament</h1>
               <p className="text-xs text-[#6b8fad]">Spectator View</p>
             </div>
           </div>
@@ -1567,17 +1567,17 @@ function SpectatorPortal({
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-3 gap-4 text-center">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 text-center">
                   <div className="bg-[#0a1017]/50 rounded-xl p-4">
-                    <p className="text-3xl font-bold text-emerald-400">{tournament.matches?.filter(m => m.status === 'completed').length || 0}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-emerald-400">{tournament.matches?.filter(m => m.status === 'completed').length || 0}</p>
                     <p className="text-xs text-[#6b8fad]">Completed</p>
                   </div>
                   <div className="bg-[#0a1017]/50 rounded-xl p-4">
-                    <p className="text-3xl font-bold text-orange-400">{tournament.matches?.filter(m => m.status === 'in_progress').length || 0}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-orange-400">{tournament.matches?.filter(m => m.status === 'in_progress').length || 0}</p>
                     <p className="text-xs text-[#6b8fad]">In Progress</p>
                   </div>
                   <div className="bg-[#0a1017]/50 rounded-xl p-4">
-                    <p className="text-3xl font-bold text-[#6b8fad]">{tournament.matches?.filter(m => m.status === 'pending').length || 0}</p>
+                    <p className="text-2xl sm:text-3xl font-bold text-[#6b8fad]">{tournament.matches?.filter(m => m.status === 'pending').length || 0}</p>
                     <p className="text-xs text-[#6b8fad]">Remaining</p>
                   </div>
                 </div>
@@ -1609,7 +1609,7 @@ function SpectatorPortal({
                         <div className="flex items-center justify-between">
                           <div className="flex-1 text-center">
                             <p className="text-white font-medium">{player1?.firstName} {player1?.lastName}</p>
-                            <p className="text-3xl font-bold text-white mt-1">{match.player1Score.length}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-white mt-1">{match.player1Score.length}</p>
                             <p className="text-xs text-[#6b8fad] mt-1">
                               {match.player1Score.map(s => getScoreName(s)).join(' ') || '-'}
                             </p>
@@ -1617,7 +1617,7 @@ function SpectatorPortal({
                           <div className="px-4 text-[#4a6b8a]">VS</div>
                           <div className="flex-1 text-center">
                             <p className="text-white font-medium">{player2?.firstName} {player2?.lastName}</p>
-                            <p className="text-3xl font-bold text-white mt-1">{match.player2Score.length}</p>
+                            <p className="text-2xl sm:text-3xl font-bold text-white mt-1">{match.player2Score.length}</p>
                             <p className="text-xs text-[#6b8fad] mt-1">
                               {match.player2Score.map(s => getScoreName(s)).join(' ') || '-'}
                             </p>
@@ -1742,7 +1742,7 @@ function SpectatorPortal({
                           </div>
                         </div>
                         <div className="px-4 text-center">
-                          <span className="text-2xl font-bold text-white">{p1Score} - {p2Score}</span>
+                          <span className="text-xl sm:text-2xl font-bold text-white">{p1Score} - {p2Score}</span>
                         </div>
                         <div className="flex-1 text-right">
                           <p className={`font-medium ${p2Won ? 'text-green-400' : 'text-white'}`}>
@@ -1789,7 +1789,7 @@ function SpectatorPortal({
                           {group?.name || groupId}
                         </h3>
                         <div className="overflow-x-auto">
-                          <table className="w-full text-sm">
+                          <table className="w-full text-xs sm:text-sm">
                             <thead>
                               <tr className="border-b border-white/10">
                                 <th className="text-left py-2 px-2 text-[#6b8fad] font-medium">#</th>
@@ -2450,7 +2450,7 @@ function AdminPortal({
               </Card>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <Card className="bg-[#142130] border-white/5">
                   <CardContent className="p-4 text-center">
                     <Users className="w-8 h-8 text-orange-400 mx-auto mb-2" />
@@ -3500,7 +3500,7 @@ function TournamentManager({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4">
             <div className="bg-[#1e3a5f]/30 rounded-xl p-4 text-center border border-white/5">
               <div className="text-3xl font-bold text-white">{state.members.length}</div>
               <div className="text-sm text-[#b8d4ec]">Total Members</div>
@@ -4369,7 +4369,7 @@ function VolunteersTab({
   return (
     <div className="space-y-6">
       {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <Card className="bg-[#142130] border-white/5">
           <CardContent className="p-4 text-center">
             <Heart className="w-6 h-6 text-pink-400 mx-auto mb-2" />
@@ -4446,7 +4446,7 @@ function VolunteersTab({
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-xs sm:text-sm">
                 <thead>
                   <tr className="border-b border-white/10">
                     <th className="text-left py-3 px-2 text-[#6b8fad] font-medium">Name</th>
@@ -4618,7 +4618,7 @@ function VolunteersTab({
                   className="pl-10 bg-[#1a2d42] border-[#1e3a5f] text-white h-9 text-sm"
                 />
               </div>
-              <ScrollArea className="h-40 border border-[#1e3a5f] rounded-lg p-2">
+              <ScrollArea className="h-32 sm:h-40 border border-[#1e3a5f] rounded-lg p-2">
                 {state.members
                   .filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(memberSearchQuery.toLowerCase()))
                   .map(member => (
@@ -5462,7 +5462,7 @@ function CourtkeeperPortal({
             </div>
             
             {/* Center Numbers */}
-            <div className="text-3xl font-mono font-bold px-2">
+            <div className="text-2xl sm:text-3xl font-mono font-bold px-2">
               <span className="text-red-400">{p1EffectiveScore}</span>
               <span className="text-slate-500 mx-1">:</span>
               <span className="text-slate-200">{p2EffectiveScore}</span>
@@ -5508,7 +5508,7 @@ function CourtkeeperPortal({
                     key={`p1-${type.id}`}
                     onClick={() => addScore('player1', type.id)}
                     disabled={gameOver}
-                    className="h-14 rounded-lg border-2 border-red-500/50 text-red-400 hover:bg-red-500/20 disabled:opacity-30 flex items-center justify-center"
+                    className="h-12 sm:h-14 rounded-lg border-2 border-red-500/50 text-red-400 hover:bg-red-500/20 disabled:opacity-30 flex items-center justify-center"
                   >
                     <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
                       {type.letter}
@@ -5548,7 +5548,7 @@ function CourtkeeperPortal({
                     key={`p2-${type.id}`}
                     onClick={() => addScore('player2', type.id)}
                     disabled={gameOver}
-                    className="h-14 rounded-lg border-2 border-slate-500/50 text-slate-300 hover:bg-slate-500/20 disabled:opacity-30 flex items-center justify-center"
+                    className="h-12 sm:h-14 rounded-lg border-2 border-slate-500/50 text-slate-300 hover:bg-slate-500/20 disabled:opacity-30 flex items-center justify-center"
                   >
                     <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
                       {type.letter}
