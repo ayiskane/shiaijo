@@ -33,7 +33,7 @@ import {
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Award, ChevronLeft, Undo2, ChevronDown, ChevronUp, Heart, Clock,
+  ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Heart, Clock,
   Eye, Shield, Lock
 } from 'lucide-react'
 
@@ -2448,7 +2448,11 @@ function AdminPortal({
           <div className="flex items-center justify-between mb-6">
             <div>
               <p className="text-[#6b8fad] text-sm mb-1 hidden md:block">Welcome Back!</p>
-              <h2 className="text-xl md:text-2xl font-bold">ADMIN <span className="text-[#6b8fad]">&gt;&gt;</span> <span className="capitalize">{activeTab}</span></h2>
+              <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
+                <span className="text-orange-400">ADMIN</span>
+                <ChevronRight className="w-5 h-5 text-[#6b8fad]" />
+                <span className="capitalize text-white">{activeTab}</span>
+              </h2>
             </div>
             <div className="hidden md:flex items-center gap-3">
               <div className="relative">
@@ -2495,19 +2499,12 @@ function AdminPortal({
               </Card>
 
               {/* Quick Stats */}
-              <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 <Card className="bg-[#142130] border-white/5">
                   <CardContent className="p-4 text-center">
                     <Users className="w-8 h-8 text-orange-400 mx-auto mb-2" />
                     <p className="text-3xl font-bold text-white">{state.members.length}</p>
                     <p className="text-xs text-[#6b8fad]">Total Members</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-[#142130] border-white/5">
-                  <CardContent className="p-4 text-center">
-                    <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
-                    <p className="text-3xl font-bold text-white">{state.members.filter(m => m.isParticipating).length}</p>
-                    <p className="text-xs text-[#6b8fad]">Participating</p>
                   </CardContent>
                 </Card>
                 <Card className="bg-[#142130] border-white/5">
