@@ -71,6 +71,7 @@ interface Match {
   timerDuration: number  // in seconds
   actualDuration?: number  // recorded when match completes
   orderIndex: number
+  round: number  // Round number (1 = initial round robin, 2+ = tiebreakers/playoffs)
 }
 
 interface Tournament {
@@ -335,6 +336,148 @@ const calculateStandings = (
   })
 }
 
+// Generate next round matches for a group when current round is complete
+// This handles tiebreakers and playoff rounds automatically
+const generateNextRoundMatchesForGroup = (
+  groupId: string,
+  tournament: Tournament,
+  members: Member[],
+  getGroupById: (id: string) => Group | undefined
+): Match[] => {
+  const groupMatches = tournament.matches.filter(m => m.groupId === groupId)
+  if (groupMatches.length === 0) return []
+  
+  // Find current max round
+  const currentRound = Math.max(...groupMatches.map(m => m.round || 1))
+  
+  // Check if all matches in current round are completed
+  const currentRoundMatches = groupMatches.filter(m => (m.round || 1) === currentRound)
+  const pendingInCurrentRound = currentRoundMatches.filter(m => m.status !== 'completed')
+  
+  if (pendingInCurrentRound.length > 0) {
+    return [] // Current round not complete yet
+  }
+  
+  // Calculate standings using all completed matches
+  const standings = calculateStandings(groupId, tournament.matches, members)
+  
+  if (standings.length < 2) return []
+  
+  // Check if there's a clear winner (top player has more points than 2nd)
+  const topPoints = standings[0].points
+  const tiedAtTop = standings.filter(s => s.points === topPoints)
+  
+  if (tiedAtTop.length === 1) {
+    // Clear winner - no more matches needed for this group
+    return []
+  }
+  
+  // We have ties at the top - need tiebreaker matches
+  const tiedPlayerIds = tiedAtTop.map(s => s.playerId)
+  
+  // Check if all tied players have already played each other in tiebreaker rounds
+  // If so, use ippon differential, then head-to-head
+  const tiebreakerMatches = groupMatches.filter(m => 
+    (m.round || 1) > 1 && 
+    tiedPlayerIds.includes(m.player1Id) && 
+    tiedPlayerIds.includes(m.player2Id)
+  )
+  
+  // Generate matches between tied players who haven't played in THIS specific tiebreaker round
+  const newRound = currentRound + 1
+  const newMatches: Match[] = []
+  
+  // Get group info for match settings
+  const group = getGroupById(groupId)
+  const isHantei = group?.isNonBogu || false
+  
+  // Find court assignment from existing matches
+  const existingCourt = groupMatches[0]?.court || 'A'
+  
+  // Find max orderIndex in tournament
+  const maxOrderIndex = Math.max(...tournament.matches.map(m => m.orderIndex), 0)
+  let orderIndex = maxOrderIndex + 1
+  
+  // Generate round-robin among tied players using rest optimization
+  const matchPairs = generateRoundRobinWithRest(tiedPlayerIds)
+  
+  // Filter out pairs that have already played in a tiebreaker round
+  const playedPairs = new Set<string>()
+  tiebreakerMatches.forEach(m => {
+    playedPairs.add([m.player1Id, m.player2Id].sort().join('-'))
+  })
+  
+  const newPairs = matchPairs.filter(([p1, p2]) => {
+    const pairKey = [p1, p2].sort().join('-')
+    return !playedPairs.has(pairKey)
+  })
+  
+  if (newPairs.length === 0) {
+    // All tied players have played each other in tiebreakers
+    // At this point, we need sudden death - just pick first two
+    if (tiedPlayerIds.length >= 2) {
+      newMatches.push({
+        id: generateId(),
+        groupId,
+        player1Id: tiedPlayerIds[0],
+        player2Id: tiedPlayerIds[1],
+        player1Score: [],
+        player2Score: [],
+        player1Hansoku: 0,
+        player2Hansoku: 0,
+        winner: null,
+        status: 'pending',
+        court: existingCourt,
+        isHantei,
+        matchType: 'ippon', // Sudden death = ippon
+        timerDuration: 180,
+        orderIndex: orderIndex++,
+        round: newRound,
+      })
+    }
+  } else {
+    // Create new tiebreaker matches
+    newPairs.forEach(([p1, p2]) => {
+      newMatches.push({
+        id: generateId(),
+        groupId,
+        player1Id: p1,
+        player2Id: p2,
+        player1Score: [],
+        player2Score: [],
+        player1Hansoku: 0,
+        player2Hansoku: 0,
+        winner: null,
+        status: 'pending',
+        court: existingCourt,
+        isHantei,
+        matchType: isHantei ? 'ippon' : 'sanbon',
+        timerDuration: 180,
+        orderIndex: orderIndex++,
+        round: newRound,
+      })
+    })
+  }
+  
+  return newMatches
+}
+
+// Check all groups and generate next round matches where needed
+const checkAndGenerateNextRoundMatches = (
+  tournament: Tournament,
+  members: Member[],
+  getGroupById: (id: string) => Group | undefined
+): Match[] => {
+  const allNewMatches: Match[] = []
+  
+  tournament.groupOrder.forEach(groupId => {
+    const newMatches = generateNextRoundMatchesForGroup(groupId, tournament, members, getGroupById)
+    allNewMatches.push(...newMatches)
+  })
+  
+  return allNewMatches
+}
+
 // Firebase Realtime Database for cross-device sync
 const FIREBASE_URL = 'https://shiaijo-7412f-default-rtdb.firebaseio.com'
 const STORAGE_KEY = 'renbu-shiai-data-v3'
@@ -396,6 +539,7 @@ const sanitizeMatch = (match: Match): Match => ({
   winner: match.winner || null,
   matchType: match.matchType || 'sanbon',
   timerDuration: match.timerDuration || 180,
+  round: match.round || 1,  // Default to round 1 for backwards compatibility
 })
 
 const sanitizeTournament = (tournament: Tournament | null): Tournament | null => {
@@ -1508,9 +1652,12 @@ function SpectatorPortal({
                         return (
                           <div key={match.id} className="flex items-center gap-2 text-sm bg-[#0a1017]/30 rounded-lg px-3 py-2">
                             <span className="text-[#6b8fad] w-5">#{idx + 1}</span>
+                            {(match.round || 1) > 1 && (
+                              <span className="text-[9px] px-1 py-0.5 bg-purple-900/50 text-purple-300 rounded">TB</span>
+                            )}
                             <div className="flex-1 min-w-0">
                               <p className="text-white truncate">{p1?.firstName} {p1?.lastName} vs {p2?.firstName} {p2?.lastName}</p>
-                              <p className="text-xs text-[#6b8fad]">{group?.name}</p>
+                              <p className="text-xs text-[#6b8fad]">{group?.name}{(match.round || 1) > 1 ? ` · Round ${match.round}` : ''}</p>
                             </div>
                           </div>
                         )
@@ -1540,9 +1687,12 @@ function SpectatorPortal({
                         return (
                           <div key={match.id} className="flex items-center gap-2 text-sm bg-[#0a1017]/30 rounded-lg px-3 py-2">
                             <span className="text-[#6b8fad] w-5">#{idx + 1}</span>
+                            {(match.round || 1) > 1 && (
+                              <span className="text-[9px] px-1 py-0.5 bg-purple-900/50 text-purple-300 rounded">TB</span>
+                            )}
                             <div className="flex-1 min-w-0">
                               <p className="text-white truncate">{p1?.firstName} {p1?.lastName} vs {p2?.firstName} {p2?.lastName}</p>
-                              <p className="text-xs text-[#6b8fad]">{group?.name}</p>
+                              <p className="text-xs text-[#6b8fad]">{group?.name}{(match.round || 1) > 1 ? ` · Round ${match.round}` : ''}</p>
                             </div>
                           </div>
                         )
@@ -1870,6 +2020,7 @@ function AdminPortal({
           matchType: isHantei ? 'ippon' : 'sanbon',
           timerDuration: 180,
           orderIndex: globalOrderIndex++,
+          round: 1,
         })
       })
     })
@@ -1968,6 +2119,7 @@ function AdminPortal({
             status: 'pending',
             court,
             isHantei,
+            round: 1,
             matchType: isHantei ? 'ippon' : 'sanbon',
             timerDuration: state.currentTournament?.defaultTimerDuration || 180,
             orderIndex: globalOrderIndex++,
@@ -3660,6 +3812,11 @@ function TournamentManager({
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-[#6b8fad] text-xs w-5">#{idx + 1}</span>
+                          {(match.round || 1) > 1 && (
+                            <span className="text-[9px] px-1 py-0.5 bg-purple-900/50 text-purple-300 rounded border border-purple-500/30">
+                              R{match.round}
+                            </span>
+                          )}
                           <button
                             className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}
                             onClick={() => swapMatchCourt(match.id)}
@@ -4918,6 +5075,8 @@ function CourtkeeperPortal({
 
     setState(prev => {
       if (!prev.currentTournament) return prev
+      
+      // First, mark the current match as completed
       const updatedMatches = prev.currentTournament.matches.map(m => {
         if (m.id === matchId) {
           return {
@@ -4929,9 +5088,28 @@ function CourtkeeperPortal({
         }
         return m
       })
+      
+      // Create a temporary tournament state to check for next round matches
+      const tempTournament = { ...prev.currentTournament, matches: updatedMatches }
+      
+      // Check if any group needs next round matches (tiebreakers/playoffs)
+      const nextRoundMatches = checkAndGenerateNextRoundMatches(tempTournament, prev.members, getGroupById)
+      
+      // Combine all matches
+      const allMatches = [...updatedMatches, ...nextRoundMatches]
+      
+      // Show toast if new tiebreaker matches were added
+      if (nextRoundMatches.length > 0) {
+        setTimeout(() => {
+          toast.success(`${nextRoundMatches.length} tiebreaker match${nextRoundMatches.length > 1 ? 'es' : ''} added!`, {
+            duration: 4000,
+          })
+        }, 500)
+      }
+      
       return {
         ...prev,
-        currentTournament: { ...prev.currentTournament, matches: updatedMatches },
+        currentTournament: { ...prev.currentTournament, matches: allMatches },
         courtASelectedMatch: selectedCourt === 'A' ? null : prev.courtASelectedMatch,
         courtBSelectedMatch: selectedCourt === 'B' ? null : prev.courtBSelectedMatch,
       }
