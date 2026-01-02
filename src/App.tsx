@@ -5958,6 +5958,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                   <Undo2 className="w-4 h-4" />
                 </button>
               </div>
+              <button
+                onClick={() => forfeitMatch('player1')}
+                disabled={gameOver}
+                className="w-full mt-2 py-1.5 rounded-lg text-[10px] font-medium border border-red-800/50 text-red-300/70 hover:bg-red-900/30 hover:text-red-300 disabled:opacity-30"
+              >
+                Forfeit
+              </button>
             </div>
 
             {/* SHIRO Controls */}
@@ -5998,6 +6005,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                   <Undo2 className="w-3 h-3" />
                 </button>
               </div>
+              <button
+                onClick={() => forfeitMatch('player2')}
+                disabled={gameOver}
+                className="w-full mt-2 py-1.5 rounded-lg text-[10px] font-medium border border-slate-600/50 text-slate-400/70 hover:bg-slate-700/30 hover:text-slate-300 disabled:opacity-30"
+              >
+                Forfeit
+              </button>
             </div>
           </div>
         )}
@@ -6074,37 +6088,19 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
           </div>
         )}
 
-        {/* Debug Mode Toggle & Forfeit Buttons */}
+        {/* Debug Mode Toggle */}
         {currentMatch && (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <button
-                onClick={() => setDebugMode(!debugMode)}
-                className={`px-3 py-1 rounded text-[10px] font-medium transition-colors ${
-                  debugMode 
-                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
-                    : 'bg-slate-800 text-slate-500 hover:text-slate-400'
-                }`}
-              >
-                {debugMode ? '⚡ Debug ON' : '⚙ Debug'}
-              </button>
-              {debugMode && (
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => forfeitMatch('player1')}
-                    className="px-2 py-1 rounded text-[10px] font-medium bg-red-950/50 text-red-400 border border-red-500/30 hover:bg-red-900/50"
-                  >
-                    AKA Forfeit
-                  </button>
-                  <button
-                    onClick={() => forfeitMatch('player2')}
-                    className="px-2 py-1 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 border border-slate-500/30 hover:bg-slate-600/50"
-                  >
-                    SHIRO Forfeit
-                  </button>
-                </div>
-              )}
-            </div>
+          <div className="flex justify-end">
+            <button
+              onClick={() => setDebugMode(!debugMode)}
+              className={`px-3 py-1 rounded text-[10px] font-medium transition-colors ${
+                debugMode 
+                  ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                  : 'bg-slate-800 text-slate-500 hover:text-slate-400'
+              }`}
+            >
+              {debugMode ? '⚡ Debug ON' : '⚙ Debug'}
+            </button>
           </div>
         )}
 
