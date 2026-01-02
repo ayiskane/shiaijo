@@ -31,7 +31,7 @@ const SortableGroupCard = ({
     <Card 
       ref={setNodeRef} 
       style={style}
-      className={`border-l-2 transition-all ${
+      className={`border-l-2 transition-all relative overflow-hidden ${
         isDragging ? 'scale-[0.98] shadow-xl ring-2 ring-amber-400' :
         isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
       }`}
