@@ -2307,12 +2307,15 @@ const AdminPortal = memo(function AdminPortal({
 
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col fixed h-full bg-[#0f1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
-        <div className="p-4 border-b border-white/5">
-          <div className="flex items-center gap-3">
-            <ShiaijoLogo size={sidebarCollapsed ? 40 : 45} glow />
-            {!sidebarCollapsed && (
-              <span className="text-xl text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
-            )}
+        <div className="p-4 border-b border-white/5 overflow-hidden">
+          <div className={`flex items-center gap-3 transition-all duration-300 ${sidebarCollapsed ? 'justify-center' : ''}`}>
+            <div className="flex-shrink-0">
+              <ShiaijoLogo size={40} glow />
+            </div>
+            <span 
+              className={`text-xl text-white whitespace-nowrap transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`} 
+              style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}
+            >試合場</span>
           </div>
         </div>
 
@@ -2351,7 +2354,9 @@ const AdminPortal = memo(function AdminPortal({
               <button
                 onClick={() => setActiveTab(id)}
                 title={sidebarCollapsed ? label : undefined}
-                className={`w-full flex items-center gap-2 px-3 py-2 transition-colors ${
+                className={`w-full flex items-center gap-2 py-2 transition-colors overflow-hidden ${
+                  sidebarCollapsed ? 'justify-center px-0' : 'px-3'
+                } ${
                   activeTab === id 
                     ? 'text-orange-400 bg-gradient-to-r from-orange-500/10 to-transparent border-l-2 border-orange-500' 
                     : 'text-[#8fb3d1] hover:text-white hover:bg-white/5'
@@ -2360,17 +2365,13 @@ const AdminPortal = memo(function AdminPortal({
                 <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${activeTab === id ? 'bg-orange-500/20' : 'bg-[#1a2d42]'}`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                {!sidebarCollapsed && (
-                  <>
-                    <span className="text-sm">{label}</span>
-                    {badge && (
-                      <span className={`ml-auto px-1.5 py-0.5 text-[10px] rounded-full border ${
-                        badgeColor === 'green' 
-                          ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                          : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                      }`}>{badge}</span>
-                    )}
-                  </>
+                <span className={`text-sm whitespace-nowrap transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 flex-1'}`}>{label}</span>
+                {!sidebarCollapsed && badge && (
+                  <span className={`px-1.5 py-0.5 text-[10px] rounded-full border flex-shrink-0 ${
+                    badgeColor === 'green' 
+                      ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                      : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                  }`}>{badge}</span>
                 )}
               </button>
             )
@@ -2420,9 +2421,9 @@ const AdminPortal = memo(function AdminPortal({
           })()}
         </nav>
 
-        <div className="p-4 border-t border-white/5">
+        <div className={`border-t border-white/5 ${sidebarCollapsed ? 'p-2 flex justify-center' : 'p-4'}`}>
           <Select onValueChange={(value) => onSwitchPortal(value)}>
-            <SelectTrigger className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] hover:from-[#2a4a6f] hover:to-[#1e3a5f] rounded-xl flex items-center justify-center gap-2 font-medium transition border-0 ${sidebarCollapsed ? 'px-2' : ''}`}>
+            <SelectTrigger className={`text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] hover:from-[#2a4a6f] hover:to-[#1e3a5f] rounded-xl flex items-center justify-center font-medium transition border-0 ${sidebarCollapsed ? 'w-11 h-11 p-0' : 'w-full py-3 px-4 gap-2'}`}>
               <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
               {!sidebarCollapsed && <span className="flex-1 text-left">Switch Portal</span>}
             </SelectTrigger>
