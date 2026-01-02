@@ -826,60 +826,62 @@ export default function App() {
 
   if (portal === 'select') {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
+      <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-4 sm:p-5">
         <Toaster theme="dark" position="top-center" />
-        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl">
+        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-6 sm:p-8 max-w-sm w-full shadow-2xl">
           {/* Logo */}
-          <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <ShiaijoLogo size={120} glow />
+          <div className="text-center mb-6">
+            <div className="flex justify-center mb-3">
+              <div className="transform scale-100 sm:scale-110 md:scale-125">
+                <ShiaijoLogo size={120} glow />
+              </div>
             </div>
-            <p className="text-[#6b8fad] text-sm tracking-widest uppercase">Shiai Manager</p>
+            <p className="text-[#6b8fad] text-xs sm:text-sm tracking-widest uppercase">Shiai Manager</p>
           </div>
           
           {/* Spectator Button - Glass style */}
           <button 
             onClick={() => setPortal('spectator')}
-            className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 flex items-center justify-center gap-3 mb-4"
+            className="w-full py-3 px-4 rounded-xl text-sm font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 flex items-center justify-center gap-2 mb-4"
           >
-            <Eye className="w-5 h-5" /> Join as Spectator
+            <Eye className="w-4 h-4" /> Join as Spectator
           </button>
           
           {/* Divider */}
-          <div className="flex items-center my-6">
+          <div className="flex items-center my-4">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
-            <span className="px-4 text-xs text-[#3d5a78] uppercase tracking-widest">staff</span>
+            <span className="px-3 text-[10px] text-[#3d5a78] uppercase tracking-widest">staff</span>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
           </div>
           
           {/* Admin, Courtkeeper & Volunteer Buttons - Glass style */}
-          <div className="space-y-3">
+          <div className="space-y-2">
             <button 
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
-              className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 px-4 rounded-xl text-sm font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              <Shield className="w-5 h-5" /> Admin Portal
-              {state.adminPassword && <Lock className="w-4 h-4 ml-1 opacity-60" />}
+              <Shield className="w-4 h-4" /> Admin Portal
+              {state.adminPassword && <Lock className="w-3 h-3 ml-1 opacity-60" />}
             </button>
             
             <button 
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
-              className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 px-4 rounded-xl text-sm font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              <Swords className="w-5 h-5" /> Courtkeeper Portal
-              {state.courtkeeperPassword && <Lock className="w-4 h-4 ml-1 opacity-60" />}
+              <Swords className="w-4 h-4" /> Courtkeeper Portal
+              {state.courtkeeperPassword && <Lock className="w-3 h-3 ml-1 opacity-60" />}
             </button>
             
             <button 
               onClick={() => setPortal('volunteer')}
-              className="w-full py-3 sm:py-4 px-4 sm:px-6 rounded-2xl text-sm sm:text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 px-4 rounded-xl text-sm font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex items-center justify-center gap-2"
             >
-              <Heart className="w-5 h-5" /> Volunteer Portal
+              <Heart className="w-4 h-4" /> Volunteer Portal
             </button>
           </div>
           
           {/* Footer */}
-          <p className="text-center text-xs text-[#3d5a78] mt-8">
+          <p className="text-center text-[10px] text-[#3d5a78] mt-6">
             Powered by <span className="text-orange-500">Renbu Dojo</span>
           </p>
         </div>
