@@ -2782,7 +2782,7 @@ const AdminPortal = memo(function AdminPortal({
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-2">
                       <Trophy className="w-4 h-4 text-emerald-400" />
-                      <span className="text-sm font-medium text-emerald-400">Tournament Registration</span>
+                      <span className="text-sm font-medium text-emerald-400">Registering for: {state.currentTournament.name || 'Tournament'}</span>
                     </div>
                     <span className="text-xs text-emerald-300">{state.members.filter(m => m.isParticipating).length} participating</span>
                   </div>
@@ -2802,6 +2802,18 @@ const AdminPortal = memo(function AdminPortal({
                   </div>
                 </div>
               )}
+
+              {/* Search Bar */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b8fad]" />
+                <input
+                  type="text"
+                  placeholder="Search members..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full bg-[#142130] border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm placeholder:text-[#6b8fad] focus:outline-none focus:border-orange-500/50"
+                />
+              </div>
 
               {/* Filter Pills */}
               <div className="flex gap-2 overflow-x-auto pb-1">
@@ -3489,6 +3501,8 @@ const TournamentManager = memo(function TournamentManager({
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
+  const [touchDragId, setTouchDragId] = useState<string | null>(null)
+  const [touchTimeout, setTouchTimeout] = useState<NodeJS.Timeout | null>(null)
   const tournament = state.currentTournament
 
   const startTournament = () => {
@@ -3889,7 +3903,7 @@ const TournamentManager = memo(function TournamentManager({
         const isShared = state.sharedGroups.includes(groupId)
         const isCourtA = !isShared && groupMatches[0]?.court === 'A'
         const isCourtB = !isShared && groupMatches[0]?.court === 'B'
-        const isDragging = draggedGroupId === groupId
+        const isDragging = draggedGroupId === groupId || touchDragId === groupId
         const isDragTarget = draggedGroupId && draggedGroupId !== groupId
         const isCollapsed = collapsedGroups.includes(groupId)
         const isNonBogu = group?.isNonBogu
@@ -3920,25 +3934,61 @@ const TournamentManager = memo(function TournamentManager({
               // Only start drag if touching the drag handle area (not buttons/selects)
               const target = e.target as HTMLElement
               if (target.closest('button') || target.closest('select') || target.closest('input')) return
-              setDraggedGroupId(groupId)
+              // Start a hold timer - drag only activates after holding for 300ms
+              const timeout = setTimeout(() => {
+                setTouchDragId(groupId)
+                setDraggedGroupId(groupId)
+                // Vibrate on mobile to indicate drag started
+                if (navigator.vibrate) navigator.vibrate(50)
+              }, 300)
+              setTouchTimeout(timeout)
             }}
-            onTouchEnd={(e) => {
-              const target = e.target as HTMLElement
-              if (target.closest('button') || target.closest('select') || target.closest('input')) return
-              if (draggedGroupId && isDragTarget) {
-                reorderTournamentGroups(draggedGroupId, groupId)
+            onTouchMove={(e) => {
+              // Cancel drag initiation if user moves before hold completes
+              if (touchTimeout && !touchDragId) {
+                clearTimeout(touchTimeout)
+                setTouchTimeout(null)
               }
+              // If dragging, find element under touch and potentially reorder
+              if (touchDragId) {
+                const touch = e.touches[0]
+                const element = document.elementFromPoint(touch.clientX, touch.clientY)
+                const cardEl = element?.closest('[data-group-id]')
+                if (cardEl) {
+                  const targetGroupId = cardEl.getAttribute('data-group-id')
+                  if (targetGroupId && targetGroupId !== touchDragId) {
+                    reorderTournamentGroups(touchDragId, targetGroupId)
+                  }
+                }
+              }
+            }}
+            onTouchEnd={() => {
+              if (touchTimeout) {
+                clearTimeout(touchTimeout)
+                setTouchTimeout(null)
+              }
+              setTouchDragId(null)
               setDraggedGroupId(null)
             }}
+            onTouchCancel={() => {
+              if (touchTimeout) {
+                clearTimeout(touchTimeout)
+                setTouchTimeout(null)
+              }
+              setTouchDragId(null)
+              setDraggedGroupId(null)
+            }}
+            data-group-id={groupId}
             className={`border-l-2 transition-all ${
               isDragging ? 'opacity-50 scale-[0.98]' :
               isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
               isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
             }`}
           >
-            <CardHeader className="p-2 pb-1">
-              {/* Row 1: Collapse toggle, court badge, group name, progress */}
+            <CardHeader className="p-3 pb-2">
+              {/* Row 1: Drag handle, collapse toggle, court badge, group name, progress */}
               <div className="flex items-center gap-1.5">
+                <span className="text-slate-500 cursor-grab active:cursor-grabbing text-sm select-none touch-none">☰</span>
                 <button 
                   onClick={() => setCollapsedGroups(prev => 
                     prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]
@@ -4016,6 +4066,7 @@ const TournamentManager = memo(function TournamentManager({
                           'bg-[#142130]'
                         }`}
                       >
+                        {/* Row 1: Match number, court, players */}
                         <div className="flex items-center gap-2">
                           <span className="text-[#6b8fad] text-xs w-5">#{idx + 1}</span>
                           {(match.round || 1) > 1 && (
@@ -4024,7 +4075,7 @@ const TournamentManager = memo(function TournamentManager({
                             </span>
                           )}
                           <button
-                            className={`w-6 h-6 rounded text-xs font-bold ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}
+                            className={`w-6 h-6 rounded text-xs font-bold flex-shrink-0 ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}
                             onClick={() => swapMatchCourt(match.id)}
                           >
                             {match.court}
@@ -4036,21 +4087,24 @@ const TournamentManager = memo(function TournamentManager({
                               <span className={`truncate ${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'}`}>
                                 {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}
                               </span>
-                              <span className="text-[#6b8fad] mx-1">vs</span>
+                              <span className="text-[#6b8fad] mx-1 flex-shrink-0">vs</span>
                               <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
                               <span className={`truncate ${match.winner === 'player2' ? 'text-blue-100 font-semibold' : 'text-white'}`}>
                                 {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}
                               </span>
                             </div>
                           </div>
-                          
-                          {/* Match settings for pending matches - hidden for non-bogu/hantei */}
-                          {match.status === 'pending' && !isNonBogu && (
-                            <div className="flex items-center gap-1">
+                        </div>
+                        
+                        {/* Row 2: Settings/Status */}
+                        <div className="flex items-center justify-between mt-1.5 gap-2">
+                          {/* Left: Settings or timer info */}
+                          {match.status === 'pending' && !isNonBogu ? (
+                            <div className="flex items-center gap-1.5">
                               <select
                                 value={match.timerDuration || 180}
                                 onChange={(e) => updateMatchSettings(match.id, 'timerDuration', parseInt(e.target.value))}
-                                className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#8fb3d1] w-12"
+                                className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1.5 py-1 text-xs text-[#8fb3d1]"
                               >
                                 {(tournament.timerOptions || [60, 120, 180]).map(secs => (
                                   <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
@@ -4059,34 +4113,33 @@ const TournamentManager = memo(function TournamentManager({
                               <select
                                 value={match.matchType || 'sanbon'}
                                 onChange={(e) => updateMatchSettings(match.id, 'matchType', e.target.value)}
-                                className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#8fb3d1] w-12"
+                                className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1.5 py-1 text-xs text-[#8fb3d1]"
                               >
                                 <option value="sanbon">Sanbon</option>
                                 <option value="ippon">Ippon</option>
                               </select>
                             </div>
+                          ) : (
+                            <span className="text-[10px] text-[#6b8fad]">
+                              {isNonBogu ? 'Hantei' :
+                               match.status === 'completed' && match.actualDuration ? 
+                                `${Math.floor(match.actualDuration / 60)}:${(match.actualDuration % 60).toString().padStart(2, '0')}` : 
+                                `${timerMins}m · ${isIppon ? 'Ippon' : 'Sanbon'}`
+                              }
+                            </span>
                           )}
-                        </div>
-                        
-                        {/* Status row */}
-                        <div className="flex items-center justify-between mt-1">
-                          <span className="text-[10px] text-[#6b8fad]">
-                            {isNonBogu ? 'Hantei' :
-                             match.status === 'completed' && match.actualDuration ? 
-                              `${Math.floor(match.actualDuration / 60)}:${(match.actualDuration % 60).toString().padStart(2, '0')}` : 
-                              `${timerMins}m · ${isIppon ? 'Ippon' : 'Sanbon'}`
-                            }
-                          </span>
+                          
+                          {/* Right: Status badge */}
                           {match.status === 'completed' && (
-                            <span className={`text-xs px-2 py-0.5 rounded ${match.winner === 'player1' ? 'bg-red-900/30 text-red-400' : match.winner === 'player2' ? 'bg-blue-900/30 text-blue-200' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${match.winner === 'player1' ? 'bg-red-900/30 text-red-400' : match.winner === 'player2' ? 'bg-blue-900/30 text-blue-200' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}>
                               {match.winner === 'draw' ? 'Draw' : 
-                               match.winner === 'player1' ? `Win ${match.isHantei ? '(Hantei)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}` :
-                               `Win ${match.isHantei ? '(Hantei)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}`}
+                               match.winner === 'player1' ? `Win ${match.isHantei ? '(H)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}` :
+                               `Win ${match.isHantei ? '(H)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}`}
                             </span>
                           )}
                           {match.status === 'in_progress' && (
-                            <span className={`text-xs px-2 py-0.5 rounded text-white animate-pulse ${match.court === 'A' ? 'bg-amber-500' : 'bg-blue-500'}`}>
-                              Live {match.court}
+                            <span className={`text-[10px] px-2 py-1 rounded text-white animate-pulse flex-shrink-0 whitespace-nowrap ${match.court === 'A' ? 'bg-amber-500' : 'bg-blue-500'}`}>
+                              ● Live
                             </span>
                           )}
                         </div>
