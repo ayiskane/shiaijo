@@ -2309,15 +2309,9 @@ const AdminPortal = memo(function AdminPortal({
       <aside className={`hidden md:flex flex-col fixed h-full bg-[#0f1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
         <div className="p-4 border-b border-white/5">
           <div className="flex items-center gap-3">
-            {sidebarCollapsed ? (
-              <div className="w-10 h-10 flex items-center justify-center">
-                <span className="text-xl" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試</span>
-              </div>
-            ) : (
-              <>
-                <ShiaijoLogo size={45} glow />
-                <span className="text-xl text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
-              </>
+            <ShiaijoLogo size={sidebarCollapsed ? 40 : 45} glow />
+            {!sidebarCollapsed && (
+              <span className="text-xl text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
             )}
           </div>
         </div>
@@ -2665,36 +2659,11 @@ const AdminPortal = memo(function AdminPortal({
                     <ShiaijoLogo size={60} glow />
                     <div>
                       <h2 className="text-2xl font-bold text-white">Welcome to <span style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span></h2>
-                      <p className="text-[#6b8fad]">Shiai Manager</p>
+                      <p className="text-[#6b8fad]">Renbu Monthly Shiai Manager <span className="text-orange-400 text-xs">(beta)</span></p>
                     </div>
                   </div>
                 </CardContent>
               </Card>
-
-              {/* Quick Stats */}
-              <div className="grid grid-cols-3 gap-3 sm:gap-4">
-                <Card className="bg-[#142130] border-white/5">
-                  <CardContent className="p-4 text-center">
-                    <Users className="w-8 h-8 text-orange-400 mx-auto mb-2" />
-                    <p className="text-3xl font-bold text-white">{state.members.length}</p>
-                    <p className="text-xs text-[#6b8fad]">Total Members</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-[#142130] border-white/5">
-                  <CardContent className="p-4 text-center">
-                    <Filter className="w-8 h-8 text-blue-400 mx-auto mb-2" />
-                    <p className="text-3xl font-bold text-white">{state.groups.length}</p>
-                    <p className="text-xs text-[#6b8fad]">Groups</p>
-                  </CardContent>
-                </Card>
-                <Card className="bg-[#142130] border-white/5">
-                  <CardContent className="p-4 text-center">
-                    <Trophy className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
-                    <p className="text-3xl font-bold text-white">{state.history.length}</p>
-                    <p className="text-xs text-[#6b8fad]">Past Tournaments</p>
-                  </CardContent>
-                </Card>
-              </div>
 
               {/* Tournament Status */}
               <Card className="bg-[#142130] border-white/5">
@@ -2726,11 +2695,9 @@ const AdminPortal = memo(function AdminPortal({
                            state.currentTournament.status === 'in_progress' ? 'In Progress' : 'Completed'}
                         </Badge>
                       </div>
-                      <div className="flex gap-2">
-                        <Button onClick={() => setActiveTab('tournament')} className="bg-orange-600 hover:bg-orange-700">
-                          <Play className="w-4 h-4 mr-2" /> Go to Tournament
-                        </Button>
-                      </div>
+                      <Button onClick={() => setActiveTab('tournament')} className="bg-orange-600 hover:bg-orange-700">
+                        <Play className="w-4 h-4 mr-2" /> Go to Tournament
+                      </Button>
                     </div>
                   ) : (
                     <div className="text-center py-8">
@@ -2743,49 +2710,6 @@ const AdminPortal = memo(function AdminPortal({
                   )}
                 </CardContent>
               </Card>
-
-              {/* Quick Actions */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-[#142130] border-white/5 hover:border-orange-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('members')}>
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
-                        <Users className="w-6 h-6 text-orange-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium leading-tight">Manage Members</p>
-                        <p className="text-xs text-[#6b8fad] leading-tight mt-0.5">Add, edit, or remove members</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-[#142130] border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('groups')}>
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                        <Filter className="w-6 h-6 text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium leading-tight">Manage Groups</p>
-                        <p className="text-xs text-[#6b8fad] leading-tight mt-0.5">Configure rank groups</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="bg-[#142130] border-white/5 hover:border-emerald-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('settings')}>
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                        <Settings className="w-6 h-6 text-emerald-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium leading-tight">Settings</p>
-                        <p className="text-xs text-[#6b8fad] leading-tight mt-0.5">Passwords & preferences</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
             </div>
           )}
 
