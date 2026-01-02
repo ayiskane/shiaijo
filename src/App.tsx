@@ -1536,6 +1536,7 @@ const SpectatorPortal = memo(function SpectatorPortal({
       case 3: return 'D'  // Do
       case 4: return 'T'  // Tsuki
       case 5: return 'H'  // Hansoku
+      case 6: return 'FF' // Forfeit
       default: return '?'
     }
   }
@@ -1547,6 +1548,7 @@ const SpectatorPortal = memo(function SpectatorPortal({
       case 3: return 'Do'
       case 4: return 'Tsuki'
       case 5: return 'Hansoku'
+      case 6: return 'Forfeit'
       default: return '?'
     }
   }
@@ -5160,9 +5162,12 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     : (tournament?.groups || []).filter(gId => courtBMatches.some(m => m.groupId === gId))
   
   // Get pending matches sorted by group order then match order
-  const getSortedPendingMatches = (matches: Match[], groupOrder: string[]) => {
+  // Excludes matches that are in_progress on a different court
+  const getSortedPendingMatches = (matches: Match[], groupOrder: string[], thisCourt: 'A' | 'B') => {
     return matches
       .filter(m => m.status !== 'completed')
+      // Exclude matches that are in_progress but locked to the other court
+      .filter(m => !(m.status === 'in_progress' && m.court !== thisCourt))
       .sort((a, b) => {
         const aGroupIdx = groupOrder.indexOf(a.groupId)
         const bGroupIdx = groupOrder.indexOf(b.groupId)
@@ -5171,8 +5176,8 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       })
   }
   
-  const pendingMatchesA = getSortedPendingMatches(courtAMatches, courtAGroupOrder)
-  const pendingMatchesB = getSortedPendingMatches(courtBMatches, courtBGroupOrder)
+  const pendingMatchesA = getSortedPendingMatches(courtAMatches, courtAGroupOrder, 'A')
+  const pendingMatchesB = getSortedPendingMatches(courtBMatches, courtBGroupOrder, 'B')
   
   // If a match is manually selected, use it; otherwise use first pending match
   const selectedMatchIdA = state.courtASelectedMatch
@@ -5218,6 +5223,23 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       }
     }
   }, [currentMatch?.id, selectedCourt, lastMatchId, setState])
+  
+  // Auto-skip: If a manually selected match was started on the other court, clear selection
+  useEffect(() => {
+    const selectedId = selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB
+    if (!selectedId) return
+    
+    const selectedMatch = tournament?.matches?.find(m => m.id === selectedId)
+    if (selectedMatch && selectedMatch.status === 'in_progress' && selectedMatch.court !== selectedCourt) {
+      // Match was started on another court - clear our selection to move to next
+      if (selectedCourt === 'A') {
+        setState(prev => ({ ...prev, courtASelectedMatch: null }))
+      } else {
+        setState(prev => ({ ...prev, courtBSelectedMatch: null }))
+      }
+      toast('Match started on other court - moving to next', { icon: '↪️', duration: 2000 })
+    }
+  }, [tournament?.matches, selectedCourt, selectedMatchIdA, selectedMatchIdB, setState])
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
@@ -5279,6 +5301,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     { id: 3, name: 'Do', letter: 'D', circle: 'Ⓓ' },
     { id: 4, name: 'Tsuki', letter: 'T', circle: 'Ⓣ' },
     { id: 5, name: 'Hansoku', letter: 'H', circle: 'Ⓗ' }, // Point from opponent's 2 hansoku
+    { id: 6, name: 'Forfeit', letter: 'FF', circle: 'FF' }, // Forfeit win
   ]
 
   // Calculate effective points (including hansoku-derived points)
@@ -5467,6 +5490,49 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     })
   }
 
+  // Forfeit - declare winner with FF score
+  const forfeitMatch = (loser: 'player1' | 'player2') => {
+    const matchId = currentMatch?.id
+    if (!matchId) return
+    
+    const winner = loser === 'player1' ? 'player2' : 'player1'
+    
+    setState(prev => {
+      if (!prev.currentTournament) return prev
+      
+      // Mark match as completed with FF score for winner
+      const updatedMatches = prev.currentTournament.matches.map(m => {
+        if (m.id === matchId) {
+          return {
+            ...m,
+            status: 'completed' as const,
+            winner: winner,
+            // Add FF (6) as the winning score
+            player1Score: winner === 'player1' ? [...m.player1Score, 6] : m.player1Score,
+            player2Score: winner === 'player2' ? [...m.player2Score, 6] : m.player2Score,
+            actualDuration: timerSeconds,
+          }
+        }
+        return m
+      })
+      
+      // Check for next round matches
+      const tempTournament = { ...prev.currentTournament, matches: updatedMatches }
+      const nextRoundMatches = checkAndGenerateNextRoundMatches(tempTournament, prev.members, getGroupById)
+      const allMatches = [...updatedMatches, ...nextRoundMatches]
+      
+      return {
+        ...prev,
+        currentTournament: { ...prev.currentTournament, matches: allMatches },
+        courtASelectedMatch: selectedCourt === 'A' ? null : prev.courtASelectedMatch,
+        courtBSelectedMatch: selectedCourt === 'B' ? null : prev.courtBSelectedMatch,
+      }
+    })
+    
+    const loserName = loser === 'player1' ? player1?.firstName : player2?.firstName
+    toast.success(`${loserName || 'Player'} forfeited`)
+  }
+
   // Select a specific match to play next (override queue)
   const selectMatch = (matchId: string) => {
     if (selectedCourt === 'A') {
@@ -5627,6 +5693,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const [modalDismissedForMatch, setModalDismissedForMatch] = useState<string | null>(null)
   const [draggedMatchId, setDraggedMatchId] = useState<string | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [debugMode, setDebugMode] = useState(false)
   
   // Detect when someone wins and show modal, or close if score undone
   useEffect(() => {
@@ -6007,13 +6074,49 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
           </div>
         )}
 
+        {/* Debug Mode Toggle & Forfeit Buttons */}
+        {currentMatch && (
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setDebugMode(!debugMode)}
+                className={`px-3 py-1 rounded text-[10px] font-medium transition-colors ${
+                  debugMode 
+                    ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' 
+                    : 'bg-slate-800 text-slate-500 hover:text-slate-400'
+                }`}
+              >
+                {debugMode ? '⚡ Debug ON' : '⚙ Debug'}
+              </button>
+              {debugMode && (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => forfeitMatch('player1')}
+                    className="px-2 py-1 rounded text-[10px] font-medium bg-red-950/50 text-red-400 border border-red-500/30 hover:bg-red-900/50"
+                  >
+                    AKA Forfeit
+                  </button>
+                  <button
+                    onClick={() => forfeitMatch('player2')}
+                    className="px-2 py-1 rounded text-[10px] font-medium bg-slate-700/50 text-slate-300 border border-slate-500/30 hover:bg-slate-600/50"
+                  >
+                    SHIRO Forfeit
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* Match Complete Buttons */}
         {!currentMatch?.isHantei && (
           <div className="grid grid-cols-3 gap-2">
             <button
               onClick={() => completeMatch('player1')}
-              disabled={!gameOver}
-              className="py-2.5 rounded-lg font-bold text-xs bg-red-600/80 hover:bg-red-600 disabled:opacity-30"
+              disabled={!gameOver && !debugMode}
+              className={`py-2.5 rounded-lg font-bold text-xs bg-red-600/80 hover:bg-red-600 disabled:opacity-30 ${
+                !gameOver && debugMode ? 'ring-1 ring-amber-500/50' : ''
+              }`}
             >
               AKA Wins
             </button>
@@ -6025,8 +6128,10 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
             </button>
             <button
               onClick={() => completeMatch('player2')}
-              disabled={!gameOver}
-              className="py-2.5 rounded-lg font-bold text-xs bg-slate-500/80 hover:bg-slate-500 disabled:opacity-30"
+              disabled={!gameOver && !debugMode}
+              className={`py-2.5 rounded-lg font-bold text-xs bg-slate-500/80 hover:bg-slate-500 disabled:opacity-30 ${
+                !gameOver && debugMode ? 'ring-1 ring-amber-500/50' : ''
+              }`}
             >
               SHIRO Wins
             </button>
