@@ -803,7 +803,7 @@ export default function App() {
   if (portal === 'admin-login') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
-        <Toaster theme="dark" position="top-center" />
+        <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
         <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl">
           <button 
             onClick={() => { setPortal('select'); setPasswordInput(''); setPasswordError(false) }}
@@ -844,7 +844,7 @@ export default function App() {
   if (portal === 'courtkeeper-login') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
-        <Toaster theme="dark" position="top-center" />
+        <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
         <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-6 sm:p-10 max-w-md w-full shadow-2xl">
           <button 
             onClick={() => { setPortal('select'); setPasswordInput(''); setPasswordError(false) }}
@@ -884,7 +884,7 @@ export default function App() {
   if (portal === 'select') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-4">
-        <Toaster theme="dark" position="top-center" />
+        <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
         <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-2xl md:rounded-3xl p-5 md:p-8 w-full max-w-[300px] md:max-w-[380px] shadow-2xl">
           {/* Logo - responsive size */}
           <div className="text-center mb-4 md:mb-6">
@@ -2305,7 +2305,7 @@ const AdminPortal = memo(function AdminPortal({
 
   return (
     <div className="min-h-screen bg-[#0a1017] text-white">
-      <Toaster theme="dark" position="top-center" />
+      <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
 
       {/* Desktop Sidebar */}
       <aside className={`hidden md:flex flex-col fixed h-full bg-[#0f1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
@@ -5125,7 +5125,7 @@ const AddMemberForm = memo(function AddMemberForm({
 const CourtkeeperPortal = memo(function CourtkeeperPortal({ 
   state, 
   setState, 
-  isMobile: _isMobile,
+  isMobile,
   onSwitchPortal,
   getMemberById,
   getGroupById
@@ -5683,7 +5683,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   if (!tournament || tournament.status !== 'in_progress') {
     return (
       <div className="min-h-screen bg-[#0a1017] flex items-center justify-center p-4">
-        <Toaster theme="dark" position="top-center" />
+        <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
         <Card className="bg-[#0f1a24] border-[#1e3a5f] max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-white text-center">No Active Tournament</CardTitle>
@@ -5706,7 +5706,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   if (!currentMatch) {
     return (
       <div className="min-h-screen bg-[#0a1017] flex items-center justify-center p-4">
-        <Toaster theme="dark" position="top-center" />
+        <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
         <Card className="bg-[#0f1a24] border-[#1e3a5f] max-w-md w-full">
           <CardHeader>
             <CardTitle className="text-white text-center">All Matches Complete!</CardTitle>
@@ -5837,7 +5837,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
 
   return (
     <div className="h-screen bg-[#0a0e14] text-white flex flex-col overflow-hidden">
-      <Toaster theme="dark" position="top-center" />
+      <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
       
       {/* Header */}
       <header className="bg-[#0f1419] border-b border-slate-800 px-3 py-2 flex-shrink-0">
