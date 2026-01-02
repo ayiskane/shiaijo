@@ -5589,6 +5589,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const [modalDismissedForMatch, setModalDismissedForMatch] = useState<string | null>(null)
   const [draggedMatchId, setDraggedMatchId] = useState<string | null>(null)
   const [touchStartY, setTouchStartY] = useState<number | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   
   // Detect when someone wins and show modal, or close if score undone
   useEffect(() => {
@@ -6172,6 +6173,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                       const canDrag = match.status === 'pending' && !isCurrentlyPlaying && !isLiveOnOtherCourt
                       const isDragging = draggedMatchId === match.id
                       const isDragTarget = draggedMatchId && draggedMatchId !== match.id && canDrag
+                      const isDropTarget = dropTargetId === match.id
                       
                       return (
                         <div
@@ -6182,11 +6184,12 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                             setDraggedMatchId(match.id)
                             e.dataTransfer.effectAllowed = 'move'
                           }}
-                          onDragEnd={() => setDraggedMatchId(null)}
+                          onDragEnd={() => { setDraggedMatchId(null); setDropTargetId(null) }}
                           onDragOver={(e) => {
                             if (!isDragTarget) return
                             e.preventDefault()
                             e.dataTransfer.dropEffect = 'move'
+                            setDropTargetId(match.id)
                           }}
                           onDrop={(e) => {
                             e.preventDefault()
@@ -6194,18 +6197,22 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                               reorderMatch(draggedMatchId, match.id)
                             }
                             setDraggedMatchId(null)
+                            setDropTargetId(null)
                           }}
                           data-match-id={match.id}
                           onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
-                          className={`w-full p-2 rounded-lg mb-1 text-xs transition-all cursor-pointer select-none ${
+                          className={`relative w-full p-2 rounded-lg mb-1 text-xs transition-all cursor-pointer select-none ${
                             isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400' :
-                            isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
                             isCurrentlyPlaying ? 'bg-emerald-900/30 border border-emerald-600' 
                             : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
                             : isSelected ? 'bg-amber-900/30 border border-amber-500'
                             : 'bg-slate-800/50 hover:bg-slate-800'
                           }`}
                         >
+                          {/* Drop indicator bar */}
+                          {isDropTarget && (
+                            <div className="absolute -top-1 left-0 right-0 h-1 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                          )}
                           <div className="flex items-center">
                             {canDrag && !isSelected && !isCurrentlyPlaying && (
                               <span 
@@ -6226,13 +6233,19 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                                   if (matchEl) {
                                     const targetId = matchEl.getAttribute('data-match-id')
                                     if (targetId && targetId !== draggedMatchId) {
-                                      reorderMatch(draggedMatchId, targetId)
+                                      setDropTargetId(targetId)
                                     }
+                                  } else {
+                                    setDropTargetId(null)
                                   }
                                 }}
                                 onTouchEnd={() => {
+                                  if (draggedMatchId && dropTargetId && draggedMatchId !== dropTargetId) {
+                                    reorderMatch(draggedMatchId, dropTargetId)
+                                  }
                                   setDraggedMatchId(null)
                                   setTouchStartY(null)
+                                  setDropTargetId(null)
                                 }}
                               >☰</span>
                             )}
