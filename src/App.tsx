@@ -3406,6 +3406,8 @@ const TournamentManager = memo(function TournamentManager({
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [showEditTournament, setShowEditTournament] = useState(false)
+  const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
+  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
   const tournament = state.currentTournament
 
   const startTournament = () => {
@@ -3515,7 +3517,7 @@ const TournamentManager = memo(function TournamentManager({
   }
 
   // Track dragged group in tournament
-  const [draggedTournamentGroupId, setDraggedTournamentGroupId] = useState<string | null>(null)
+  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
 
   const reorderTournamentGroups = (draggedId: string, targetId: string) => {
     if (!tournament || !tournament.groupOrder || draggedId === targetId) return
@@ -3817,82 +3819,109 @@ const TournamentManager = memo(function TournamentManager({
         const isShared = state.sharedGroups.includes(groupId)
         const isCourtA = !isShared && groupMatches[0]?.court === 'A'
         const isCourtB = !isShared && groupMatches[0]?.court === 'B'
-        const isDraggingGroup = draggedTournamentGroupId === groupId
-        const isDragTargetGroup = draggedTournamentGroupId && draggedTournamentGroupId !== groupId
+        const isDragging = draggedGroupId === groupId
+        const isDragTarget = draggedGroupId && draggedGroupId !== groupId
+        const isCollapsed = collapsedGroups.includes(groupId)
+        const isNonBogu = group?.isNonBogu
+        const completedCount = groupMatches.filter(m => m.status === 'completed').length
         
         return (
           <Card 
             key={groupId} 
             draggable
             onDragStart={(e) => {
-              setDraggedTournamentGroupId(groupId)
+              setDraggedGroupId(groupId)
               e.dataTransfer.effectAllowed = 'move'
             }}
-            onDragEnd={() => setDraggedTournamentGroupId(null)}
+            onDragEnd={() => setDraggedGroupId(null)}
             onDragOver={(e) => {
-              if (!isDragTargetGroup) return
+              if (!isDragTarget) return
               e.preventDefault()
               e.dataTransfer.dropEffect = 'move'
             }}
             onDrop={(e) => {
               e.preventDefault()
-              if (draggedTournamentGroupId && isDragTargetGroup) {
-                reorderTournamentGroups(draggedTournamentGroupId, groupId)
+              if (draggedGroupId && isDragTarget) {
+                reorderTournamentGroups(draggedGroupId, groupId)
               }
-              setDraggedTournamentGroupId(null)
+              setDraggedGroupId(null)
             }}
-            className={`border-l-2 transition-all cursor-grab active:cursor-grabbing ${
-              isDraggingGroup ? 'opacity-50 scale-[0.98]' :
-              isDragTargetGroup ? 'border-2 border-dashed border-amber-400/50' :
+            onTouchStart={() => setDraggedGroupId(groupId)}
+            onTouchEnd={() => {
+              if (draggedGroupId && isDragTarget) {
+                reorderTournamentGroups(draggedGroupId, groupId)
+              }
+              setDraggedGroupId(null)
+            }}
+            className={`border-l-2 transition-all ${
+              isDragging ? 'opacity-50 scale-[0.98]' :
+              isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
               isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
             }`}
           >
             <CardHeader className="p-2 pb-1">
-              {/* Single row: Group name, settings, court, progress */}
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="text-slate-500 cursor-grab text-xs">☰</span>
+              {/* Row 1: Collapse toggle, court badge, group name, progress */}
+              <div className="flex items-center gap-1.5">
+                <button 
+                  onClick={() => setCollapsedGroups(prev => 
+                    prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]
+                  )}
+                  className="text-slate-500 hover:text-white transition p-0.5"
+                >
+                  <ChevronDown className={`w-4 h-4 transition-transform ${isCollapsed ? '-rotate-90' : ''}`} />
+                </button>
                 <span className={`px-1.5 h-5 rounded flex items-center justify-center text-[10px] font-bold ${
                   isShared ? 'bg-emerald-500 text-white' : isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
                 }`}>
                   {isShared ? 'A+B' : isCourtA ? 'A' : 'B'}
                 </span>
-                <span className="text-white font-medium text-sm">{group?.name || groupId}</span>
-                {group?.isNonBogu && <span className="text-[8px] px-1 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
-                
-                <select
-                  value={groupMatches[0]?.timerDuration || 180}
-                  onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
-                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-1.5 py-0.5 text-[10px] text-[#b8d4ec] ml-auto"
-                >
-                  {(tournament.timerOptions || [60, 120, 180]).map(secs => (
-                    <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
-                  ))}
-                </select>
-                <select
-                  value={groupMatches[0]?.matchType || 'sanbon'}
-                  onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
-                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-1.5 py-0.5 text-[10px] text-[#b8d4ec]"
-                >
-                  <option value="sanbon">Sanbon</option>
-                  <option value="ippon">Ippon</option>
-                </select>
-                <div className="flex rounded overflow-hidden border border-[#1e3a5f]">
-                  <button
-                    className={`px-2 py-0.5 text-[10px] font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
-                    onClick={() => setGroupCourt(groupId, 'A')}
-                  >A</button>
-                  <button
-                    className={`px-2 py-0.5 text-[10px] font-bold ${isShared ? 'bg-emerald-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
-                    onClick={() => toggleSharedGroup(groupId)}
-                  >A+B</button>
-                  <button
-                    className={`px-2 py-0.5 text-[10px] font-bold ${isCourtB ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
-                    onClick={() => setGroupCourt(groupId, 'B')}
-                  >B</button>
-                </div>
-                <span className="text-[10px] text-[#6b8fad]">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length} done</span>
+                <span className="text-white font-medium text-sm flex-1">{group?.name || groupId}</span>
+                {isNonBogu && <span className="text-[8px] px-1 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
+                <span className="text-[10px] text-[#6b8fad]">{completedCount}/{groupMatches.length}</span>
               </div>
+              
+              {/* Row 2: Settings (only if not collapsed) - hidden for non-bogu except court */}
+              {!isCollapsed && (
+                <div className="flex items-center gap-2 mt-2 flex-wrap">
+                  {!isNonBogu && (
+                    <>
+                      <select
+                        value={groupMatches[0]?.timerDuration || 180}
+                        onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
+                        className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
+                      >
+                        {(tournament.timerOptions || [60, 120, 180]).map(secs => (
+                          <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
+                        ))}
+                      </select>
+                      <select
+                        value={groupMatches[0]?.matchType || 'sanbon'}
+                        onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
+                        className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
+                      >
+                        <option value="sanbon">Sanbon</option>
+                        <option value="ippon">Ippon</option>
+                      </select>
+                    </>
+                  )}
+                  <div className="flex rounded overflow-hidden border border-[#1e3a5f] ml-auto">
+                    <button
+                      className={`px-3 py-1 text-xs font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                      onClick={() => setGroupCourt(groupId, 'A')}
+                    >A</button>
+                    <button
+                      className={`px-3 py-1 text-xs font-bold ${isShared ? 'bg-emerald-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                      onClick={() => toggleSharedGroup(groupId)}
+                    >A+B</button>
+                    <button
+                      className={`px-3 py-1 text-xs font-bold ${isCourtB ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                      onClick={() => setGroupCourt(groupId, 'B')}
+                    >B</button>
+                  </div>
+                </div>
+              )}
             </CardHeader>
+            {!isCollapsed && (
             <CardContent>
               <ScrollArea className="h-72 pr-2">
                 <div className="space-y-2">
@@ -3938,8 +3967,8 @@ const TournamentManager = memo(function TournamentManager({
                             </div>
                           </div>
                           
-                          {/* Match settings for pending matches */}
-                          {match.status === 'pending' && (
+                          {/* Match settings for pending matches - hidden for non-bogu/hantei */}
+                          {match.status === 'pending' && !isNonBogu && (
                             <div className="flex items-center gap-1">
                               <select
                                 value={match.timerDuration || 180}
@@ -3965,7 +3994,8 @@ const TournamentManager = memo(function TournamentManager({
                         {/* Status row */}
                         <div className="flex items-center justify-between mt-1">
                           <span className="text-[10px] text-[#6b8fad]">
-                            {match.status === 'completed' && match.actualDuration ? 
+                            {isNonBogu ? 'Hantei' :
+                             match.status === 'completed' && match.actualDuration ? 
                               `${Math.floor(match.actualDuration / 60)}:${(match.actualDuration % 60).toString().padStart(2, '0')}` : 
                               `${timerMins}m · ${isIppon ? 'Ippon' : 'Sanbon'}`
                             }
@@ -3989,6 +4019,7 @@ const TournamentManager = memo(function TournamentManager({
                 </div>
               </ScrollArea>
             </CardContent>
+            )}
           </Card>
         )
       })}
@@ -6054,7 +6085,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       )}
     </div>
   )
-}
+})
 
 
 
