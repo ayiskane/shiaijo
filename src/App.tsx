@@ -4181,7 +4181,7 @@ const TournamentManager = memo(function TournamentManager({
                           )}
                           {match.status === 'in_progress' && (
                             <span className={`text-[10px] px-2 py-1 rounded text-white animate-pulse flex-shrink-0 whitespace-nowrap ${match.court === 'A' ? 'bg-amber-500' : 'bg-blue-500'}`}>
-                              ● Live
+                              ● LIVE
                             </span>
                           )}
                         </div>
@@ -4280,7 +4280,7 @@ const StandingsView = memo(function StandingsView({
                       <th className="text-center text-[#b8d4ec] p-2 font-medium">W</th>
                       {!group?.isNonBogu && <th className="text-center text-[#b8d4ec] p-2 font-medium">D</th>}
                       <th className="text-center text-[#b8d4ec] p-2 font-medium">L</th>
-                      <th className="text-center text-[#b8d4ec] p-2 font-medium">Left</th>
+
                       {!group?.isNonBogu && <th className="text-center text-[#b8d4ec] p-2 font-medium">Ippons</th>}
                       {groupMembers.map(m => (
                         <th key={m.id} className="text-center text-[#b8d4ec] p-2 font-medium text-xs">
@@ -4298,7 +4298,7 @@ const StandingsView = memo(function StandingsView({
                         <td className="p-2 text-center text-green-400">{standing.wins}</td>
                         {!group?.isNonBogu && <td className="p-2 text-center text-[#b8d4ec]">{standing.draws}</td>}
                         <td className="p-2 text-center text-red-400">{standing.losses}</td>
-                        <td className="p-2 text-center text-slate-400">{standing.gamesLeft > 0 ? standing.gamesLeft : '-'}</td>
+
                         {!group?.isNonBogu && (
                           <td className="p-2 text-center text-[#b8d4ec]">
                             {standing.ipponsScored}-{standing.ipponsAgainst}
