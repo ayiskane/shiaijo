@@ -4198,7 +4198,7 @@ const TournamentManager = memo(function TournamentManager({
                           'bg-[#142130]'
                         }`}
                       >
-                        {/* Row 1: Match number, court, players */}
+                        {/* Row 1: Match number, players */}
                         <div className="flex items-center gap-2">
                           <span className="text-[#6b8fad] text-xs w-5">#{idx + 1}</span>
                           {(match.round || 1) > 1 && (
@@ -4206,12 +4206,6 @@ const TournamentManager = memo(function TournamentManager({
                               R{match.round}
                             </span>
                           )}
-                          <button
-                            className={`w-6 h-6 rounded text-xs font-bold flex-shrink-0 ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}
-                            onClick={() => swapMatchCourt(match.id)}
-                          >
-                            {match.court}
-                          </button>
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1 text-sm">
