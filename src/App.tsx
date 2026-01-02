@@ -5621,23 +5621,22 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     // First remove from shared if it was shared
     const wasShared = (state.sharedGroups || []).includes(groupId)
     
-    // Get group match IDs from current state before the setState
-    const groupMatchIds = new Set(
-      tournament?.matches
-        ?.filter(m => m.groupId === groupId && m.status === 'pending')
-        .map(m => m.id) || []
-    )
-    
     setState(prev => {
       if (!prev.currentTournament) return prev
       
+      // Get all match IDs in this group
+      const groupMatchIds = prev.currentTournament.matches
+        .filter(m => m.groupId === groupId && m.status === 'pending')
+        .map(m => m.id)
+      
       // Clear selections if they're matches from this group
-      const clearA = prev.courtASelectedMatch && groupMatchIds.has(prev.courtASelectedMatch)
-      const clearB = prev.courtBSelectedMatch && groupMatchIds.has(prev.courtBSelectedMatch)
+      const clearA = groupMatchIds.includes(prev.courtASelectedMatch || '')
+      const clearB = groupMatchIds.includes(prev.courtBSelectedMatch || '')
       
       const updatedMatches = prev.currentTournament.matches.map(m => 
         m.groupId === groupId && m.status === 'pending' ? { ...m, court: newCourt } : m
       )
+      
       return {
         ...prev,
         sharedGroups: wasShared ? (prev.sharedGroups || []).filter(g => g !== groupId) : prev.sharedGroups,
