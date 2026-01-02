@@ -2625,7 +2625,18 @@ const AdminPortal = memo(function AdminPortal({
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
                 <span className="text-orange-400">Admin Portal</span>
                 <ChevronRight className="w-4 h-4 text-[#6b8fad]" />
-                <span className="capitalize text-white">{activeTab}</span>
+                <span className="text-white">{
+                  activeTab === 'standings' ? 'Results' :
+                  activeTab === 'dashboard' ? 'Dashboard' :
+                  activeTab === 'members' ? 'Members' :
+                  activeTab === 'guests' ? 'Guests' :
+                  activeTab === 'groups' ? 'Groups' :
+                  activeTab === 'tournament' ? 'Tournament' :
+                  activeTab === 'history' ? 'History' :
+                  activeTab === 'volunteers' ? 'Volunteers' :
+                  activeTab === 'settings' ? 'Settings' :
+                  activeTab
+                }</span>
               </h2>
             </div>
             <div className="hidden md:flex items-center gap-3">
