@@ -831,15 +831,10 @@ export default function App() {
         <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-12 max-w-md w-full shadow-2xl">
           {/* Logo */}
           <div className="text-center mb-8">
-            <div className="flex justify-center mb-6">
-              <div className="w-full max-w-[280px] p-4 rounded-2xl bg-gradient-to-b from-white/5 to-transparent border border-white/10">
-                <ShiaijoLogo size={200} glow />
-              </div>
+            <div className="flex justify-center mb-4">
+              <ShiaijoLogo size={160} glow />
             </div>
-            <h2 className="text-2xl font-bold tracking-[0.3em] text-transparent bg-clip-text bg-gradient-to-r from-orange-400 via-amber-300 to-orange-400 mb-1">
-              SHIAI MANAGER
-            </h2>
-            <p className="text-[#4a6b8a] text-xs tracking-[0.2em] uppercase">試合場</p>
+            <p className="text-[#6b8fad] text-sm tracking-widest uppercase">Shiai Manager</p>
           </div>
           
           {/* Spectator Button - Glass style */}
