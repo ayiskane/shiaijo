@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react'
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
@@ -55,6 +55,211 @@ const SortableGroupCard = ({
     </Card>
   )
 }
+
+// Presentational component for Court Assignment item (used in DragOverlay)
+const CourtAssignmentItem = ({ 
+  group, 
+  isShared, 
+  groupCourt, 
+  isDragging = false,
+  onCourtChange 
+}: { 
+  group: { id: string; name: string; isNonBogu?: boolean } | undefined
+  isShared: boolean
+  groupCourt: string
+  isDragging?: boolean
+  onCourtChange?: (court: 'A' | 'B' | 'shared') => void
+}) => (
+  <div className={`flex items-center gap-1.5 py-1.5 px-1 rounded select-none transition-all duration-200 ${
+    isDragging ? 'bg-amber-900/40 border border-amber-500 shadow-lg scale-105' : 'hover:bg-slate-800/30'
+  }`}>
+    <span className="text-slate-500 cursor-grab active:cursor-grabbing p-1 -m-0.5 hover:text-slate-400">
+      <GripVertical className="w-4 h-4" />
+    </span>
+    <span className="text-xs text-slate-300 flex-1 truncate">{group?.name || 'Unknown'}</span>
+    {group?.isNonBogu && (
+      <span className="text-[9px] px-1 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
+    )}
+    <div className="flex rounded overflow-hidden border border-slate-700">
+      <button
+        onClick={(e) => { e.stopPropagation(); onCourtChange?.('A') }}
+        className={`w-7 h-6 text-[10px] font-bold ${!isShared && groupCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
+      >A</button>
+      <button
+        onClick={(e) => { e.stopPropagation(); onCourtChange?.('B') }}
+        className={`w-7 h-6 text-[10px] font-bold border-x border-slate-700 ${!isShared && groupCourt === 'B' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
+      >B</button>
+      <button
+        onClick={(e) => { e.stopPropagation(); onCourtChange?.('shared') }}
+        className={`px-1.5 h-6 text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
+      >A+B</button>
+    </div>
+  </div>
+)
+
+// Sortable wrapper for Court Assignment item
+const SortableCourtItem = ({ 
+  id, 
+  group, 
+  isShared, 
+  groupCourt,
+  onCourtChange
+}: { 
+  id: string
+  group: { id: string; name: string; isNonBogu?: boolean } | undefined
+  isShared: boolean
+  groupCourt: string
+  onCourtChange: (court: 'A' | 'B' | 'shared') => void
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+  }
+  
+  return (
+    <div ref={setNodeRef} style={style} {...attributes} {...listeners}>
+      <CourtAssignmentItem 
+        group={group} 
+        isShared={isShared} 
+        groupCourt={groupCourt}
+        onCourtChange={onCourtChange}
+      />
+    </div>
+  )
+}
+
+// Court Assignment DnD Component - handles reordering with smooth animations
+const CourtAssignmentDnd = memo(function CourtAssignmentDnd({
+  tournament,
+  state,
+  setState,
+  getGroupById,
+}: {
+  tournament: Tournament
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+  getGroupById: (id: string) => Group | undefined
+}) {
+  const [activeId, setActiveId] = useState<string | null>(null)
+  
+  const courtSensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 5 }
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 150, tolerance: 8 }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  )
+  
+  const handleCourtDragStart = (event: { active: { id: string | number } }) => {
+    setActiveId(event.active.id as string)
+  }
+  
+  const handleCourtDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveId(null)
+    
+    if (over && active.id !== over.id && tournament?.groupOrder) {
+      const oldIndex = tournament.groupOrder.indexOf(active.id as string)
+      const newIndex = tournament.groupOrder.indexOf(over.id as string)
+      const newOrder = arrayMove(tournament.groupOrder, oldIndex, newIndex)
+      
+      // Auto-stagger courts (A, B, A, B...) for non-shared groups
+      setState(prev => {
+        if (!prev.currentTournament) return prev
+        const sharedGroups = prev.sharedGroups || []
+        const updatedMatches = prev.currentTournament.matches.map(m => {
+          if (m.status !== 'pending') return m
+          if (sharedGroups.includes(m.groupId)) return m
+          const groupIdx = newOrder.indexOf(m.groupId)
+          const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
+          return { ...m, court: newCourt as 'A' | 'B' }
+        })
+        return {
+          ...prev,
+          currentTournament: { ...prev.currentTournament, groupOrder: newOrder, matches: updatedMatches }
+        }
+      })
+    }
+  }
+  
+  const activeGroup = activeId ? getGroupById(activeId) : null
+  const activeIsShared = activeId ? state.sharedGroups.includes(activeId) : false
+  const activeGroupMatches = activeId ? (tournament.matches || []).filter(m => m.groupId === activeId) : []
+  const activeGroupCourt = activeGroupMatches[0]?.court || 'A'
+  
+  return (
+    <div className="bg-[#1e3a5f]/20 rounded-lg p-2.5 border border-white/5">
+      <span className="text-xs text-[#8fb3d1] block mb-2">Court Assignment & Order</span>
+      <DndContext 
+        sensors={courtSensors} 
+        collisionDetection={closestCenter} 
+        onDragStart={handleCourtDragStart}
+        onDragEnd={handleCourtDragEnd}
+      >
+        <SortableContext items={tournament.groupOrder || []} strategy={verticalListSortingStrategy}>
+          <div className="space-y-0.5">
+            {(tournament.groupOrder || []).map((groupId) => {
+              const group = getGroupById(groupId)
+              const isShared = state.sharedGroups.includes(groupId)
+              const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
+              const groupCourt = groupMatches[0]?.court || 'A'
+              
+              const handleCourtChange = (court: 'A' | 'B' | 'shared') => {
+                if (court === 'shared') {
+                  setState(prev => ({
+                    ...prev,
+                    sharedGroups: prev.sharedGroups.includes(groupId) ? prev.sharedGroups : [...prev.sharedGroups, groupId]
+                  }))
+                } else {
+                  setState(prev => {
+                    if (!prev.currentTournament) return prev
+                    const updatedMatches = prev.currentTournament.matches.map(m => 
+                      m.groupId === groupId && m.status === 'pending' ? { ...m, court } : m
+                    )
+                    return {
+                      ...prev,
+                      sharedGroups: prev.sharedGroups.filter(g => g !== groupId),
+                      currentTournament: { ...prev.currentTournament, matches: updatedMatches }
+                    }
+                  })
+                }
+              }
+              
+              return (
+                <SortableCourtItem
+                  key={groupId}
+                  id={groupId}
+                  group={group}
+                  isShared={isShared}
+                  groupCourt={groupCourt}
+                  onCourtChange={handleCourtChange}
+                />
+              )
+            })}
+          </div>
+        </SortableContext>
+        <DragOverlay dropAnimation={{ duration: 200, easing: 'ease-out' }}>
+          {activeId ? (
+            <CourtAssignmentItem 
+              group={activeGroup}
+              isShared={activeIsShared}
+              groupCourt={activeGroupCourt}
+              isDragging
+            />
+          ) : null}
+        </DragOverlay>
+      </DndContext>
+    </div>
+  )
+})
+
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -3521,8 +3726,6 @@ const TournamentManager = memo(function TournamentManager({
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
   const [showEditTournament, setShowEditTournament] = useState(false)
-  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
-  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   const tournament = state.currentTournament
   
   // DnD Kit sensors with touch delay for mobile
@@ -3912,181 +4115,12 @@ const TournamentManager = memo(function TournamentManager({
             </div>
 
             {/* Court Assignment & Group Order */}
-            <div className="bg-[#1e3a5f]/20 rounded-lg p-2.5 border border-white/5">
-              <span className="text-xs text-[#8fb3d1] block mb-2">Court Assignment & Order</span>
-              <div className="space-y-0">
-                {(tournament.groupOrder || []).map((groupId) => {
-                  const group = getGroupById(groupId)
-                  const isShared = state.sharedGroups.includes(groupId)
-                  const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
-                  const groupCourt = groupMatches[0]?.court || 'A'
-                  const isDragging = draggedGroupId === groupId
-                  const isDropTarget = dropTargetId === groupId && draggedGroupId !== groupId
-                  
-                  return (
-                    <div key={groupId} className="relative">
-                      {/* Drop indicator line - shows ABOVE this item */}
-                      {isDropTarget && (
-                        <div className="absolute -top-[2px] left-0 right-0 z-10 flex items-center gap-1 pointer-events-none">
-                          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
-                          <div className="flex-1 h-[3px] bg-amber-400 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
-                          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
-                        </div>
-                      )}
-                      <div 
-                        data-group-order-id={groupId}
-                        draggable
-                        onDragStart={(e) => {
-                          setDraggedGroupId(groupId)
-                          e.dataTransfer.effectAllowed = 'move'
-                        }}
-                        onDragEnd={() => { setDraggedGroupId(null); setDropTargetId(null) }}
-                        onDragOver={(e) => {
-                          if (!draggedGroupId || draggedGroupId === groupId) return
-                          e.preventDefault()
-                          e.dataTransfer.dropEffect = 'move'
-                          setDropTargetId(groupId)
-                        }}
-                        onDragLeave={() => { if (dropTargetId === groupId) setDropTargetId(null) }}
-                        onDrop={(e) => {
-                          e.preventDefault()
-                          if (draggedGroupId && draggedGroupId !== groupId) {
-                            // Reorder groupOrder and auto-stagger courts
-                            setState(prev => {
-                              if (!prev.currentTournament) return prev
-                              const order = [...(prev.currentTournament.groupOrder || [])]
-                              const draggedIdx = order.indexOf(draggedGroupId)
-                              const targetIdx = order.indexOf(groupId)
-                              if (draggedIdx === -1 || targetIdx === -1) return prev
-                              const [dragged] = order.splice(draggedIdx, 1)
-                              order.splice(targetIdx, 0, dragged)
-                              // Auto-stagger courts (A, B, A, B...) for non-shared groups
-                              const sharedGroups = prev.sharedGroups || []
-                              const updatedMatches = prev.currentTournament.matches.map(m => {
-                                if (m.status !== 'pending') return m
-                                if (sharedGroups.includes(m.groupId)) return m
-                                const groupIdx = order.indexOf(m.groupId)
-                                const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
-                                return { ...m, court: newCourt as 'A' | 'B' }
-                              })
-                              return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order, matches: updatedMatches } }
-                            })
-                          }
-                          setDraggedGroupId(null)
-                          setDropTargetId(null)
-                        }}
-                        className={`flex items-center gap-1.5 py-1.5 px-1 rounded select-none transition-all duration-150 ${
-                          isDragging ? 'opacity-40 scale-95 bg-amber-900/30 border border-amber-500' : 'hover:bg-slate-800/30'
-                        }`}
-                      >
-                        {/* Drag handle with touch support */}
-                        <span 
-                          className="text-slate-500 cursor-grab active:cursor-grabbing p-1 -m-0.5 hover:text-slate-400"
-                          style={{ touchAction: 'none' }}
-                          onTouchStart={(e) => {
-                            e.stopPropagation()
-                            setDraggedGroupId(groupId)
-                          }}
-                          onTouchMove={(e) => {
-                            if (!draggedGroupId) return
-                            e.preventDefault()
-                            e.stopPropagation()
-                            const touch = e.touches[0]
-                            const el = document.elementFromPoint(touch.clientX, touch.clientY)
-                            const groupEl = el?.closest('[data-group-order-id]')
-                            if (groupEl) {
-                              const targetId = groupEl.getAttribute('data-group-order-id')
-                              if (targetId && targetId !== draggedGroupId) {
-                                setDropTargetId(targetId)
-                              }
-                            } else {
-                              setDropTargetId(null)
-                            }
-                          }}
-                          onTouchEnd={() => {
-                            if (draggedGroupId && dropTargetId && draggedGroupId !== dropTargetId) {
-                              setState(prev => {
-                                if (!prev.currentTournament) return prev
-                                const order = [...(prev.currentTournament.groupOrder || [])]
-                                const draggedIdx = order.indexOf(draggedGroupId)
-                                const targetIdx = order.indexOf(dropTargetId)
-                                if (draggedIdx === -1 || targetIdx === -1) return prev
-                                const [dragged] = order.splice(draggedIdx, 1)
-                                order.splice(targetIdx, 0, dragged)
-                                // Auto-stagger courts (A, B, A, B...) for non-shared groups
-                                const sharedGroups = prev.sharedGroups || []
-                                const updatedMatches = prev.currentTournament.matches.map(m => {
-                                  if (m.status !== 'pending') return m
-                                  if (sharedGroups.includes(m.groupId)) return m
-                                  const groupIdx = order.indexOf(m.groupId)
-                                  const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
-                                  return { ...m, court: newCourt as 'A' | 'B' }
-                                })
-                                return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order, matches: updatedMatches } }
-                              })
-                            }
-                            setDraggedGroupId(null)
-                            setDropTargetId(null)
-                          }}
-                        >
-                          <GripVertical className="w-4 h-4" />
-                        </span>
-                      <span className="text-xs text-slate-300 flex-1 truncate">{group?.name}</span>
-                      {group?.isNonBogu && (
-                        <span className="text-[9px] px-1 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
-                      )}
-                      <div className="flex rounded overflow-hidden border border-slate-700">
-                        <button
-                          onClick={(e) => { 
-                            e.stopPropagation()
-                            setState(prev => {
-                              if (!prev.currentTournament) return prev
-                              const updatedMatches = prev.currentTournament.matches.map(m => 
-                                m.groupId === groupId && m.status === 'pending' ? { ...m, court: 'A' as const } : m
-                              )
-                              return {
-                                ...prev,
-                                sharedGroups: prev.sharedGroups.filter(g => g !== groupId),
-                                currentTournament: { ...prev.currentTournament, matches: updatedMatches }
-                              }
-                            })
-                          }}
-                          className={`w-7 h-6 text-[10px] font-bold ${!isShared && groupCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
-                        >A</button>
-                        <button
-                          onClick={(e) => { 
-                            e.stopPropagation()
-                            setState(prev => {
-                              if (!prev.currentTournament) return prev
-                              const updatedMatches = prev.currentTournament.matches.map(m => 
-                                m.groupId === groupId && m.status === 'pending' ? { ...m, court: 'B' as const } : m
-                              )
-                              return {
-                                ...prev,
-                                sharedGroups: prev.sharedGroups.filter(g => g !== groupId),
-                                currentTournament: { ...prev.currentTournament, matches: updatedMatches }
-                              }
-                            })
-                          }}
-                          className={`w-7 h-6 text-[10px] font-bold border-x border-slate-700 ${!isShared && groupCourt === 'B' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
-                        >B</button>
-                        <button
-                          onClick={(e) => { 
-                            e.stopPropagation()
-                            setState(prev => ({
-                              ...prev,
-                              sharedGroups: prev.sharedGroups.includes(groupId) ? prev.sharedGroups : [...prev.sharedGroups, groupId]
-                            }))
-                          }}
-                          className={`px-1.5 h-6 text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
-                        >A+B</button>
-                      </div>
-                    </div>
-                  </div>
-                  )
-                })}
-              </div>
-            </div>
+            <CourtAssignmentDnd 
+              tournament={tournament}
+              state={state}
+              setState={setState}
+              getGroupById={getGroupById}
+            />
 
             {/* Actions */}
             <div className="flex gap-2 flex-wrap">
