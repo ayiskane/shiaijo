@@ -3577,19 +3577,6 @@ const TournamentManager = memo(function TournamentManager({
     toast.success('Tournament cleared')
   }
 
-  const swapMatchCourt = (matchId: string) => {
-    if (!tournament) return
-    setState(prev => ({
-      ...prev,
-      currentTournament: {
-        ...tournament,
-        matches: (tournament.matches || []).map(m => 
-          m.id === matchId ? { ...m, court: m.court === 'A' ? 'B' : 'A' } : m
-        )
-      }
-    }))
-  }
-
   const setGroupCourt = (groupId: string, court: 'A' | 'B') => {
     if (!tournament) return
     // Remove from shared groups when assigning to specific court
