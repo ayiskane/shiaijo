@@ -48,12 +48,6 @@ export const GripVertical = ({ className, ...props }: IconProps) => (
   </svg>
 )
 
-export const Check = ({ className, ...props }: IconProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" className={className} fill="currentColor" {...props}>
-    <path fill="currentColor" d="M434.8 70.1c14.3 10.4 17.5 30.4 7.1 44.7l-256 352c-5.5 7.6-14 12.3-23.4 13.1s-18.5-2.7-25.1-9.3l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l101.5 101.5 234-321.7c10.4-14.3 30.4-17.5 44.7-7.1z" />
-  </svg>
-)
-
 export const Triangle = ({ className, ...props }: IconProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className} fill="currentColor" {...props}>
     <path fill="currentColor" d="M291.2 21C284.2 8.1 270.7 0 256 0s-28.2 8.1-35.2 21L4.8 421c-6.7 12.4-6.4 27.4 .8 39.5S25.9 480 40 480l432 0c14.1 0 27.1-7.4 34.4-19.5s7.5-27.1 .8-39.5L291.2 21z" />
@@ -105,12 +99,6 @@ export const Edit2 = ({ className, ...props }: IconProps) => (
 export const Menu = ({ className, ...props }: IconProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" className={className} fill="currentColor" {...props}>
     <path fill="currentColor" d="M0 96C0 78.3 14.3 64 32 64l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 128C14.3 128 0 113.7 0 96zM0 256c0-17.7 14.3-32 32-32l384 0c17.7 0 32 14.3 32 32s-14.3 32-32 32L32 288c-17.7 0-32-14.3-32-32zM448 416c0 17.7-14.3 32-32 32L32 448c-17.7 0-32-14.3-32-32s14.3-32 32-32l384 0c17.7 0 32 14.3 32 32z" />
-  </svg>
-)
-
-export const Swords = ({ className, ...props }: IconProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className} fill="currentColor" {...props}>
-    <path fill="currentColor" d="M0 66.7L0 16C0 7.2 7.2 0 16 0L66.7 0c8.5 0 16.6 3.4 22.6 9.4l276.7 276.7-80 80-276.7-276.7C3.4 83.4 0 75.2 0 66.7zM400 448l-79.6 26.5c-10.1 3.4-21.1 .7-28.6-6.8-10.9-10.9-10.9-28.6 0-39.6L428.2 291.8c10.9-10.9 28.6-10.9 39.6 0 7.5 7.5 10.1 18.6 6.8 28.6L448 400 489.4 441.4c12.5 12.5 12.5 32.8 0 45.3l-2.7 2.7c-12.5 12.5-32.8 12.5-45.3 0L400 448zM112 320l30.1-30.1 80 80-30.1 30.1 28.2 28.2c10.9 10.9 10.9 28.6 0 39.6-7.5 7.5-18.6 10.1-28.6 6.8L112 448 70.6 489.4c-12.5 12.5-32.8 12.5-45.3 0l-2.7-2.7c-12.5-12.5-12.5-32.8 0-45.3L64 400 37.5 320.4c-3.4-10.1-.7-21.1 6.8-28.6 10.9-10.9 28.6-10.9 39.6 0L112 320zM502.6 89.4l-132.7 132.7-80-80 132.7-132.7c6-6 14.1-9.4 22.6-9.4L496 0c8.8 0 16 7.2 16 16l0 50.7c0 8.5-3.4 16.6-9.4 22.6z" />
   </svg>
 )
 
@@ -192,27 +180,9 @@ export const ChevronUp = ({ className, ...props }: IconProps) => (
   </svg>
 )
 
-export const Heart = ({ className, ...props }: IconProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className} fill="currentColor" {...props}>
-    <path fill="currentColor" d="M241 87.1l15 20.7 15-20.7C296 52.5 336.2 32 378.9 32 452.4 32 512 91.6 512 165.1l0 2.6c0 112.2-139.9 242.5-212.9 298.2-12.4 9.4-27.6 14.1-43.1 14.1s-30.8-4.6-43.1-14.1C139.9 410.2 0 279.9 0 167.7l0-2.6C0 91.6 59.6 32 133.1 32 175.8 32 216 52.5 241 87.1z" />
-  </svg>
-)
-
 export const Clock = ({ className, ...props }: IconProps) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className} fill="currentColor" {...props}>
     <path fill="currentColor" d="M256 0a256 256 0 1 1 0 512 256 256 0 1 1 0-512zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z" />
-  </svg>
-)
-
-export const Eye = ({ className, ...props }: IconProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" className={className} fill="currentColor" {...props}>
-    <path fill="currentColor" d="M288 32c-80.8 0-145.5 36.8-192.6 80.6-46.8 43.5-78.1 95.4-93 131.1-3.3 7.9-3.3 16.7 0 24.6 14.9 35.7 46.2 87.7 93 131.1 47.1 43.7 111.8 80.6 192.6 80.6s145.5-36.8 192.6-80.6c46.8-43.5 78.1-95.4 93-131.1 3.3-7.9 3.3-16.7 0-24.6-14.9-35.7-46.2-87.7-93-131.1-47.1-43.7-111.8-80.6-192.6-80.6zM144 256a144 144 0 1 1 288 0 144 144 0 1 1 -288 0zm144-64c0 35.3-28.7 64-64 64-11.5 0-22.3-3-31.7-8.4-1 10.9-.1 22.1 2.9 33.2 13.7 51.2 66.4 81.6 117.6 67.9s81.6-66.4 67.9-117.6c-12.2-45.7-55.5-74.8-101.1-70.8 5.3 9.3 8.4 20.1 8.4 31.7z" />
-  </svg>
-)
-
-export const Shield = ({ className, ...props }: IconProps) => (
-  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" className={className} fill="currentColor" {...props}>
-    <path fill="currentColor" d="M256 0c4.6 0 9.2 1 13.4 2.9L457.8 82.8c22 9.3 38.4 31 38.3 57.2-.5 99.2-41.3 280.7-213.6 363.2-16.7 8-36.1 8-52.8 0-172.4-82.5-213.1-264-213.6-363.2-.1-26.2 16.3-47.9 38.3-57.2L242.7 2.9C246.9 1 251.4 0 256 0z" />
   </svg>
 )
 
