@@ -3324,6 +3324,7 @@ const GroupsManager = memo(function GroupsManager({
   const [editingGroup, setEditingGroup] = useState<Group | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
   const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
+  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
 
   const updateGroup = (groupId: string, updates: Partial<Group>) => {
     setState(prev => ({
@@ -3411,6 +3412,7 @@ const GroupsManager = memo(function GroupsManager({
               const isCourtA = idx % 2 === 0
               const isDragging = draggedGroupId === group.id
               const isDragTarget = draggedGroupId && draggedGroupId !== group.id
+              const isDropTarget = dropTargetId === group.id
               
               return (
                 <div 
@@ -3420,11 +3422,15 @@ const GroupsManager = memo(function GroupsManager({
                     setDraggedGroupId(group.id)
                     e.dataTransfer.effectAllowed = 'move'
                   }}
-                  onDragEnd={() => setDraggedGroupId(null)}
+                  onDragEnd={() => { setDraggedGroupId(null); setDropTargetId(null) }}
                   onDragOver={(e) => {
                     if (!isDragTarget) return
                     e.preventDefault()
                     e.dataTransfer.dropEffect = 'move'
+                    setDropTargetId(group.id)
+                  }}
+                  onDragLeave={() => {
+                    if (dropTargetId === group.id) setDropTargetId(null)
                   }}
                   onDrop={(e) => {
                     e.preventDefault()
@@ -3432,15 +3438,20 @@ const GroupsManager = memo(function GroupsManager({
                       reorderGroups(draggedGroupId, group.id)
                     }
                     setDraggedGroupId(null)
+                    setDropTargetId(null)
                   }}
-                  className={`flex items-center gap-2 p-3 rounded-lg transition-all cursor-grab active:cursor-grabbing select-none ${
-                    isDragging ? 'opacity-50 scale-95' :
-                    isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
+                  className={`relative flex items-center gap-2 p-3 rounded-lg transition-all duration-200 ease-out cursor-grab active:cursor-grabbing select-none ${
+                    isDragging ? 'opacity-50 scale-95 ring-2 ring-amber-400 z-50' :
+                    isDropTarget ? 'translate-y-1' :
                     isCourtA 
                       ? 'bg-amber-950/20 border-l-2 border-l-amber-500' 
                       : 'bg-blue-950/20 border-l-2 border-l-blue-500'
                   }`}
                 >
+                  {/* Drop indicator bar */}
+                  {isDropTarget && (
+                    <div className="absolute -top-1.5 left-2 right-2 h-1 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-pulse" />
+                  )}
                   {/* Drag handle */}
                   <GripVertical className="w-4 h-4 text-slate-500 cursor-grab flex-shrink-0" />
                   {/* Court badge */}
