@@ -5620,19 +5620,20 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const switchGroupCourt = (groupId: string, newCourt: 'A' | 'B') => {
     // First remove from shared if it was shared
     const wasShared = (state.sharedGroups || []).includes(groupId)
+    
+    // Get group match IDs from current state before the setState
+    const groupMatchIds = new Set(
+      tournament?.matches
+        ?.filter(m => m.groupId === groupId && m.status === 'pending')
+        .map(m => m.id) || []
+    )
+    
     setState(prev => {
       if (!prev.currentTournament) return prev
       
-      // Get all match IDs in this group (pending only - in_progress stays where it is)
-      const groupMatchIds = prev.currentTournament.matches
-        .filter(m => m.groupId === groupId && m.status === 'pending')
-        .map(m => m.id)
-      
-      // Clear ANY selection if it's a match from this group
-      const newCourtASelected = prev.courtASelectedMatch && groupMatchIds.includes(prev.courtASelectedMatch) 
-        ? null : prev.courtASelectedMatch
-      const newCourtBSelected = prev.courtBSelectedMatch && groupMatchIds.includes(prev.courtBSelectedMatch) 
-        ? null : prev.courtBSelectedMatch
+      // Clear selections if they're matches from this group
+      const clearA = prev.courtASelectedMatch && groupMatchIds.has(prev.courtASelectedMatch)
+      const clearB = prev.courtBSelectedMatch && groupMatchIds.has(prev.courtBSelectedMatch)
       
       const updatedMatches = prev.currentTournament.matches.map(m => 
         m.groupId === groupId && m.status === 'pending' ? { ...m, court: newCourt } : m
@@ -5641,8 +5642,8 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         ...prev,
         sharedGroups: wasShared ? (prev.sharedGroups || []).filter(g => g !== groupId) : prev.sharedGroups,
         currentTournament: { ...prev.currentTournament, matches: updatedMatches },
-        courtASelectedMatch: newCourtASelected,
-        courtBSelectedMatch: newCourtBSelected,
+        courtASelectedMatch: clearA ? null : prev.courtASelectedMatch,
+        courtBSelectedMatch: clearB ? null : prev.courtBSelectedMatch,
       }
     })
     toast.success(`Group moved to Court ${newCourt}`)
