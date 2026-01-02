@@ -1,4 +1,51 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
+import { CSS } from '@dnd-kit/utilities'
+
+// Drag Handle component for sortable items
+const DragHandle = () => (
+  <span className="text-slate-500 cursor-grab active:cursor-grabbing text-sm select-none touch-none px-1">☰</span>
+)
+
+// Sortable Group Card wrapper component
+const SortableGroupCard = ({ 
+  id, 
+  children, 
+  isShared, 
+  isCourtA, 
+  isCourtB 
+}: { 
+  id: string
+  children: React.ReactNode
+  isShared: boolean
+  isCourtA: boolean
+  isCourtB: boolean
+}) => {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id })
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 'auto',
+  }
+  
+  return (
+    <Card 
+      ref={setNodeRef} 
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`border-l-2 transition-all touch-none ${
+        isDragging ? 'scale-[0.98] shadow-xl' :
+        isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
+      }`}
+    >
+      {children}
+    </Card>
+  )
+}
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -3500,10 +3547,37 @@ const TournamentManager = memo(function TournamentManager({
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
-  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
-  const [touchDragId, setTouchDragId] = useState<string | null>(null)
-  const [touchTimeout, setTouchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
+  const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
   const tournament = state.currentTournament
+  
+  // DnD Kit sensors with touch delay for mobile
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 }
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 }
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates
+    })
+  )
+  
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    if (over && active.id !== over.id && tournament?.groupOrder) {
+      const oldIndex = tournament.groupOrder.indexOf(active.id as string)
+      const newIndex = tournament.groupOrder.indexOf(over.id as string)
+      const newOrder = arrayMove(tournament.groupOrder, oldIndex, newIndex)
+      setState(prev => ({
+        ...prev,
+        currentTournament: prev.currentTournament ? {
+          ...prev.currentTournament,
+          groupOrder: newOrder
+        } : null
+      }))
+    }
+  }
 
   const startTournament = () => {
     if (!tournament) return
@@ -3897,99 +3971,32 @@ const TournamentManager = memo(function TournamentManager({
       </Card>
 
       {/* Match Schedule by Group with Court Assignment */}
-      {(tournament.groupOrder || []).map((groupId) => {
-        const group = getGroupById(groupId)
-        const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
-        const isShared = state.sharedGroups.includes(groupId)
-        const isCourtA = !isShared && groupMatches[0]?.court === 'A'
-        const isCourtB = !isShared && groupMatches[0]?.court === 'B'
-        const isDragging = draggedGroupId === groupId || touchDragId === groupId
-        const isDragTarget = draggedGroupId && draggedGroupId !== groupId
-        const isCollapsed = collapsedGroups.includes(groupId)
-        const isNonBogu = group?.isNonBogu
-        const completedCount = groupMatches.filter(m => m.status === 'completed').length
-        
-        return (
-          <Card 
-            key={groupId} 
-            draggable
-            onDragStart={(e) => {
-              setDraggedGroupId(groupId)
-              e.dataTransfer.effectAllowed = 'move'
-            }}
-            onDragEnd={() => setDraggedGroupId(null)}
-            onDragOver={(e) => {
-              if (!isDragTarget) return
-              e.preventDefault()
-              e.dataTransfer.dropEffect = 'move'
-            }}
-            onDrop={(e) => {
-              e.preventDefault()
-              if (draggedGroupId && isDragTarget) {
-                reorderTournamentGroups(draggedGroupId, groupId)
-              }
-              setDraggedGroupId(null)
-            }}
-            onTouchStart={(e) => {
-              // Only start drag if touching the drag handle area (not buttons/selects)
-              const target = e.target as HTMLElement
-              if (target.closest('button') || target.closest('select') || target.closest('input')) return
-              // Start a hold timer - drag only activates after holding for 300ms
-              const timeout = setTimeout(() => {
-                setTouchDragId(groupId)
-                setDraggedGroupId(groupId)
-                // Vibrate on mobile to indicate drag started
-                if (navigator.vibrate) navigator.vibrate(50)
-              }, 300)
-              setTouchTimeout(timeout)
-            }}
-            onTouchMove={(e) => {
-              // Cancel drag initiation if user moves before hold completes
-              if (touchTimeout && !touchDragId) {
-                clearTimeout(touchTimeout)
-                setTouchTimeout(null)
-              }
-              // If dragging, find element under touch and potentially reorder
-              if (touchDragId) {
-                const touch = e.touches[0]
-                const element = document.elementFromPoint(touch.clientX, touch.clientY)
-                const cardEl = element?.closest('[data-group-id]')
-                if (cardEl) {
-                  const targetGroupId = cardEl.getAttribute('data-group-id')
-                  if (targetGroupId && targetGroupId !== touchDragId) {
-                    reorderTournamentGroups(touchDragId, targetGroupId)
-                  }
-                }
-              }
-            }}
-            onTouchEnd={() => {
-              if (touchTimeout) {
-                clearTimeout(touchTimeout)
-                setTouchTimeout(null)
-              }
-              setTouchDragId(null)
-              setDraggedGroupId(null)
-            }}
-            onTouchCancel={() => {
-              if (touchTimeout) {
-                clearTimeout(touchTimeout)
-                setTouchTimeout(null)
-              }
-              setTouchDragId(null)
-              setDraggedGroupId(null)
-            }}
-            data-group-id={groupId}
-            className={`border-l-2 transition-all ${
-              isDragging ? 'opacity-50 scale-[0.98]' :
-              isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
-              isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
-            }`}
-          >
-            <CardHeader className="p-3 pb-2">
-              {/* Row 1: Drag handle, collapse toggle, court badge, group name, progress */}
-              <div className="flex items-center gap-1.5">
-                <span className="text-slate-500 cursor-grab active:cursor-grabbing text-sm select-none touch-none">☰</span>
-                <button 
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+        <SortableContext items={tournament.groupOrder || []} strategy={verticalListSortingStrategy}>
+          {(tournament.groupOrder || []).map((groupId) => {
+            const group = getGroupById(groupId)
+            const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
+            const isShared = state.sharedGroups.includes(groupId)
+            const isCourtA = !isShared && groupMatches[0]?.court === 'A'
+            const isCourtB = !isShared && groupMatches[0]?.court === 'B'
+            const isCollapsed = collapsedGroups.includes(groupId)
+            const isNonBogu = group?.isNonBogu
+            const completedCount = groupMatches.filter(m => m.status === 'completed').length
+            const isEditing = editingGroupId === groupId
+            
+            return (
+              <SortableGroupCard
+                key={groupId}
+                id={groupId}
+                isShared={isShared}
+                isCourtA={isCourtA}
+                isCourtB={isCourtB}
+              >
+                <CardHeader className="p-3 pb-2">
+                  {/* Row 1: Drag handle, collapse toggle, court badge, group name, edit, progress */}
+                  <div className="flex items-center gap-1.5">
+                    <DragHandle />
+                    <button 
                   onClick={() => setCollapsedGroups(prev => 
                     prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]
                   )}
@@ -4004,11 +4011,17 @@ const TournamentManager = memo(function TournamentManager({
                 </span>
                 <span className="text-white font-medium text-sm flex-1">{group?.name || groupId}</span>
                 {isNonBogu && <span className="text-[8px] px-1 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
+                <button
+                  onClick={(e) => { e.stopPropagation(); setEditingGroupId(isEditing ? null : groupId) }}
+                  className={`p-1 rounded transition ${isEditing ? 'text-orange-400 bg-orange-500/20' : 'text-[#6b8fad] hover:text-white'}`}
+                >
+                  <Edit2 className="w-3.5 h-3.5" />
+                </button>
                 <span className="text-[10px] text-[#6b8fad]">{completedCount}/{groupMatches.length}</span>
               </div>
               
-              {/* Row 2: Settings (only if not collapsed) - hidden for non-bogu except court */}
-              {!isCollapsed && (
+              {/* Row 2: Settings (only if editing and not collapsed) */}
+              {!isCollapsed && isEditing && (
                 <div className="flex items-center gap-2 mt-2 flex-wrap">
                   {!isNonBogu && (
                     <>
@@ -4016,6 +4029,7 @@ const TournamentManager = memo(function TournamentManager({
                         value={groupMatches[0]?.timerDuration || 180}
                         onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
                         className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         {(tournament.timerOptions || [60, 120, 180]).map(secs => (
                           <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
@@ -4025,6 +4039,7 @@ const TournamentManager = memo(function TournamentManager({
                         value={groupMatches[0]?.matchType || 'sanbon'}
                         onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
                         className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
+                        onClick={(e) => e.stopPropagation()}
                       >
                         <option value="sanbon">Sanbon</option>
                         <option value="ippon">Ippon</option>
@@ -4098,13 +4113,14 @@ const TournamentManager = memo(function TournamentManager({
                         
                         {/* Row 2: Settings/Status */}
                         <div className="flex items-center justify-between mt-1.5 gap-2">
-                          {/* Left: Settings or timer info */}
-                          {match.status === 'pending' && !isNonBogu ? (
+                          {/* Left: Settings (if editing) or timer info */}
+                          {match.status === 'pending' && !isNonBogu && isEditing ? (
                             <div className="flex items-center gap-1.5">
                               <select
                                 value={match.timerDuration || 180}
                                 onChange={(e) => updateMatchSettings(match.id, 'timerDuration', parseInt(e.target.value))}
                                 className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1.5 py-1 text-xs text-[#8fb3d1]"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 {(tournament.timerOptions || [60, 120, 180]).map(secs => (
                                   <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
@@ -4114,6 +4130,7 @@ const TournamentManager = memo(function TournamentManager({
                                 value={match.matchType || 'sanbon'}
                                 onChange={(e) => updateMatchSettings(match.id, 'matchType', e.target.value)}
                                 className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1.5 py-1 text-xs text-[#8fb3d1]"
+                                onClick={(e) => e.stopPropagation()}
                               >
                                 <option value="sanbon">Sanbon</option>
                                 <option value="ippon">Ippon</option>
@@ -4150,9 +4167,11 @@ const TournamentManager = memo(function TournamentManager({
               </ScrollArea>
             </CardContent>
             )}
-          </Card>
+          </SortableGroupCard>
         )
       })}
+        </SortableContext>
+      </DndContext>
     </div>
   )
 })
