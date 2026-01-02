@@ -2455,7 +2455,7 @@ function TournamentManager({
                 <span className="text-[10px] text-[#6b8fad] ml-auto">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
               </div>
               {/* Row 2: Settings */}
-              <div className="flex items-center gap-2 mt-2 px-1">
+              <div className="flex items-center gap-2 mt-2 px-4">
                 <select
                   value={groupMatches[0]?.timerDuration || 180}
                   onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
