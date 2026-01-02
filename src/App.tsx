@@ -2301,7 +2301,7 @@ function TournamentManager({
             <div>
               <CardTitle className="text-white text-lg sm:text-xl">{tournament.name}</CardTitle>
               <CardDescription className="text-[#8fb3d1] text-sm">
-                {tournament.month} {tournament.year}
+                {tournament.date ? new Date(tournament.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : `${tournament.month} ${tournament.year}`}
               </CardDescription>
             </div>
             <Badge className={`text-sm px-3 py-1 ${
@@ -2455,11 +2455,11 @@ function TournamentManager({
                 <span className="text-[10px] text-[#6b8fad] ml-auto">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
               </div>
               {/* Row 2: Settings */}
-              <div className="flex items-center gap-1 mt-1">
+              <div className="flex items-center gap-2 mt-2 px-1">
                 <select
                   value={groupMatches[0]?.timerDuration || 180}
                   onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
-                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#b8d4ec]"
+                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
                 >
                   {(tournament.timerOptions || [120, 180, 240, 300]).map(secs => (
                     <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
@@ -2468,22 +2468,22 @@ function TournamentManager({
                 <select
                   value={groupMatches[0]?.matchType || 'sanbon'}
                   onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
-                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#b8d4ec]"
+                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
                 >
                   <option value="sanbon">Sanbon</option>
                   <option value="ippon">Ippon</option>
                 </select>
                 <div className="flex rounded overflow-hidden border border-[#1e3a5f] ml-auto">
                   <button
-                    className={`px-2 py-0.5 text-[10px] font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    className={`px-3 py-1 text-xs font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                     onClick={() => setGroupCourt(groupId, 'A')}
                   >A</button>
                   <button
-                    className={`px-2 py-0.5 text-[10px] font-bold ${isShared ? 'bg-emerald-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    className={`px-3 py-1 text-xs font-bold ${isShared ? 'bg-emerald-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                     onClick={() => toggleSharedGroup(groupId)}
                   >A+B</button>
                   <button
-                    className={`px-2 py-0.5 text-[10px] font-bold ${isCourtB ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    className={`px-3 py-1 text-xs font-bold ${isCourtB ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                     onClick={() => setGroupCourt(groupId, 'B')}
                   >B</button>
                 </div>
