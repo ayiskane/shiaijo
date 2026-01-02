@@ -693,10 +693,10 @@ export default function App() {
             <p className="text-[#6b8fad] text-sm tracking-wide">Kendo Tournament Manager</p>
           </div>
           
-          {/* Spectator Button */}
+          {/* Spectator Button - Glass style */}
           <button 
             onClick={() => setPortal('spectator')}
-            className="w-full py-4 px-6 rounded-2xl text-base font-semibold bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 hover:shadow-emerald-500/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-4 border border-emerald-400/20"
+            className="w-full py-4 px-6 rounded-2xl text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 flex items-center justify-center gap-3 mb-4"
           >
             <Eye className="w-5 h-5" /> Join as Spectator
           </button>
@@ -708,27 +708,27 @@ export default function App() {
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
           </div>
           
-          {/* Admin, Courtkeeper & Volunteer Buttons */}
+          {/* Admin, Courtkeeper & Volunteer Buttons - Glass style */}
           <div className="space-y-3">
             <button 
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
-              className="w-full py-4 px-6 rounded-2xl text-base font-semibold bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/40 hover:shadow-orange-500/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 border border-orange-400/20"
+              className="w-full py-4 px-6 rounded-2xl text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
               <Shield className="w-5 h-5" /> Admin Portal
-              {state.adminPassword && <Lock className="w-4 h-4 ml-1 opacity-70" />}
+              {state.adminPassword && <Lock className="w-4 h-4 ml-1 opacity-60" />}
             </button>
             
             <button 
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
-              className="w-full py-4 px-6 rounded-2xl text-base font-semibold bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40 hover:shadow-blue-500/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 border border-blue-400/20"
+              className="w-full py-4 px-6 rounded-2xl text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
               <Swords className="w-5 h-5" /> Courtkeeper Portal
-              {state.courtkeeperPassword && <Lock className="w-4 h-4 ml-1 opacity-70" />}
+              {state.courtkeeperPassword && <Lock className="w-4 h-4 ml-1 opacity-60" />}
             </button>
             
             <button 
               onClick={() => setPortal('volunteer')}
-              className="w-full py-4 px-6 rounded-2xl text-base font-semibold bg-gradient-to-br from-pink-400 via-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/40 hover:shadow-pink-500/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 border border-pink-400/20"
+              className="w-full py-4 px-6 rounded-2xl text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
               <Heart className="w-5 h-5" /> Volunteer Portal
             </button>
