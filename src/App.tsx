@@ -6160,7 +6160,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                       {(state.sharedGroups || []).includes(groupId) && (
                         <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-600 text-white font-bold">A+B</span>
                       )}
-                      <span className="text-slate-500 text-[10px] font-medium">{groupInfo?.name}</span>
+                      <span className="text-slate-500 text-[10px] font-medium">{groupInfo?.name} ({groupMatches.length})</span>
                     </div>
                     {groupMatches.map((match) => {
                       const mp1 = getMemberById(match.player1Id)
