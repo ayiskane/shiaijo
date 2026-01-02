@@ -5621,6 +5621,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     // First remove from shared if it was shared
     const wasShared = (state.sharedGroups || []).includes(groupId)
     
+    // Count how many matches will be moved
+    const matchesToMove = tournament?.matches?.filter(m => m.groupId === groupId && m.status === 'pending').length || 0
+    
     setState(prev => {
       if (!prev.currentTournament) return prev
       
@@ -5634,6 +5637,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         m.groupId === groupId && m.status === 'pending' ? { ...m, court: newCourt } : m
       )
       
+      // Debug: Log what we're doing
+      console.log('switchGroupCourt:', { groupId, newCourt, matchesToMove, clearA, clearB, courtAMatch: courtAMatch?.id, courtBMatch: courtBMatch?.id })
+      
       return {
         ...prev,
         sharedGroups: wasShared ? (prev.sharedGroups || []).filter(g => g !== groupId) : prev.sharedGroups,
@@ -5642,7 +5648,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         courtBSelectedMatch: clearB ? null : prev.courtBSelectedMatch,
       }
     })
-    toast.success(`Group moved to Court ${newCourt}`)
+    toast.success(`Moved ${matchesToMove} matches to Court ${newCourt}`)
   }
 
   // Reorder match in queue (drag and drop)
