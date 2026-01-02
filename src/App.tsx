@@ -5181,15 +5181,23 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const pendingMatchesB = getSortedPendingMatches(courtBMatches, courtBGroupOrder)
   
   // If a match is manually selected, use it; otherwise use first pending match
+  // IMPORTANT: If a match is already in_progress on this court, that's the current match (can't have 2 live matches)
   const selectedMatchIdA = state.courtASelectedMatch
   const selectedMatchIdB = state.courtBSelectedMatch
   
-  const currentMatchA = selectedMatchIdA 
-    ? courtAMatches.find(m => m.id === selectedMatchIdA && m.status !== 'completed')
-    : pendingMatchesA[0]
-  const currentMatchB = selectedMatchIdB
-    ? courtBMatches.find(m => m.id === selectedMatchIdB && m.status !== 'completed')
-    : pendingMatchesB[0]
+  const inProgressA = courtAMatches.find(m => m.status === 'in_progress' && m.court === 'A')
+  const inProgressB = courtBMatches.find(m => m.status === 'in_progress' && m.court === 'B')
+  
+  const currentMatchA = inProgressA 
+    ? inProgressA
+    : selectedMatchIdA 
+      ? courtAMatches.find(m => m.id === selectedMatchIdA && m.status !== 'completed')
+      : pendingMatchesA.find(m => m.status === 'pending')
+  const currentMatchB = inProgressB
+    ? inProgressB
+    : selectedMatchIdB
+      ? courtBMatches.find(m => m.id === selectedMatchIdB && m.status !== 'completed')
+      : pendingMatchesB.find(m => m.status === 'pending')
   
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
   const pendingMatches = selectedCourt === 'A' ? pendingMatchesA : pendingMatchesB
