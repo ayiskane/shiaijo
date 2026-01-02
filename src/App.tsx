@@ -894,7 +894,7 @@ export default function App() {
         state={state} 
         setState={setState} 
         isMobile={isMobile}
-        onSwitchPortal={() => setPortal('select')}
+        onSwitchPortal={(p) => setPortal(p as any)}
         getMemberById={getMemberById}
         getGroupById={getGroupById}
       />
@@ -906,7 +906,7 @@ export default function App() {
       <VolunteerPortal 
         state={state}
         setState={setState}
-        onSwitchPortal={() => setPortal('select')}
+        onSwitchPortal={(p) => setPortal(p as any)}
         getMemberById={getMemberById}
       />
     )
@@ -916,7 +916,7 @@ export default function App() {
     return (
       <SpectatorPortal 
         state={state}
-        onSwitchPortal={() => setPortal('select')}
+        onSwitchPortal={(p) => setPortal(p as any)}
         getMemberById={getMemberById}
         getGroupById={getGroupById}
       />
@@ -928,7 +928,7 @@ export default function App() {
       state={state} 
       setState={setState} 
       isMobile={isMobile}
-      onSwitchPortal={() => setPortal('select')}
+      onSwitchPortal={(p) => setPortal(p as any)}
       getMemberById={getMemberById}
       getGroupById={getGroupById}
     />
@@ -944,7 +944,7 @@ function VolunteerPortal({
 }: { 
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
-  onSwitchPortal: () => void
+  onSwitchPortal: (portal: string) => void
   getMemberById: (id: string) => Member | undefined
 }) {
   const [selectedVolunteer, setSelectedVolunteer] = useState<string | null>(null)
@@ -1091,12 +1091,26 @@ function VolunteerPortal({
               <p className="text-xs text-[#6b8fad]">Log hours & sign up for events</p>
             </div>
           </div>
-          <button 
-            onClick={onSwitchPortal}
-            className="text-xs text-[#6b8fad] hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/5"
-          >
-            ← Back
-          </button>
+          <Select onValueChange={(value) => onSwitchPortal(value)}>
+            <SelectTrigger className="text-xs text-[#6b8fad] hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/5 border-0 w-auto gap-1">
+              <ArrowLeftRight className="w-3 h-3" />
+              <span>Switch</span>
+            </SelectTrigger>
+            <SelectContent className="bg-[#142130] border-[#1e3a5f]">
+              <SelectItem value="spectator" className="text-emerald-300">
+                <span className="flex items-center gap-2"><Eye className="w-4 h-4" /> Spectator</span>
+              </SelectItem>
+              <SelectItem value="admin" className="text-orange-300">
+                <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Admin</span>
+              </SelectItem>
+              <SelectItem value="courtkeeper" className="text-sky-300">
+                <span className="flex items-center gap-2"><Swords className="w-4 h-4" /> Courtkeeper</span>
+              </SelectItem>
+              <SelectItem value="select" className="text-[#8fb3d1]">
+                <span className="flex items-center gap-2"><Home className="w-4 h-4" /> Main Menu</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </header>
       
@@ -1437,7 +1451,7 @@ function SpectatorPortal({
   getGroupById
 }: { 
   state: AppState
-  onSwitchPortal: () => void
+  onSwitchPortal: (portal: string) => void
   getMemberById: (id: string) => Member | undefined
   getGroupById: (id: string) => Group | undefined
 }) {
@@ -1537,12 +1551,26 @@ function SpectatorPortal({
               <p className="text-xs text-[#6b8fad]">Spectator View</p>
             </div>
           </div>
-          <button 
-            onClick={onSwitchPortal}
-            className="text-xs text-[#6b8fad] hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/5"
-          >
-            ← Back
-          </button>
+          <Select onValueChange={(value) => onSwitchPortal(value)}>
+            <SelectTrigger className="text-xs text-[#6b8fad] hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/5 border-0 w-auto gap-1">
+              <ArrowLeftRight className="w-3 h-3" />
+              <span>Switch</span>
+            </SelectTrigger>
+            <SelectContent className="bg-[#142130] border-[#1e3a5f]">
+              <SelectItem value="admin" className="text-orange-300">
+                <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Admin</span>
+              </SelectItem>
+              <SelectItem value="courtkeeper" className="text-sky-300">
+                <span className="flex items-center gap-2"><Swords className="w-4 h-4" /> Courtkeeper</span>
+              </SelectItem>
+              <SelectItem value="volunteer" className="text-pink-300">
+                <span className="flex items-center gap-2"><Heart className="w-4 h-4" /> Volunteer</span>
+              </SelectItem>
+              <SelectItem value="select" className="text-[#8fb3d1]">
+                <span className="flex items-center gap-2"><Home className="w-4 h-4" /> Main Menu</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </header>
       
@@ -1856,7 +1884,7 @@ function AdminPortal({
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
   isMobile: boolean
-  onSwitchPortal: () => void
+  onSwitchPortal: (portal: string) => void
   getMemberById: (id: string) => Member | undefined
   getGroupById: (id: string) => Group | undefined
 }) {
@@ -2312,13 +2340,26 @@ function AdminPortal({
         </nav>
 
         <div className="p-4 border-t border-white/5">
-          <button 
-            onClick={onSwitchPortal}
-            className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] hover:from-[#2a4a6f] hover:to-[#1e3a5f] rounded-xl flex items-center justify-center gap-2 font-medium transition ${sidebarCollapsed ? 'px-0' : ''}`}
-          >
-            <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
-            {!sidebarCollapsed && <span>Courtkeeper</span>}
-          </button>
+          <Select onValueChange={(value) => onSwitchPortal(value)}>
+            <SelectTrigger className={`w-full py-3 px-4 text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] hover:from-[#2a4a6f] hover:to-[#1e3a5f] rounded-xl flex items-center justify-center gap-2 font-medium transition border-0 ${sidebarCollapsed ? 'px-2' : ''}`}>
+              <ArrowLeftRight className="w-4 h-4 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="flex-1 text-left">Switch Portal</span>}
+            </SelectTrigger>
+            <SelectContent className="bg-[#142130] border-[#1e3a5f]">
+              <SelectItem value="spectator" className="text-emerald-300 hover:bg-emerald-900/30">
+                <span className="flex items-center gap-2"><Eye className="w-4 h-4" /> Spectator</span>
+              </SelectItem>
+              <SelectItem value="courtkeeper" className="text-sky-300 hover:bg-sky-900/30">
+                <span className="flex items-center gap-2"><Swords className="w-4 h-4" /> Courtkeeper</span>
+              </SelectItem>
+              <SelectItem value="volunteer" className="text-pink-300 hover:bg-pink-900/30">
+                <span className="flex items-center gap-2"><Heart className="w-4 h-4" /> Volunteer</span>
+              </SelectItem>
+              <SelectItem value="select" className="text-[#8fb3d1] hover:bg-[#1e3a5f]/50">
+                <span className="flex items-center gap-2"><Home className="w-4 h-4" /> Main Menu</span>
+              </SelectItem>
+            </SelectContent>
+          </Select>
         </div>
       </aside>
 
@@ -2364,13 +2405,31 @@ function AdminPortal({
                 </button>
               ))}
             </nav>
-            <div className="p-4 border-t border-white/5">
+            <div className="p-4 border-t border-white/5 space-y-2">
+              <p className="text-xs text-[#6b8fad] uppercase tracking-wider mb-2">Switch Portal</p>
               <button 
-                onClick={() => { setMobileNavOpen(false); onSwitchPortal(); }}
-                className="w-full py-3 px-4 text-sm bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] rounded-xl flex items-center justify-center gap-2 font-medium text-white"
+                onClick={() => { setMobileNavOpen(false); onSwitchPortal('spectator'); }}
+                className="w-full py-2.5 px-4 text-sm bg-emerald-950/40 border border-emerald-500/30 rounded-lg flex items-center gap-2 text-emerald-300"
               >
-                <ArrowLeftRight className="w-4 h-4" />
-                <span>Courtkeeper</span>
+                <Eye className="w-4 h-4" /> Spectator
+              </button>
+              <button 
+                onClick={() => { setMobileNavOpen(false); onSwitchPortal('courtkeeper'); }}
+                className="w-full py-2.5 px-4 text-sm bg-sky-950/40 border border-sky-500/30 rounded-lg flex items-center gap-2 text-sky-300"
+              >
+                <Swords className="w-4 h-4" /> Courtkeeper
+              </button>
+              <button 
+                onClick={() => { setMobileNavOpen(false); onSwitchPortal('volunteer'); }}
+                className="w-full py-2.5 px-4 text-sm bg-pink-950/40 border border-pink-500/30 rounded-lg flex items-center gap-2 text-pink-300"
+              >
+                <Heart className="w-4 h-4" /> Volunteer
+              </button>
+              <button 
+                onClick={() => { setMobileNavOpen(false); onSwitchPortal('select'); }}
+                className="w-full py-2.5 px-4 text-sm bg-[#1e3a5f]/50 border border-[#1e3a5f] rounded-lg flex items-center gap-2 text-[#8fb3d1]"
+              >
+                <Home className="w-4 h-4" /> Main Menu
               </button>
             </div>
           </SheetContent>
@@ -4795,7 +4854,7 @@ function CourtkeeperPortal({
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
   isMobile: boolean
-  onSwitchPortal: () => void
+  onSwitchPortal: (portal: string) => void
   getMemberById: (id: string) => Member | undefined
   getGroupById: (id: string) => Group | undefined
 }) {
@@ -5232,7 +5291,7 @@ function CourtkeeperPortal({
             <p className="text-[#b8d4ec]">
               {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament generated yet'}
             </p>
-            <Button onClick={onSwitchPortal} variant="outline" className="border-orange-500 text-orange-400">
+            <Button onClick={() => onSwitchPortal('admin')} variant="outline" className="border-orange-500 text-orange-400">
               Go to Admin Portal
             </Button>
           </CardContent>
@@ -5257,7 +5316,7 @@ function CourtkeeperPortal({
               <Button onClick={() => setSelectedCourt(selectedCourt === 'A' ? 'B' : 'A')} className="bg-[#1e3a5f]">
                 Switch to Court {selectedCourt === 'A' ? 'B' : 'A'}
               </Button>
-              <Button onClick={onSwitchPortal} variant="outline" className="border-orange-500 text-orange-400">
+              <Button onClick={() => onSwitchPortal('admin')} variant="outline" className="border-orange-500 text-orange-400">
                 Admin Portal
               </Button>
             </div>
@@ -5757,12 +5816,26 @@ function CourtkeeperPortal({
                 </button>
               </div>
               
-              <button 
-                onClick={onSwitchPortal}
-                className="w-full py-2 rounded bg-slate-800 text-slate-400 text-xs hover:bg-slate-700 flex items-center justify-center gap-2"
-              >
-                <ArrowLeftRight className="w-3 h-3" /> Switch to Admin
-              </button>
+              <Select onValueChange={(value) => onSwitchPortal(value)}>
+                <SelectTrigger className="w-full py-2 rounded bg-slate-800 text-slate-400 text-xs hover:bg-slate-700 flex items-center justify-center gap-2 border-0">
+                  <ArrowLeftRight className="w-3 h-3" />
+                  <span>Switch Portal</span>
+                </SelectTrigger>
+                <SelectContent className="bg-[#142130] border-[#1e3a5f]">
+                  <SelectItem value="spectator" className="text-emerald-300">
+                    <span className="flex items-center gap-2"><Eye className="w-4 h-4" /> Spectator</span>
+                  </SelectItem>
+                  <SelectItem value="admin" className="text-orange-300">
+                    <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Admin</span>
+                  </SelectItem>
+                  <SelectItem value="volunteer" className="text-pink-300">
+                    <span className="flex items-center gap-2"><Heart className="w-4 h-4" /> Volunteer</span>
+                  </SelectItem>
+                  <SelectItem value="select" className="text-[#8fb3d1]">
+                    <span className="flex items-center gap-2"><Home className="w-4 h-4" /> Main Menu</span>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             
             {/* Group Queue - Collapsible */}
