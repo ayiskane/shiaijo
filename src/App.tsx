@@ -844,9 +844,9 @@ export default function App() {
           {/* Spectator Button - Glass style */}
           <button 
             onClick={() => setPortal('spectator')}
-            className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 flex items-center justify-center gap-2 md:gap-3 mb-4 md:mb-5"
+            className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 flex items-center justify-center gap-3 mb-4 md:mb-5"
           >
-            <Eye className="w-4 h-4 md:w-5 md:h-5" /> Join as Spectator
+            <span className="w-5 flex justify-center"><Eye className="w-4 h-4 md:w-5 md:h-5" /></span> Join as Spectator
           </button>
           
           {/* Divider */}
@@ -860,25 +860,25 @@ export default function App() {
           <div className="space-y-2 md:space-y-3">
             <button 
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex items-center justify-center gap-2 md:gap-3"
+              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
-              <Shield className="w-4 h-4 md:w-5 md:h-5" /> Admin Portal
+              <span className="w-5 flex justify-center"><Shield className="w-4 h-4 md:w-5 md:h-5" /></span> Admin Portal
               {state.adminPassword && <Lock className="w-3 h-3 md:w-4 md:h-4 ml-1 opacity-60" />}
             </button>
             
             <button 
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex items-center justify-center gap-2 md:gap-3"
+              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
-              <Swords className="w-4 h-4 md:w-5 md:h-5" /> Courtkeeper Portal
+              <span className="w-5 flex justify-center"><Swords className="w-4 h-4 md:w-5 md:h-5" /></span> Courtkeeper Portal
               {state.courtkeeperPassword && <Lock className="w-3 h-3 md:w-4 md:h-4 ml-1 opacity-60" />}
             </button>
             
             <button 
               onClick={() => setPortal('volunteer')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex items-center justify-center gap-2 md:gap-3"
+              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex items-center justify-center gap-3"
             >
-              <Heart className="w-4 h-4 md:w-5 md:h-5" /> Volunteer Portal
+              <span className="w-5 flex justify-center"><Heart className="w-4 h-4 md:w-5 md:h-5" /></span> Volunteer Portal
             </button>
           </div>
           
