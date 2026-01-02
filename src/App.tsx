@@ -3520,7 +3520,6 @@ const TournamentManager = memo(function TournamentManager({
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [editingGroupId, setEditingGroupId] = useState<string | null>(null)
-  const [editGroupOrder, setEditGroupOrder] = useState(false)
   const [showEditTournament, setShowEditTournament] = useState(false)
   const tournament = state.currentTournament
   
