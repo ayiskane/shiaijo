@@ -3916,8 +3916,15 @@ const TournamentManager = memo(function TournamentManager({
               }
               setDraggedGroupId(null)
             }}
-            onTouchStart={() => setDraggedGroupId(groupId)}
-            onTouchEnd={() => {
+            onTouchStart={(e) => {
+              // Only start drag if touching the drag handle area (not buttons/selects)
+              const target = e.target as HTMLElement
+              if (target.closest('button') || target.closest('select') || target.closest('input')) return
+              setDraggedGroupId(groupId)
+            }}
+            onTouchEnd={(e) => {
+              const target = e.target as HTMLElement
+              if (target.closest('button') || target.closest('select') || target.closest('input')) return
               if (draggedGroupId && isDragTarget) {
                 reorderTournamentGroups(draggedGroupId, groupId)
               }
@@ -6087,6 +6094,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                           }}
                           onTouchStart={(e) => {
                             if (!canDrag) return
+                            // Don't start drag if touching interactive elements
+                            const target = e.target as HTMLElement
+                            if (target.closest('button') || target.closest('select') || target.closest('input')) return
                             setTouchStartY(e.touches[0].clientY)
                             setDraggedMatchId(match.id)
                           }}
