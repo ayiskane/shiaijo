@@ -5726,7 +5726,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
             <CardTitle className="text-white text-center">No Active Tournament</CardTitle>
           </CardHeader>
           <CardContent className="text-center space-y-4">
-            <ShiaijoLogo size={80} />
+            <div className="flex justify-center">
+              <ShiaijoLogo size={80} glow />
+            </div>
             <p className="text-[#b8d4ec]">
               {tournament ? 'Tournament needs to be started from Admin Portal' : 'No tournament generated yet'}
             </p>
