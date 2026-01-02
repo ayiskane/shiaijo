@@ -126,16 +126,18 @@ interface VolunteerSignup {
   tournamentName: string
   date: string
   hours: number
-  role: string
-  notes?: string
+  minutes: number
+  description: string
+  isShiaiSignup: boolean
+  shiaiRole?: 'courtkeeper' | 'general'
 }
 
 interface Volunteer {
   id: string
   firstName: string
   lastName: string
-  email?: string
   phone?: string
+  relatedMemberIds: string[]
   signups: VolunteerSignup[]
 }
 
@@ -457,7 +459,7 @@ const useDeviceDetection = () => {
 
 // Main App Component
 export default function App() {
-  const [portal, setPortal] = useState<'select' | 'admin' | 'courtkeeper' | 'spectator' | 'admin-login' | 'courtkeeper-login'>('select')
+  const [portal, setPortal] = useState<'select' | 'admin' | 'courtkeeper' | 'spectator' | 'volunteer' | 'admin-login' | 'courtkeeper-login'>('select')
   const [passwordInput, setPasswordInput] = useState('')
   const [passwordError, setPasswordError] = useState(false)
   const [state, setState] = useState<AppState>(defaultState)
@@ -690,12 +692,20 @@ export default function App() {
             <p className="text-[#6b8fad] text-sm tracking-wide">Kendo Tournament Manager</p>
           </div>
           
-          {/* Spectator Button - First, no password needed */}
+          {/* Spectator Button */}
           <button 
             onClick={() => setPortal('spectator')}
-            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-4"
+            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-3"
           >
             <span>📱</span> Join as Spectator
+          </button>
+          
+          {/* Volunteer Button */}
+          <button 
+            onClick={() => setPortal('volunteer')}
+            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-4"
+          >
+            <span>💝</span> Volunteer Portal
           </button>
           
           {/* Divider */}
@@ -746,6 +756,17 @@ export default function App() {
     )
   }
 
+  if (portal === 'volunteer') {
+    return (
+      <VolunteerPortal 
+        state={state}
+        setState={setState}
+        onSwitchPortal={() => setPortal('select')}
+        getMemberById={getMemberById}
+      />
+    )
+  }
+
   if (portal === 'spectator') {
     return (
       <SpectatorPortal 
@@ -766,6 +787,485 @@ export default function App() {
       getMemberById={getMemberById}
       getGroupById={getGroupById}
     />
+  )
+}
+
+// Volunteer Portal Component
+function VolunteerPortal({ 
+  state, 
+  setState,
+  onSwitchPortal,
+  getMemberById
+}: { 
+  state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
+  onSwitchPortal: () => void
+  getMemberById: (id: string) => Member | undefined
+}) {
+  const [selectedVolunteer, setSelectedVolunteer] = useState<string | null>(null)
+  const [showRegister, setShowRegister] = useState(false)
+  const [newFirstName, setNewFirstName] = useState('')
+  const [newLastName, setNewLastName] = useState('')
+  const [newPhone, setNewPhone] = useState('')
+  const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+  
+  // Log hours form
+  const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0])
+  const [logHours, setLogHours] = useState('0')
+  const [logMinutes, setLogMinutes] = useState('0')
+  const [logDescription, setLogDescription] = useState('')
+  
+  // Shiai signup
+  const [shiaiSignupRole, setShiaiSignupRole] = useState<'courtkeeper' | 'general'>('general')
+
+  const currentVolunteer = selectedVolunteer ? state.volunteers.find(v => v.id === selectedVolunteer) : null
+  const upcomingTournament = state.currentTournament?.status === 'setup' || state.currentTournament?.status === 'in_progress' ? state.currentTournament : null
+
+  const registerVolunteer = () => {
+    if (!newFirstName.trim() || !newLastName.trim()) return
+    const volunteer: Volunteer = {
+      id: generateId(),
+      firstName: newFirstName.trim(),
+      lastName: newLastName.trim(),
+      phone: newPhone.trim() || undefined,
+      relatedMemberIds: selectedMembers,
+      signups: []
+    }
+    setState(prev => ({ ...prev, volunteers: [...prev.volunteers, volunteer] }))
+    setSelectedVolunteer(volunteer.id)
+    setShowRegister(false)
+    setNewFirstName('')
+    setNewLastName('')
+    setNewPhone('')
+    setSelectedMembers([])
+    toast.success('Welcome! You are now registered as a volunteer.')
+  }
+
+  const logVolunteerHours = () => {
+    if (!selectedVolunteer || (!logHours && !logMinutes) || !logDescription.trim()) return
+    const hours = parseInt(logHours) || 0
+    const minutes = parseInt(logMinutes) || 0
+    if (hours === 0 && minutes === 0) return
+
+    const signup: VolunteerSignup = {
+      id: generateId(),
+      tournamentId: 'general',
+      tournamentName: 'General Volunteering',
+      date: logDate,
+      hours,
+      minutes,
+      description: logDescription.trim(),
+      isShiaiSignup: false
+    }
+    setState(prev => ({
+      ...prev,
+      volunteers: prev.volunteers.map(v => 
+        v.id === selectedVolunteer 
+          ? { ...v, signups: [...v.signups, signup] }
+          : v
+      )
+    }))
+    setLogHours('0')
+    setLogMinutes('0')
+    setLogDescription('')
+    toast.success('Hours logged!')
+  }
+
+  const signUpForShiai = () => {
+    if (!selectedVolunteer || !upcomingTournament) return
+    
+    // Check if already signed up
+    const alreadySignedUp = currentVolunteer?.signups.some(
+      s => s.isShiaiSignup && s.tournamentId === upcomingTournament.id
+    )
+    if (alreadySignedUp) {
+      toast.error('You are already signed up for this tournament')
+      return
+    }
+
+    const signup: VolunteerSignup = {
+      id: generateId(),
+      tournamentId: upcomingTournament.id,
+      tournamentName: upcomingTournament.name,
+      date: upcomingTournament.date,
+      hours: 0,
+      minutes: 0,
+      description: `Shiai Volunteer - ${shiaiSignupRole === 'courtkeeper' ? 'Courtkeeper' : 'General'}`,
+      isShiaiSignup: true,
+      shiaiRole: shiaiSignupRole
+    }
+    setState(prev => ({
+      ...prev,
+      volunteers: prev.volunteers.map(v => 
+        v.id === selectedVolunteer 
+          ? { ...v, signups: [...v.signups, signup] }
+          : v
+      )
+    }))
+    toast.success(`Signed up as ${shiaiSignupRole === 'courtkeeper' ? 'Courtkeeper' : 'General Volunteer'}!`)
+  }
+
+  const cancelShiaiSignup = (signupId: string) => {
+    if (!selectedVolunteer) return
+    setState(prev => ({
+      ...prev,
+      volunteers: prev.volunteers.map(v => 
+        v.id === selectedVolunteer 
+          ? { ...v, signups: v.signups.filter(s => s.id !== signupId) }
+          : v
+      )
+    }))
+    toast.success('Signup cancelled')
+  }
+
+  const getTotalTime = (volunteer: Volunteer) => {
+    const totalMinutes = volunteer.signups.reduce((sum, s) => sum + (s.hours * 60) + s.minutes, 0)
+    const hours = Math.floor(totalMinutes / 60)
+    const mins = totalMinutes % 60
+    return { hours, mins, totalMinutes }
+  }
+
+  const getRelatedMemberNames = (volunteer: Volunteer) => {
+    return volunteer.relatedMemberIds
+      .map(id => getMemberById(id))
+      .filter(Boolean)
+      .map(m => `${m!.firstName} ${m!.lastName}`)
+      .join(', ')
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017]">
+      {/* Header */}
+      <header className="bg-[#0f1419]/90 backdrop-blur-sm border-b border-white/5 px-4 py-3 sticky top-0 z-10">
+        <div className="max-w-2xl mx-auto flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <ShiaijoLogo size={36} glow />
+            <div>
+              <h1 className="text-white font-semibold">Volunteer Portal</h1>
+              <p className="text-xs text-[#6b8fad]">Log hours & sign up for events</p>
+            </div>
+          </div>
+          <button 
+            onClick={onSwitchPortal}
+            className="text-xs text-[#6b8fad] hover:text-white transition px-3 py-1.5 rounded-lg hover:bg-white/5"
+          >
+            ← Back
+          </button>
+        </div>
+      </header>
+      
+      <main className="max-w-2xl mx-auto p-4 space-y-6">
+        {/* Select or Register */}
+        {!selectedVolunteer ? (
+          <Card className="bg-[#142130]/80 border-white/5">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Heart className="w-5 h-5 text-pink-400" />
+                Welcome, Volunteer!
+              </CardTitle>
+              <CardDescription className="text-[#6b8fad]">
+                Select your name or register as a new volunteer
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              {state.volunteers.length > 0 && (
+                <div className="space-y-2">
+                  <Label className="text-[#8fb3d1]">I am...</Label>
+                  <Select value={selectedVolunteer || ''} onValueChange={setSelectedVolunteer}>
+                    <SelectTrigger className="bg-[#1a2d42] border-[#1e3a5f] text-white">
+                      <SelectValue placeholder="Select your name..." />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#1a2d42] border-[#1e3a5f]">
+                      {state.volunteers.map(v => (
+                        <SelectItem key={v.id} value={v.id}>
+                          {v.firstName} {v.lastName}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              
+              <div className="flex items-center gap-4">
+                <div className="flex-1 h-px bg-[#1e3a5f]"></div>
+                <span className="text-xs text-[#6b8fad]">or</span>
+                <div className="flex-1 h-px bg-[#1e3a5f]"></div>
+              </div>
+              
+              <Button 
+                onClick={() => setShowRegister(true)} 
+                className="w-full bg-pink-600 hover:bg-pink-700"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Register as New Volunteer
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            {/* Volunteer Info Card */}
+            <Card className="bg-[#142130]/80 border-white/5">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-full bg-pink-500/20 flex items-center justify-center">
+                      <span className="text-pink-400 font-semibold text-lg">
+                        {currentVolunteer?.firstName[0]}{currentVolunteer?.lastName[0]}
+                      </span>
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">{currentVolunteer?.firstName} {currentVolunteer?.lastName}</p>
+                      {currentVolunteer && currentVolunteer.relatedMemberIds.length > 0 && (
+                        <p className="text-xs text-[#6b8fad]">Parent of: {getRelatedMemberNames(currentVolunteer)}</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-pink-400">
+                      {currentVolunteer && getTotalTime(currentVolunteer).hours}h {currentVolunteer && getTotalTime(currentVolunteer).mins}m
+                    </p>
+                    <p className="text-xs text-[#6b8fad]">Total volunteer time</p>
+                  </div>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mt-3 text-[#6b8fad]"
+                  onClick={() => setSelectedVolunteer(null)}
+                >
+                  Switch volunteer
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Upcoming Shiai Signup */}
+            {upcomingTournament && (
+              <Card className="bg-gradient-to-br from-orange-900/20 to-[#142130] border-orange-500/30">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-orange-400" />
+                    Upcoming Shiai
+                  </CardTitle>
+                  <CardDescription className="text-[#8fb3d1]">
+                    {upcomingTournament.name} - {upcomingTournament.date ? new Date(upcomingTournament.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' }) : upcomingTournament.month}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {currentVolunteer?.signups.some(s => s.isShiaiSignup && s.tournamentId === upcomingTournament.id) ? (
+                    <div className="bg-emerald-900/30 border border-emerald-500/30 rounded-lg p-4">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+                          <span className="text-emerald-400 font-medium">You're signed up!</span>
+                        </div>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="text-red-400 hover:text-red-300"
+                          onClick={() => {
+                            const signup = currentVolunteer?.signups.find(s => s.isShiaiSignup && s.tournamentId === upcomingTournament.id)
+                            if (signup) cancelShiaiSignup(signup.id)
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </div>
+                      <p className="text-sm text-[#6b8fad] mt-2">
+                        Role: {currentVolunteer?.signups.find(s => s.isShiaiSignup && s.tournamentId === upcomingTournament.id)?.shiaiRole === 'courtkeeper' ? 'Courtkeeper' : 'General Volunteer'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="flex gap-2">
+                        <Button
+                          variant={shiaiSignupRole === 'courtkeeper' ? 'default' : 'outline'}
+                          className={shiaiSignupRole === 'courtkeeper' ? 'bg-orange-600 flex-1' : 'flex-1'}
+                          onClick={() => setShiaiSignupRole('courtkeeper')}
+                        >
+                          <Swords className="w-4 h-4 mr-2" /> Courtkeeper
+                        </Button>
+                        <Button
+                          variant={shiaiSignupRole === 'general' ? 'default' : 'outline'}
+                          className={shiaiSignupRole === 'general' ? 'bg-pink-600 flex-1' : 'flex-1'}
+                          onClick={() => setShiaiSignupRole('general')}
+                        >
+                          <Heart className="w-4 h-4 mr-2" /> General
+                        </Button>
+                      </div>
+                      <Button onClick={signUpForShiai} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                        Sign Up to Volunteer
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Log Hours */}
+            <Card className="bg-[#142130]/80 border-white/5">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Clock className="w-5 h-5 text-blue-400" />
+                  Log Volunteer Hours
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <Label className="text-[#8fb3d1]">Date</Label>
+                  <Input
+                    type="date"
+                    value={logDate}
+                    onChange={(e) => setLogDate(e.target.value)}
+                    className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  />
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-[#8fb3d1]">Hours</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      value={logHours}
+                      onChange={(e) => setLogHours(e.target.value)}
+                      className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label className="text-[#8fb3d1]">Minutes</Label>
+                    <Input
+                      type="number"
+                      min="0"
+                      max="59"
+                      value={logMinutes}
+                      onChange={(e) => setLogMinutes(e.target.value)}
+                      className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <Label className="text-[#8fb3d1]">What did you volunteer for?</Label>
+                  <Input
+                    value={logDescription}
+                    onChange={(e) => setLogDescription(e.target.value)}
+                    className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                    placeholder="e.g., Setup and cleanup, Registration desk..."
+                  />
+                </div>
+                <Button 
+                  onClick={logVolunteerHours} 
+                  className="w-full bg-blue-600 hover:bg-blue-700"
+                  disabled={(!logHours || logHours === '0') && (!logMinutes || logMinutes === '0') || !logDescription.trim()}
+                >
+                  <Plus className="w-4 h-4 mr-2" /> Log Hours
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Recent Activity */}
+            {currentVolunteer && currentVolunteer.signups.length > 0 && (
+              <Card className="bg-[#142130]/80 border-white/5">
+                <CardHeader>
+                  <CardTitle className="text-white text-base">Your Volunteer History</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {currentVolunteer.signups.slice().reverse().map(signup => (
+                      <div key={signup.id} className="flex items-center justify-between bg-[#0f1a24]/50 rounded-lg px-3 py-2 text-sm">
+                        <div>
+                          <p className="text-white">{signup.description}</p>
+                          <p className="text-xs text-[#6b8fad]">
+                            {new Date(signup.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          </p>
+                        </div>
+                        <Badge className={signup.isShiaiSignup ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}>
+                          {signup.hours > 0 || signup.minutes > 0 ? `${signup.hours}h ${signup.minutes}m` : 'Signed up'}
+                        </Badge>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </>
+        )}
+      </main>
+
+      {/* Register Dialog */}
+      <Dialog open={showRegister} onOpenChange={setShowRegister}>
+        <DialogContent className="bg-[#142130] border-[#1e3a5f] text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>Register as Volunteer</DialogTitle>
+            <DialogDescription className="text-[#6b8fad]">
+              Join our volunteer team!
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>First Name *</Label>
+                <Input
+                  value={newFirstName}
+                  onChange={(e) => setNewFirstName(e.target.value)}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                />
+              </div>
+              <div>
+                <Label>Last Name *</Label>
+                <Input
+                  value={newLastName}
+                  onChange={(e) => setNewLastName(e.target.value)}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                />
+              </div>
+            </div>
+            <div>
+              <Label>Phone (optional)</Label>
+              <Input
+                type="tel"
+                value={newPhone}
+                onChange={(e) => setNewPhone(e.target.value)}
+                className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                placeholder="(555) 123-4567"
+              />
+            </div>
+            <div>
+              <Label>Related Member(s)</Label>
+              <p className="text-xs text-[#6b8fad] mb-2">Select the member(s) you're a parent/guardian of</p>
+              <ScrollArea className="h-40 border border-[#1e3a5f] rounded-lg p-2">
+                {state.members.map(member => (
+                  <div 
+                    key={member.id}
+                    className="flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer"
+                    onClick={() => {
+                      setSelectedMembers(prev => 
+                        prev.includes(member.id) 
+                          ? prev.filter(id => id !== member.id)
+                          : [...prev, member.id]
+                      )
+                    }}
+                  >
+                    <Checkbox checked={selectedMembers.includes(member.id)} />
+                    <span className="text-white">{member.firstName} {member.lastName}</span>
+                  </div>
+                ))}
+                {state.members.length === 0 && (
+                  <p className="text-[#6b8fad] text-center py-4">No members available</p>
+                )}
+              </ScrollArea>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRegister(false)}>Cancel</Button>
+            <Button 
+              onClick={registerVolunteer} 
+              className="bg-pink-600 hover:bg-pink-700"
+              disabled={!newFirstName.trim() || !newLastName.trim()}
+            >
+              Register
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
 
@@ -1800,7 +2300,7 @@ function AdminPortal({
 
           {/* Volunteers Tab */}
           {activeTab === 'volunteers' && (
-            <VolunteersTab state={state} setState={setState} />
+            <VolunteersTab state={state} setState={setState} getMemberById={getMemberById} />
           )}
 
           {/* Settings Tab */}
@@ -2690,6 +3190,37 @@ function TournamentManager({
             </div>
           </div>
 
+          {/* Volunteer Courtkeepers */}
+          {(() => {
+            const courtkeeperVolunteers = state.volunteers.filter(v => 
+              v.signups.some(s => s.isShiaiSignup && s.tournamentId === tournament.id && s.shiaiRole === 'courtkeeper')
+            )
+            const generalVolunteers = state.volunteers.filter(v => 
+              v.signups.some(s => s.isShiaiSignup && s.tournamentId === tournament.id && s.shiaiRole === 'general')
+            )
+            if (courtkeeperVolunteers.length === 0 && generalVolunteers.length === 0) return null
+            return (
+              <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-3">
+                <div className="flex items-center gap-2 mb-2">
+                  <Heart className="w-4 h-4 text-pink-400" />
+                  <span className="text-sm font-medium text-pink-400">Volunteers Signed Up</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {courtkeeperVolunteers.map(v => (
+                    <span key={v.id} className="px-2 py-1 bg-orange-500/20 text-orange-300 text-xs rounded-full flex items-center gap-1">
+                      <Swords className="w-3 h-3" /> {v.firstName} {v.lastName}
+                    </span>
+                  ))}
+                  {generalVolunteers.map(v => (
+                    <span key={v.id} className="px-2 py-1 bg-pink-500/20 text-pink-300 text-xs rounded-full flex items-center gap-1">
+                      <Heart className="w-3 h-3" /> {v.firstName} {v.lastName}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )
+          })()}
+
           {/* Timer Settings */}
           <div className="bg-[#1e3a5f]/20 rounded-lg p-3 border border-white/5">
             <div className="flex items-center justify-between mb-2">
@@ -3294,22 +3825,25 @@ function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
 // Volunteers Tab Component
 function VolunteersTab({ 
   state, 
-  setState 
+  setState,
+  getMemberById
 }: { 
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
+  getMemberById: (id: string) => Member | undefined
 }) {
   const [showAddVolunteer, setShowAddVolunteer] = useState(false)
   const [newFirstName, setNewFirstName] = useState('')
   const [newLastName, setNewLastName] = useState('')
-  const [newEmail, setNewEmail] = useState('')
   const [newPhone, setNewPhone] = useState('')
+  const [selectedMemberIds, setSelectedMemberIds] = useState<string[]>([])
   const [showLogHours, setShowLogHours] = useState<string | null>(null)
-  const [logHours, setLogHours] = useState('')
-  const [logRole, setLogRole] = useState('')
-  const [logDate, setLogDate] = useState('')
-  const [logNotes, setLogNotes] = useState('')
+  const [logHours, setLogHours] = useState('0')
+  const [logMinutes, setLogMinutes] = useState('0')
+  const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0])
+  const [logDescription, setLogDescription] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
+  const [sortBy, setSortBy] = useState<'name' | 'hours'>('name')
 
   const addVolunteer = () => {
     if (!newFirstName.trim() || !newLastName.trim()) return
@@ -3317,15 +3851,15 @@ function VolunteersTab({
       id: generateId(),
       firstName: newFirstName.trim(),
       lastName: newLastName.trim(),
-      email: newEmail.trim() || undefined,
       phone: newPhone.trim() || undefined,
+      relatedMemberIds: selectedMemberIds,
       signups: []
     }
     setState(prev => ({ ...prev, volunteers: [...prev.volunteers, volunteer] }))
     setNewFirstName('')
     setNewLastName('')
-    setNewEmail('')
     setNewPhone('')
+    setSelectedMemberIds([])
     setShowAddVolunteer(false)
     toast.success('Volunteer added')
   }
@@ -3336,15 +3870,19 @@ function VolunteersTab({
   }
 
   const logVolunteerHours = (volunteerId: string) => {
-    if (!logHours || !logDate) return
+    const hours = parseInt(logHours) || 0
+    const minutes = parseInt(logMinutes) || 0
+    if ((hours === 0 && minutes === 0) || !logDescription.trim()) return
+    
     const signup: VolunteerSignup = {
       id: generateId(),
-      tournamentId: state.currentTournament?.id || 'general',
-      tournamentName: state.currentTournament?.name || 'General Volunteering',
+      tournamentId: 'general',
+      tournamentName: 'General Volunteering',
       date: logDate,
-      hours: parseFloat(logHours),
-      role: logRole || 'General',
-      notes: logNotes || undefined
+      hours,
+      minutes,
+      description: logDescription.trim(),
+      isShiaiSignup: false
     }
     setState(prev => ({
       ...prev,
@@ -3355,10 +3893,9 @@ function VolunteersTab({
       )
     }))
     setShowLogHours(null)
-    setLogHours('')
-    setLogRole('')
-    setLogDate('')
-    setLogNotes('')
+    setLogHours('0')
+    setLogMinutes('0')
+    setLogDescription('')
     toast.success('Hours logged')
   }
 
@@ -3374,15 +3911,36 @@ function VolunteersTab({
     toast.success('Entry removed')
   }
 
-  const getTotalHours = (volunteer: Volunteer) => {
-    return volunteer.signups.reduce((sum, s) => sum + s.hours, 0)
+  const getTotalTime = (volunteer: Volunteer) => {
+    const totalMinutes = volunteer.signups.reduce((sum, s) => sum + (s.hours * 60) + s.minutes, 0)
+    return { hours: Math.floor(totalMinutes / 60), mins: totalMinutes % 60, totalMinutes }
   }
 
-  const filteredVolunteers = state.volunteers.filter(v => 
-    `${v.firstName} ${v.lastName}`.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const getRelatedMemberNames = (volunteer: Volunteer) => {
+    return volunteer.relatedMemberIds
+      .map(id => getMemberById(id))
+      .filter(Boolean)
+      .map(m => `${m!.firstName} ${m!.lastName}`)
+      .join(', ')
+  }
 
-  const totalVolunteerHours = state.volunteers.reduce((sum, v) => sum + getTotalHours(v), 0)
+  const filteredVolunteers = state.volunteers
+    .filter(v => `${v.firstName} ${v.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => {
+      if (sortBy === 'hours') return getTotalTime(b).totalMinutes - getTotalTime(a).totalMinutes
+      return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+    })
+
+  const totalVolunteerMinutes = state.volunteers.reduce((sum, v) => sum + getTotalTime(v).totalMinutes, 0)
+  const totalHours = Math.floor(totalVolunteerMinutes / 60)
+  const totalMins = totalVolunteerMinutes % 60
+
+  // Get courtkeeper volunteers for current tournament
+  const courtkeeperVolunteers = state.currentTournament 
+    ? state.volunteers.filter(v => 
+        v.signups.some(s => s.isShiaiSignup && s.tournamentId === state.currentTournament?.id && s.shiaiRole === 'courtkeeper')
+      )
+    : []
 
   return (
     <div className="space-y-6">
@@ -3398,31 +3956,29 @@ function VolunteersTab({
         <Card className="bg-[#142130] border-white/5">
           <CardContent className="p-4 text-center">
             <Clock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{totalVolunteerHours.toFixed(1)}</p>
-            <p className="text-xs text-[#6b8fad]">Total Hours</p>
+            <p className="text-2xl font-bold text-white">{totalHours}h {totalMins}m</p>
+            <p className="text-xs text-[#6b8fad]">Total Time</p>
           </CardContent>
         </Card>
         <Card className="bg-[#142130] border-white/5">
           <CardContent className="p-4 text-center">
             <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
             <p className="text-2xl font-bold text-white">
-              {state.volunteers.filter(v => getTotalHours(v) >= 10).length}
+              {state.volunteers.filter(v => getTotalTime(v).totalMinutes >= 600).length}
             </p>
             <p className="text-xs text-[#6b8fad]">10+ Hours</p>
           </CardContent>
         </Card>
         <Card className="bg-[#142130] border-white/5">
           <CardContent className="p-4 text-center">
-            <Award className="w-6 h-6 text-orange-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">
-              {state.volunteers.length > 0 ? Math.max(...state.volunteers.map(v => getTotalHours(v))).toFixed(1) : '0'}
-            </p>
-            <p className="text-xs text-[#6b8fad]">Top Hours</p>
+            <Swords className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+            <p className="text-2xl font-bold text-white">{courtkeeperVolunteers.length}</p>
+            <p className="text-xs text-[#6b8fad]">Courtkeepers</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Add Volunteer & Search */}
+      {/* Volunteer Hours Table */}
       <Card className="bg-[#142130] border-white/5">
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -3430,9 +3986,20 @@ function VolunteersTab({
               <Heart className="w-5 h-5 text-pink-400" />
               Volunteer Registry
             </CardTitle>
-            <Button onClick={() => setShowAddVolunteer(true)} className="bg-pink-600 hover:bg-pink-700">
-              <Plus className="w-4 h-4 mr-2" /> Add Volunteer
-            </Button>
+            <div className="flex gap-2">
+              <Select value={sortBy} onValueChange={(v: 'name' | 'hours') => setSortBy(v)}>
+                <SelectTrigger className="w-32 bg-[#1a2d42] border-[#1e3a5f] text-white text-xs">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-[#1a2d42] border-[#1e3a5f]">
+                  <SelectItem value="name">By Name</SelectItem>
+                  <SelectItem value="hours">By Hours</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button onClick={() => setShowAddVolunteer(true)} className="bg-pink-600 hover:bg-pink-700">
+                <Plus className="w-4 h-4 mr-2" /> Add
+              </Button>
+            </div>
           </div>
         </CardHeader>
         <CardContent>
@@ -3454,84 +4021,122 @@ function VolunteersTab({
               </p>
             </div>
           ) : (
-            <div className="space-y-3">
-              {filteredVolunteers.map(volunteer => (
-                <div key={volunteer.id} className="bg-[#1a2d42]/50 rounded-xl p-4 border border-white/5">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center">
-                          <span className="text-pink-400 font-semibold">
-                            {volunteer.firstName[0]}{volunteer.lastName[0]}
-                          </span>
-                        </div>
-                        <div>
-                          <p className="text-white font-medium">{volunteer.firstName} {volunteer.lastName}</p>
-                          <div className="flex items-center gap-3 text-xs text-[#6b8fad]">
-                            {volunteer.email && <span>{volunteer.email}</span>}
-                            {volunteer.phone && <span>{volunteer.phone}</span>}
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="border-b border-white/10">
+                    <th className="text-left py-3 px-2 text-[#6b8fad] font-medium">Name</th>
+                    <th className="text-left py-3 px-2 text-[#6b8fad] font-medium hidden sm:table-cell">Related To</th>
+                    <th className="text-center py-3 px-2 text-[#6b8fad] font-medium">Total Hours</th>
+                    <th className="text-center py-3 px-2 text-[#6b8fad] font-medium">Entries</th>
+                    <th className="text-right py-3 px-2 text-[#6b8fad] font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredVolunteers.map(volunteer => {
+                    const time = getTotalTime(volunteer)
+                    const relatedNames = getRelatedMemberNames(volunteer)
+                    return (
+                      <tr key={volunteer.id} className="border-b border-white/5 hover:bg-white/5">
+                        <td className="py-3 px-2">
+                          <div className="flex items-center gap-2">
+                            <div className="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center flex-shrink-0">
+                              <span className="text-pink-400 text-xs font-semibold">
+                                {volunteer.firstName[0]}{volunteer.lastName[0]}
+                              </span>
+                            </div>
+                            <div>
+                              <p className="text-white font-medium">{volunteer.firstName} {volunteer.lastName}</p>
+                              {volunteer.phone && <p className="text-xs text-[#6b8fad]">{volunteer.phone}</p>}
+                            </div>
                           </div>
-                        </div>
+                        </td>
+                        <td className="py-3 px-2 text-[#8fb3d1] hidden sm:table-cell">
+                          {relatedNames || <span className="text-[#6b8fad]">-</span>}
+                        </td>
+                        <td className="py-3 px-2 text-center">
+                          <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
+                            {time.hours}h {time.mins}m
+                          </Badge>
+                        </td>
+                        <td className="py-3 px-2 text-center text-[#8fb3d1]">
+                          {volunteer.signups.length}
+                        </td>
+                        <td className="py-3 px-2 text-right">
+                          <div className="flex items-center justify-end gap-1">
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/30 h-8 w-8 p-0"
+                              onClick={() => setShowLogHours(volunteer.id)}
+                            >
+                              <Clock className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="text-red-400 hover:text-red-300 hover:bg-red-900/30 h-8 w-8 p-0"
+                              onClick={() => deleteVolunteer(volunteer.id)}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Full History Log */}
+      <Card className="bg-[#142130] border-white/5">
+        <CardHeader>
+          <CardTitle className="text-white flex items-center gap-2">
+            <History className="w-5 h-5 text-blue-400" />
+            Complete Volunteer History
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          {state.volunteers.flatMap(v => v.signups.map(s => ({ volunteer: v, signup: s }))).length === 0 ? (
+            <p className="text-[#6b8fad] text-center py-8">No volunteer entries yet</p>
+          ) : (
+            <div className="space-y-2 max-h-96 overflow-y-auto">
+              {state.volunteers
+                .flatMap(v => v.signups.map(s => ({ volunteer: v, signup: s })))
+                .sort((a, b) => new Date(b.signup.date).getTime() - new Date(a.signup.date).getTime())
+                .map(({ volunteer, signup }) => (
+                  <div key={signup.id} className="flex items-center justify-between bg-[#0f1a24]/50 rounded-lg px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 rounded-full bg-pink-500/20 flex items-center justify-center">
+                        <span className="text-pink-400 text-xs font-semibold">
+                          {volunteer.firstName[0]}{volunteer.lastName[0]}
+                        </span>
+                      </div>
+                      <div>
+                        <p className="text-white font-medium">{volunteer.firstName} {volunteer.lastName}</p>
+                        <p className="text-sm text-[#8fb3d1]">{signup.description}</p>
+                        <p className="text-xs text-[#6b8fad]">
+                          {new Date(signup.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
                       </div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/30">
-                        {getTotalHours(volunteer).toFixed(1)} hrs
+                      <Badge className={signup.isShiaiSignup ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}>
+                        {signup.hours}h {signup.minutes}m
                       </Badge>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/30"
-                        onClick={() => setShowLogHours(volunteer.id)}
+                      <button 
+                        onClick={() => deleteSignup(volunteer.id, signup.id)}
+                        className="text-red-400/50 hover:text-red-400 p-1"
                       >
-                        <Clock className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        className="text-red-400 hover:text-red-300 hover:bg-red-900/30"
-                        onClick={() => deleteVolunteer(volunteer.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
+                        <X className="w-4 h-4" />
+                      </button>
                     </div>
                   </div>
-
-                  {/* Volunteer Hours History */}
-                  {volunteer.signups.length > 0 && (
-                    <div className="mt-4 pt-4 border-t border-white/5">
-                      <p className="text-xs text-[#6b8fad] mb-2">Volunteer History</p>
-                      <div className="space-y-2">
-                        {volunteer.signups.slice().reverse().slice(0, 5).map(signup => (
-                          <div key={signup.id} className="flex items-center justify-between bg-[#0f1a24]/50 rounded-lg px-3 py-2 text-sm">
-                            <div className="flex items-center gap-3">
-                              <span className="text-[#6b8fad]">
-                                {new Date(signup.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                              </span>
-                              <span className="text-white">{signup.role}</span>
-                              {signup.notes && <span className="text-[#6b8fad] text-xs">({signup.notes})</span>}
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-emerald-400 font-medium">{signup.hours}h</span>
-                              <button 
-                                onClick={() => deleteSignup(volunteer.id, signup.id)}
-                                className="text-red-400/50 hover:text-red-400"
-                              >
-                                <X className="w-3 h-3" />
-                              </button>
-                            </div>
-                          </div>
-                        ))}
-                        {volunteer.signups.length > 5 && (
-                          <p className="text-xs text-[#6b8fad] text-center">
-                            +{volunteer.signups.length - 5} more entries
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
+                ))}
             </div>
           )}
         </CardContent>
@@ -3539,7 +4144,7 @@ function VolunteersTab({
 
       {/* Add Volunteer Dialog */}
       <Dialog open={showAddVolunteer} onOpenChange={setShowAddVolunteer}>
-        <DialogContent className="bg-[#142130] border-[#1e3a5f] text-white">
+        <DialogContent className="bg-[#142130] border-[#1e3a5f] text-white max-w-md">
           <DialogHeader>
             <DialogTitle>Add Volunteer</DialogTitle>
             <DialogDescription className="text-[#6b8fad]">
@@ -3568,17 +4173,7 @@ function VolunteersTab({
               </div>
             </div>
             <div>
-              <Label>Email</Label>
-              <Input
-                type="email"
-                value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)}
-                className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
-                placeholder="john@example.com"
-              />
-            </div>
-            <div>
-              <Label>Phone</Label>
+              <Label>Phone (optional)</Label>
               <Input
                 type="tel"
                 value={newPhone}
@@ -3586,6 +4181,31 @@ function VolunteersTab({
                 className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
                 placeholder="(555) 123-4567"
               />
+            </div>
+            <div>
+              <Label>Related Member(s)</Label>
+              <p className="text-xs text-[#6b8fad] mb-2">Select the member(s) this volunteer is a parent/guardian of</p>
+              <ScrollArea className="h-40 border border-[#1e3a5f] rounded-lg p-2">
+                {state.members.map(member => (
+                  <div 
+                    key={member.id}
+                    className="flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer"
+                    onClick={() => {
+                      setSelectedMemberIds(prev => 
+                        prev.includes(member.id) 
+                          ? prev.filter(id => id !== member.id)
+                          : [...prev, member.id]
+                      )
+                    }}
+                  >
+                    <Checkbox checked={selectedMemberIds.includes(member.id)} />
+                    <span className="text-white">{member.firstName} {member.lastName}</span>
+                  </div>
+                ))}
+                {state.members.length === 0 && (
+                  <p className="text-[#6b8fad] text-center py-4">No members available</p>
+                )}
+              </ScrollArea>
             </div>
           </div>
           <DialogFooter>
@@ -3608,7 +4228,7 @@ function VolunteersTab({
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <Label>Date *</Label>
+              <Label>Date</Label>
               <Input
                 type="date"
                 value={logDate}
@@ -3616,42 +4236,36 @@ function VolunteersTab({
                 className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
               />
             </div>
-            <div>
-              <Label>Hours *</Label>
-              <Input
-                type="number"
-                step="0.5"
-                min="0.5"
-                value={logHours}
-                onChange={(e) => setLogHours(e.target.value)}
-                className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
-                placeholder="2"
-              />
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Hours</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={logHours}
+                  onChange={(e) => setLogHours(e.target.value)}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                />
+              </div>
+              <div>
+                <Label>Minutes</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="59"
+                  value={logMinutes}
+                  onChange={(e) => setLogMinutes(e.target.value)}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                />
+              </div>
             </div>
             <div>
-              <Label>Role</Label>
-              <Select value={logRole} onValueChange={setLogRole}>
-                <SelectTrigger className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1">
-                  <SelectValue placeholder="Select role..." />
-                </SelectTrigger>
-                <SelectContent className="bg-[#1a2d42] border-[#1e3a5f]">
-                  <SelectItem value="Scorekeeper">Scorekeeper</SelectItem>
-                  <SelectItem value="Timer">Timer</SelectItem>
-                  <SelectItem value="Registration">Registration</SelectItem>
-                  <SelectItem value="Setup/Cleanup">Setup/Cleanup</SelectItem>
-                  <SelectItem value="Refreshments">Refreshments</SelectItem>
-                  <SelectItem value="Photography">Photography</SelectItem>
-                  <SelectItem value="General">General</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label>Notes</Label>
+              <Label>What did they volunteer for?</Label>
               <Input
-                value={logNotes}
-                onChange={(e) => setLogNotes(e.target.value)}
+                value={logDescription}
+                onChange={(e) => setLogDescription(e.target.value)}
                 className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
-                placeholder="Optional notes..."
+                placeholder="e.g., Setup, Registration, Cleanup..."
               />
             </div>
           </div>
@@ -3660,7 +4274,7 @@ function VolunteersTab({
             <Button 
               onClick={() => showLogHours && logVolunteerHours(showLogHours)} 
               className="bg-emerald-600 hover:bg-emerald-700"
-              disabled={!logHours || !logDate}
+              disabled={(parseInt(logHours) === 0 && parseInt(logMinutes) === 0) || !logDescription.trim()}
             >
               <Clock className="w-4 h-4 mr-2" /> Log Hours
             </Button>
