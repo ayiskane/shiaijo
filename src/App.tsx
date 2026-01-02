@@ -6166,7 +6166,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                       const mp1 = getMemberById(match.player1Id)
                       const mp2 = getMemberById(match.player2Id)
                       const isSelected = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
-                      const isSharedGroup = (state.sharedGroups || []).includes(groupId)
                       const isLiveOnThisCourt = match.status === 'in_progress' && match.court === selectedCourt
                       const isLiveOnOtherCourt = match.status === 'in_progress' && match.court !== selectedCourt
                       const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt
