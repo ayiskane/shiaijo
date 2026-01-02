@@ -87,10 +87,11 @@ const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolea
 import { 
   Users, Settings, Trophy, Play, Pause, RotateCcw, GripVertical, Triangle, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
-  Menu, Swords, UserPlus, Home,
+  Menu, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Heart, Clock,
-  Eye, Shield, Lock
+  ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Clock,
+  Lock,
+  SpectatorIcon, CourtkeeperIcon, VolunteerIcon, AdminIcon
 } from './FAIcons'
 
 // Types
@@ -853,7 +854,7 @@ export default function App() {
           </button>
           <div className="text-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2a4a6f]/20 to-[#1e3a5f]/10 flex items-center justify-center mx-auto mb-4">
-              <Swords className="w-8 h-8 text-[#4a8fd1]" />
+              <CourtkeeperIcon className="w-8 h-8 text-[#4a8fd1]" />
             </div>
             <h2 className="text-xl font-semibold text-white">Courtkeeper Portal</h2>
             <p className="text-[#6b8fad] text-sm mt-1">Enter password to continue</p>
@@ -900,7 +901,7 @@ export default function App() {
             className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 mb-4 md:mb-5"
           >
             <span className="flex items-center justify-center gap-2">
-              <span className="w-6 flex justify-center"><Eye className="w-5 h-5" /></span>
+              <span className="w-6 flex justify-center"><SpectatorIcon className="w-5 h-5" /></span>
               <span className="w-32 text-left">Join as Spectator</span>
             </span>
           </button>
@@ -918,7 +919,7 @@ export default function App() {
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
               className="py-4 md:py-5 px-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex flex-col items-center gap-2"
             >
-              <Shield className="w-6 h-6 md:w-7 md:h-7" />
+              <AdminIcon className="w-6 h-6 md:w-7 md:h-7" />
               <span className="flex items-center gap-1">Admin{state.adminPassword && <Lock className="w-3 h-3 opacity-60" />}</span>
             </button>
             
@@ -926,7 +927,7 @@ export default function App() {
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
               className="py-4 md:py-5 px-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex flex-col items-center gap-2"
             >
-              <Swords className="w-6 h-6 md:w-7 md:h-7" />
+              <CourtkeeperIcon className="w-6 h-6 md:w-7 md:h-7" />
               <span className="flex items-center gap-1">Courtkeeper{state.courtkeeperPassword && <Lock className="w-3 h-3 opacity-60" />}</span>
             </button>
             
@@ -934,7 +935,7 @@ export default function App() {
               onClick={() => setPortal('volunteer')}
               className="py-4 md:py-5 px-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex flex-col items-center gap-2"
             >
-              <Heart className="w-6 h-6 md:w-7 md:h-7" />
+              <VolunteerIcon className="w-6 h-6 md:w-7 md:h-7" />
               <span>Volunteer</span>
             </button>
           </div>
@@ -1168,13 +1169,13 @@ const VolunteerPortal = memo(function VolunteerPortal({
             </SelectTrigger>
             <SelectContent className="bg-[#142130] border-[#1e3a5f]">
               <SelectItem value="spectator" className="text-emerald-300">
-                <span className="flex items-center gap-2"><Eye className="w-4 h-4" /> Spectator</span>
+                <span className="flex items-center gap-2"><SpectatorIcon className="w-4 h-4" /> Spectator</span>
               </SelectItem>
               <SelectItem value="admin" className="text-orange-300">
-                <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Admin</span>
+                <span className="flex items-center gap-2"><AdminIcon className="w-4 h-4" /> Admin</span>
               </SelectItem>
               <SelectItem value="courtkeeper" className="text-sky-300">
-                <span className="flex items-center gap-2"><Swords className="w-4 h-4" /> Courtkeeper</span>
+                <span className="flex items-center gap-2"><CourtkeeperIcon className="w-4 h-4" /> Courtkeeper</span>
               </SelectItem>
               <SelectItem value="select" className="text-[#8fb3d1]">
                 <span className="flex items-center gap-2"><Home className="w-4 h-4" /> Main Menu</span>
@@ -1190,7 +1191,7 @@ const VolunteerPortal = memo(function VolunteerPortal({
           <Card className="bg-[#142130]/80 border-white/5">
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
-                <Heart className="w-5 h-5 text-pink-400" />
+                <VolunteerIcon className="w-5 h-5 text-pink-400" />
                 Welcome, Volunteer!
               </CardTitle>
               <CardDescription className="text-[#6b8fad]">
@@ -1311,14 +1312,14 @@ const VolunteerPortal = memo(function VolunteerPortal({
                           className={shiaiSignupRole === 'courtkeeper' ? 'bg-orange-600 flex-1' : 'flex-1'}
                           onClick={() => setShiaiSignupRole('courtkeeper')}
                         >
-                          <Swords className="w-4 h-4 mr-2" /> Courtkeeper
+                          <CourtkeeperIcon className="w-4 h-4 mr-2" /> Courtkeeper
                         </Button>
                         <Button
                           variant={shiaiSignupRole === 'general' ? 'default' : 'outline'}
                           className={shiaiSignupRole === 'general' ? 'bg-pink-600 flex-1' : 'flex-1'}
                           onClick={() => setShiaiSignupRole('general')}
                         >
-                          <Heart className="w-4 h-4 mr-2" /> General
+                          <VolunteerIcon className="w-4 h-4 mr-2" /> General
                         </Button>
                       </div>
                       <Button onClick={signUpForShiai} className="w-full bg-emerald-600 hover:bg-emerald-700">
@@ -1628,13 +1629,13 @@ const SpectatorPortal = memo(function SpectatorPortal({
             </SelectTrigger>
             <SelectContent className="bg-[#142130] border-[#1e3a5f]">
               <SelectItem value="admin" className="text-orange-300">
-                <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Admin</span>
+                <span className="flex items-center gap-2"><AdminIcon className="w-4 h-4" /> Admin</span>
               </SelectItem>
               <SelectItem value="courtkeeper" className="text-sky-300">
-                <span className="flex items-center gap-2"><Swords className="w-4 h-4" /> Courtkeeper</span>
+                <span className="flex items-center gap-2"><CourtkeeperIcon className="w-4 h-4" /> Courtkeeper</span>
               </SelectItem>
               <SelectItem value="volunteer" className="text-pink-300">
-                <span className="flex items-center gap-2"><Heart className="w-4 h-4" /> Volunteer</span>
+                <span className="flex items-center gap-2"><VolunteerIcon className="w-4 h-4" /> Volunteer</span>
               </SelectItem>
               <SelectItem value="select" className="text-[#8fb3d1]">
                 <span className="flex items-center gap-2"><Home className="w-4 h-4" /> Main Menu</span>
@@ -1687,7 +1688,7 @@ const SpectatorPortal = memo(function SpectatorPortal({
             <Card className="bg-[#142130]/80 border-white/5">
               <CardHeader>
                 <CardTitle className="text-white text-lg flex items-center gap-2">
-                  <Swords className="w-5 h-5 text-orange-400" />
+                  <CourtkeeperIcon className="w-5 h-5 text-orange-400" />
                   Current Matches
                 </CardTitle>
               </CardHeader>
@@ -2417,7 +2418,7 @@ const AdminPortal = memo(function AdminPortal({
                 </NavGroup>
                 
                 <NavGroup groupId="admin" label="Administrative">
-                  <NavItem id="volunteers" icon={Heart} label="Volunteers" />
+                  <NavItem id="volunteers" icon={VolunteerIcon} label="Volunteers" />
                   <NavItem id="settings" icon={Settings} label="Settings" />
                 </NavGroup>
               </>
@@ -2433,13 +2434,13 @@ const AdminPortal = memo(function AdminPortal({
             </SelectTrigger>
             <SelectContent className="bg-[#142130] border-[#1e3a5f]">
               <SelectItem value="spectator" className="text-emerald-300 hover:bg-emerald-900/30">
-                <span className="flex items-center gap-2"><Eye className="w-4 h-4" /> Spectator</span>
+                <span className="flex items-center gap-2"><SpectatorIcon className="w-4 h-4" /> Spectator</span>
               </SelectItem>
               <SelectItem value="courtkeeper" className="text-sky-300 hover:bg-sky-900/30">
-                <span className="flex items-center gap-2"><Swords className="w-4 h-4" /> Courtkeeper</span>
+                <span className="flex items-center gap-2"><CourtkeeperIcon className="w-4 h-4" /> Courtkeeper</span>
               </SelectItem>
               <SelectItem value="volunteer" className="text-pink-300 hover:bg-pink-900/30">
-                <span className="flex items-center gap-2"><Heart className="w-4 h-4" /> Volunteer</span>
+                <span className="flex items-center gap-2"><VolunteerIcon className="w-4 h-4" /> Volunteer</span>
               </SelectItem>
               <SelectItem value="select" className="text-[#8fb3d1] hover:bg-[#1e3a5f]/50">
                 <span className="flex items-center gap-2"><Home className="w-4 h-4" /> Main Menu</span>
@@ -2464,7 +2465,7 @@ const AdminPortal = memo(function AdminPortal({
                 <span className="text-xl text-white" style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span>
               </div>
               <div className="flex items-center justify-center gap-1.5 mt-2">
-                <Shield className="w-3 h-3 text-orange-400" />
+                <AdminIcon className="w-3 h-3 text-orange-400" />
                 <span className="text-[10px] text-orange-400 uppercase tracking-widest">Admin Portal</span>
               </div>
             </div>
@@ -2545,7 +2546,7 @@ const AdminPortal = memo(function AdminPortal({
                 Administrative
               </button>
               {mobileNavGroups.includes('admin') && [
-                { id: 'volunteers', icon: Heart, label: 'Volunteers' },
+                { id: 'volunteers', icon: VolunteerIcon, label: 'Volunteers' },
                 { id: 'settings', icon: Settings, label: 'Settings' },
               ].map(item => (
                 <button
@@ -2569,19 +2570,19 @@ const AdminPortal = memo(function AdminPortal({
                   onClick={() => { setMobileNavOpen(false); onSwitchPortal('spectator'); }}
                   className="py-2 px-2 text-xs bg-emerald-950/40 border border-emerald-500/30 rounded-lg flex items-center justify-center gap-1.5 text-emerald-300"
                 >
-                  <Eye className="w-3.5 h-3.5" /> Spectator
+                  <SpectatorIcon className="w-3.5 h-3.5" /> Spectator
                 </button>
                 <button 
                   onClick={() => { setMobileNavOpen(false); onSwitchPortal('courtkeeper'); }}
                   className="py-2 px-2 text-xs bg-sky-950/40 border border-sky-500/30 rounded-lg flex items-center justify-center gap-1.5 text-sky-300"
                 >
-                  <Swords className="w-3.5 h-3.5" /> Courtkeeper
+                  <CourtkeeperIcon className="w-3.5 h-3.5" /> Courtkeeper
                 </button>
                 <button 
                   onClick={() => { setMobileNavOpen(false); onSwitchPortal('volunteer'); }}
                   className="py-2 px-2 text-xs bg-pink-950/40 border border-pink-500/30 rounded-lg flex items-center justify-center gap-1.5 text-pink-300"
                 >
-                  <Heart className="w-3.5 h-3.5" /> Volunteer
+                  <VolunteerIcon className="w-3.5 h-3.5" /> Volunteer
                 </button>
                 <button 
                   onClick={() => { setMobileNavOpen(false); onSwitchPortal('select'); }}
@@ -3894,7 +3895,7 @@ const TournamentManager = memo(function TournamentManager({
               <div className="grid grid-cols-2 gap-2">
                 <div className="bg-sky-900/20 border border-sky-700/30 rounded-lg p-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Swords className="w-3 h-3 text-sky-400" />
+                    <CourtkeeperIcon className="w-3 h-3 text-sky-400" />
                     <span className="text-xs font-medium text-sky-400">Courtkeepers</span>
                     <span className="text-[10px] text-sky-300 ml-auto">{courtkeeperVolunteers.length}</span>
                   </div>
@@ -3908,7 +3909,7 @@ const TournamentManager = memo(function TournamentManager({
                 </div>
                 <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-2">
                   <div className="flex items-center gap-1 mb-1">
-                    <Heart className="w-3 h-3 text-pink-400" />
+                    <VolunteerIcon className="w-3 h-3 text-pink-400" />
                     <span className="text-xs font-medium text-pink-400">General</span>
                     <span className="text-[10px] text-pink-300 ml-auto">{generalVolunteers.length}</span>
                   </div>
@@ -4688,7 +4689,7 @@ const VolunteersTab = memo(function VolunteersTab({
       <div className="grid grid-cols-2 gap-3 sm:gap-4">
         <Card className="bg-[#142130] border-white/5">
           <CardContent className="p-4 text-center">
-            <Heart className="w-6 h-6 text-pink-400 mx-auto mb-2" />
+            <VolunteerIcon className="w-6 h-6 text-pink-400 mx-auto mb-2" />
             <p className="text-2xl font-bold text-white">{state.volunteers.length}</p>
             <p className="text-xs text-[#6b8fad]">Volunteers</p>
           </CardContent>
@@ -4711,7 +4712,7 @@ const VolunteersTab = memo(function VolunteersTab({
         </Card>
         <Card className="bg-[#142130] border-white/5">
           <CardContent className="p-4 text-center">
-            <Swords className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+            <CourtkeeperIcon className="w-6 h-6 text-orange-400 mx-auto mb-2" />
             <p className="text-2xl font-bold text-white">{courtkeeperVolunteers.length}</p>
             <p className="text-xs text-[#6b8fad]">Courtkeepers</p>
           </CardContent>
@@ -4723,7 +4724,7 @@ const VolunteersTab = memo(function VolunteersTab({
         <CardHeader className="pb-3">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <CardTitle className="text-white flex items-center gap-2">
-              <Heart className="w-5 h-5 text-pink-400" />
+              <VolunteerIcon className="w-5 h-5 text-pink-400" />
               Volunteer Registry
             </CardTitle>
             <div className="flex gap-2">
@@ -4755,7 +4756,7 @@ const VolunteersTab = memo(function VolunteersTab({
 
           {filteredVolunteers.length === 0 ? (
             <div className="text-center py-12">
-              <Heart className="w-12 h-12 text-[#3d5a78] mx-auto mb-3" />
+              <VolunteerIcon className="w-12 h-12 text-[#3d5a78] mx-auto mb-3" />
               <p className="text-[#6b8fad]">
                 {state.volunteers.length === 0 ? 'No volunteers yet' : 'No matching volunteers'}
               </p>
@@ -6096,13 +6097,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                 </SelectTrigger>
                 <SelectContent className="bg-[#142130] border-[#1e3a5f]">
                   <SelectItem value="spectator" className="text-emerald-300">
-                    <span className="flex items-center gap-2"><Eye className="w-4 h-4" /> Spectator</span>
+                    <span className="flex items-center gap-2"><SpectatorIcon className="w-4 h-4" /> Spectator</span>
                   </SelectItem>
                   <SelectItem value="admin" className="text-orange-300">
-                    <span className="flex items-center gap-2"><Shield className="w-4 h-4" /> Admin</span>
+                    <span className="flex items-center gap-2"><AdminIcon className="w-4 h-4" /> Admin</span>
                   </SelectItem>
                   <SelectItem value="volunteer" className="text-pink-300">
-                    <span className="flex items-center gap-2"><Heart className="w-4 h-4" /> Volunteer</span>
+                    <span className="flex items-center gap-2"><VolunteerIcon className="w-4 h-4" /> Volunteer</span>
                   </SelectItem>
                   <SelectItem value="select" className="text-[#8fb3d1]">
                     <span className="flex items-center gap-2"><Home className="w-4 h-4" /> Main Menu</span>
