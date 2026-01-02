@@ -2663,7 +2663,7 @@ const AdminPortal = memo(function AdminPortal({
                     <ShiaijoLogo size={60} glow />
                     <div>
                       <h2 className="text-2xl font-bold text-white">Welcome to <span style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>試合場</span></h2>
-                      <p className="text-[#6b8fad]">Renbu Monthly Shiai Manager <span className="text-orange-400 text-xs">(beta)</span></p>
+                      <p className="text-[#6b8fad]">Renbu Monthly Shiai Manager <sup className="text-orange-400 text-[10px]">(beta)</sup></p>
                     </div>
                   </div>
                 </CardContent>
@@ -3954,7 +3954,7 @@ const TournamentManager = memo(function TournamentManager({
                       onDrop={(e) => {
                         e.preventDefault()
                         if (draggedGroupId && draggedGroupId !== groupId) {
-                          // Reorder groupOrder
+                          // Reorder groupOrder and auto-stagger courts
                           setState(prev => {
                             if (!prev.currentTournament) return prev
                             const order = [...(prev.currentTournament.groupOrder || [])]
@@ -3963,7 +3963,16 @@ const TournamentManager = memo(function TournamentManager({
                             if (draggedIdx === -1 || targetIdx === -1) return prev
                             const [dragged] = order.splice(draggedIdx, 1)
                             order.splice(targetIdx, 0, dragged)
-                            return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order } }
+                            // Auto-stagger courts (A, B, A, B...) for non-shared groups
+                            const sharedGroups = prev.sharedGroups || []
+                            const updatedMatches = prev.currentTournament.matches.map(m => {
+                              if (m.status !== 'pending') return m
+                              if (sharedGroups.includes(m.groupId)) return m
+                              const groupIdx = order.indexOf(m.groupId)
+                              const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
+                              return { ...m, court: newCourt as 'A' | 'B' }
+                            })
+                            return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order, matches: updatedMatches } }
                           })
                         }
                         setDraggedGroupId(null)
@@ -4012,7 +4021,16 @@ const TournamentManager = memo(function TournamentManager({
                               if (draggedIdx === -1 || targetIdx === -1) return prev
                               const [dragged] = order.splice(draggedIdx, 1)
                               order.splice(targetIdx, 0, dragged)
-                              return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order } }
+                              // Auto-stagger courts (A, B, A, B...) for non-shared groups
+                              const sharedGroups = prev.sharedGroups || []
+                              const updatedMatches = prev.currentTournament.matches.map(m => {
+                                if (m.status !== 'pending') return m
+                                if (sharedGroups.includes(m.groupId)) return m
+                                const groupIdx = order.indexOf(m.groupId)
+                                const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
+                                return { ...m, court: newCourt as 'A' | 'B' }
+                              })
+                              return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order, matches: updatedMatches } }
                             })
                           }
                           setDraggedGroupId(null)
@@ -4495,7 +4513,23 @@ const HistoryView = memo(function HistoryView({
   setState: React.Dispatch<React.SetStateAction<AppState>>
 }) {
   const [showImport, setShowImport] = useState(false)
+  const [editMode, setEditMode] = useState(false)
+  const [expandedEntries, setExpandedEntries] = useState<string[]>([])
   const history = state.history || []
+  
+  const toggleEntry = (id: string) => {
+    setExpandedEntries(prev => 
+      prev.includes(id) ? prev.filter(e => e !== id) : [...prev, id]
+    )
+  }
+  
+  const toggleAll = () => {
+    if (expandedEntries.length === history.length) {
+      setExpandedEntries([])
+    } else {
+      setExpandedEntries(history.map(h => h.id))
+    }
+  }
   
   const deleteHistoryEntry = (id: string) => {
     setState(prev => ({
@@ -4585,73 +4619,106 @@ const HistoryView = memo(function HistoryView({
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Dialog open={showImport} onOpenChange={setShowImport}>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]">
-              <Upload className="w-4 h-4 mr-2" />
-              Import Past History
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="bg-[#142130] border-white/5 backdrop-blur-sm max-w-2xl">
-            <DialogHeader>
-              <DialogTitle className="text-white">Import Tournament History</DialogTitle>
-              <DialogDescription className="text-[#b8d4ec]">
-                Import past tournament data from CSV/Excel. Format: Month,Year,GroupName,Rank,PlayerName,Points,Wins,Losses,Draws
-              </DialogDescription>
-            </DialogHeader>
-            <HistoryImportForm onImport={handleExcelImport} />
-          </DialogContent>
-        </Dialog>
+      <div className="flex justify-between items-center gap-2 flex-wrap">
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={toggleAll}
+          className="border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]"
+        >
+          <ChevronDown className={`w-4 h-4 mr-1.5 transition-transform ${expandedEntries.length === history.length ? '' : '-rotate-90'}`} />
+          {expandedEntries.length === history.length ? 'Collapse All' : 'Expand All'}
+        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setEditMode(!editMode)}
+            className={`${editMode ? 'bg-amber-500/20 border-amber-500/50 text-amber-400' : 'border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]'}`}
+          >
+            <Edit2 className="w-4 h-4 mr-1.5" />
+            {editMode ? 'Done' : 'Edit'}
+          </Button>
+          <Dialog open={showImport} onOpenChange={setShowImport}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="border-[#2a4a6f] bg-[#142130] hover:bg-[#1e3a5f]">
+                <Upload className="w-4 h-4 mr-1.5" />
+                Import
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-[#142130] border-white/5 backdrop-blur-sm max-w-2xl">
+              <DialogHeader>
+                <DialogTitle className="text-white">Import Tournament History</DialogTitle>
+                <DialogDescription className="text-[#b8d4ec]">
+                  Import past tournament data from CSV/Excel. Format: Month,Year,GroupName,Rank,PlayerName,Points,Wins,Losses,Draws
+                </DialogDescription>
+              </DialogHeader>
+              <HistoryImportForm onImport={handleExcelImport} />
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {history.map(entry => (
-        <Card key={entry.id} className="bg-[#142130] border-white/5 backdrop-blur-sm">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-white">{entry.name}</CardTitle>
-                <CardDescription className="text-[#b8d4ec]">{entry.date}</CardDescription>
-              </div>
-              <Button
-                size="icon"
-                variant="ghost"
-                onClick={() => deleteHistoryEntry(entry.id)}
-                className="h-8 w-8 text-red-400 hover:text-red-300"
-              >
-                <Trash2 className="w-4 h-4" />
-              </Button>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {entry.results.map(result => (
-                <div key={result.groupId} className="bg-[#142130] rounded-lg p-4">
-                  <div className="flex items-center gap-2 mb-3">
-                    <h4 className="text-white font-medium">{result.groupName}</h4>
-                    {result.isNonBogu && <Badge className="bg-orange-900 text-orange-200 text-xs">Hantei</Badge>}
-                  </div>
-                  <div className="space-y-2">
-                    {result.standings.slice(0, 3).map((s, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <span className={`w-6 text-center font-bold ${
-                          idx === 0 ? 'text-orange-400' :
-                          idx === 1 ? 'text-[#b8d4ec]' :
-                          'text-amber-700'
-                        }`}>
-                          {idx + 1}
-                        </span>
-                        <span className="text-white flex-1">{s.playerName}</span>
-                        <span className="text-orange-400">{s.points}pts</span>
-                      </div>
-                    ))}
+      {history.map(entry => {
+        const isExpanded = expandedEntries.includes(entry.id)
+        return (
+          <Card key={entry.id} className="bg-[#142130] border-white/5 backdrop-blur-sm">
+            <CardHeader 
+              className="cursor-pointer" 
+              onClick={() => toggleEntry(entry.id)}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
+                  <div>
+                    <CardTitle className="text-white">{entry.name}</CardTitle>
+                    <CardDescription className="text-[#b8d4ec]">{entry.date} · {entry.results.length} groups</CardDescription>
                   </div>
                 </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-      ))}
+                {editMode && (
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={(e) => { e.stopPropagation(); deleteHistoryEntry(entry.id) }}
+                    className="h-8 w-8 text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                )}
+              </div>
+            </CardHeader>
+            {isExpanded && (
+              <CardContent>
+                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {entry.results.map(result => (
+                    <div key={result.groupId} className="bg-[#0f1a24] rounded-lg p-4">
+                      <div className="flex items-center gap-2 mb-3">
+                        <h4 className="text-white font-medium">{result.groupName}</h4>
+                        {result.isNonBogu && <Badge className="bg-orange-900 text-orange-200 text-xs">Hantei</Badge>}
+                      </div>
+                      <div className="space-y-2">
+                        {result.standings.slice(0, 3).map((s, idx) => (
+                          <div key={idx} className="flex items-center gap-2">
+                            <span className={`w-6 text-center font-bold ${
+                              idx === 0 ? 'text-orange-400' :
+                              idx === 1 ? 'text-[#b8d4ec]' :
+                              'text-amber-700'
+                            }`}>
+                              {idx + 1}
+                            </span>
+                            <span className="text-white flex-1">{s.playerName}</span>
+                            <span className="text-orange-400">{s.points}pts</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            )}
+          </Card>
+        )
+      })}
     </div>
   )
 })
