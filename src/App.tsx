@@ -5509,6 +5509,23 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       toast.success(`Group shared between both courts`)
     }
   }
+  
+  const switchGroupCourt = (groupId: string, newCourt: 'A' | 'B') => {
+    // First remove from shared if it was shared
+    const wasShared = (state.sharedGroups || []).includes(groupId)
+    setState(prev => {
+      if (!prev.currentTournament) return prev
+      const updatedMatches = prev.currentTournament.matches.map(m => 
+        m.groupId === groupId && m.status === 'pending' ? { ...m, court: newCourt } : m
+      )
+      return {
+        ...prev,
+        sharedGroups: wasShared ? (prev.sharedGroups || []).filter(g => g !== groupId) : prev.sharedGroups,
+        currentTournament: { ...prev.currentTournament, matches: updatedMatches }
+      }
+    })
+    toast.success(`Group moved to Court ${newCourt}`)
+  }
 
   // Reorder match in queue (drag and drop)
   const reorderMatch = (draggedId: string, targetId: string) => {
@@ -6111,25 +6128,39 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                     const isShared = (state.sharedGroups || []).includes(groupId)
                     if (groupMatchCount === 0) return null
                     return (
-                      <div key={groupId} className="flex items-center text-xs py-1.5 gap-2">
-                        <span className="text-slate-300 flex-1">{groupInfo?.name} <span className="text-slate-500">({groupMatchCount})</span></span>
-                        <button
-                          onClick={() => toggleSharedGroupCK(groupId)}
-                          className={`px-1.5 h-5 rounded text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                        >{isShared ? <><Check className="w-3 h-3 inline" />A+B</> : 'A+B'}</button>
+                      <div key={groupId} className="flex items-center text-xs py-1.5 gap-1.5">
+                        <span className="text-slate-300 flex-1 truncate">{groupInfo?.name} <span className="text-slate-500">({groupMatchCount})</span></span>
                         <button
                           onClick={() => moveGroupInQueue(groupId, 'up')}
                           disabled={gIdx === 0}
-                          className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
+                          className="w-5 h-5 rounded bg-slate-800 text-slate-500 disabled:opacity-30 flex items-center justify-center"
                         ><ChevronUp className="w-3 h-3" /></button>
                         <button
                           onClick={() => moveGroupInQueue(groupId, 'down')}
                           disabled={gIdx === groupOrder.length - 1}
-                          className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
+                          className="w-5 h-5 rounded bg-slate-800 text-slate-500 disabled:opacity-30 flex items-center justify-center"
                         ><ChevronDown className="w-3 h-3" /></button>
-                        <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold min-w-[28px] text-center ${isShared ? 'bg-emerald-500 text-white' : selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
-                          {isShared ? 'A+B' : selectedCourt}
-                        </span>
+                        {(() => {
+                          const groupCourt = pendingMatches.find(m => m.groupId === groupId)?.court || 'A'
+                          const isOnA = !isShared && groupCourt === 'A'
+                          const isOnB = !isShared && groupCourt === 'B'
+                          return (
+                            <div className="flex rounded overflow-hidden border border-slate-700">
+                              <button
+                                onClick={() => switchGroupCourt(groupId, 'A')}
+                                className={`w-6 h-5 text-[9px] font-bold ${isOnA ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
+                              >A</button>
+                              <button
+                                onClick={() => toggleSharedGroupCK(groupId)}
+                                className={`px-1 h-5 text-[8px] font-medium border-x border-slate-700 ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
+                              >A+B</button>
+                              <button
+                                onClick={() => switchGroupCourt(groupId, 'B')}
+                                className={`w-6 h-5 text-[9px] font-bold ${isOnB ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
+                              >B</button>
+                            </div>
+                          )
+                        })()}
                       </div>
                     )
                   })}
