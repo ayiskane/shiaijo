@@ -1891,6 +1891,7 @@ const AdminPortal = memo(function AdminPortal({
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [expandedGroups, setExpandedGroups] = useState<string[]>(['roster', 'shiai', 'admin'])
+  const [mobileNavGroups, setMobileNavGroups] = useState<string[]>(['roster', 'shiai', 'admin'])
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState<string>('all')
   const [sortBy] = useState<'name' | 'group'>('name')
@@ -2412,8 +2413,14 @@ const AdminPortal = memo(function AdminPortal({
               </button>
               
               {/* Roster Group */}
-              <p className="px-4 py-1.5 text-[10px] text-[#6b8fad] uppercase tracking-wider mt-2">Roster</p>
-              {[
+              <button 
+                onClick={() => setMobileNavGroups(prev => prev.includes('roster') ? prev.filter(g => g !== 'roster') : [...prev, 'roster'])}
+                className="w-full flex items-center gap-2 px-4 py-1.5 mt-2 text-[10px] text-[#6b8fad] uppercase tracking-wider hover:text-white/70"
+              >
+                <ChevronDown className={`w-3 h-3 transition-transform ${mobileNavGroups.includes('roster') ? '' : '-rotate-90'}`} />
+                Roster
+              </button>
+              {mobileNavGroups.includes('roster') && [
                 { id: 'members', icon: Users, label: 'Members' },
                 { id: 'guests', icon: UserPlus, label: 'Guests' },
                 { id: 'groups', icon: Filter, label: 'Groups' },
@@ -2433,8 +2440,14 @@ const AdminPortal = memo(function AdminPortal({
               ))}
               
               {/* Shiai Group */}
-              <p className="px-4 py-1.5 text-[10px] text-[#6b8fad] uppercase tracking-wider mt-2">Shiai</p>
-              {[
+              <button 
+                onClick={() => setMobileNavGroups(prev => prev.includes('shiai') ? prev.filter(g => g !== 'shiai') : [...prev, 'shiai'])}
+                className="w-full flex items-center gap-2 px-4 py-1.5 mt-2 text-[10px] text-[#6b8fad] uppercase tracking-wider hover:text-white/70"
+              >
+                <ChevronDown className={`w-3 h-3 transition-transform ${mobileNavGroups.includes('shiai') ? '' : '-rotate-90'}`} />
+                Shiai
+              </button>
+              {mobileNavGroups.includes('shiai') && [
                 { id: 'tournament', icon: Trophy, label: 'Tournament' },
                 { id: 'standings', icon: Table, label: 'Results' },
                 { id: 'history', icon: History, label: 'History' },
@@ -2454,8 +2467,14 @@ const AdminPortal = memo(function AdminPortal({
               ))}
               
               {/* Administrative Group */}
-              <p className="px-4 py-1.5 text-[10px] text-[#6b8fad] uppercase tracking-wider mt-2">Administrative</p>
-              {[
+              <button 
+                onClick={() => setMobileNavGroups(prev => prev.includes('admin') ? prev.filter(g => g !== 'admin') : [...prev, 'admin'])}
+                className="w-full flex items-center gap-2 px-4 py-1.5 mt-2 text-[10px] text-[#6b8fad] uppercase tracking-wider hover:text-white/70"
+              >
+                <ChevronDown className={`w-3 h-3 transition-transform ${mobileNavGroups.includes('admin') ? '' : '-rotate-90'}`} />
+                Administrative
+              </button>
+              {mobileNavGroups.includes('admin') && [
                 { id: 'volunteers', icon: Heart, label: 'Volunteers' },
                 { id: 'settings', icon: Settings, label: 'Settings' },
               ].map(item => (
@@ -2534,8 +2553,8 @@ const AdminPortal = memo(function AdminPortal({
             <div>
               <p className="text-[#6b8fad] text-sm mb-1 hidden md:block">Welcome Back!</p>
               <h2 className="text-xl md:text-2xl font-bold flex items-center gap-2">
-                <span className="text-orange-400">ADMIN</span>
-                <ChevronRight className="w-5 h-5 text-[#6b8fad]" />
+                <span className="text-orange-400">Admin Portal</span>
+                <ChevronRight className="w-4 h-4 text-[#6b8fad]" />
                 <span className="capitalize text-white">{activeTab}</span>
               </h2>
             </div>
@@ -2698,80 +2717,77 @@ const AdminPortal = memo(function AdminPortal({
           {/* Members Tab */}
           {activeTab === 'members' && (
             <div className="space-y-4">
-              {/* Stats */}
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
-                <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
-                  <p className="text-[#6b8fad] text-xs mb-1">Total Members</p>
-                  <p className="text-2xl font-bold">{state.members.length}</p>
-                </div>
-                <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
-                  <p className="text-[#6b8fad] text-xs mb-1">Participating</p>
-                  <p className="text-2xl font-bold text-green-400">{state.members.filter(m => m.isParticipating).length}</p>
-                </div>
-                <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
-                  <p className="text-[#6b8fad] text-xs mb-1">Matches</p>
-                  <p className="text-2xl font-bold">{state.currentTournament?.matches?.length || 0}</p>
-                </div>
-                <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
-                  <p className="text-[#6b8fad] text-xs mb-1">Completed</p>
-                  <p className="text-2xl font-bold text-orange-400">{state.currentTournament?.matches?.filter(m => m.status === 'completed').length || 0}</p>
-                </div>
+              {/* Add Member / Import */}
+              <div className="flex flex-wrap gap-2">
+                <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-orange-600 hover:bg-orange-700">
+                      <Plus className="w-4 h-4 mr-2" />Add Member
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#142130] border-[#162d4a]">
+                    <DialogHeader>
+                      <DialogTitle className="text-white">Add Member</DialogTitle>
+                    </DialogHeader>
+                    <AddMemberForm groups={state.groups} onAdd={addMember} />
+                  </DialogContent>
+                </Dialog>
+                <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="border-[#1e3a5f] text-[#b8d4ec]">
+                      <Upload className="w-4 h-4 mr-2" />Import CSV
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="bg-[#142130] border-[#162d4a]">
+                    <DialogHeader>
+                      <DialogTitle className="text-white">Import Members</DialogTitle>
+                      <DialogDescription className="text-[#8fb3d1]">Paste CSV: FirstName,LastName,Group</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <textarea 
+                        className="w-full h-32 bg-[#1a2d42] border border-[#1e3a5f] rounded-lg p-3 text-sm"
+                        placeholder="FirstName,LastName,Group&#10;John,Doe,Group A"
+                        id="csv-input"
+                      />
+                      <div className="flex justify-end gap-2">
+                        <Button variant="outline" onClick={() => setShowBulkAdd(false)} className="border-[#1e3a5f]">Cancel</Button>
+                        <Button onClick={() => { 
+                          const textarea = document.getElementById('csv-input') as HTMLTextAreaElement
+                          if (textarea) { handleCSVImport(textarea.value); setShowBulkAdd(false); }
+                        }} className="bg-orange-600 hover:bg-orange-700">Import</Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+                <span className="text-sm text-[#6b8fad] self-center ml-auto">{state.members.length} members</span>
               </div>
 
-              {/* Actions */}
-              <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
-                <div className="flex flex-wrap gap-2">
-                  <Dialog open={showAddMember} onOpenChange={setShowAddMember}>
-                    <DialogTrigger asChild>
-                      <Button className="bg-orange-600 hover:bg-orange-700">
-                        <Plus className="w-4 h-4 mr-2" />Add Member
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-[#142130] border-[#162d4a]">
-                      <DialogHeader>
-                        <DialogTitle className="text-white">Add Member</DialogTitle>
-                      </DialogHeader>
-                      <AddMemberForm groups={state.groups} onAdd={addMember} />
-                    </DialogContent>
-                  </Dialog>
-                  <Dialog open={showBulkAdd} onOpenChange={setShowBulkAdd}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="border-[#1e3a5f] text-[#b8d4ec]">
-                        <Upload className="w-4 h-4 mr-2" />Import CSV
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="bg-[#142130] border-[#162d4a]">
-                      <DialogHeader>
-                        <DialogTitle className="text-white">Import Members</DialogTitle>
-                        <DialogDescription className="text-[#8fb3d1]">Paste CSV: FirstName,LastName,Group</DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <textarea 
-                          className="w-full h-32 bg-[#1a2d42] border border-[#1e3a5f] rounded-lg p-3 text-sm"
-                          placeholder="FirstName,LastName,Group&#10;John,Doe,Group A"
-                          id="csv-input"
-                        />
-                        <div className="flex justify-end gap-2">
-                          <Button variant="outline" onClick={() => setShowBulkAdd(false)} className="border-[#1e3a5f]">Cancel</Button>
-                          <Button onClick={() => { 
-                            const textarea = document.getElementById('csv-input') as HTMLTextAreaElement
-                            if (textarea) { handleCSVImport(textarea.value); setShowBulkAdd(false); }
-                          }} className="bg-orange-600 hover:bg-orange-700">Import</Button>
-                        </div>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-                </div>
-                <div className="flex flex-wrap gap-2 mt-3 pt-3 border-t border-white/5">
-                  <span className="text-xs text-[#6b8fad] self-center">Quick select:</span>
-                  {state.groups.map(g => (
-                    <button key={g.id} onClick={() => selectByGroup(g.id)} className="px-3 py-1 text-xs rounded-lg bg-[#1a2d42] text-[#8fb3d1] hover:bg-[#243a52]">
-                      +{g.name}
+              {/* Tournament Registration - only show if there's a tournament */}
+              {state.currentTournament && (
+                <div className="bg-emerald-900/20 border border-emerald-700/30 rounded-xl p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Trophy className="w-4 h-4 text-emerald-400" />
+                      <span className="text-sm font-medium text-emerald-400">Tournament Registration</span>
+                    </div>
+                    <span className="text-xs text-emerald-300">{state.members.filter(m => m.isParticipating).length} participating</span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    <span className="text-xs text-[#6b8fad] self-center">Quick select:</span>
+                    {state.groups.map(g => (
+                      <button key={g.id} onClick={() => selectByGroup(g.id)} className="px-3 py-1 text-xs rounded-lg bg-emerald-900/30 text-emerald-300 hover:bg-emerald-900/50 border border-emerald-700/30">
+                        +{g.name}
+                      </button>
+                    ))}
+                    <button onClick={() => state.members.forEach(m => !m.isParticipating && toggleParticipation(m.id))} className="px-3 py-1 text-xs rounded-lg bg-emerald-600 text-white hover:bg-emerald-700">
+                      Select All
                     </button>
-                  ))}
-                  <button onClick={deselectAll} className="px-3 py-1 text-xs rounded-lg text-[#6b8fad] hover:text-[#b8d4ec]">Clear</button>
+                    <button onClick={deselectAll} className="px-3 py-1 text-xs rounded-lg text-emerald-300 hover:text-white border border-emerald-700/30">
+                      Clear All
+                    </button>
+                  </div>
                 </div>
-              </div>
+              )}
 
               {/* Filter Pills */}
               <div className="flex gap-2 overflow-x-auto pb-1">
