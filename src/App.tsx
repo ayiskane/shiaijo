@@ -85,7 +85,7 @@ const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolea
 
 
 import { 
-  Users, Settings, Trophy, Play, Pause, RotateCcw, GripVertical, Check, Triangle, 
+  Users, Settings, Trophy, Play, Pause, RotateCcw, GripVertical, Triangle, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
