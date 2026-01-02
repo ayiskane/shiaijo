@@ -2640,32 +2640,19 @@ const AdminPortal = memo(function AdminPortal({
                 }</span>
               </h2>
             </div>
-            <div className="hidden md:flex items-center gap-3">
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-[#6b8fad]" />
-                <input 
-                  type="text" 
-                  placeholder="Search..." 
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 bg-[#1e3a5f]/30 border border-[#1e3a5f]/50 rounded-xl pl-11 pr-4 py-2.5 text-sm focus:outline-none focus:border-orange-500/50"
-                />
-              </div>
-
-              <button 
-                onClick={async () => {
-                  const saved = await loadFromStorage()
-                  if (saved) {
-                    const tournament = sanitizeTournament(saved.currentTournament)
-                    setState(prev => ({ ...prev, members: saved.members || prev.members, groups: saved.groups || prev.groups, guestRegistry: saved.guestRegistry || prev.guestRegistry, currentTournament: tournament, history: saved.history || prev.history }))
-                    toast.success('Synced')
-                  }
-                }}
-                className="p-2.5 text-[#8fb3d1] hover:text-white hover:bg-[#1a2d42] rounded-xl transition"
-              >
-                <RefreshCw className="w-5 h-5" />
-              </button>
-            </div>
+            <button 
+              onClick={async () => {
+                const saved = await loadFromStorage()
+                if (saved) {
+                  const tournament = sanitizeTournament(saved.currentTournament)
+                  setState(prev => ({ ...prev, members: saved.members || prev.members, groups: saved.groups || prev.groups, guestRegistry: saved.guestRegistry || prev.guestRegistry, currentTournament: tournament, history: saved.history || prev.history }))
+                  toast.success('Synced')
+                }
+              }}
+              className="hidden md:flex p-2.5 text-[#8fb3d1] hover:text-white hover:bg-[#1a2d42] rounded-xl transition"
+            >
+              <RefreshCw className="w-5 h-5" />
+            </button>
           </div>
 
           {/* Dashboard Tab */}
@@ -2760,35 +2747,41 @@ const AdminPortal = memo(function AdminPortal({
               {/* Quick Actions */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <Card className="bg-[#142130] border-white/5 hover:border-orange-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('members')}>
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
-                      <Users className="w-6 h-6 text-orange-400" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white font-medium">Manage Members</p>
-                      <p className="text-xs text-[#6b8fad]">Add, edit, or remove members</p>
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center flex-shrink-0">
+                        <Users className="w-6 h-6 text-orange-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium leading-tight">Manage Members</p>
+                        <p className="text-xs text-[#6b8fad] leading-tight mt-0.5">Add, edit, or remove members</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="bg-[#142130] border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('groups')}>
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
-                      <Filter className="w-6 h-6 text-blue-400" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white font-medium">Manage Groups</p>
-                      <p className="text-xs text-[#6b8fad]">Configure rank groups</p>
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                        <Filter className="w-6 h-6 text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium leading-tight">Manage Groups</p>
+                        <p className="text-xs text-[#6b8fad] leading-tight mt-0.5">Configure rank groups</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
                 <Card className="bg-[#142130] border-white/5 hover:border-emerald-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('settings')}>
-                  <CardContent className="p-6 flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
-                      <Settings className="w-6 h-6 text-emerald-400" />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-white font-medium">Settings</p>
-                      <p className="text-xs text-[#6b8fad]">Passwords & preferences</p>
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center flex-shrink-0">
+                        <Settings className="w-6 h-6 text-emerald-400" />
+                      </div>
+                      <div>
+                        <p className="text-white font-medium leading-tight">Settings</p>
+                        <p className="text-xs text-[#6b8fad] leading-tight mt-0.5">Passwords & preferences</p>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
