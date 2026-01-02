@@ -46,7 +46,7 @@ const SortableGroupCard = ({
           className="absolute left-0 top-0 bottom-0 w-8 flex items-center justify-center cursor-grab active:cursor-grabbing text-slate-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors z-10"
           style={{ touchAction: 'none' }}
         >
-          <span className="text-lg">⋮⋮</span>
+          <GripVertical className="w-5 h-5" />
         </div>
       )}
       <div className={showDragHandle ? "pl-6" : ""}>
@@ -85,7 +85,7 @@ const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolea
 
 
 import { 
-  Users, Settings, Trophy, Play, Pause, RotateCcw, 
+  Users, Settings, Trophy, Play, Pause, RotateCcw, GripVertical, Check, Triangle, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
@@ -3448,7 +3448,7 @@ const GroupsManager = memo(function GroupsManager({
                   }`}
                 >
                   {/* Drag handle */}
-                  <span className="text-slate-500 cursor-grab">☰</span>
+                  <GripVertical className="w-4 h-4 text-slate-500 cursor-grab flex-shrink-0" />
                   {/* Court badge */}
                   <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
                     isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
@@ -5803,11 +5803,11 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
           {/* Hansoku indicator - fixed layout, always centered */}
           <div className="flex items-center justify-center mt-2 pt-2 border-t border-slate-700/30">
             <div className="w-16 flex justify-end">
-              {p1Hansoku % 2 === 1 && <span className="text-yellow-400 text-xl drop-shadow-[0_0_4px_rgba(250,204,21,0.5)]">▲</span>}
+              {p1Hansoku % 2 === 1 && <Triangle className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.5)]" />}
             </div>
             <span className="text-slate-500 mx-3 text-xs">Hansoku</span>
             <div className="w-16 flex justify-start">
-              {p2Hansoku % 2 === 1 && <span className="text-yellow-400 text-xl drop-shadow-[0_0_4px_rgba(250,204,21,0.5)]">▲</span>}
+              {p2Hansoku % 2 === 1 && <Triangle className="w-5 h-5 text-yellow-400 fill-yellow-400 drop-shadow-[0_0_4px_rgba(250,204,21,0.5)]" />}
             </div>
           </div>
         </div>
@@ -5842,9 +5842,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                 <button
                   onClick={() => addHansoku('player1')}
                   disabled={p1Hansoku >= p1MaxHansoku || gameOver}
-                  className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
+                  className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30 flex items-center justify-center"
                 >
-                  ▲
+                  <Triangle className="w-4 h-4 fill-current" />
                 </button>
                 <button
                   onClick={() => removeLastScore('player1')}
@@ -5882,9 +5882,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                 <button
                   onClick={() => addHansoku('player2')}
                   disabled={p2Hansoku >= p2MaxHansoku || gameOver}
-                  className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30"
+                  className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30 flex items-center justify-center"
                 >
-                  ▲
+                  <Triangle className="w-4 h-4 fill-current" />
                 </button>
                 <button
                   onClick={() => removeHansoku('player2')}
@@ -6116,17 +6116,17 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                         <button
                           onClick={() => toggleSharedGroupCK(groupId)}
                           className={`px-1.5 h-5 rounded text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                        >{isShared ? '✓A+B' : 'A+B'}</button>
+                        >{isShared ? <><Check className="w-3 h-3 inline" />A+B</> : 'A+B'}</button>
                         <button
                           onClick={() => moveGroupInQueue(groupId, 'up')}
                           disabled={gIdx === 0}
                           className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
-                        >▲</button>
+                        ><ChevronUp className="w-3 h-3" /></button>
                         <button
                           onClick={() => moveGroupInQueue(groupId, 'down')}
                           disabled={gIdx === groupOrder.length - 1}
                           className="w-5 h-5 rounded text-[10px] bg-slate-800 text-slate-500 disabled:opacity-30"
-                        >▼</button>
+                        ><ChevronDown className="w-3 h-3" /></button>
                         <span className={`px-1.5 py-0.5 rounded text-[9px] font-bold min-w-[28px] text-center ${isShared ? 'bg-emerald-500 text-white' : selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
                           {isShared ? 'A+B' : selectedCourt}
                         </span>
@@ -6244,7 +6244,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                                   setDraggedMatchId(null)
                                   setDropTargetId(null)
                                 }}
-                              >☰</span>
+                              ><GripVertical className="w-4 h-4" /></span>
                             )}
                             {isLiveOnThisCourt && (
                               <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-500 text-white font-bold mr-2">
