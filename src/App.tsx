@@ -3997,6 +3997,42 @@ const TournamentManager = memo(function TournamentManager({
                 <Trash2 className="w-3.5 h-3.5 mr-1.5" />
                 Clear
               </Button>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => {
+                  if (!tournament) return
+                  setState(prev => {
+                    if (!prev.currentTournament) return prev
+                    // Reset all matches to pending, clear scores and timers
+                    const resetMatches = prev.currentTournament.matches.map(m => ({
+                      ...m,
+                      status: 'pending' as const,
+                      winner: null,
+                      player1Score: [],
+                      player2Score: [],
+                      player1Hansoku: 0,
+                      player2Hansoku: 0,
+                      actualDuration: undefined,
+                    }))
+                    return {
+                      ...prev,
+                      currentTournament: { ...prev.currentTournament, matches: resetMatches },
+                      courtASelectedMatch: null,
+                      courtBSelectedMatch: null,
+                      timerSecondsA: 0,
+                      timerSecondsB: 0,
+                      timerRunningA: false,
+                      timerRunningB: false,
+                    }
+                  })
+                  toast.success('Tournament reset - all matches back to pending')
+                }} 
+                className="h-8 border-amber-700/60 text-amber-400 bg-amber-900/20 hover:bg-amber-800/40"
+              >
+                <RotateCcw className="w-3.5 h-3.5 mr-1.5" />
+                Reset (Debug)
+              </Button>
             </div>
           </CardContent>
         )}
