@@ -33,7 +33,8 @@ import {
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Award, ChevronLeft, Undo2, ChevronDown, ChevronUp, Heart, Clock
+  ArrowLeftRight, Award, ChevronLeft, Undo2, ChevronDown, ChevronUp, Heart, Clock,
+  Eye, Shield, Lock
 } from 'lucide-react'
 
 // Types
@@ -695,9 +696,9 @@ export default function App() {
           {/* Spectator Button */}
           <button 
             onClick={() => setPortal('spectator')}
-            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-4"
+            className="w-full py-4 px-6 rounded-2xl text-base font-semibold bg-gradient-to-br from-emerald-400 via-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/40 hover:shadow-emerald-500/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-4 border border-emerald-400/20"
           >
-            <span>📱</span> Join as Spectator
+            <Eye className="w-5 h-5" /> Join as Spectator
           </button>
           
           {/* Divider */}
@@ -711,25 +712,25 @@ export default function App() {
           <div className="space-y-3">
             <button 
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
-              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+              className="w-full py-4 px-6 rounded-2xl text-base font-semibold bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/40 hover:shadow-orange-500/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 border border-orange-400/20"
             >
-              <span>🏟️</span> Admin Portal
-              {state.adminPassword && <span className="text-orange-200/70 text-xs">🔒</span>}
+              <Shield className="w-5 h-5" /> Admin Portal
+              {state.adminPassword && <Lock className="w-4 h-4 ml-1 opacity-70" />}
             </button>
             
             <button 
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
-              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] text-[#b8d4ec] border border-white/10 hover:from-[#2a4a6f] hover:to-[#1e3a5f] hover:text-white transition-all flex items-center justify-center gap-3"
+              className="w-full py-4 px-6 rounded-2xl text-base font-semibold bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 text-white shadow-lg shadow-blue-500/40 hover:shadow-blue-500/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 border border-blue-400/20"
             >
-              <span>⚔️</span> Courtkeeper Portal
-              {state.courtkeeperPassword && <span className="text-blue-200/70 text-xs">🔒</span>}
+              <Swords className="w-5 h-5" /> Courtkeeper Portal
+              {state.courtkeeperPassword && <Lock className="w-4 h-4 ml-1 opacity-70" />}
             </button>
             
             <button 
               onClick={() => setPortal('volunteer')}
-              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+              className="w-full py-4 px-6 rounded-2xl text-base font-semibold bg-gradient-to-br from-pink-400 via-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/40 hover:shadow-pink-500/60 hover:shadow-xl hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 border border-pink-400/20"
             >
-              <span>💝</span> Volunteer Portal
+              <Heart className="w-5 h-5" /> Volunteer Portal
             </button>
           </div>
           
