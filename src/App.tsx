@@ -3914,7 +3914,7 @@ const TournamentManager = memo(function TournamentManager({
             {/* Court Assignment & Group Order */}
             <div className="bg-[#1e3a5f]/20 rounded-lg p-2.5 border border-white/5">
               <span className="text-xs text-[#8fb3d1] block mb-2">Court Assignment & Order</span>
-              <div className="space-y-1">
+              <div className="space-y-0">
                 {(tournament.groupOrder || []).map((groupId) => {
                   const group = getGroupById(groupId)
                   const isShared = state.sharedGroups.includes(groupId)
@@ -3924,89 +3924,39 @@ const TournamentManager = memo(function TournamentManager({
                   const isDropTarget = dropTargetId === groupId && draggedGroupId !== groupId
                   
                   return (
-                    <div 
-                      key={groupId}
-                      data-group-order-id={groupId}
-                      draggable
-                      onDragStart={(e) => {
-                        setDraggedGroupId(groupId)
-                        e.dataTransfer.effectAllowed = 'move'
-                      }}
-                      onDragEnd={() => { setDraggedGroupId(null); setDropTargetId(null) }}
-                      onDragOver={(e) => {
-                        if (!draggedGroupId || draggedGroupId === groupId) return
-                        e.preventDefault()
-                        e.dataTransfer.dropEffect = 'move'
-                        setDropTargetId(groupId)
-                      }}
-                      onDragLeave={() => { if (dropTargetId === groupId) setDropTargetId(null) }}
-                      onDrop={(e) => {
-                        e.preventDefault()
-                        if (draggedGroupId && draggedGroupId !== groupId) {
-                          // Reorder groupOrder and auto-stagger courts
-                          setState(prev => {
-                            if (!prev.currentTournament) return prev
-                            const order = [...(prev.currentTournament.groupOrder || [])]
-                            const draggedIdx = order.indexOf(draggedGroupId)
-                            const targetIdx = order.indexOf(groupId)
-                            if (draggedIdx === -1 || targetIdx === -1) return prev
-                            const [dragged] = order.splice(draggedIdx, 1)
-                            order.splice(targetIdx, 0, dragged)
-                            // Auto-stagger courts (A, B, A, B...) for non-shared groups
-                            const sharedGroups = prev.sharedGroups || []
-                            const updatedMatches = prev.currentTournament.matches.map(m => {
-                              if (m.status !== 'pending') return m
-                              if (sharedGroups.includes(m.groupId)) return m
-                              const groupIdx = order.indexOf(m.groupId)
-                              const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
-                              return { ...m, court: newCourt as 'A' | 'B' }
-                            })
-                            return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order, matches: updatedMatches } }
-                          })
-                        }
-                        setDraggedGroupId(null)
-                        setDropTargetId(null)
-                      }}
-                      className={`relative flex items-center gap-1.5 py-1 px-1 rounded select-none transition-all duration-150 ${
-                        isDragging ? 'opacity-50 scale-95 bg-amber-900/30 border border-amber-500' :
-                        isDropTarget ? 'bg-slate-700/50' : 'hover:bg-slate-800/30'
-                      }`}
-                    >
-                      {/* Drop indicator */}
+                    <div key={groupId} className="relative">
+                      {/* Drop indicator line - shows ABOVE this item */}
                       {isDropTarget && (
-                        <div className="absolute -top-0.5 left-1 right-1 h-0.5 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                        <div className="absolute -top-[2px] left-0 right-0 z-10 flex items-center gap-1 pointer-events-none">
+                          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
+                          <div className="flex-1 h-[3px] bg-amber-400 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                          <div className="w-2 h-2 rounded-full bg-amber-400 shadow-[0_0_6px_rgba(251,191,36,0.8)]" />
+                        </div>
                       )}
-                      {/* Drag handle with touch support */}
-                      <span 
-                        className="text-slate-500 cursor-grab active:cursor-grabbing p-1 -m-0.5 hover:text-slate-400"
-                        style={{ touchAction: 'none' }}
-                        onTouchStart={(e) => {
-                          e.stopPropagation()
+                      <div 
+                        data-group-order-id={groupId}
+                        draggable
+                        onDragStart={(e) => {
                           setDraggedGroupId(groupId)
+                          e.dataTransfer.effectAllowed = 'move'
                         }}
-                        onTouchMove={(e) => {
-                          if (!draggedGroupId) return
+                        onDragEnd={() => { setDraggedGroupId(null); setDropTargetId(null) }}
+                        onDragOver={(e) => {
+                          if (!draggedGroupId || draggedGroupId === groupId) return
                           e.preventDefault()
-                          e.stopPropagation()
-                          const touch = e.touches[0]
-                          const el = document.elementFromPoint(touch.clientX, touch.clientY)
-                          const groupEl = el?.closest('[data-group-order-id]')
-                          if (groupEl) {
-                            const targetId = groupEl.getAttribute('data-group-order-id')
-                            if (targetId && targetId !== draggedGroupId) {
-                              setDropTargetId(targetId)
-                            }
-                          } else {
-                            setDropTargetId(null)
-                          }
+                          e.dataTransfer.dropEffect = 'move'
+                          setDropTargetId(groupId)
                         }}
-                        onTouchEnd={() => {
-                          if (draggedGroupId && dropTargetId && draggedGroupId !== dropTargetId) {
+                        onDragLeave={() => { if (dropTargetId === groupId) setDropTargetId(null) }}
+                        onDrop={(e) => {
+                          e.preventDefault()
+                          if (draggedGroupId && draggedGroupId !== groupId) {
+                            // Reorder groupOrder and auto-stagger courts
                             setState(prev => {
                               if (!prev.currentTournament) return prev
                               const order = [...(prev.currentTournament.groupOrder || [])]
                               const draggedIdx = order.indexOf(draggedGroupId)
-                              const targetIdx = order.indexOf(dropTargetId)
+                              const targetIdx = order.indexOf(groupId)
                               if (draggedIdx === -1 || targetIdx === -1) return prev
                               const [dragged] = order.splice(draggedIdx, 1)
                               order.splice(targetIdx, 0, dragged)
@@ -4025,9 +3975,62 @@ const TournamentManager = memo(function TournamentManager({
                           setDraggedGroupId(null)
                           setDropTargetId(null)
                         }}
+                        className={`flex items-center gap-1.5 py-1.5 px-1 rounded select-none transition-all duration-150 ${
+                          isDragging ? 'opacity-40 scale-95 bg-amber-900/30 border border-amber-500' : 'hover:bg-slate-800/30'
+                        }`}
                       >
-                        <GripVertical className="w-4 h-4" />
-                      </span>
+                        {/* Drag handle with touch support */}
+                        <span 
+                          className="text-slate-500 cursor-grab active:cursor-grabbing p-1 -m-0.5 hover:text-slate-400"
+                          style={{ touchAction: 'none' }}
+                          onTouchStart={(e) => {
+                            e.stopPropagation()
+                            setDraggedGroupId(groupId)
+                          }}
+                          onTouchMove={(e) => {
+                            if (!draggedGroupId) return
+                            e.preventDefault()
+                            e.stopPropagation()
+                            const touch = e.touches[0]
+                            const el = document.elementFromPoint(touch.clientX, touch.clientY)
+                            const groupEl = el?.closest('[data-group-order-id]')
+                            if (groupEl) {
+                              const targetId = groupEl.getAttribute('data-group-order-id')
+                              if (targetId && targetId !== draggedGroupId) {
+                                setDropTargetId(targetId)
+                              }
+                            } else {
+                              setDropTargetId(null)
+                            }
+                          }}
+                          onTouchEnd={() => {
+                            if (draggedGroupId && dropTargetId && draggedGroupId !== dropTargetId) {
+                              setState(prev => {
+                                if (!prev.currentTournament) return prev
+                                const order = [...(prev.currentTournament.groupOrder || [])]
+                                const draggedIdx = order.indexOf(draggedGroupId)
+                                const targetIdx = order.indexOf(dropTargetId)
+                                if (draggedIdx === -1 || targetIdx === -1) return prev
+                                const [dragged] = order.splice(draggedIdx, 1)
+                                order.splice(targetIdx, 0, dragged)
+                                // Auto-stagger courts (A, B, A, B...) for non-shared groups
+                                const sharedGroups = prev.sharedGroups || []
+                                const updatedMatches = prev.currentTournament.matches.map(m => {
+                                  if (m.status !== 'pending') return m
+                                  if (sharedGroups.includes(m.groupId)) return m
+                                  const groupIdx = order.indexOf(m.groupId)
+                                  const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
+                                  return { ...m, court: newCourt as 'A' | 'B' }
+                                })
+                                return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order, matches: updatedMatches } }
+                              })
+                            }
+                            setDraggedGroupId(null)
+                            setDropTargetId(null)
+                          }}
+                        >
+                          <GripVertical className="w-4 h-4" />
+                        </span>
                       <span className="text-xs text-slate-300 flex-1 truncate">{group?.name}</span>
                       {group?.isNonBogu && (
                         <span className="text-[9px] px-1 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
@@ -4079,6 +4082,7 @@ const TournamentManager = memo(function TournamentManager({
                         >A+B</button>
                       </div>
                     </div>
+                  </div>
                   )
                 })}
               </div>
