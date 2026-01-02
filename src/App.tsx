@@ -5623,21 +5623,16 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     setState(prev => {
       if (!prev.currentTournament) return prev
       
-      // Get all pending match IDs in this group
+      // Get all match IDs in this group (pending only - in_progress stays where it is)
       const groupMatchIds = prev.currentTournament.matches
         .filter(m => m.groupId === groupId && m.status === 'pending')
         .map(m => m.id)
       
-      // Clear selected matches if they belong to this group and are being moved away
-      let newCourtASelected = prev.courtASelectedMatch
-      let newCourtBSelected = prev.courtBSelectedMatch
-      
-      if (newCourt === 'B' && newCourtASelected && groupMatchIds.includes(newCourtASelected)) {
-        newCourtASelected = null // Moving to B, clear A's selection
-      }
-      if (newCourt === 'A' && newCourtBSelected && groupMatchIds.includes(newCourtBSelected)) {
-        newCourtBSelected = null // Moving to A, clear B's selection
-      }
+      // Clear ANY selection if it's a match from this group
+      const newCourtASelected = prev.courtASelectedMatch && groupMatchIds.includes(prev.courtASelectedMatch) 
+        ? null : prev.courtASelectedMatch
+      const newCourtBSelected = prev.courtBSelectedMatch && groupMatchIds.includes(prev.courtBSelectedMatch) 
+        ? null : prev.courtBSelectedMatch
       
       const updatedMatches = prev.currentTournament.matches.map(m => 
         m.groupId === groupId && m.status === 'pending' ? { ...m, court: newCourt } : m
