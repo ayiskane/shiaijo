@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback, memo } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -1874,10 +1874,10 @@ const SpectatorPortal = memo(function SpectatorPortal({
       </main>
     </div>
   )
-}
+})
 
 // Admin Portal Component
-function AdminPortal({ 
+const AdminPortal = memo(function AdminPortal({ 
   state, 
   setState, 
   onSwitchPortal,
@@ -4880,10 +4880,10 @@ const AddMemberForm = memo(function AddMemberForm({
       </DialogFooter>
     </div>
   )
-}
+})
 
 // Courtkeeper Portal Component - Significantly Enhanced
-function CourtkeeperPortal({ 
+const CourtkeeperPortal = memo(function CourtkeeperPortal({ 
   state, 
   setState, 
   isMobile: _isMobile,
@@ -6069,5 +6069,5 @@ declare global {
       list: (prefix?: string, shared?: boolean) => Promise<{ keys: string[] } | null>
     }
   }
-})
+}
 
