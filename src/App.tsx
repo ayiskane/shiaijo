@@ -654,7 +654,7 @@ export default function App() {
             <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2a4a6f]/20 to-[#1e3a5f]/10 flex items-center justify-center mx-auto mb-4">
               <Swords className="w-8 h-8 text-[#4a8fd1]" />
             </div>
-            <h2 className="text-xl font-semibold text-white">Courtkeeper Mode</h2>
+            <h2 className="text-xl font-semibold text-white">Courtkeeper Portal</h2>
             <p className="text-[#6b8fad] text-sm mt-1">Enter password to continue</p>
           </div>
           <div className="space-y-4">
@@ -695,17 +695,9 @@ export default function App() {
           {/* Spectator Button */}
           <button 
             onClick={() => setPortal('spectator')}
-            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-3"
+            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-4"
           >
             <span>📱</span> Join as Spectator
-          </button>
-          
-          {/* Volunteer Button */}
-          <button 
-            onClick={() => setPortal('volunteer')}
-            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-4"
-          >
-            <span>💝</span> Volunteer Portal
           </button>
           
           {/* Divider */}
@@ -715,7 +707,7 @@ export default function App() {
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
           </div>
           
-          {/* Admin & Courtkeeper Buttons */}
+          {/* Admin, Courtkeeper & Volunteer Buttons */}
           <div className="space-y-3">
             <button 
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
@@ -729,8 +721,15 @@ export default function App() {
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
               className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] text-[#b8d4ec] border border-white/10 hover:from-[#2a4a6f] hover:to-[#1e3a5f] hover:text-white transition-all flex items-center justify-center gap-3"
             >
-              <span>⚔️</span> Courtkeeper Mode
+              <span>⚔️</span> Courtkeeper Portal
               {state.courtkeeperPassword && <span className="text-blue-200/70 text-xs">🔒</span>}
+            </button>
+            
+            <button 
+              onClick={() => setPortal('volunteer')}
+              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-pink-500 to-pink-600 text-white shadow-lg shadow-pink-500/30 hover:shadow-pink-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+            >
+              <span>💝</span> Volunteer Portal
             </button>
           </div>
           
@@ -808,6 +807,7 @@ function VolunteerPortal({
   const [newLastName, setNewLastName] = useState('')
   const [newPhone, setNewPhone] = useState('')
   const [selectedMembers, setSelectedMembers] = useState<string[]>([])
+  const [memberSearchQuery, setMemberSearchQuery] = useState('')
   
   // Log hours form
   const [logDate, setLogDate] = useState(new Date().toISOString().split('T')[0])
@@ -1230,8 +1230,19 @@ function VolunteerPortal({
             <div>
               <Label>Related Member(s)</Label>
               <p className="text-xs text-[#6b8fad] mb-2">Select the member(s) you're a parent/guardian of</p>
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b8fad]" />
+                <Input
+                  placeholder="Search members..."
+                  value={memberSearchQuery}
+                  onChange={(e) => setMemberSearchQuery(e.target.value)}
+                  className="pl-10 bg-[#1a2d42] border-[#1e3a5f] text-white h-9 text-sm"
+                />
+              </div>
               <ScrollArea className="h-40 border border-[#1e3a5f] rounded-lg p-2">
-                {state.members.map(member => (
+                {state.members
+                  .filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(memberSearchQuery.toLowerCase()))
+                  .map(member => (
                   <div 
                     key={member.id}
                     className="flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer"
@@ -1247,10 +1258,13 @@ function VolunteerPortal({
                     <span className="text-white">{member.firstName} {member.lastName}</span>
                   </div>
                 ))}
-                {state.members.length === 0 && (
-                  <p className="text-[#6b8fad] text-center py-4">No members available</p>
+                {state.members.filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(memberSearchQuery.toLowerCase())).length === 0 && (
+                  <p className="text-[#6b8fad] text-center py-4">{state.members.length === 0 ? 'No members available' : 'No matching members'}</p>
                 )}
               </ScrollArea>
+              {selectedMembers.length > 0 && (
+                <p className="text-xs text-emerald-400 mt-2">{selectedMembers.length} member(s) selected</p>
+              )}
             </div>
           </div>
           <DialogFooter>
@@ -3844,6 +3858,7 @@ function VolunteersTab({
   const [logDescription, setLogDescription] = useState('')
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'hours'>('name')
+  const [memberSearchQuery, setMemberSearchQuery] = useState('')
 
   const addVolunteer = () => {
     if (!newFirstName.trim() || !newLastName.trim()) return
@@ -4185,8 +4200,19 @@ function VolunteersTab({
             <div>
               <Label>Related Member(s)</Label>
               <p className="text-xs text-[#6b8fad] mb-2">Select the member(s) this volunteer is a parent/guardian of</p>
+              <div className="relative mb-2">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b8fad]" />
+                <Input
+                  placeholder="Search members..."
+                  value={memberSearchQuery}
+                  onChange={(e) => setMemberSearchQuery(e.target.value)}
+                  className="pl-10 bg-[#1a2d42] border-[#1e3a5f] text-white h-9 text-sm"
+                />
+              </div>
               <ScrollArea className="h-40 border border-[#1e3a5f] rounded-lg p-2">
-                {state.members.map(member => (
+                {state.members
+                  .filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(memberSearchQuery.toLowerCase()))
+                  .map(member => (
                   <div 
                     key={member.id}
                     className="flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer"
@@ -4202,10 +4228,13 @@ function VolunteersTab({
                     <span className="text-white">{member.firstName} {member.lastName}</span>
                   </div>
                 ))}
-                {state.members.length === 0 && (
-                  <p className="text-[#6b8fad] text-center py-4">No members available</p>
+                {state.members.filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(memberSearchQuery.toLowerCase())).length === 0 && (
+                  <p className="text-[#6b8fad] text-center py-4">{state.members.length === 0 ? 'No members available' : 'No matching members'}</p>
                 )}
               </ScrollArea>
+              {selectedMemberIds.length > 0 && (
+                <p className="text-xs text-emerald-400 mt-2">{selectedMemberIds.length} member(s) selected</p>
+              )}
             </div>
           </div>
           <DialogFooter>
