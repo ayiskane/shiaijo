@@ -1,5 +1,6 @@
 // Font Awesome Pro 7.1.0 Icons as React Components
 // Converted from SVG files
+import React from 'react'
 
 interface IconProps extends React.SVGProps<SVGSVGElement> {
   className?: string
