@@ -5624,14 +5624,11 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     setState(prev => {
       if (!prev.currentTournament) return prev
       
-      // Get all match IDs in this group
-      const groupMatchIds = prev.currentTournament.matches
-        .filter(m => m.groupId === groupId && m.status === 'pending')
-        .map(m => m.id)
-      
-      // Clear selections if they're matches from this group
-      const clearA = groupMatchIds.includes(prev.courtASelectedMatch || '')
-      const clearB = groupMatchIds.includes(prev.courtBSelectedMatch || '')
+      // Check if either court has a selected match from this group
+      const courtAMatch = prev.currentTournament.matches.find(m => m.id === prev.courtASelectedMatch)
+      const courtBMatch = prev.currentTournament.matches.find(m => m.id === prev.courtBSelectedMatch)
+      const clearA = courtAMatch?.groupId === groupId
+      const clearB = courtBMatch?.groupId === groupId
       
       const updatedMatches = prev.currentTournament.matches.map(m => 
         m.groupId === groupId && m.status === 'pending' ? { ...m, court: newCourt } : m
