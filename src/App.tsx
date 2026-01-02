@@ -168,6 +168,8 @@ const CourtAssignmentDnd = memo(function CourtAssignmentDnd({
     if (over && active.id !== over.id && tournament?.groupOrder) {
       const oldIndex = tournament.groupOrder.indexOf(active.id as string)
       const newIndex = tournament.groupOrder.indexOf(over.id as string)
+      // Don't move if indices are the same (no actual change)
+      if (oldIndex === newIndex || oldIndex === -1 || newIndex === -1) return
       const newOrder = arrayMove(tournament.groupOrder, oldIndex, newIndex)
       
       // Auto-stagger courts (A, B, A, B...) for non-shared groups
@@ -189,7 +191,7 @@ const CourtAssignmentDnd = memo(function CourtAssignmentDnd({
     }
   }
   
-  const activeGroup = activeId ? getGroupById(activeId) : null
+  const activeGroup = activeId ? getGroupById(activeId) : undefined
   const activeIsShared = activeId ? state.sharedGroups.includes(activeId) : false
   const activeGroupMatches = activeId ? (tournament.matches || []).filter(m => m.groupId === activeId) : []
   const activeGroupCourt = activeGroupMatches[0]?.court || 'A'
@@ -3741,13 +3743,8 @@ const TournamentManager = memo(function TournamentManager({
     })
   )
   
-  const handleDragStart = (event: { active: { id: string | number } }) => {
-    setActiveId(event.active.id as string)
-  }
-
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event
-    setActiveId(null)
     
     if (over && active.id !== over.id && tournament?.groupOrder) {
       const oldIndex = tournament.groupOrder.indexOf(active.id as string)
