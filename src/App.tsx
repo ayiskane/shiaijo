@@ -841,9 +841,12 @@ export default function App() {
           {/* Spectator Button - Glass style */}
           <button 
             onClick={() => setPortal('spectator')}
-            className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 flex items-center justify-center gap-3 mb-4 md:mb-5"
+            className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-emerald-950/40 backdrop-blur-sm text-emerald-300 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:bg-emerald-900/50 hover:border-emerald-400/50 hover:shadow-[0_0_25px_rgba(16,185,129,0.25)] hover:text-emerald-200 transition-all duration-300 mb-4 md:mb-5"
           >
-            <span className="w-6 flex justify-center"><Eye className="w-5 h-5" /></span><span>Join as Spectator</span>
+            <span className="flex items-center justify-center gap-3">
+              <Eye className="w-5 h-5 flex-shrink-0" />
+              <span>Join as Spectator</span>
+            </span>
           </button>
           
           {/* Divider */}
@@ -857,25 +860,34 @@ export default function App() {
           <div className="space-y-2 md:space-y-3">
             <button 
               onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-orange-950/40 backdrop-blur-sm text-orange-300 border border-orange-500/30 shadow-[0_0_15px_rgba(249,115,22,0.15)] hover:bg-orange-900/50 hover:border-orange-400/50 hover:shadow-[0_0_25px_rgba(249,115,22,0.25)] hover:text-orange-200 transition-all duration-300"
             >
-              <span className="w-6 flex justify-center"><Shield className="w-5 h-5" /></span><span>Admin Portal</span>
-              {state.adminPassword && <Lock className="w-3 h-3 md:w-4 md:h-4 ml-1 opacity-60" />}
+              <span className="flex items-center justify-center gap-3">
+                <Shield className="w-5 h-5 flex-shrink-0" />
+                <span>Admin Portal</span>
+                {state.adminPassword && <Lock className="w-3 h-3 md:w-4 md:h-4 opacity-60" />}
+              </span>
             </button>
             
             <button 
               onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300"
             >
-              <span className="w-6 flex justify-center"><Swords className="w-5 h-5" /></span><span>Courtkeeper Portal</span>
-              {state.courtkeeperPassword && <Lock className="w-3 h-3 md:w-4 md:h-4 ml-1 opacity-60" />}
+              <span className="flex items-center justify-center gap-3">
+                <Swords className="w-5 h-5 flex-shrink-0" />
+                <span>Courtkeeper Portal</span>
+                {state.courtkeeperPassword && <Lock className="w-3 h-3 md:w-4 md:h-4 opacity-60" />}
+              </span>
             </button>
             
             <button 
               onClick={() => setPortal('volunteer')}
-              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300 flex items-center justify-center gap-3"
+              className="w-full py-3 md:py-4 px-4 md:px-6 rounded-xl md:rounded-2xl text-sm md:text-base font-medium bg-pink-950/40 backdrop-blur-sm text-pink-300 border border-pink-500/30 shadow-[0_0_15px_rgba(236,72,153,0.15)] hover:bg-pink-900/50 hover:border-pink-400/50 hover:shadow-[0_0_25px_rgba(236,72,153,0.25)] hover:text-pink-200 transition-all duration-300"
             >
-              <span className="w-6 flex justify-center"><Heart className="w-5 h-5" /></span><span>Volunteer Portal</span>
+              <span className="flex items-center justify-center gap-3">
+                <Heart className="w-5 h-5 flex-shrink-0" />
+                <span>Volunteer Portal</span>
+              </span>
             </button>
           </div>
           
@@ -888,8 +900,8 @@ export default function App() {
               rel="noopener noreferrer"
               className="inline-flex items-center gap-1 text-orange-400 hover:text-orange-300 transition-colors"
             >
-              Renbu Dojo
-              <img src="/renbu-logo.png" alt="Renbu" className="w-4 h-4 inline-block" />
+              <img src="/renbu-logo.png" alt="Renbu" className="w-4 h-4" />
+              <span>Renbu Dojo</span>
               <span style={{ fontFamily: 'ShiaijoCalligraphy, serif' }}>錬武道場</span>
             </a>
           </p>
