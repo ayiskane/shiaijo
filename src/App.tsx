@@ -5821,6 +5821,11 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
             <span className={`px-2 py-1 rounded font-bold ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
               {selectedCourt === 'A' ? 'COURT A' : 'COURT B'}
             </span>
+            {currentMatch?.status === 'in_progress' && (
+              <span className="px-1.5 py-0.5 bg-emerald-500 text-white rounded text-[10px] font-bold animate-pulse">
+                ● LIVE
+              </span>
+            )}
             <span className="text-slate-400 font-semibold uppercase">{group?.name || 'No Match'}</span>
             {group?.isNonBogu && <span className="px-1.5 py-0.5 bg-orange-500/20 text-orange-400 rounded text-[10px]">Hantei</span>}
           </div>
