@@ -31,7 +31,7 @@ const ShiaijoLogo = ({ size = 48, glow = false }: { size?: number; glow?: boolea
 import { 
   Users, Settings, Trophy, Play, Pause, RotateCcw, 
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
-  Menu, Swords, UserPlus,
+  Menu, Swords, UserPlus, Home, Lock, Eye, EyeOff,
   CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Award, ChevronLeft, Undo2, ChevronDown, ChevronUp
 } from 'lucide-react'
@@ -141,6 +141,8 @@ interface AppState {
   history: TournamentHistory[]
   lastUpdated?: number
   useFirstNamesOnly: boolean
+  adminPassword: string
+  courtkeeperPassword: string
 }
 
 // Utility functions
@@ -412,6 +414,8 @@ const defaultState: AppState = {
   timerTarget: 180,
   history: [],
   useFirstNamesOnly: true,
+  adminPassword: '',
+  courtkeeperPassword: '',
 }
 
 // Device detection hook
@@ -432,7 +436,9 @@ const useDeviceDetection = () => {
 
 // Main App Component
 export default function App() {
-  const [portal, setPortal] = useState<'select' | 'admin' | 'courtkeeper' | 'spectator'>('select')
+  const [portal, setPortal] = useState<'select' | 'admin' | 'courtkeeper' | 'spectator' | 'admin-login' | 'courtkeeper-login'>('select')
+  const [passwordInput, setPasswordInput] = useState('')
+  const [passwordError, setPasswordError] = useState(false)
   const [state, setState] = useState<AppState>(defaultState)
   const [loading, setLoading] = useState(true)
   const isMobile = useDeviceDetection()
@@ -556,6 +562,100 @@ export default function App() {
     )
   }
 
+  // Handle password login attempts
+  const handlePasswordSubmit = (targetPortal: 'admin' | 'courtkeeper') => {
+    const requiredPassword = targetPortal === 'admin' ? state.adminPassword : state.courtkeeperPassword
+    if (passwordInput === requiredPassword) {
+      setPasswordInput('')
+      setPasswordError(false)
+      setPortal(targetPortal)
+    } else {
+      setPasswordError(true)
+    }
+  }
+
+  // Password login screen for admin
+  if (portal === 'admin-login') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
+        <Toaster theme="dark" position="top-center" />
+        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-12 max-w-md w-full shadow-2xl">
+          <button 
+            onClick={() => { setPortal('select'); setPasswordInput(''); setPasswordError(false) }}
+            className="text-[#6b8fad] hover:text-white text-sm mb-6 flex items-center gap-2"
+          >
+            ← Back
+          </button>
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500/20 to-orange-600/10 flex items-center justify-center mx-auto mb-4">
+              <Settings className="w-8 h-8 text-orange-500" />
+            </div>
+            <h2 className="text-xl font-semibold text-white">Admin Portal</h2>
+            <p className="text-[#6b8fad] text-sm mt-1">Enter password to continue</p>
+          </div>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Password"
+              value={passwordInput}
+              onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false) }}
+              onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit('admin')}
+              className={`bg-[#1a2d42] border-[#1e3a5f] text-white h-12 ${passwordError ? 'border-red-500' : ''}`}
+            />
+            {passwordError && <p className="text-red-400 text-sm">Incorrect password</p>}
+            <button 
+              onClick={() => handlePasswordSubmit('admin')}
+              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 transition-all"
+            >
+              Enter
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Password login screen for courtkeeper
+  if (portal === 'courtkeeper-login') {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
+        <Toaster theme="dark" position="top-center" />
+        <div className="bg-gradient-to-br from-[#0f1a24] to-[#142130] border border-white/5 rounded-3xl p-12 max-w-md w-full shadow-2xl">
+          <button 
+            onClick={() => { setPortal('select'); setPasswordInput(''); setPasswordError(false) }}
+            className="text-[#6b8fad] hover:text-white text-sm mb-6 flex items-center gap-2"
+          >
+            ← Back
+          </button>
+          <div className="text-center mb-8">
+            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-[#2a4a6f]/20 to-[#1e3a5f]/10 flex items-center justify-center mx-auto mb-4">
+              <Swords className="w-8 h-8 text-[#4a8fd1]" />
+            </div>
+            <h2 className="text-xl font-semibold text-white">Courtkeeper Mode</h2>
+            <p className="text-[#6b8fad] text-sm mt-1">Enter password to continue</p>
+          </div>
+          <div className="space-y-4">
+            <Input
+              type="password"
+              placeholder="Password"
+              value={passwordInput}
+              onChange={(e) => { setPasswordInput(e.target.value); setPasswordError(false) }}
+              onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit('courtkeeper')}
+              className={`bg-[#1a2d42] border-[#1e3a5f] text-white h-12 ${passwordError ? 'border-red-500' : ''}`}
+            />
+            {passwordError && <p className="text-red-400 text-sm">Incorrect password</p>}
+            <button 
+              onClick={() => handlePasswordSubmit('courtkeeper')}
+              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] text-white border border-white/10 hover:from-[#2a4a6f] hover:to-[#1e3a5f] transition-all"
+            >
+              Enter
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   if (portal === 'select') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-[#0a1017] via-[#0f1a24] to-[#0a1017] flex items-center justify-center p-5">
@@ -569,37 +669,39 @@ export default function App() {
             <p className="text-[#6b8fad] text-sm tracking-wide">Kendo Tournament Manager</p>
           </div>
           
-          {/* Main Buttons */}
-          <div className="space-y-4">
-            <button 
-              onClick={() => setPortal('admin')}
-              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
-            >
-              <span>🏟️</span> Enter Admin Portal
-            </button>
-            
-            <button 
-              onClick={() => setPortal('courtkeeper')}
-              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] text-[#b8d4ec] border border-white/10 hover:from-[#2a4a6f] hover:to-[#1e3a5f] hover:text-white transition-all flex items-center justify-center gap-3"
-            >
-              <span>⚔️</span> Courtkeeper Mode
-            </button>
-          </div>
+          {/* Spectator Button - First, no password needed */}
+          <button 
+            onClick={() => setPortal('spectator')}
+            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-emerald-500 to-emerald-600 text-white shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3 mb-4"
+          >
+            <span>📱</span> Join as Spectator
+          </button>
           
           {/* Divider */}
           <div className="flex items-center my-6">
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
-            <span className="px-4 text-xs text-[#3d5a78] uppercase tracking-widest">or</span>
+            <span className="px-4 text-xs text-[#3d5a78] uppercase tracking-widest">staff</span>
             <div className="flex-1 h-px bg-gradient-to-r from-transparent via-[#1e3a5f] to-transparent"></div>
           </div>
           
-          {/* Spectator Button */}
-          <button 
-            onClick={() => setPortal('spectator')}
-            className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-transparent text-[#6b8fad] border border-[#1e3a5f] hover:bg-[#1e3a5f]/30 hover:border-[#2a4a6f] hover:text-[#8fb3d1] transition-all flex items-center justify-center gap-3"
-          >
-            <span>📱</span> Join as Spectator
-          </button>
+          {/* Admin & Courtkeeper Buttons */}
+          <div className="space-y-3">
+            <button 
+              onClick={() => state.adminPassword ? setPortal('admin-login') : setPortal('admin')}
+              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-orange-500 to-orange-600 text-white shadow-lg shadow-orange-500/30 hover:shadow-orange-500/50 hover:-translate-y-0.5 transition-all flex items-center justify-center gap-3"
+            >
+              <span>🏟️</span> Admin Portal
+              {state.adminPassword && <span className="text-orange-200/70 text-xs">🔒</span>}
+            </button>
+            
+            <button 
+              onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
+              className="w-full py-4 px-6 rounded-xl text-base font-semibold bg-gradient-to-r from-[#1e3a5f] to-[#162d4a] text-[#b8d4ec] border border-white/10 hover:from-[#2a4a6f] hover:to-[#1e3a5f] hover:text-white transition-all flex items-center justify-center gap-3"
+            >
+              <span>⚔️</span> Courtkeeper Mode
+              {state.courtkeeperPassword && <span className="text-blue-200/70 text-xs">🔒</span>}
+            </button>
+          </div>
           
           {/* Footer */}
           <p className="text-center text-xs text-[#3d5a78] mt-8">
@@ -820,7 +922,7 @@ function AdminPortal({
   getMemberById: (id: string) => Member | undefined
   getGroupById: (id: string) => Group | undefined
 }) {
-  const [activeTab, setActiveTab] = useState('members')
+  const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState<string>('all')
@@ -1229,6 +1331,7 @@ function AdminPortal({
                 : null
             
             return [
+              { id: 'dashboard', icon: Home, label: 'Dashboard', badge: null },
               { id: 'members', icon: Users, label: 'Members', badge: null },
               { id: 'guests', icon: UserPlus, label: 'Guests', badge: null },
               { id: 'groups', icon: Filter, label: 'Groups', badge: null },
@@ -1296,6 +1399,7 @@ function AdminPortal({
             </div>
             <nav className="py-4">
               {[
+                { id: 'dashboard', icon: Home, label: 'Dashboard' },
                 { id: 'members', icon: Users, label: 'Members' },
                 { id: 'guests', icon: UserPlus, label: 'Guests' },
                 { id: 'groups', icon: Filter, label: 'Groups' },
@@ -1387,6 +1491,138 @@ function AdminPortal({
               </button>
             </div>
           </div>
+
+          {/* Dashboard Tab */}
+          {activeTab === 'dashboard' && (
+            <div className="space-y-6">
+              {/* Welcome Card */}
+              <Card className="bg-gradient-to-br from-[#142130] to-[#1a2d42] border-white/5">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <ShiaijoLogo size={60} glow />
+                    <div>
+                      <h2 className="text-2xl font-bold text-white">Welcome to 試合場</h2>
+                      <p className="text-[#6b8fad]">Kendo Tournament Manager</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Quick Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <Card className="bg-[#142130] border-white/5">
+                  <CardContent className="p-4 text-center">
+                    <Users className="w-8 h-8 text-orange-400 mx-auto mb-2" />
+                    <p className="text-3xl font-bold text-white">{state.members.length}</p>
+                    <p className="text-xs text-[#6b8fad]">Total Members</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-[#142130] border-white/5">
+                  <CardContent className="p-4 text-center">
+                    <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto mb-2" />
+                    <p className="text-3xl font-bold text-white">{state.members.filter(m => m.isParticipating).length}</p>
+                    <p className="text-xs text-[#6b8fad]">Participating</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-[#142130] border-white/5">
+                  <CardContent className="p-4 text-center">
+                    <Filter className="w-8 h-8 text-blue-400 mx-auto mb-2" />
+                    <p className="text-3xl font-bold text-white">{state.groups.length}</p>
+                    <p className="text-xs text-[#6b8fad]">Groups</p>
+                  </CardContent>
+                </Card>
+                <Card className="bg-[#142130] border-white/5">
+                  <CardContent className="p-4 text-center">
+                    <Trophy className="w-8 h-8 text-yellow-400 mx-auto mb-2" />
+                    <p className="text-3xl font-bold text-white">{state.history.length}</p>
+                    <p className="text-xs text-[#6b8fad]">Past Tournaments</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Tournament Status */}
+              <Card className="bg-[#142130] border-white/5">
+                <CardHeader>
+                  <CardTitle className="text-white flex items-center gap-2">
+                    <Trophy className="w-5 h-5 text-orange-400" />
+                    Current Tournament
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  {state.currentTournament ? (
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-white font-medium">{state.currentTournament.name}</p>
+                          <p className="text-sm text-[#6b8fad]">
+                            {state.currentTournament.date ? new Date(state.currentTournament.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : `${state.currentTournament.month} ${state.currentTournament.year}`}
+                          </p>
+                        </div>
+                        <Badge className={`${
+                          state.currentTournament.status === 'setup' ? 'bg-yellow-600' :
+                          state.currentTournament.status === 'in_progress' ? 'bg-emerald-600' :
+                          'bg-blue-600'
+                        }`}>
+                          {state.currentTournament.status === 'setup' ? 'Setup' : 
+                           state.currentTournament.status === 'in_progress' ? 'In Progress' : 'Completed'}
+                        </Badge>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button onClick={() => setActiveTab('tournament')} className="bg-orange-600 hover:bg-orange-700">
+                          <Play className="w-4 h-4 mr-2" /> Go to Tournament
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-8">
+                      <Trophy className="w-12 h-12 text-[#3d5a78] mx-auto mb-3" />
+                      <p className="text-[#6b8fad] mb-4">No active tournament</p>
+                      <Button onClick={() => setActiveTab('tournament')} className="bg-orange-600 hover:bg-orange-700">
+                        <Plus className="w-4 h-4 mr-2" /> Create Tournament
+                      </Button>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+
+              {/* Quick Actions */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card className="bg-[#142130] border-white/5 hover:border-orange-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('members')}>
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-orange-500/20 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-orange-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Manage Members</p>
+                      <p className="text-xs text-[#6b8fad]">Add, edit, or remove members</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-[#142130] border-white/5 hover:border-blue-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('groups')}>
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center">
+                      <Filter className="w-6 h-6 text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Manage Groups</p>
+                      <p className="text-xs text-[#6b8fad]">Configure rank groups</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card className="bg-[#142130] border-white/5 hover:border-emerald-500/30 transition-colors cursor-pointer" onClick={() => setActiveTab('settings')}>
+                  <CardContent className="p-6 flex items-center gap-4">
+                    <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center">
+                      <Settings className="w-6 h-6 text-emerald-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Settings</p>
+                      <p className="text-xs text-[#6b8fad]">Passwords & preferences</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
 
           {/* Members Tab */}
           {activeTab === 'members' && (
@@ -1557,6 +1793,97 @@ function AdminPortal({
                       onCheckedChange={(checked) => setState(prev => ({ ...prev, useFirstNamesOnly: checked }))}
                       className="data-[state=checked]:bg-orange-500"
                     />
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Security Settings */}
+              <Card className="bg-[#142130] border-white/5">
+                <CardHeader>
+                  <CardTitle className="text-white">Security</CardTitle>
+                  <CardDescription className="text-[#6b8fad]">Set passwords to protect portal access</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-3">
+                    <div>
+                      <Label className="text-sm text-[#8fb3d1]">Admin Password</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          type="password"
+                          placeholder={state.adminPassword ? '••••••••' : 'No password set'}
+                          className="bg-[#1a2d42] border-[#1e3a5f] text-white"
+                          onBlur={(e) => {
+                            if (e.target.value) {
+                              setState(prev => ({ ...prev, adminPassword: e.target.value }))
+                              toast.success('Admin password updated')
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && (e.target as HTMLInputElement).value) {
+                              setState(prev => ({ ...prev, adminPassword: (e.target as HTMLInputElement).value }))
+                              toast.success('Admin password updated')
+                              ;(e.target as HTMLInputElement).value = ''
+                            }
+                          }}
+                        />
+                        {state.adminPassword && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-red-800/50 text-red-400 hover:bg-red-900/30"
+                            onClick={() => {
+                              setState(prev => ({ ...prev, adminPassword: '' }))
+                              toast.success('Admin password removed')
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#6b8fad] mt-1">
+                        {state.adminPassword ? '🔒 Password protected' : 'Anyone can access admin portal'}
+                      </p>
+                    </div>
+                    
+                    <div>
+                      <Label className="text-sm text-[#8fb3d1]">Courtkeeper Password</Label>
+                      <div className="flex gap-2 mt-1">
+                        <Input
+                          type="password"
+                          placeholder={state.courtkeeperPassword ? '••••••••' : 'No password set'}
+                          className="bg-[#1a2d42] border-[#1e3a5f] text-white"
+                          onBlur={(e) => {
+                            if (e.target.value) {
+                              setState(prev => ({ ...prev, courtkeeperPassword: e.target.value }))
+                              toast.success('Courtkeeper password updated')
+                            }
+                          }}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && (e.target as HTMLInputElement).value) {
+                              setState(prev => ({ ...prev, courtkeeperPassword: (e.target as HTMLInputElement).value }))
+                              toast.success('Courtkeeper password updated')
+                              ;(e.target as HTMLInputElement).value = ''
+                            }
+                          }}
+                        />
+                        {state.courtkeeperPassword && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="border-red-800/50 text-red-400 hover:bg-red-900/30"
+                            onClick={() => {
+                              setState(prev => ({ ...prev, courtkeeperPassword: '' }))
+                              toast.success('Courtkeeper password removed')
+                            }}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                      </div>
+                      <p className="text-xs text-[#6b8fad] mt-1">
+                        {state.courtkeeperPassword ? '🔒 Password protected' : 'Anyone can access courtkeeper mode'}
+                      </p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
