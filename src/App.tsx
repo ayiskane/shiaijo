@@ -3502,7 +3502,7 @@ const TournamentManager = memo(function TournamentManager({
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
   const [touchDragId, setTouchDragId] = useState<string | null>(null)
-  const [touchTimeout, setTouchTimeout] = useState<NodeJS.Timeout | null>(null)
+  const [touchTimeout, setTouchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null)
   const tournament = state.currentTournament
 
   const startTournament = () => {
