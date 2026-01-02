@@ -3924,79 +3924,150 @@ const TournamentManager = memo(function TournamentManager({
 
             {/* Court Assignment & Group Order */}
             <div className="bg-[#1e3a5f]/20 rounded-lg p-2.5 border border-white/5">
-              <span className="text-xs text-[#8fb3d1] block mb-2">Court Assignment & Order (drag to reorder)</span>
+              <span className="text-xs text-[#8fb3d1] block mb-2">Court Assignment & Order</span>
               <div className="space-y-1">
-                {(tournament.groupOrder || []).map((groupId, idx) => {
+                {(tournament.groupOrder || []).map((groupId) => {
                   const group = getGroupById(groupId)
                   const isShared = state.sharedGroups.includes(groupId)
                   const groupMatches = (tournament.matches || []).filter(m => m.groupId === groupId)
                   const groupCourt = groupMatches[0]?.court || 'A'
-                  
-                  const setGroupCourt = (court: 'A' | 'B' | 'shared') => {
-                    if (court === 'shared') {
-                      setState(prev => ({
-                        ...prev,
-                        sharedGroups: prev.sharedGroups.includes(groupId) ? prev.sharedGroups : [...prev.sharedGroups, groupId]
-                      }))
-                    } else {
-                      setState(prev => {
-                        if (!prev.currentTournament) return prev
-                        const updatedMatches = prev.currentTournament.matches.map(m => 
-                          m.groupId === groupId && m.status === 'pending' ? { ...m, court } : m
-                        )
-                        return {
-                          ...prev,
-                          sharedGroups: prev.sharedGroups.filter(g => g !== groupId),
-                          currentTournament: { ...prev.currentTournament, matches: updatedMatches }
-                        }
-                      })
-                    }
-                  }
-                  
-                  const moveGroup = (direction: 'up' | 'down') => {
-                    const order = [...(tournament.groupOrder || [])]
-                    const newIdx = direction === 'up' ? idx - 1 : idx + 1
-                    if (newIdx < 0 || newIdx >= order.length) return
-                    [order[idx], order[newIdx]] = [order[newIdx], order[idx]]
-                    setState(prev => ({
-                      ...prev,
-                      currentTournament: prev.currentTournament ? { ...prev.currentTournament, groupOrder: order } : null
-                    }))
-                  }
+                  const isDragging = draggedGroupId === groupId
+                  const isDropTarget = dropTargetId === groupId && draggedGroupId !== groupId
                   
                   return (
-                    <div key={groupId} className="flex items-center gap-1.5 py-0.5">
-                      <div className="flex flex-col">
-                        <button
-                          onClick={() => moveGroup('up')}
-                          disabled={idx === 0}
-                          className="text-slate-500 hover:text-slate-300 disabled:opacity-30 disabled:hover:text-slate-500"
-                        >
-                          <ChevronUp className="w-3 h-3" />
-                        </button>
-                        <button
-                          onClick={() => moveGroup('down')}
-                          disabled={idx === (tournament.groupOrder?.length || 0) - 1}
-                          className="text-slate-500 hover:text-slate-300 disabled:opacity-30 disabled:hover:text-slate-500"
-                        >
-                          <ChevronDown className="w-3 h-3" />
-                        </button>
-                      </div>
+                    <div 
+                      key={groupId}
+                      data-group-order-id={groupId}
+                      draggable
+                      onDragStart={(e) => {
+                        setDraggedGroupId(groupId)
+                        e.dataTransfer.effectAllowed = 'move'
+                      }}
+                      onDragEnd={() => { setDraggedGroupId(null); setDropTargetId(null) }}
+                      onDragOver={(e) => {
+                        if (!draggedGroupId || draggedGroupId === groupId) return
+                        e.preventDefault()
+                        e.dataTransfer.dropEffect = 'move'
+                        setDropTargetId(groupId)
+                      }}
+                      onDragLeave={() => { if (dropTargetId === groupId) setDropTargetId(null) }}
+                      onDrop={(e) => {
+                        e.preventDefault()
+                        if (draggedGroupId && draggedGroupId !== groupId) {
+                          // Reorder groupOrder
+                          setState(prev => {
+                            if (!prev.currentTournament) return prev
+                            const order = [...(prev.currentTournament.groupOrder || [])]
+                            const draggedIdx = order.indexOf(draggedGroupId)
+                            const targetIdx = order.indexOf(groupId)
+                            if (draggedIdx === -1 || targetIdx === -1) return prev
+                            const [dragged] = order.splice(draggedIdx, 1)
+                            order.splice(targetIdx, 0, dragged)
+                            return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order } }
+                          })
+                        }
+                        setDraggedGroupId(null)
+                        setDropTargetId(null)
+                      }}
+                      className={`relative flex items-center gap-1.5 py-1 px-1 rounded select-none transition-all duration-150 ${
+                        isDragging ? 'opacity-50 scale-95 bg-amber-900/30 border border-amber-500' :
+                        isDropTarget ? 'bg-slate-700/50' : 'hover:bg-slate-800/30'
+                      }`}
+                    >
+                      {/* Drop indicator */}
+                      {isDropTarget && (
+                        <div className="absolute -top-0.5 left-1 right-1 h-0.5 bg-amber-400 rounded-full shadow-[0_0_8px_rgba(251,191,36,0.6)]" />
+                      )}
+                      {/* Drag handle with touch support */}
+                      <span 
+                        className="text-slate-500 cursor-grab active:cursor-grabbing p-1 -m-0.5 hover:text-slate-400"
+                        style={{ touchAction: 'none' }}
+                        onTouchStart={(e) => {
+                          e.stopPropagation()
+                          setDraggedGroupId(groupId)
+                        }}
+                        onTouchMove={(e) => {
+                          if (!draggedGroupId) return
+                          e.preventDefault()
+                          e.stopPropagation()
+                          const touch = e.touches[0]
+                          const el = document.elementFromPoint(touch.clientX, touch.clientY)
+                          const groupEl = el?.closest('[data-group-order-id]')
+                          if (groupEl) {
+                            const targetId = groupEl.getAttribute('data-group-order-id')
+                            if (targetId && targetId !== draggedGroupId) {
+                              setDropTargetId(targetId)
+                            }
+                          } else {
+                            setDropTargetId(null)
+                          }
+                        }}
+                        onTouchEnd={() => {
+                          if (draggedGroupId && dropTargetId && draggedGroupId !== dropTargetId) {
+                            setState(prev => {
+                              if (!prev.currentTournament) return prev
+                              const order = [...(prev.currentTournament.groupOrder || [])]
+                              const draggedIdx = order.indexOf(draggedGroupId)
+                              const targetIdx = order.indexOf(dropTargetId)
+                              if (draggedIdx === -1 || targetIdx === -1) return prev
+                              const [dragged] = order.splice(draggedIdx, 1)
+                              order.splice(targetIdx, 0, dragged)
+                              return { ...prev, currentTournament: { ...prev.currentTournament, groupOrder: order } }
+                            })
+                          }
+                          setDraggedGroupId(null)
+                          setDropTargetId(null)
+                        }}
+                      >
+                        <GripVertical className="w-4 h-4" />
+                      </span>
                       <span className="text-xs text-slate-300 flex-1 truncate">{group?.name}</span>
                       {group?.isNonBogu && (
                         <span className="text-[9px] px-1 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
                       )}
                       <div className="flex rounded overflow-hidden border border-slate-700">
                         <button
-                          onClick={() => setGroupCourt('A')}
+                          onClick={(e) => { 
+                            e.stopPropagation()
+                            setState(prev => {
+                              if (!prev.currentTournament) return prev
+                              const updatedMatches = prev.currentTournament.matches.map(m => 
+                                m.groupId === groupId && m.status === 'pending' ? { ...m, court: 'A' as const } : m
+                              )
+                              return {
+                                ...prev,
+                                sharedGroups: prev.sharedGroups.filter(g => g !== groupId),
+                                currentTournament: { ...prev.currentTournament, matches: updatedMatches }
+                              }
+                            })
+                          }}
                           className={`w-7 h-6 text-[10px] font-bold ${!isShared && groupCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
                         >A</button>
                         <button
-                          onClick={() => setGroupCourt('B')}
+                          onClick={(e) => { 
+                            e.stopPropagation()
+                            setState(prev => {
+                              if (!prev.currentTournament) return prev
+                              const updatedMatches = prev.currentTournament.matches.map(m => 
+                                m.groupId === groupId && m.status === 'pending' ? { ...m, court: 'B' as const } : m
+                              )
+                              return {
+                                ...prev,
+                                sharedGroups: prev.sharedGroups.filter(g => g !== groupId),
+                                currentTournament: { ...prev.currentTournament, matches: updatedMatches }
+                              }
+                            })
+                          }}
                           className={`w-7 h-6 text-[10px] font-bold border-x border-slate-700 ${!isShared && groupCourt === 'B' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
                         >B</button>
                         <button
-                          onClick={() => setGroupCourt('shared')}
+                          onClick={(e) => { 
+                            e.stopPropagation()
+                            setState(prev => ({
+                              ...prev,
+                              sharedGroups: prev.sharedGroups.includes(groupId) ? prev.sharedGroups : [...prev.sharedGroups, groupId]
+                            }))
+                          }}
                           className={`px-1.5 h-6 text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-500 hover:bg-slate-700'}`}
                         >A+B</button>
                       </div>
