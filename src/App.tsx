@@ -5544,11 +5544,22 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
 
   // Select a specific match to play next (override queue)
   const selectMatch = (matchId: string) => {
-    if (selectedCourt === 'A') {
-      setState(prev => ({ ...prev, courtASelectedMatch: matchId }))
-    } else {
-      setState(prev => ({ ...prev, courtBSelectedMatch: matchId }))
-    }
+    setState(prev => {
+      // Clear the other court's selection if they had the same match
+      if (selectedCourt === 'A') {
+        return { 
+          ...prev, 
+          courtASelectedMatch: matchId,
+          courtBSelectedMatch: prev.courtBSelectedMatch === matchId ? null : prev.courtBSelectedMatch
+        }
+      } else {
+        return { 
+          ...prev, 
+          courtBSelectedMatch: matchId,
+          courtASelectedMatch: prev.courtASelectedMatch === matchId ? null : prev.courtASelectedMatch
+        }
+      }
+    })
     toast.success('Match selected - will start next')
   }
 
@@ -6332,10 +6343,12 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                     {groupMatches.map((match) => {
                       const mp1 = getMemberById(match.player1Id)
                       const mp2 = getMemberById(match.player2Id)
-                      const isSelected = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
+                      const isSelectedByThisCourt = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
+                      const isSelectedByOtherCourt = match.id === (selectedCourt === 'A' ? selectedMatchIdB : selectedMatchIdA)
+                      const isSelected = isSelectedByThisCourt || isSelectedByOtherCourt
                       const isLiveOnThisCourt = match.status === 'in_progress' && match.court === selectedCourt
                       const isLiveOnOtherCourt = match.status === 'in_progress' && match.court !== selectedCourt
-                      const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt
+                      const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt
                       const isDragging = draggedMatchId === match.id
                       const isDragTarget = draggedMatchId && draggedMatchId !== match.id && canDrag
                       const isDropTarget = dropTargetId === match.id
@@ -6365,13 +6378,14 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                             setDropTargetId(null)
                           }}
                           data-match-id={match.id}
-                          onClick={() => { if (!isLiveOnThisCourt && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
+                          onClick={() => { if (!isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
                           className={`relative w-full p-2 rounded-lg mb-1 text-xs cursor-pointer select-none transition-all duration-200 ease-out ${
                             isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400 z-50' :
                             isDropTarget ? 'translate-y-1 bg-slate-800/80' :
                             isLiveOnThisCourt ? 'bg-emerald-900/30 border border-emerald-600' 
                             : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
-                            : isSelected ? 'bg-amber-900/30 border border-amber-500'
+                            : isSelectedByThisCourt ? 'bg-amber-900/30 border border-amber-500'
+                            : isSelectedByOtherCourt ? 'bg-slate-800/30 border border-slate-600 opacity-50'
                             : 'bg-slate-800/50 hover:bg-slate-800'
                           }`}
                         >
@@ -6380,7 +6394,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                             <div className="absolute -top-1.5 left-2 right-2 h-1 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-pulse" />
                           )}
                           <div className="flex items-center">
-                            {canDrag && !isSelected && !isLiveOnThisCourt && (
+                            {canDrag && !isSelectedByThisCourt && !isLiveOnThisCourt && (
                               <span 
                                 className="text-slate-600 mr-2 cursor-grab active:cursor-grabbing p-2 -m-1"
                                 style={{ touchAction: 'none' }}
@@ -6423,7 +6437,12 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                                 {match.court}
                               </span>
                             )}
-                            {isSelected && !isLiveOnThisCourt && !isLiveOnOtherCourt && <span className="text-[8px] px-1 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
+                            {isSelectedByThisCourt && !isLiveOnThisCourt && <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
+                            {isSelectedByOtherCourt && !isLiveOnOtherCourt && (
+                              <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 opacity-60 ${selectedCourt === 'A' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-black'}`}>
+                                NEXT {selectedCourt === 'A' ? 'B' : 'A'}
+                              </span>
+                            )}
                             <span className="text-red-400 truncate flex-1 text-left">
                               {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
                             </span>
