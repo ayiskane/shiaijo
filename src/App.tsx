@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, memo } from 'react'
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core'
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core'
+import type { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
@@ -9,14 +10,12 @@ const SortableGroupCard = ({
   id, 
   children, 
   isShared, 
-  isCourtA, 
-  isCourtB 
+  isCourtA
 }: { 
   id: string
   children: React.ReactNode
   isShared: boolean
   isCourtA: boolean
-  isCourtB: boolean
 }) => {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({ id })
   
@@ -3691,17 +3690,6 @@ const TournamentManager = memo(function TournamentManager({
     toast.success(`Updated ${field} for all ${getGroupById(groupId)?.name || 'group'} matches`)
   }
 
-  const reorderTournamentGroups = (draggedId: string, targetId: string) => {
-    if (!tournament || !tournament.groupOrder || draggedId === targetId) return
-    const currentOrder = [...tournament.groupOrder]
-    const draggedIdx = currentOrder.indexOf(draggedId)
-    const targetIdx = currentOrder.indexOf(targetId)
-    if (draggedIdx === -1 || targetIdx === -1) return
-    currentOrder.splice(draggedIdx, 1)
-    currentOrder.splice(targetIdx, 0, draggedId)
-    setState(prev => ({
-      ...prev,
-      currentTournament: { ...tournament, groupOrder: currentOrder }
     }))
   }
 
@@ -3996,7 +3984,6 @@ const TournamentManager = memo(function TournamentManager({
                 id={groupId}
                 isShared={isShared}
                 isCourtA={isCourtA}
-                isCourtB={isCourtB}
               >
                 <CardHeader className="p-3 pb-2">
                   {/* Row 1: Drag handle, collapse toggle, court badge, group name, edit, progress */}
