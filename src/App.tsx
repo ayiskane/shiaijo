@@ -719,9 +719,6 @@ export default function App() {
   }, [state.members])
   const getGroupById = useCallback((id: string) => state.groups.find(g => g.id === id), [state.groups])
   
-  // Memoized counts
-  const participantCount = useMemo(() => state.members.filter(m => m.isParticipating).length, [state.members])
-
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a1017] flex flex-col items-center justify-center">
@@ -3407,7 +3404,6 @@ const TournamentManager = memo(function TournamentManager({
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()])
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
-  const [showEditTournament, setShowEditTournament] = useState(false)
   const [collapsedGroups, setCollapsedGroups] = useState<string[]>([])
   const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
   const tournament = state.currentTournament
@@ -3517,9 +3513,6 @@ const TournamentManager = memo(function TournamentManager({
     }))
     toast.success(`Updated ${field} for all ${getGroupById(groupId)?.name || 'group'} matches`)
   }
-
-  // Track dragged group in tournament
-  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
 
   const reorderTournamentGroups = (draggedId: string, targetId: string) => {
     if (!tournament || !tournament.groupOrder || draggedId === targetId) return
@@ -3661,15 +3654,7 @@ const TournamentManager = memo(function TournamentManager({
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
-              {tournament.status === 'setup' && (
-                <button
-                  onClick={() => setShowEditTournament(true)}
-                  className="p-1.5 rounded-lg bg-[#1e3a5f]/50 hover:bg-[#1e3a5f] text-[#8fb3d1] hover:text-white transition"
-                  title="Edit Tournament"
-                >
-                  <Pencil className="w-4 h-4" />
-                </button>
-              )}
+
               <Badge className={`text-sm px-3 py-1 ${
                 tournament.status === 'setup' ? 'bg-yellow-600' :
                 tournament.status === 'in_progress' ? (isComplete ? 'bg-emerald-600' : 'bg-amber-500') :
