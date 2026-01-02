@@ -5588,7 +5588,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const [pendingWinner, setPendingWinner] = useState<'player1' | 'player2' | null>(null)
   const [modalDismissedForMatch, setModalDismissedForMatch] = useState<string | null>(null)
   const [draggedMatchId, setDraggedMatchId] = useState<string | null>(null)
-  const [touchStartY, setTouchStartY] = useState<number | null>(null)
   const [dropTargetId, setDropTargetId] = useState<string | null>(null)
   
   // Detect when someone wins and show modal, or close if score undone
@@ -6220,7 +6219,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                                 style={{ touchAction: 'none' }}
                                 onTouchStart={(e) => {
                                   e.stopPropagation()
-                                  setTouchStartY(e.touches[0].clientY)
                                   setDraggedMatchId(match.id)
                                 }}
                                 onTouchMove={(e) => {
@@ -6244,7 +6242,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                                     reorderMatch(draggedMatchId, dropTargetId)
                                   }
                                   setDraggedMatchId(null)
-                                  setTouchStartY(null)
                                   setDropTargetId(null)
                                 }}
                               >☰</span>
