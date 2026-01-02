@@ -6195,24 +6195,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                             }
                             setDraggedMatchId(null)
                           }}
-                          onTouchMove={(e) => {
-                            // Only handle if we're already dragging (started from handle)
-                            if (!draggedMatchId || touchStartY === null) return
-                            e.preventDefault()
-                            const touch = e.touches[0]
-                            const target = document.elementFromPoint(touch.clientX, touch.clientY)
-                            const matchEl = target?.closest('[data-match-id]')
-                            if (matchEl) {
-                              const targetId = matchEl.getAttribute('data-match-id')
-                              if (targetId && targetId !== draggedMatchId) {
-                                reorderMatch(draggedMatchId, targetId)
-                              }
-                            }
-                          }}
-                          onTouchEnd={() => {
-                            setDraggedMatchId(null)
-                            setTouchStartY(null)
-                          }}
                           data-match-id={match.id}
                           onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
                           className={`w-full p-2 rounded-lg mb-1 text-xs transition-all cursor-pointer select-none ${
@@ -6227,12 +6209,30 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                           <div className="flex items-center">
                             {canDrag && !isSelected && !isCurrentlyPlaying && (
                               <span 
-                                className="text-slate-600 mr-2 cursor-grab active:cursor-grabbing p-1 -m-1"
+                                className="text-slate-600 mr-2 cursor-grab active:cursor-grabbing p-2 -m-1"
                                 style={{ touchAction: 'none' }}
                                 onTouchStart={(e) => {
                                   e.stopPropagation()
                                   setTouchStartY(e.touches[0].clientY)
                                   setDraggedMatchId(match.id)
+                                }}
+                                onTouchMove={(e) => {
+                                  if (!draggedMatchId) return
+                                  e.preventDefault()
+                                  e.stopPropagation()
+                                  const touch = e.touches[0]
+                                  const target = document.elementFromPoint(touch.clientX, touch.clientY)
+                                  const matchEl = target?.closest('[data-match-id]')
+                                  if (matchEl) {
+                                    const targetId = matchEl.getAttribute('data-match-id')
+                                    if (targetId && targetId !== draggedMatchId) {
+                                      reorderMatch(draggedMatchId, targetId)
+                                    }
+                                  }
+                                }}
+                                onTouchEnd={() => {
+                                  setDraggedMatchId(null)
+                                  setTouchStartY(null)
                                 }}
                               >☰</span>
                             )}
