@@ -33,7 +33,7 @@ import {
   Plus, Trash2, Upload, Search, Filter, X, Edit2,
   Menu, Swords, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
-  ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Heart, Clock,
+  ArrowLeftRight, Award, ChevronLeft, ChevronRight, Pencil, Undo2, ChevronDown, ChevronUp, Heart, Clock,
   Eye, Shield, Lock
 } from 'lucide-react'
 
@@ -884,7 +884,7 @@ export default function App() {
           
           {/* Footer */}
           <p className="text-center text-[10px] md:text-xs text-[#3d5a78] mt-6 md:mt-8">
-            Powered by <span className="text-orange-500">Renbu Dojo</span>
+            Powered by <span className="text-orange-500">Renbu Dojo</span> <span style={{ fontFamily: 'ShiaijoCalligraphy, serif' }} className="text-orange-400">錬武道場</span>
           </p>
         </div>
       </div>
@@ -1893,6 +1893,7 @@ function AdminPortal({
 }) {
   const [activeTab, setActiveTab] = useState('dashboard')
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [expandedGroups, setExpandedGroups] = useState<string[]>(['roster', 'shiai', 'admin'])
   const [searchQuery, setSearchQuery] = useState('')
   const [filterGroup, setFilterGroup] = useState<string>('all')
   const [sortBy] = useState<'name' | 'group'>('name')
@@ -2068,7 +2069,7 @@ function AdminPortal({
       matches: allMatches,
       groups: [...participantsByGroup.keys()],
       groupOrder,
-      timerOptions: [120, 180, 240, 300],
+      timerOptions: [60, 120, 180],
       defaultTimerDuration: 180,
     }
     
@@ -2260,7 +2261,6 @@ function AdminPortal({
         </button>
 
         <nav className="flex-1 py-4 overflow-y-auto">
-          {!sidebarCollapsed && <p className="px-4 mb-2 text-xs text-[#6b8fad] uppercase tracking-wider">Menu</p>}
           {(() => {
             // Determine upcoming month indicator
             const now = new Date()
@@ -2271,12 +2271,10 @@ function AdminPortal({
             const nextMonth = MONTHS[(now.getMonth() + 1) % 12]
             const nextYear = now.getMonth() === 11 ? currentYear + 1 : currentYear
             
-            // Check if current month has results
             const hasCurrentMonthResults = (state.history || []).some(h => 
               h.month === currentMonth && h.year === currentYear
             ) || (state.currentTournament?.month === currentMonth && state.currentTournament?.year === currentYear)
             
-            // Upcoming is next month if: past first 2 weeks OR current month already has results
             const upcomingMonth = (!isFirstTwoWeeks || hasCurrentMonthResults) ? nextMonth : currentMonth
             const upcomingYear = (!isFirstTwoWeeks || hasCurrentMonthResults) ? nextYear : currentYear
             
@@ -2285,46 +2283,78 @@ function AdminPortal({
               : (state.currentTournament?.month === upcomingMonth && state.currentTournament?.year === upcomingYear)
                 ? upcomingMonth.slice(0, 3)
                 : null
-            
-            return [
-              { id: 'dashboard', icon: Home, label: 'Dashboard', badge: null },
-              { id: 'members', icon: Users, label: 'Members', badge: null },
-              { id: 'guests', icon: UserPlus, label: 'Guests', badge: null },
-              { id: 'groups', icon: Filter, label: 'Groups', badge: null },
-              { id: 'tournament', icon: Trophy, label: 'Tournament', badge: tournamentBadge, badgeColor: state.currentTournament?.status === 'in_progress' ? 'green' : 'amber' },
-              { id: 'standings', icon: Table, label: 'Standings', badge: null },
-              { id: 'history', icon: History, label: 'History', badge: null },
-              { id: 'volunteers', icon: Heart, label: 'Volunteers', badge: null },
-              { id: 'settings', icon: Settings, label: 'Settings', badge: null },
-            ]
-          })().map(item => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              title={sidebarCollapsed ? item.label : undefined}
-              className={`w-full flex items-center gap-3 px-4 py-3 transition-colors ${
-                activeTab === item.id 
-                  ? 'text-orange-400 bg-gradient-to-r from-orange-500/10 to-transparent border-l-2 border-orange-500' 
-                  : 'text-[#8fb3d1] hover:text-white hover:bg-white/5'
-              }`}
-            >
-              <div className={`w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0 ${activeTab === item.id ? 'bg-orange-500/20' : 'bg-[#1a2d42]'}`}>
-                <item.icon className="w-5 h-5" />
-              </div>
-              {!sidebarCollapsed && (
-                <>
-                  <span className="font-medium">{item.label}</span>
-                  {item.badge && (
-                    <span className={`ml-auto px-2 py-0.5 text-xs rounded-full border ${
-                      item.badgeColor === 'green' 
-                        ? 'bg-green-500/20 text-green-400 border-green-500/30' 
-                        : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
-                    }`}>{item.badge}</span>
+
+            const NavItem = ({ id, icon: Icon, label, badge, badgeColor }: { id: string, icon: any, label: string, badge?: string | null, badgeColor?: string }) => (
+              <button
+                onClick={() => setActiveTab(id)}
+                title={sidebarCollapsed ? label : undefined}
+                className={`w-full flex items-center gap-2 px-3 py-2 transition-colors ${
+                  activeTab === id 
+                    ? 'text-orange-400 bg-gradient-to-r from-orange-500/10 to-transparent border-l-2 border-orange-500' 
+                    : 'text-[#8fb3d1] hover:text-white hover:bg-white/5'
+                }`}
+              >
+                <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${activeTab === id ? 'bg-orange-500/20' : 'bg-[#1a2d42]'}`}>
+                  <Icon className="w-4 h-4" />
+                </div>
+                {!sidebarCollapsed && (
+                  <>
+                    <span className="text-sm">{label}</span>
+                    {badge && (
+                      <span className={`ml-auto px-1.5 py-0.5 text-[10px] rounded-full border ${
+                        badgeColor === 'green' 
+                          ? 'bg-green-500/20 text-green-400 border-green-500/30' 
+                          : 'bg-amber-500/20 text-amber-400 border-amber-500/30'
+                      }`}>{badge}</span>
+                    )}
+                  </>
+                )}
+              </button>
+            )
+
+            const NavGroup = ({ groupId, label, children }: { groupId: string, label: string, children: React.ReactNode }) => {
+              const isExpanded = expandedGroups.includes(groupId)
+              return (
+                <div className="mb-1">
+                  {!sidebarCollapsed && (
+                    <button
+                      onClick={() => setExpandedGroups(prev => 
+                        prev.includes(groupId) ? prev.filter(g => g !== groupId) : [...prev, groupId]
+                      )}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[10px] text-[#6b8fad] uppercase tracking-wider hover:text-white/70"
+                    >
+                      <ChevronDown className={`w-3 h-3 transition-transform ${isExpanded ? '' : '-rotate-90'}`} />
+                      {label}
+                    </button>
                   )}
-                </>
-              )}
-            </button>
-          ))}
+                  {(sidebarCollapsed || isExpanded) && children}
+                </div>
+              )
+            }
+
+            return (
+              <>
+                <NavItem id="dashboard" icon={Home} label="Dashboard" />
+                
+                <NavGroup groupId="roster" label="Roster">
+                  <NavItem id="members" icon={Users} label="Members" />
+                  <NavItem id="guests" icon={UserPlus} label="Guests" />
+                  <NavItem id="groups" icon={Filter} label="Groups" />
+                </NavGroup>
+                
+                <NavGroup groupId="shiai" label="Shiai">
+                  <NavItem id="tournament" icon={Trophy} label="Tournament" badge={tournamentBadge} badgeColor={state.currentTournament?.status === 'in_progress' ? 'green' : 'amber'} />
+                  <NavItem id="standings" icon={Table} label="Results" />
+                  <NavItem id="history" icon={History} label="History" />
+                </NavGroup>
+                
+                <NavGroup groupId="admin" label="Administrative">
+                  <NavItem id="volunteers" icon={Heart} label="Volunteers" />
+                  <NavItem id="settings" icon={Settings} label="Settings" />
+                </NavGroup>
+              </>
+            )
+          })()}
         </nav>
 
         <div className="p-4 border-t border-white/5">
@@ -2374,7 +2404,7 @@ function AdminPortal({
                 { id: 'guests', icon: UserPlus, label: 'Guests' },
                 { id: 'groups', icon: Filter, label: 'Groups' },
                 { id: 'tournament', icon: Trophy, label: 'Tournament' },
-                { id: 'standings', icon: Table, label: 'Standings' },
+                { id: 'standings', icon: Table, label: 'Results' },
                 { id: 'history', icon: History, label: 'History' },
                 { id: 'volunteers', icon: Heart, label: 'Volunteers' },
                 { id: 'settings', icon: Settings, label: 'Settings' },
@@ -3375,6 +3405,7 @@ const TournamentManager = memo(function TournamentManager({
   const [selectedMonth, setSelectedMonth] = useState(MONTHS[new Date().getMonth()])
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear())
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [showEditTournament, setShowEditTournament] = useState(false)
   const tournament = state.currentTournament
 
   const startTournament = () => {
@@ -3625,13 +3656,24 @@ const TournamentManager = memo(function TournamentManager({
                 {tournament.date ? new Date(tournament.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : `${tournament.month} ${tournament.year}`}
               </CardDescription>
             </div>
-            <Badge className={`text-sm px-3 py-1 ${
-              tournament.status === 'setup' ? 'bg-yellow-600' :
-              tournament.status === 'in_progress' ? (isComplete ? 'bg-emerald-600' : 'bg-amber-500') :
-              'bg-emerald-600'
-            }`}>
-              {tournament.status === 'setup' ? 'Setup' : tournament.status === 'in_progress' ? (isComplete ? 'Complete!' : 'In Progress') : 'Completed'}
-            </Badge>
+            <div className="flex items-center gap-2">
+              {tournament.status === 'setup' && (
+                <button
+                  onClick={() => setShowEditTournament(true)}
+                  className="p-1.5 rounded-lg bg-[#1e3a5f]/50 hover:bg-[#1e3a5f] text-[#8fb3d1] hover:text-white transition"
+                  title="Edit Tournament"
+                >
+                  <Pencil className="w-4 h-4" />
+                </button>
+              )}
+              <Badge className={`text-sm px-3 py-1 ${
+                tournament.status === 'setup' ? 'bg-yellow-600' :
+                tournament.status === 'in_progress' ? (isComplete ? 'bg-emerald-600' : 'bg-amber-500') :
+                'bg-emerald-600'
+              }`}>
+                {tournament.status === 'setup' ? 'Setup' : tournament.status === 'in_progress' ? (isComplete ? 'Complete!' : 'In Progress') : 'Completed'}
+              </Badge>
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -3642,7 +3684,7 @@ const TournamentManager = memo(function TournamentManager({
                 style={{ width: `${(completedMatches / totalMatches) * 100}%` }}
               />
             </div>
-            <span className="text-[#b8d4ec] text-sm">{completedMatches}/{totalMatches} matches</span>
+            <span className="text-[#b8d4ec] text-sm">{completedMatches}/{totalMatches} <span className="text-[#6b8fad]">Matches Completed</span></span>
           </div>
 
           <div className="grid grid-cols-2 gap-2 sm:gap-4">
@@ -3656,7 +3698,7 @@ const TournamentManager = memo(function TournamentManager({
             </div>
           </div>
 
-          {/* Volunteer Courtkeepers */}
+          {/* Volunteer Cards */}
           {(() => {
             const courtkeeperVolunteers = state.volunteers.filter(v => 
               v.signups.some(s => s.isShiaiSignup && s.tournamentId === tournament.id && s.shiaiRole === 'courtkeeper')
@@ -3666,22 +3708,34 @@ const TournamentManager = memo(function TournamentManager({
             )
             if (courtkeeperVolunteers.length === 0 && generalVolunteers.length === 0) return null
             return (
-              <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Heart className="w-4 h-4 text-pink-400" />
-                  <span className="text-sm font-medium text-pink-400">Volunteers Signed Up</span>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-sky-900/20 border border-sky-700/30 rounded-lg p-2">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Swords className="w-3 h-3 text-sky-400" />
+                    <span className="text-xs font-medium text-sky-400">Courtkeepers</span>
+                    <span className="text-[10px] text-sky-300 ml-auto">{courtkeeperVolunteers.length}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {courtkeeperVolunteers.length > 0 ? courtkeeperVolunteers.map(v => (
+                      <span key={v.id} className="px-1.5 py-0.5 bg-sky-500/20 text-sky-300 text-[10px] rounded">
+                        {v.firstName}
+                      </span>
+                    )) : <span className="text-[10px] text-[#6b8fad]">None</span>}
+                  </div>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {courtkeeperVolunteers.map(v => (
-                    <span key={v.id} className="px-2 py-1 bg-orange-500/20 text-orange-300 text-xs rounded-full flex items-center gap-1">
-                      <Swords className="w-3 h-3" /> {v.firstName} {v.lastName}
-                    </span>
-                  ))}
-                  {generalVolunteers.map(v => (
-                    <span key={v.id} className="px-2 py-1 bg-pink-500/20 text-pink-300 text-xs rounded-full flex items-center gap-1">
-                      <Heart className="w-3 h-3" /> {v.firstName} {v.lastName}
-                    </span>
-                  ))}
+                <div className="bg-pink-900/20 border border-pink-700/30 rounded-lg p-2">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Heart className="w-3 h-3 text-pink-400" />
+                    <span className="text-xs font-medium text-pink-400">General</span>
+                    <span className="text-[10px] text-pink-300 ml-auto">{generalVolunteers.length}</span>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {generalVolunteers.length > 0 ? generalVolunteers.map(v => (
+                      <span key={v.id} className="px-1.5 py-0.5 bg-pink-500/20 text-pink-300 text-[10px] rounded">
+                        {v.firstName}
+                      </span>
+                    )) : <span className="text-[10px] text-[#6b8fad]">None</span>}
+                  </div>
                 </div>
               </div>
             )
@@ -3694,13 +3748,13 @@ const TournamentManager = memo(function TournamentManager({
               <span className="text-xs text-slate-500">Available durations for matches</span>
             </div>
             <div className="flex flex-wrap gap-2">
-              {[60, 90, 120, 150, 180, 240, 300].map(secs => {
-                const isSelected = (tournament.timerOptions || [120, 180, 240, 300]).includes(secs)
+              {[60, 120, 180].map(secs => {
+                const isSelected = (tournament.timerOptions || [60, 120, 180]).includes(secs)
                 return (
                   <button
                     key={secs}
                     onClick={() => {
-                      const current = tournament.timerOptions || [120, 180, 240, 300]
+                      const current = tournament.timerOptions || [60, 120, 180]
                       const newOptions = isSelected 
                         ? current.filter(t => t !== secs)
                         : [...current, secs].sort((a, b) => a - b)
@@ -3793,52 +3847,50 @@ const TournamentManager = memo(function TournamentManager({
               isShared ? 'border-l-emerald-500' : isCourtA ? 'border-l-amber-500' : 'border-l-blue-500'
             }`}
           >
-            <CardHeader className="p-3 pb-2">
-              {/* Row 1: Group name and progress */}
-              <div className="flex items-center gap-2">
-                <span className="text-slate-500 cursor-grab">☰</span>
-                <span className={`px-1.5 h-6 rounded flex items-center justify-center text-xs font-bold ${
+            <CardHeader className="p-2 pb-1">
+              {/* Single row: Group name, settings, court, progress */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="text-slate-500 cursor-grab text-xs">☰</span>
+                <span className={`px-1.5 h-5 rounded flex items-center justify-center text-[10px] font-bold ${
                   isShared ? 'bg-emerald-500 text-white' : isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
                 }`}>
                   {isShared ? 'A+B' : isCourtA ? 'A' : 'B'}
                 </span>
                 <span className="text-white font-medium text-sm">{group?.name || groupId}</span>
-                {group?.isNonBogu && <span className="text-[9px] px-1 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
-                <span className="text-[10px] text-[#6b8fad] ml-auto">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length}</span>
-              </div>
-              {/* Row 2: Settings */}
-              <div className="flex items-center gap-2 mt-2 px-4">
+                {group?.isNonBogu && <span className="text-[8px] px-1 py-0.5 bg-orange-900/40 text-orange-300 rounded">Hantei</span>}
+                
                 <select
                   value={groupMatches[0]?.timerDuration || 180}
                   onChange={(e) => setGroupMatchSettings(groupId, 'timerDuration', parseInt(e.target.value))}
-                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
+                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-1.5 py-0.5 text-[10px] text-[#b8d4ec] ml-auto"
                 >
-                  {(tournament.timerOptions || [120, 180, 240, 300]).map(secs => (
+                  {(tournament.timerOptions || [60, 120, 180]).map(secs => (
                     <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
                   ))}
                 </select>
                 <select
                   value={groupMatches[0]?.matchType || 'sanbon'}
                   onChange={(e) => setGroupMatchSettings(groupId, 'matchType', e.target.value)}
-                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-2 py-1 text-xs text-[#b8d4ec]"
+                  className="bg-[#1a2d42] border border-[#1e3a5f] rounded px-1.5 py-0.5 text-[10px] text-[#b8d4ec]"
                 >
                   <option value="sanbon">Sanbon</option>
                   <option value="ippon">Ippon</option>
                 </select>
-                <div className="flex rounded overflow-hidden border border-[#1e3a5f] ml-auto">
+                <div className="flex rounded overflow-hidden border border-[#1e3a5f]">
                   <button
-                    className={`px-3 py-1 text-xs font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    className={`px-2 py-0.5 text-[10px] font-bold ${isCourtA ? 'bg-amber-500 text-black' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                     onClick={() => setGroupCourt(groupId, 'A')}
                   >A</button>
                   <button
-                    className={`px-3 py-1 text-xs font-bold ${isShared ? 'bg-emerald-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    className={`px-2 py-0.5 text-[10px] font-bold ${isShared ? 'bg-emerald-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                     onClick={() => toggleSharedGroup(groupId)}
                   >A+B</button>
                   <button
-                    className={`px-3 py-1 text-xs font-bold ${isCourtB ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
+                    className={`px-2 py-0.5 text-[10px] font-bold ${isCourtB ? 'bg-blue-500 text-white' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}
                     onClick={() => setGroupCourt(groupId, 'B')}
                   >B</button>
                 </div>
+                <span className="text-[10px] text-[#6b8fad]">{groupMatches.filter(m => m.status === 'completed').length}/{groupMatches.length} done</span>
               </div>
             </CardHeader>
             <CardContent>
@@ -3894,7 +3946,7 @@ const TournamentManager = memo(function TournamentManager({
                                 onChange={(e) => updateMatchSettings(match.id, 'timerDuration', parseInt(e.target.value))}
                                 className="bg-[#0f1a24] border border-[#1e3a5f] rounded px-1 py-0.5 text-[10px] text-[#8fb3d1] w-12"
                               >
-                                {(tournament.timerOptions || [120, 180, 240, 300]).map(secs => (
+                                {(tournament.timerOptions || [60, 120, 180]).map(secs => (
                                   <option key={secs} value={secs}>{Math.floor(secs / 60)}m</option>
                                 ))}
                               </select>
@@ -5458,7 +5510,7 @@ function CourtkeeperPortal({
                 onChange={(e) => updateMatchSettings('timerDuration', parseInt(e.target.value))}
                 className="bg-slate-800 border-0 rounded px-1.5 py-0.5 text-[10px] text-slate-300"
               >
-                {(tournament?.timerOptions || [120, 180, 240, 300]).map(secs => (
+                {(tournament?.timerOptions || [60, 120, 180]).map(secs => (
                   <option key={secs} value={secs}>{Math.floor(secs / 60)}:{(secs % 60).toString().padStart(2, '0')}</option>
                 ))}
               </select>
