@@ -3690,10 +3690,7 @@ const TournamentManager = memo(function TournamentManager({
     toast.success(`Updated ${field} for all ${getGroupById(groupId)?.name || 'group'} matches`)
   }
 
-    }))
-  }
-
-    if (!tournament || !tournament.groupOrder) {
+  if (!tournament || !tournament.groupOrder) {
     return (
       <Card className="bg-[#142130] border-white/5 backdrop-blur-sm">
         <CardHeader>
