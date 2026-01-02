@@ -6112,8 +6112,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                     if (groupMatchCount === 0) return null
                     return (
                       <div key={groupId} className="flex items-center text-xs py-1.5 gap-2">
-                        <span className="text-slate-300 flex-1">{groupInfo?.name}</span>
-                        <span className="text-slate-500 text-[10px]">{groupMatchCount}</span>
+                        <span className="text-slate-300 flex-1">{groupInfo?.name} <span className="text-slate-500">({groupMatchCount})</span></span>
                         <button
                           onClick={() => toggleSharedGroupCK(groupId)}
                           className={`px-1.5 h-5 rounded text-[9px] font-medium ${isShared ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
@@ -6206,6 +6205,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                           }}
                           onTouchMove={(e) => {
                             if (!draggedMatchId || touchStartY === null) return
+                            e.preventDefault() // Prevent scrolling while dragging
                             const touch = e.touches[0]
                             const target = document.elementFromPoint(touch.clientX, touch.clientY)
                             const matchEl = target?.closest('[data-match-id]')
@@ -6222,6 +6222,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                           }}
                           data-match-id={match.id}
                           onClick={() => { if (!isCurrentlyPlaying && !isLiveOnOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
+                          style={{ touchAction: canDrag ? 'none' : 'auto' }}
                           className={`w-full p-2 rounded-lg mb-1 text-xs transition-all cursor-pointer select-none ${
                             isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400' :
                             isDragTarget ? 'border-2 border-dashed border-amber-400/50' :
