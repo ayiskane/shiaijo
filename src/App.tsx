@@ -271,7 +271,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, Dialog
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-// import { Separator } from '@/components/ui/separator'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import { Switch } from '@/components/ui/switch'
 import { Toaster, toast } from 'sonner'
@@ -2516,7 +2515,7 @@ const AdminPortal = memo(function AdminPortal({
       <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
 
       {/* Desktop Sidebar */}
-      <aside className={`hidden md:flex flex-col fixed h-full bg-[#0f1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-64'}`}>
+      <aside className={`hidden md:flex flex-col fixed h-full bg-[#0f1a24] border-r border-white/5 transition-all duration-300 z-20 ${sidebarCollapsed ? 'w-[72px]' : 'w-48'}`}>
         <div className="p-4 border-b border-white/5 overflow-hidden">
           <div className={`flex items-center gap-3 transition-all duration-300 ${sidebarCollapsed ? 'justify-center' : ''}`}>
             <div className="flex-shrink-0">
@@ -2575,7 +2574,7 @@ const AdminPortal = memo(function AdminPortal({
                 <div className={`w-7 h-7 rounded-md flex items-center justify-center flex-shrink-0 ${activeTab === id ? 'bg-orange-500/20' : 'bg-[#1a2d42]'}`}>
                   <Icon className="w-4 h-4" />
                 </div>
-                <span className={`text-sm whitespace-nowrap transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100 flex-1'}`}>{label}</span>
+                <span className={`text-sm whitespace-nowrap transition-all duration-300 ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>{label}</span>
                 {!sidebarCollapsed && badge && (
                   <span className={`px-1.5 py-0.5 text-[10px] rounded-full border flex-shrink-0 ${
                     badgeColor === 'green' 
@@ -2822,7 +2821,7 @@ const AdminPortal = memo(function AdminPortal({
       </header>
 
       {/* Main Content */}
-      <main className={`pt-14 md:pt-0 transition-all duration-300 ${sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-64'}`}>
+      <main className={`pt-14 md:pt-0 transition-all duration-300 ${sidebarCollapsed ? 'md:ml-[72px]' : 'md:ml-48'}`}>
         <div className="p-4 md:p-6">
           {/* Header */}
           <div className="flex items-center justify-between mb-6">
@@ -3751,26 +3750,13 @@ const TournamentManager = memo(function TournamentManager({
       const newIndex = tournament.groupOrder.indexOf(over.id as string)
       const newOrder = arrayMove(tournament.groupOrder, oldIndex, newIndex)
       
-      // Auto-stagger courts (A, B, A, B...) for non-shared groups
-      setState(prev => {
-        if (!prev.currentTournament) return prev
-        const sharedGroups = prev.sharedGroups || []
-        const updatedMatches = prev.currentTournament.matches.map(m => {
-          if (m.status !== 'pending') return m
-          if (sharedGroups.includes(m.groupId)) return m
-          const groupIdx = newOrder.indexOf(m.groupId)
-          const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
-          return { ...m, court: newCourt as 'A' | 'B' }
-        })
-        return {
-          ...prev,
-          currentTournament: {
-            ...prev.currentTournament,
-            groupOrder: newOrder,
-            matches: updatedMatches
-          }
-        }
-      })
+      setState(prev => ({
+        ...prev,
+        currentTournament: prev.currentTournament ? {
+          ...prev.currentTournament,
+          groupOrder: newOrder
+        } : null
+      }))
     }
   }
 
