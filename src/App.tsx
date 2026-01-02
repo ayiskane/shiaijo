@@ -718,6 +718,9 @@ export default function App() {
     return state.members.find(m => m.id === id)
   }, [state.members])
   const getGroupById = useCallback((id: string) => state.groups.find(g => g.id === id), [state.groups])
+  
+  // Memoized counts
+  const participantCount = useMemo(() => state.members.filter(m => m.isParticipating).length, [state.members])
 
   if (loading) {
     return (
@@ -936,7 +939,7 @@ export default function App() {
 }
 
 // Volunteer Portal Component
-function VolunteerPortal({ 
+const VolunteerPortal = memo(function VolunteerPortal({ 
   state, 
   setState,
   onSwitchPortal,
@@ -1441,10 +1444,10 @@ function VolunteerPortal({
       </Dialog>
     </div>
   )
-}
+})
 
 // Spectator Portal Component
-function SpectatorPortal({ 
+const SpectatorPortal = memo(function SpectatorPortal({ 
   state, 
   onSwitchPortal,
   getMemberById,
@@ -3012,11 +3015,11 @@ function AdminPortal({
       </Dialog>
     </div>
   )
-}
+})
 
 
 // Guests Tab Component
-function GuestsTab({ state, onAddGuest, getGroupById }: {
+const GuestsTab = memo(function GuestsTab({ state, onAddGuest, getGroupById }: {
   state: AppState
   onAddGuest: (firstName: string, lastName: string, group: string, guestDojo?: string) => void
   getGroupById: (id: string) => Group | undefined
@@ -3112,10 +3115,10 @@ function GuestsTab({ state, onAddGuest, getGroupById }: {
       )}
     </div>
   )
-}
+})
 
 // Groups Manager Component
-function GroupsManager({
+const GroupsManager = memo(function GroupsManager({
   state,
   setState,
 }: {
@@ -3349,10 +3352,10 @@ function GroupsManager({
       </Card>
     </div>
   )
-}
+})
 
 
-function TournamentManager({
+const TournamentManager = memo(function TournamentManager({
   state,
   setState,
   getMemberById,
@@ -3939,10 +3942,10 @@ function TournamentManager({
       })}
     </div>
   )
-}
+})
 
 // Standings View Component
-function StandingsView({
+const StandingsView = memo(function StandingsView({
   state,
   getGroupById,
 }: {
@@ -4067,10 +4070,10 @@ function StandingsView({
       })}
     </div>
   )
-}
+})
 
 // History View Component with Excel Import
-function HistoryView({
+const HistoryView = memo(function HistoryView({
   state,
   setState,
 }: {
@@ -4237,10 +4240,10 @@ function HistoryView({
       ))}
     </div>
   )
-}
+})
 
 // History Import Form
-function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
+const HistoryImportForm = memo(function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
   const [importText, setImportText] = useState('')
   const fileInputRef = useRef<HTMLInputElement>(null)
 
@@ -4288,10 +4291,10 @@ function HistoryImportForm({ onImport }: { onImport: (data: string) => void }) {
       </DialogFooter>
     </div>
   )
-}
+})
 
 // Volunteers Tab Component
-function VolunteersTab({ 
+const VolunteersTab = memo(function VolunteersTab({ 
   state, 
   setState,
   getMemberById
@@ -4766,10 +4769,10 @@ function VolunteersTab({
       </Dialog>
     </div>
   )
-}
+})
 
 // Add Member Form
-function AddMemberForm({ 
+const AddMemberForm = memo(function AddMemberForm({ 
   groups,
   onAdd 
 }: { 
@@ -6014,5 +6017,5 @@ declare global {
       list: (prefix?: string, shared?: boolean) => Promise<{ keys: string[] } | null>
     }
   }
-}
+})
 
