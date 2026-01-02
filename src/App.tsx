@@ -91,7 +91,7 @@ import {
   CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Heart, Clock,
   Eye, Shield, Lock
-} from 'lucide-react'
+} from './FAIcons'
 
 // Types
 interface Member {
