@@ -1679,10 +1679,17 @@ const VolunteerPortal = memo(function VolunteerPortal({
               <ScrollArea className="h-32 sm:h-40 border border-[#1e3a5f] rounded-lg p-2">
                 {state.members
                   .filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(memberSearchQuery.toLowerCase()))
+                  .sort((a, b) => {
+                    const aSelected = selectedMembers.includes(a.id)
+                    const bSelected = selectedMembers.includes(b.id)
+                    if (aSelected && !bSelected) return -1
+                    if (!aSelected && bSelected) return 1
+                    return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+                  })
                   .map(member => (
                   <div 
                     key={member.id}
-                    className="flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer"
+                    className={`flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer ${selectedMembers.includes(member.id) ? 'bg-emerald-900/20' : ''}`}
                     onClick={() => {
                       setSelectedMembers(prev => 
                         prev.includes(member.id) 
@@ -5404,10 +5411,17 @@ const VolunteersTab = memo(function VolunteersTab({
               <ScrollArea className="h-32 sm:h-40 border border-[#1e3a5f] rounded-lg p-2">
                 {state.members
                   .filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(memberSearchQuery.toLowerCase()))
+                  .sort((a, b) => {
+                    const aSelected = selectedMemberIds.includes(a.id)
+                    const bSelected = selectedMemberIds.includes(b.id)
+                    if (aSelected && !bSelected) return -1
+                    if (!aSelected && bSelected) return 1
+                    return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+                  })
                   .map(member => (
                   <div 
                     key={member.id}
-                    className="flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer"
+                    className={`flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer ${selectedMemberIds.includes(member.id) ? 'bg-emerald-900/20' : ''}`}
                     onClick={() => {
                       setSelectedMemberIds(prev => 
                         prev.includes(member.id) 
@@ -5554,10 +5568,18 @@ const VolunteersTab = memo(function VolunteersTab({
                 <ScrollArea className="h-32 border border-[#1e3a5f] rounded-lg p-2">
                   {state.members
                     .filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(editMemberSearch.toLowerCase()))
+                    .sort((a, b) => {
+                      const currentIds = editingVolunteer.relatedMemberIds || []
+                      const aSelected = currentIds.includes(a.id)
+                      const bSelected = currentIds.includes(b.id)
+                      if (aSelected && !bSelected) return -1
+                      if (!aSelected && bSelected) return 1
+                      return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
+                    })
                     .map(member => (
                     <div 
                       key={member.id}
-                      className="flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer"
+                      className={`flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer ${(editingVolunteer.relatedMemberIds || []).includes(member.id) ? 'bg-emerald-900/20' : ''}`}
                       onClick={() => {
                         const currentIds = editingVolunteer.relatedMemberIds || []
                         setEditingVolunteer({
