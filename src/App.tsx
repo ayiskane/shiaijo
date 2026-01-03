@@ -296,7 +296,7 @@ import {
   Menu, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Clock,
-  Lock,
+  Lock, AlertTriangle,
   SpectatorIcon, CourtkeeperIcon, VolunteerIcon, AdminIcon
 } from './FAIcons'
 
@@ -5144,7 +5144,7 @@ const VolunteersTab = memo(function VolunteersTab({
       {/* No volunteers notice for current tournament */}
       {state.currentTournament && tournamentVolunteers.length === 0 && (
         <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+          <AlertTriangle className="w-5 h-5 text-amber-400 flex-shrink-0" />
           <p className="text-amber-200 text-sm">Notice: No volunteers found for the current tournament!</p>
         </div>
       )}
