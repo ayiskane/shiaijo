@@ -1963,7 +1963,7 @@ const SpectatorPortal = memo(function SpectatorPortal({
                       <div key={match.id} className="bg-[#0a1017]/50 rounded-xl p-4">
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-xs text-[#6b8fad]">{group?.name} • Court {match.court}</span>
-                          <Badge className="bg-orange-500/20 text-orange-400 text-xs">LIVE</Badge>
+                          <Badge className="bg-emerald-500/20 text-emerald-400 text-xs"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse mr-1 inline-block"></span>LIVE</Badge>
                         </div>
                         <div className="flex items-center justify-between">
                           <div className="flex-1 text-center">
@@ -4487,12 +4487,12 @@ const TournamentManager = memo(function TournamentManager({
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-1 text-sm">
                               <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
-                              <span className={`truncate ${match.winner === 'player1' ? 'text-red-400 font-semibold' : 'text-white'}`}>
+                              <span className={`truncate ${match.winner === 'player1' ? 'text-emerald-400' : 'text-red-400'}`}>
                                 {p1 ? formatDisplayName(p1, state.members, state.useFirstNamesOnly) : '?'}
                               </span>
                               <span className="text-[#6b8fad] mx-1 flex-shrink-0">vs</span>
                               <span className="w-2 h-2 rounded-full bg-white flex-shrink-0"></span>
-                              <span className={`truncate ${match.winner === 'player2' ? 'text-blue-100 font-semibold' : 'text-white'}`}>
+                              <span className={`truncate ${match.winner === 'player2' ? 'text-emerald-400' : 'text-white'}`}>
                                 {p2 ? formatDisplayName(p2, state.members, state.useFirstNamesOnly) : '?'}
                               </span>
                             </div>
@@ -4536,15 +4536,15 @@ const TournamentManager = memo(function TournamentManager({
                           
                           {/* Right: Status badge */}
                           {match.status === 'completed' && (
-                            <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${match.winner === 'player1' ? 'bg-red-900/30 text-red-400' : match.winner === 'player2' ? 'bg-blue-900/30 text-blue-200' : 'bg-[#1a2d42] text-[#8fb3d1]'}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded flex-shrink-0 ${match.winner === 'player1' ? 'bg-red-500/20 text-red-400' : match.winner === 'player2' ? 'bg-white/90 text-slate-900' : 'bg-amber-500/20 text-amber-400'}`}>
                               {match.winner === 'draw' ? 'Draw' : 
                                match.winner === 'player1' ? `Win ${match.isHantei ? '(H)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}` :
                                `Win ${match.isHantei ? '(H)' : (match.player1Score?.length || 0) + '-' + (match.player2Score?.length || 0)}`}
                             </span>
                           )}
                           {match.status === 'in_progress' && (
-                            <span className={`text-[10px] px-2 py-1 rounded text-white animate-pulse flex-shrink-0 whitespace-nowrap ${match.court === 'A' ? 'bg-amber-500' : 'bg-blue-500'}`}>
-                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 animate-pulse"></span>LIVE
+                            <span className="text-[10px] px-2 py-1 rounded bg-emerald-500 text-white animate-pulse flex-shrink-0 whitespace-nowrap">
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-white mr-1 animate-pulse"></span>LIVE
                             </span>
                           )}
                         </div>
@@ -6664,7 +6664,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     const p2Wins = p2EffectiveScore >= winTarget
     const matchId = currentMatch?.id
     
-    // Don't show modal if user dismissed it for this match
+    // Don't show modal if user dismissed it for this match via the X button
     const wasDismissed = modalDismissedForMatch === matchId
     
     if (p1Wins && !showWinModal && !wasDismissed) {
@@ -6677,7 +6677,11 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       // Score was undone (possibly from another device) - close modal
       setShowWinModal(false)
       setPendingWinner(null)
-      setModalDismissedForMatch(null) // Reset so modal can show again if they win again
+    }
+    
+    // Clear dismissed state when scores are below win target (allows popup to show again after undo)
+    if (!p1Wins && !p2Wins && modalDismissedForMatch) {
+      setModalDismissedForMatch(null)
     }
   }, [p1EffectiveScore, p2EffectiveScore, winTarget, showWinModal, currentMatch?.id, modalDismissedForMatch])
 
@@ -7138,7 +7142,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                 Yes, Complete Match
               </button>
               <button
-                onClick={undoWinningPoint}
+                onClick={() => debounceAction(undoWinningPoint)}
                 className="w-full py-3 rounded-xl font-bold text-lg bg-slate-700 hover:bg-slate-600 text-slate-300"
               >
                 No, Undo Last Point
