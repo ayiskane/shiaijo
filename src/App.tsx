@@ -5014,6 +5014,9 @@ const VolunteersTab = memo(function VolunteersTab({
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'name' | 'hours'>('name')
   const [memberSearchQuery, setMemberSearchQuery] = useState('')
+  const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null)
+  const [editMemberSearch, setEditMemberSearch] = useState('')
+  const [editingSignup, setEditingSignup] = useState<{ volunteerId: string, signup: VolunteerSignup } | null>(null)
 
   const addVolunteer = () => {
     if (!newFirstName.trim() || !newLastName.trim()) return
@@ -5079,6 +5082,26 @@ const VolunteersTab = memo(function VolunteersTab({
       )
     }))
     toast.success('Entry removed')
+  }
+
+  const updateVolunteer = (volunteerId: string, updates: Partial<Volunteer>) => {
+    setState(prev => ({
+      ...prev,
+      volunteers: prev.volunteers.map(v => 
+        v.id === volunteerId ? { ...v, ...updates } : v
+      )
+    }))
+  }
+
+  const updateSignup = (volunteerId: string, signupId: string, updates: Partial<VolunteerSignup>) => {
+    setState(prev => ({
+      ...prev,
+      volunteers: prev.volunteers.map(v => 
+        v.id === volunteerId 
+          ? { ...v, signups: v.signups.map(s => s.id === signupId ? { ...s, ...updates } : s) }
+          : v
+      )
+    }))
   }
 
   const getTotalTime = (volunteer: Volunteer) => {
@@ -5237,6 +5260,14 @@ const VolunteersTab = memo(function VolunteersTab({
                             <Button
                               size="sm"
                               variant="ghost"
+                              className="text-blue-400 hover:text-blue-300 hover:bg-blue-900/30 h-8 w-8 p-0"
+                              onClick={() => { setEditingVolunteer(volunteer); setEditMemberSearch(''); }}
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="ghost"
                               className="text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/30 h-8 w-8 p-0"
                               onClick={() => setShowLogHours(volunteer.id)}
                             >
@@ -5298,6 +5329,12 @@ const VolunteersTab = memo(function VolunteersTab({
                       <Badge className={signup.isShiaiSignup ? 'bg-orange-500/20 text-orange-400' : 'bg-blue-500/20 text-blue-400'}>
                         {signup.hours}h {signup.minutes}m
                       </Badge>
+                      <button 
+                        onClick={() => setEditingSignup({ volunteerId: volunteer.id, signup: { ...signup } })}
+                        className="text-blue-400/50 hover:text-blue-400 p-1"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
                       <button 
                         onClick={() => deleteSignup(volunteer.id, signup.id)}
                         className="text-red-400/50 hover:text-red-400 p-1"
@@ -5461,6 +5498,196 @@ const VolunteersTab = memo(function VolunteersTab({
               disabled={(parseInt(logHours) === 0 && parseInt(logMinutes) === 0) || !logDescription.trim()}
             >
               <Clock className="w-4 h-4 mr-2" /> Log Hours
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Volunteer Dialog */}
+      <Dialog open={editingVolunteer !== null} onOpenChange={() => setEditingVolunteer(null)}>
+        <DialogContent className="bg-[#142130] border-[#1e3a5f] text-white max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Volunteer</DialogTitle>
+          </DialogHeader>
+          {editingVolunteer && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>First Name *</Label>
+                  <Input
+                    value={editingVolunteer.firstName}
+                    onChange={(e) => setEditingVolunteer({ ...editingVolunteer, firstName: e.target.value })}
+                    className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Last Name *</Label>
+                  <Input
+                    value={editingVolunteer.lastName}
+                    onChange={(e) => setEditingVolunteer({ ...editingVolunteer, lastName: e.target.value })}
+                    className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Phone (optional)</Label>
+                <Input
+                  type="tel"
+                  value={editingVolunteer.phone || ''}
+                  onChange={(e) => setEditingVolunteer({ ...editingVolunteer, phone: e.target.value || undefined })}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  placeholder="(555) 123-4567"
+                />
+              </div>
+              <div>
+                <Label>Related Member(s)</Label>
+                <p className="text-xs text-[#6b8fad] mb-2">Select the member(s) this volunteer is a parent/guardian of</p>
+                <div className="relative mb-2">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b8fad]" />
+                  <Input
+                    placeholder="Search members..."
+                    value={editMemberSearch}
+                    onChange={(e) => setEditMemberSearch(e.target.value)}
+                    className="pl-10 bg-[#1a2d42] border-[#1e3a5f] text-white h-9 text-sm"
+                  />
+                </div>
+                <ScrollArea className="h-32 border border-[#1e3a5f] rounded-lg p-2">
+                  {state.members
+                    .filter(m => `${m.firstName} ${m.lastName}`.toLowerCase().includes(editMemberSearch.toLowerCase()))
+                    .map(member => (
+                    <div 
+                      key={member.id}
+                      className="flex items-center gap-2 p-2 hover:bg-[#1a2d42] rounded cursor-pointer"
+                      onClick={() => {
+                        const currentIds = editingVolunteer.relatedMemberIds || []
+                        setEditingVolunteer({
+                          ...editingVolunteer,
+                          relatedMemberIds: currentIds.includes(member.id) 
+                            ? currentIds.filter(id => id !== member.id)
+                            : [...currentIds, member.id]
+                        })
+                      }}
+                    >
+                      <Checkbox checked={(editingVolunteer.relatedMemberIds || []).includes(member.id)} />
+                      <span className="text-white">{member.firstName} {member.lastName}</span>
+                    </div>
+                  ))}
+                </ScrollArea>
+                {(editingVolunteer.relatedMemberIds || []).length > 0 && (
+                  <p className="text-xs text-emerald-400 mt-2">{(editingVolunteer.relatedMemberIds || []).length} member(s) selected</p>
+                )}
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingVolunteer(null)}>Cancel</Button>
+            <Button 
+              onClick={() => {
+                if (editingVolunteer) {
+                  updateVolunteer(editingVolunteer.id, {
+                    firstName: editingVolunteer.firstName,
+                    lastName: editingVolunteer.lastName,
+                    phone: editingVolunteer.phone,
+                    relatedMemberIds: editingVolunteer.relatedMemberIds
+                  })
+                  setEditingVolunteer(null)
+                  toast.success('Volunteer updated')
+                }
+              }} 
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={!editingVolunteer?.firstName.trim() || !editingVolunteer?.lastName.trim()}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Signup Dialog */}
+      <Dialog open={editingSignup !== null} onOpenChange={() => setEditingSignup(null)}>
+        <DialogContent className="bg-[#142130] border-[#1e3a5f] text-white">
+          <DialogHeader>
+            <DialogTitle>Edit Volunteer Entry</DialogTitle>
+            <DialogDescription className="text-[#6b8fad]">
+              Edit this volunteer history entry
+            </DialogDescription>
+          </DialogHeader>
+          {editingSignup && (
+            <div className="space-y-4">
+              <div>
+                <Label>Date</Label>
+                <Input
+                  type="date"
+                  value={editingSignup.signup.date}
+                  onChange={(e) => setEditingSignup({
+                    ...editingSignup,
+                    signup: { ...editingSignup.signup, date: e.target.value }
+                  })}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Hours</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    value={editingSignup.signup.hours}
+                    onChange={(e) => setEditingSignup({
+                      ...editingSignup,
+                      signup: { ...editingSignup.signup, hours: parseInt(e.target.value) || 0 }
+                    })}
+                    className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  />
+                </div>
+                <div>
+                  <Label>Minutes</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="59"
+                    value={editingSignup.signup.minutes}
+                    onChange={(e) => setEditingSignup({
+                      ...editingSignup,
+                      signup: { ...editingSignup.signup, minutes: parseInt(e.target.value) || 0 }
+                    })}
+                    className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  />
+                </div>
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Input
+                  value={editingSignup.signup.description}
+                  onChange={(e) => setEditingSignup({
+                    ...editingSignup,
+                    signup: { ...editingSignup.signup, description: e.target.value }
+                  })}
+                  className="bg-[#1a2d42] border-[#1e3a5f] text-white mt-1"
+                  placeholder="e.g., Setup, Registration, Cleanup..."
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingSignup(null)}>Cancel</Button>
+            <Button 
+              onClick={() => {
+                if (editingSignup) {
+                  updateSignup(editingSignup.volunteerId, editingSignup.signup.id, {
+                    date: editingSignup.signup.date,
+                    hours: editingSignup.signup.hours,
+                    minutes: editingSignup.signup.minutes,
+                    description: editingSignup.signup.description
+                  })
+                  setEditingSignup(null)
+                  toast.success('Entry updated')
+                }
+              }} 
+              className="bg-blue-600 hover:bg-blue-700"
+              disabled={(editingSignup?.signup.hours === 0 && editingSignup?.signup.minutes === 0) || !editingSignup?.signup.description.trim()}
+            >
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
