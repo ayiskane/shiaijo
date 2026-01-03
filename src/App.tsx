@@ -802,12 +802,14 @@ const sanitizeMatch = (match: Match): Match => ({
   winner: match.winner || null,
   matchType: match.matchType || 'sanbon',
   timerDuration: match.timerDuration || 180,
-  round: match.round || 1,  // Default to round 1 for backwards compatibility
+  round: match.round || 1,
+  // court is assigned below in sanitizeTournament if missing
 })
 
 const sanitizeTournament = (tournament: Tournament | null): Tournament | null => {
   if (!tournament) return null
-  const matches = (tournament.matches || []).map(sanitizeMatch)
+  let matches = (tournament.matches || []).map(sanitizeMatch)
+  
   // Build groupOrder from matches if missing - preserves order based on match orderIndex
   let groupOrder = tournament.groupOrder || []
   if (groupOrder.length === 0 && matches.length > 0) {
@@ -822,6 +824,18 @@ const sanitizeTournament = (tournament: Tournament | null): Tournament | null =>
       .sort((a, b) => a[1] - b[1])
       .map(([gId]) => gId)
   }
+  
+  // Assign courts to matches that don't have them (B/A/B/A pattern based on groupOrder position)
+  if (groupOrder.length > 0) {
+    matches = matches.map(m => {
+      // @ts-ignore - court might be undefined from old data
+      if (m.court === 'A' || m.court === 'B') return m  // Already has valid court assignment
+      const groupIdx = groupOrder.indexOf(m.groupId)
+      const court: 'A' | 'B' = groupIdx % 2 === 0 ? 'B' : 'A'
+      return { ...m, court }
+    })
+  }
+  
   return {
     ...tournament,
     matches,
