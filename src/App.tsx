@@ -4,6 +4,16 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
+// Debounce utility for performance
+const debounce = <T extends (...args: Parameters<T>) => void>(fn: T, delay: number) => {
+  let timeoutId: ReturnType<typeof setTimeout>
+  return (...args: Parameters<T>) => {
+    clearTimeout(timeoutId)
+    timeoutId = setTimeout(() => fn(...args), delay)
+  }
+}
+
+
 // Drag Handle component for sortable items
 // Simple sortable group card - drag via handle only when enabled
 const SortableGroupCard = ({ 
@@ -941,9 +951,15 @@ export default function App() {
     load()
   }, [])
 
+  // Debounced save to prevent excessive writes
+  const debouncedSave = useCallback(
+    debounce((s: AppState) => saveToStorage(s), 500),
+    []
+  )
+  
   useEffect(() => {
-    if (!loading) saveToStorage(state)
-  }, [state, loading])
+    if (!loading) debouncedSave(state)
+  }, [state, loading, debouncedSave])
 
   useEffect(() => {
     if (portal !== 'select') {
@@ -971,7 +987,7 @@ export default function App() {
             timerRunningB: saved.timerRunningB ?? prev.timerRunningB,
           }))
         }
-      }, 1000)
+      }, 2500)
     }
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [portal])
@@ -984,7 +1000,7 @@ export default function App() {
           ...prev,
           timerSecondsA: Math.min(prev.timerSecondsA + 1, prev.timerTarget)
         }))
-      }, 1000)
+      }, 2500)
     } else {
       if (timerRefA.current) clearInterval(timerRefA.current)
     }
@@ -999,7 +1015,7 @@ export default function App() {
           ...prev,
           timerSecondsB: Math.min(prev.timerSecondsB + 1, prev.timerTarget)
         }))
-      }, 1000)
+      }, 2500)
     } else {
       if (timerRefB.current) clearInterval(timerRefB.current)
     }
