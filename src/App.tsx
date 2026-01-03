@@ -3070,7 +3070,7 @@ const AdminPortal = memo(function AdminPortal({
 
           {/* Guests Tab */}
           {activeTab === 'guests' && (
-            <GuestsTab state={state} onAddGuest={addGuestMember} getGroupById={getGroupById} />
+            <GuestsTab state={state} setState={setState} onAddGuest={addGuestMember} getGroupById={getGroupById} />
           )}
 
           {/* Groups Tab */}
@@ -3348,20 +3348,57 @@ const AdminPortal = memo(function AdminPortal({
 
 
 // Guests Tab Component
-const GuestsTab = memo(function GuestsTab({ state, onAddGuest, getGroupById }: {
+const GuestsTab = memo(function GuestsTab({ state, setState, onAddGuest, getGroupById }: {
   state: AppState
+  setState: React.Dispatch<React.SetStateAction<AppState>>
   onAddGuest: (firstName: string, lastName: string, group: string, guestDojo?: string) => void
   getGroupById: (id: string) => Group | undefined
 }) {
   const [showAddGuest, setShowAddGuest] = useState(false)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [editingGuest, setEditingGuest] = useState<Member | null>(null)
   const guests = state.members.filter(m => m.isGuest)
+  
+  const filteredGuests = guests.filter(g => 
+    `${g.firstName} ${g.lastName}`.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (g.guestDojo || '').toLowerCase().includes(searchQuery.toLowerCase())
+  )
+  
+  const toggleGuestParticipation = (guestId: string) => {
+    setState(prev => ({
+      ...prev,
+      members: prev.members.map(m => 
+        m.id === guestId ? { ...m, isParticipating: !m.isParticipating } : m
+      )
+    }))
+  }
+  
+  const updateGuest = (guestId: string, updates: Partial<Member>) => {
+    setState(prev => ({
+      ...prev,
+      members: prev.members.map(m => 
+        m.id === guestId ? { ...m, ...updates } : m
+      )
+    }))
+  }
+  
+  const deleteGuest = (guestId: string) => {
+    setState(prev => ({
+      ...prev,
+      members: prev.members.filter(m => m.id !== guestId)
+    }))
+    toast.success('Guest removed')
+  }
+  
+  const participatingCount = guests.filter(g => g.isParticipating).length
 
   return (
     <div className="space-y-4">
-      <div className="bg-[#142130] border border-white/5 rounded-xl p-4">
+      {/* Add Guest Button */}
+      <div className="flex flex-wrap gap-2">
         <Dialog open={showAddGuest} onOpenChange={setShowAddGuest}>
           <DialogTrigger asChild>
-            <Button className="bg-[#1e3a5f] hover:bg-[#162d4a]">
+            <Button className="bg-orange-600 hover:bg-orange-700">
               <Plus className="w-4 h-4 mr-2" />Add Guest
             </Button>
           </DialogTrigger>
@@ -3370,57 +3407,186 @@ const GuestsTab = memo(function GuestsTab({ state, onAddGuest, getGroupById }: {
               <DialogTitle className="text-white">Add Guest</DialogTitle>
             </DialogHeader>
             <div className="space-y-4 py-4">
-                        <div className="space-y-2">
-                          <Label className="text-[#b8d4ec]">First Name</Label>
-                          <Input id="guest-first" className="bg-[#1a2d42] border-[#1e3a5f]" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[#b8d4ec]">Last Name</Label>
-                          <Input id="guest-last" className="bg-[#1a2d42] border-[#1e3a5f]" />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[#b8d4ec]">Group</Label>
-                          <Select defaultValue={state.groups[0]?.id}>
-                            <SelectTrigger className="bg-[#1a2d42] border-[#1e3a5f]"><SelectValue /></SelectTrigger>
-                            <SelectContent className="bg-[#1a2d42] border-[#1e3a5f]">
-                              {state.groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-[#b8d4ec]">Dojo (optional)</Label>
-                          <Input id="guest-dojo" className="bg-[#1a2d42] border-[#1e3a5f]" placeholder="Guest's home dojo" />
-                        </div>
-                        <div className="flex justify-end gap-2 pt-2">
-                          <Button variant="outline" onClick={() => setShowAddGuest(false)} className="border-[#1e3a5f]">Cancel</Button>
-                          <Button onClick={() => {
-                            const first = (document.getElementById('guest-first') as HTMLInputElement)?.value
-                            const last = (document.getElementById('guest-last') as HTMLInputElement)?.value
-                            const dojo = (document.getElementById('guest-dojo') as HTMLInputElement)?.value
-                            if (first && last) { onAddGuest(first, last, state.groups[0]?.id || '', dojo); setShowAddGuest(false); }
-                          }} className="bg-[#1e3a5f] hover:bg-[#162d4a]">Add Guest</Button>
-                        </div>
-                      </div>
+              <div className="space-y-2">
+                <Label className="text-[#b8d4ec]">First Name</Label>
+                <Input id="guest-first" className="bg-[#1a2d42] border-[#1e3a5f]" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[#b8d4ec]">Last Name</Label>
+                <Input id="guest-last" className="bg-[#1a2d42] border-[#1e3a5f]" />
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[#b8d4ec]">Group</Label>
+                <Select defaultValue={state.groups[0]?.id}>
+                  <SelectTrigger id="guest-group-select" className="bg-[#1a2d42] border-[#1e3a5f]"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-[#1a2d42] border-[#1e3a5f]">
+                    {state.groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label className="text-[#b8d4ec]">Dojo (optional)</Label>
+                <Input id="guest-dojo" className="bg-[#1a2d42] border-[#1e3a5f]" placeholder="Guest's home dojo" />
+              </div>
+              <div className="flex justify-end gap-2 pt-2">
+                <Button variant="outline" onClick={() => setShowAddGuest(false)} className="border-[#1e3a5f]">Cancel</Button>
+                <Button onClick={() => {
+                  const first = (document.getElementById('guest-first') as HTMLInputElement)?.value
+                  const last = (document.getElementById('guest-last') as HTMLInputElement)?.value
+                  const dojo = (document.getElementById('guest-dojo') as HTMLInputElement)?.value
+                  const groupSelect = document.getElementById('guest-group-select')
+                  const groupId = groupSelect?.closest('[data-radix-select-viewport]')?.querySelector('[data-state="checked"]')?.getAttribute('data-value') || state.groups[0]?.id || ''
+                  if (first && last) { onAddGuest(first, last, groupId, dojo); setShowAddGuest(false); }
+                }} className="bg-orange-600 hover:bg-orange-700">Add Guest</Button>
+              </div>
+            </div>
           </DialogContent>
         </Dialog>
+        <span className="text-sm text-[#6b8fad] self-center ml-auto">{guests.length} guests</span>
       </div>
 
+      {/* Tournament Registration Banner */}
+      {state.currentTournament && (
+        <Card className="bg-emerald-950/30 border-emerald-700/40 shadow-[0_0_15px_rgba(16,185,129,0.1)]">
+          <CardHeader className="p-4 pb-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/20 flex items-center justify-center">
+                <Trophy className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs text-emerald-300/70 uppercase tracking-wide">Registering for</p>
+                <p className="text-base font-semibold text-emerald-300">{state.currentTournament.name || 'Tournament'}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-bold text-emerald-400">{participatingCount}</p>
+                <p className="text-xs text-emerald-300/70">participating</p>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
+
+      {/* Search Bar */}
+      <div className="relative">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#6b8fad]" />
+        <input
+          type="text"
+          placeholder="Search guests..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-full bg-[#142130] border border-white/10 rounded-lg pl-10 pr-4 py-2 text-sm placeholder:text-[#6b8fad] focus:outline-none focus:border-orange-500/50"
+        />
+      </div>
+
+      {/* Guests List */}
       <div className="bg-[#142130] border border-white/5 rounded-xl overflow-hidden">
         <div className="px-4 py-3 border-b border-white/5">
-          <span className="font-medium">Guests ({guests.length})</span>
+          <span className="font-medium">Guests ({filteredGuests.length})</span>
         </div>
         <div className="divide-y divide-white/5">
-          {guests.length === 0 ? (
-            <div className="p-8 text-center text-[#6b8fad]">No guests added yet</div>
+          {filteredGuests.length === 0 ? (
+            <div className="p-8 text-center text-[#6b8fad]">
+              {guests.length === 0 ? 'No guests added yet' : 'No guests match your search'}
+            </div>
           ) : (
-            guests.map(guest => {
+            filteredGuests.map(guest => {
               const group = getGroupById(guest.group)
+              const isEditing = editingGuest?.id === guest.id
+              
               return (
-                <div key={guest.id} className="px-4 py-3 flex items-center gap-3">
-                  <div className="flex-1">
-                    <p className="font-medium">{guest.lastName}, {guest.firstName}</p>
-                    <p className="text-xs text-[#6b8fad]">{guest.guestDojo || 'Guest'} • {group?.name}</p>
-                  </div>
+                <div key={guest.id} className="px-4 py-3 flex items-center gap-3 hover:bg-white/5">
+                  {state.currentTournament && (
+                    <Checkbox 
+                      checked={guest.isParticipating} 
+                      onCheckedChange={() => toggleGuestParticipation(guest.id)}
+                      className="data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                    />
+                  )}
+                  
+                  {isEditing ? (
+                    <div className="flex-1 space-y-2">
+                      <div className="flex gap-2">
+                        <Input 
+                          value={editingGuest.firstName}
+                          onChange={(e) => setEditingGuest({ ...editingGuest, firstName: e.target.value })}
+                          className="bg-[#1a2d42] border-[#1e3a5f] h-8 text-sm"
+                          placeholder="First name"
+                        />
+                        <Input 
+                          value={editingGuest.lastName}
+                          onChange={(e) => setEditingGuest({ ...editingGuest, lastName: e.target.value })}
+                          className="bg-[#1a2d42] border-[#1e3a5f] h-8 text-sm"
+                          placeholder="Last name"
+                        />
+                      </div>
+                      <div className="flex gap-2">
+                        <Input 
+                          value={editingGuest.guestDojo || ''}
+                          onChange={(e) => setEditingGuest({ ...editingGuest, guestDojo: e.target.value })}
+                          className="bg-[#1a2d42] border-[#1e3a5f] h-8 text-sm flex-1"
+                          placeholder="Dojo"
+                        />
+                        <Select 
+                          value={editingGuest.group} 
+                          onValueChange={(val) => setEditingGuest({ ...editingGuest, group: val })}
+                        >
+                          <SelectTrigger className="bg-[#1a2d42] border-[#1e3a5f] h-8 text-sm w-32">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent className="bg-[#1a2d42] border-[#1e3a5f]">
+                            {state.groups.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="flex gap-1 justify-end">
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          onClick={() => setEditingGuest(null)}
+                          className="h-7 px-2 text-slate-400"
+                        >
+                          Cancel
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          onClick={() => {
+                            updateGuest(guest.id, {
+                              firstName: editingGuest.firstName,
+                              lastName: editingGuest.lastName,
+                              guestDojo: editingGuest.guestDojo,
+                              group: editingGuest.group
+                            })
+                            setEditingGuest(null)
+                            toast.success('Guest updated')
+                          }}
+                          className="h-7 px-2 bg-emerald-600 hover:bg-emerald-700"
+                        >
+                          Save
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium">{guest.lastName}, {guest.firstName}</p>
+                        <p className="text-xs text-[#6b8fad]">{guest.guestDojo || 'Guest'} • {group?.name}</p>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => setEditingGuest(guest)}
+                          className="p-1.5 rounded text-slate-400 hover:text-white hover:bg-white/10"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={() => deleteGuest(guest.id)}
+                          className="p-1.5 rounded text-red-400 hover:text-red-300 hover:bg-red-900/30"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </>
+                  )}
                 </div>
               )
             })
@@ -3428,10 +3594,12 @@ const GuestsTab = memo(function GuestsTab({ state, onAddGuest, getGroupById }: {
         </div>
       </div>
 
+      {/* Guest Registry - external signups */}
       {state.guestRegistry.length > 0 && (
         <div className="bg-[#142130] border border-white/5 rounded-xl overflow-hidden">
           <div className="px-4 py-3 border-b border-white/5">
             <span className="font-medium">Guest Registry ({state.guestRegistry.length})</span>
+            <span className="text-xs text-[#6b8fad] ml-2">External signups</span>
           </div>
           <div className="divide-y divide-white/5">
             {state.guestRegistry.map(guest => (
