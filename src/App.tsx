@@ -5854,10 +5854,10 @@ const SortableMatchItem = memo(function SortableMatchItem({
       style={style}
       onClick={() => { if (!isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isDragging) { onSelect(match.id) } }}
       className={`relative w-full p-2 rounded-lg mb-1 text-xs cursor-pointer select-none transition-colors ${
-        isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400 z-50' :
-        isLiveOnThisCourt ? 'bg-emerald-900/30 border border-emerald-600' 
+        isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border-2 border-amber-400 z-50' :
+        isLiveOnThisCourt ? 'bg-emerald-900/40 border-2 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
         : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
-        : isSelectedByThisCourt ? 'bg-amber-900/30 border border-amber-500'
+        : isSelectedByThisCourt ? 'bg-amber-900/40 border-2 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
         : isSelectedByOtherCourt ? 'bg-slate-800/30 border border-slate-600 opacity-50'
         : 'bg-slate-800/50 hover:bg-slate-800'
       }`}
