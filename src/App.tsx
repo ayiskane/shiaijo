@@ -5794,13 +5794,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     m.court === 'B' || (sharedGroups.includes(m.groupId) && m.status !== 'completed')
   ) || []
   
-  // Get group order for queue display (use tournament groups or custom order)
+  // Get group order for queue display (use custom order or tournament's group order)
   const courtAGroupOrder = state.courtAGroupOrder.length > 0 
     ? state.courtAGroupOrder 
-    : (tournament?.groups || []).filter(gId => courtAMatches.some(m => m.groupId === gId))
+    : (tournament?.groupOrder || []).filter(gId => courtAMatches.some(m => m.groupId === gId))
   const courtBGroupOrder = state.courtBGroupOrder.length > 0 
     ? state.courtBGroupOrder 
-    : (tournament?.groups || []).filter(gId => courtBMatches.some(m => m.groupId === gId))
+    : (tournament?.groupOrder || []).filter(gId => courtBMatches.some(m => m.groupId === gId))
   
   // Get pending/in-progress matches sorted by group order then match order
   // Shows all non-completed matches including those in_progress on other courts
