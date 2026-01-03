@@ -5819,6 +5819,7 @@ const SortableMatchItem = memo(function SortableMatchItem({
   useFirstNamesOnly,
   onSelect,
   disabled,
+  isCurrentMatch,
 }: {
   match: Match
   selectedCourt: 'A' | 'B'
@@ -5829,6 +5830,7 @@ const SortableMatchItem = memo(function SortableMatchItem({
   useFirstNamesOnly: boolean
   onSelect: (id: string) => void
   disabled: boolean
+  isCurrentMatch: boolean
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({ 
     id: match.id,
@@ -5846,16 +5848,19 @@ const SortableMatchItem = memo(function SortableMatchItem({
   const isSelectedByOtherCourt = match.id === (selectedCourt === 'A' ? selectedMatchIdB : selectedMatchIdA)
   const isLiveOnThisCourt = match.status === 'in_progress' && match.court === selectedCourt
   const isLiveOnOtherCourt = match.status === 'in_progress' && match.court !== selectedCourt
-  const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt
+  // For hantei matches, show as "active" if it's the current match (no timer needed)
+  const isActiveHantei = isCurrentMatch && match.isHantei && !isLiveOnThisCourt
+  const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isActiveHantei
   
   return (
     <div
       ref={setNodeRef}
       style={style}
-      onClick={() => { if (!isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isDragging) { onSelect(match.id) } }}
+      onClick={() => { if (!isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isDragging && !isActiveHantei) { onSelect(match.id) } }}
       className={`relative w-full p-2 rounded-lg mb-1 text-xs cursor-pointer select-none transition-colors ${
         isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border-2 border-amber-400 z-50' :
         isLiveOnThisCourt ? 'bg-emerald-900/40 border-2 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
+        : isActiveHantei ? 'bg-orange-900/40 border-2 border-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.3)]'
         : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
         : isSelectedByThisCourt ? 'bg-amber-900/40 border-2 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
         : isSelectedByOtherCourt ? 'bg-slate-800/30 border border-slate-600 opacity-50'
@@ -5863,7 +5868,7 @@ const SortableMatchItem = memo(function SortableMatchItem({
       }`}
     >
       <div className="flex items-center">
-        {canDrag && !isSelectedByThisCourt && !isLiveOnThisCourt && (
+        {canDrag && !isSelectedByThisCourt && !isLiveOnThisCourt && !isActiveHantei && (
           <span 
             ref={setActivatorNodeRef}
             {...attributes}
@@ -5873,9 +5878,12 @@ const SortableMatchItem = memo(function SortableMatchItem({
             <GripVertical className="w-4 h-4" />
           </span>
         )}
-        {isLiveOnThisCourt && (
-          <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
-            {selectedCourt}
+        {(isLiveOnThisCourt || isActiveHantei) && (
+          <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${
+            isActiveHantei ? 'bg-orange-500 text-white' :
+            selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
+          }`}>
+            {isActiveHantei ? 'HANTEI' : selectedCourt}
           </span>
         )}
         {isLiveOnOtherCourt && (
@@ -6028,23 +6036,36 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const pendingMatchesB = getSortedPendingMatches(courtBMatches, courtBGroupOrder)
   
   // If a match is manually selected, use it; otherwise use first pending match
-  // IMPORTANT: If a match is already in_progress on this court, that's the current match (can't have 2 live matches)
+  // A match is "locked" if it has scores OR timer has been used (not just status='in_progress')
   const selectedMatchIdA = state.courtASelectedMatch
   const selectedMatchIdB = state.courtBSelectedMatch
   
   const inProgressA = courtAMatches.find(m => m.status === 'in_progress' && m.court === 'A')
   const inProgressB = courtBMatches.find(m => m.status === 'in_progress' && m.court === 'B')
   
-  const currentMatchA = inProgressA 
+  // Check if in_progress match is actually locked (has scores or timer used)
+  const hasMatchActivity = (match: Match | undefined, timerSecs: number) => {
+    if (!match) return false
+    return (match.player1Score?.length || 0) > 0 || 
+           (match.player2Score?.length || 0) > 0 ||
+           (match.player1Hansoku || 0) > 0 ||
+           (match.player2Hansoku || 0) > 0 ||
+           timerSecs > 0
+  }
+  
+  const isLockedA = inProgressA && hasMatchActivity(inProgressA, state.timerSecondsA)
+  const isLockedB = inProgressB && hasMatchActivity(inProgressB, state.timerSecondsB)
+  
+  const currentMatchA = isLockedA
     ? inProgressA
     : selectedMatchIdA 
       ? courtAMatches.find(m => m.id === selectedMatchIdA && m.status !== 'completed')
-      : pendingMatchesA.find(m => m.status === 'pending')
-  const currentMatchB = inProgressB
+      : pendingMatchesA.find(m => m.status === 'pending') || inProgressA
+  const currentMatchB = isLockedB
     ? inProgressB
     : selectedMatchIdB
       ? courtBMatches.find(m => m.id === selectedMatchIdB && m.status !== 'completed')
-      : pendingMatchesB.find(m => m.status === 'pending')
+      : pendingMatchesB.find(m => m.status === 'pending') || inProgressB
   
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
   const pendingMatches = selectedCourt === 'A' ? pendingMatchesA : pendingMatchesB
@@ -6131,11 +6152,34 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   }
 
   const resetTimer = () => {
-    if (selectedCourt === 'A') {
-      setState(prev => ({ ...prev, timerSecondsA: 0, timerRunningA: false }))
-    } else {
-      setState(prev => ({ ...prev, timerSecondsB: 0, timerRunningB: false }))
-    }
+    const matchId = currentMatch?.id
+    const hasScores = (currentMatch?.player1Score?.length || 0) > 0 || 
+                      (currentMatch?.player2Score?.length || 0) > 0 ||
+                      (currentMatch?.player1Hansoku || 0) > 0 ||
+                      (currentMatch?.player2Hansoku || 0) > 0
+    
+    setState(prev => {
+      let newState = {
+        ...prev,
+        timerSecondsA: selectedCourt === 'A' ? 0 : prev.timerSecondsA,
+        timerSecondsB: selectedCourt === 'B' ? 0 : prev.timerSecondsB,
+        timerRunningA: selectedCourt === 'A' ? false : prev.timerRunningA,
+        timerRunningB: selectedCourt === 'B' ? false : prev.timerRunningB,
+      }
+      
+      // If no scores, reset match status to pending (allows switching matches)
+      if (!hasScores && matchId && prev.currentTournament) {
+        const updatedMatches = prev.currentTournament.matches.map(m =>
+          m.id === matchId ? { ...m, status: 'pending' as const } : m
+        )
+        newState = {
+          ...newState,
+          currentTournament: { ...prev.currentTournament, matches: updatedMatches }
+        }
+      }
+      
+      return newState
+    })
   }
 
   // Update match settings (timer duration, match type)
@@ -7252,6 +7296,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                             useFirstNamesOnly={state.useFirstNamesOnly}
                             onSelect={(id) => { selectMatch(id); setShowQueue(false) }}
                             disabled={match.status !== 'pending'}
+                            isCurrentMatch={match.id === currentMatch?.id}
                           />
                         ))}
                       </SortableContext>
