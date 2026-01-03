@@ -297,7 +297,7 @@ import {
   Menu, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Clock,
-  Lock, AlertTriangle,
+  Lock, AlertTriangle, CheckToSlot,
   SpectatorIcon, CourtkeeperIcon, VolunteerIcon, AdminIcon
 } from './FAIcons'
 
@@ -7121,31 +7121,43 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
             >
               <X className="w-4 h-4" />
             </button>
-            <div className="mb-3"><Trophy className="w-12 h-12 text-amber-400" /></div>
-            <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${
-              pendingWinner === 'player1' ? 'bg-red-500 text-white' : 'bg-slate-300 text-slate-900'
+            
+            {/* Icon */}
+            <div className="flex justify-center mb-4">
+              <CheckToSlot className="w-16 h-16 text-emerald-400" />
+            </div>
+            
+            {/* Winner Name */}
+            <h2 className="text-3xl font-bold text-white mb-2">
+              {pendingWinner === 'player1' 
+                ? (player1?.firstName || 'AKA')
+                : (player2?.firstName || 'SHIRO')
+              }
+            </h2>
+            
+            {/* AKA/SHIRO Tag */}
+            <div className={`inline-block px-3 py-1 rounded text-xs font-bold mb-2 ${
+              pendingWinner === 'player1' ? 'bg-red-500 text-white' : 'bg-white text-slate-900'
             }`}>
               {pendingWinner === 'player1' ? 'AKA' : 'SHIRO'}
             </div>
-            <h2 className="text-2xl font-bold text-white mb-1">
-              {pendingWinner === 'player1' 
-                ? (player1 ? formatDisplayName(player1, state.members, state.useFirstNamesOnly) : 'AKA')
-                : (player2 ? formatDisplayName(player2, state.members, state.useFirstNamesOnly) : 'SHIRO')
-              }
-            </h2>
-            <p className="text-slate-400 text-lg mb-5">wins!</p>
-            <div className="space-y-2">
+            
+            {/* Wins text */}
+            <p className="text-slate-400 text-lg mb-6">wins!</p>
+            
+            {/* Buttons */}
+            <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={() => debounceAction(confirmWin)}
-                className="w-full py-3 rounded-xl font-bold text-lg bg-emerald-600 hover:bg-emerald-500 text-white"
+                className="py-3 rounded-xl font-bold text-sm bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-400 text-white select-none"
               >
-                Yes, Complete Match
+                Confirm, next match
               </button>
               <button
                 onClick={() => debounceAction(undoWinningPoint)}
-                className="w-full py-3 rounded-xl font-bold text-lg bg-slate-700 hover:bg-slate-600 text-slate-300"
+                className="py-3 rounded-xl font-bold text-sm bg-slate-700 hover:bg-slate-600 active:bg-slate-500 text-slate-300 select-none"
               >
-                No, Undo Last Point
+                No, undo point
               </button>
             </div>
           </div>
