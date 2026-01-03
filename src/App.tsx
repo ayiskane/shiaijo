@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react'
+import { useState, useEffect, useRef, useCallback, memo } from 'react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -764,14 +764,27 @@ const saveToStorage = async (state: AppState) => {
   }
 }
 
-// Load from Firebase with localStorage fallback
+// Load from localStorage first (instant), then sync from Firebase in background
 const loadFromStorage = async (): Promise<AppState | null> => {
+  // Try localStorage first for instant load
+  let localData: AppState | null = null
+  try {
+    const local = localStorage.getItem(STORAGE_KEY)
+    if (local) localData = JSON.parse(local) as AppState
+  } catch (e) {
+    console.error('localStorage load error:', e)
+  }
+  
+  // If we have local data, return it immediately
+  // Firebase sync will happen in the polling interval
+  if (localData) return localData
+  
+  // No local data - must fetch from Firebase
   try {
     const response = await fetch(`${FIREBASE_URL}/tournament.json`)
     if (response.ok) {
       const data = await response.json()
       if (data) {
-        // Update localStorage with latest from Firebase
         localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
         return data as AppState
       }
@@ -780,13 +793,6 @@ const loadFromStorage = async (): Promise<AppState | null> => {
     console.error('Firebase load error:', e)
   }
   
-  // Fallback to localStorage
-  try {
-    const local = localStorage.getItem(STORAGE_KEY)
-    if (local) return JSON.parse(local) as AppState
-  } catch (e) {
-    console.error('localStorage load error:', e)
-  }
   return null
 }
 
@@ -908,13 +914,8 @@ export default function App() {
 
   useEffect(() => {
     const load = async () => {
-      // Try to load from Firebase first, with retries
-      let saved = null
-      for (let i = 0; i < 3; i++) {
-        saved = await loadFromStorage()
-        if (saved && saved.members && saved.members.length > 0) break
-        await new Promise(r => setTimeout(r, 500)) // Wait 500ms between retries
-      }
+      // Load from localStorage (instant) or Firebase (if no local data)
+      const saved = await loadFromStorage()
       
       if (saved) {
         setState({
