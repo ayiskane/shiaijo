@@ -2089,7 +2089,7 @@ const SpectatorPortal = memo(function SpectatorPortal({
                         <div className="flex-1">
                           <p className={`font-medium ${p1Won ? 'text-green-400' : 'text-white'}`}>
                             {player1?.firstName} {player1?.lastName}
-                            {p1Won && <span className="ml-2 text-xs">👑</span>}
+                            {p1Won && <Award className="w-4 h-4 ml-2 text-yellow-400 inline" />}
                           </p>
                           <div className="flex items-center gap-1 mt-1">
                             {match.player1Score.map((s, i) => (
@@ -2105,7 +2105,7 @@ const SpectatorPortal = memo(function SpectatorPortal({
                         </div>
                         <div className="flex-1 text-right">
                           <p className={`font-medium ${p2Won ? 'text-green-400' : 'text-white'}`}>
-                            {p2Won && <span className="mr-2 text-xs">👑</span>}
+                            {p2Won && <Award className="w-4 h-4 mr-2 text-yellow-400 inline" />}
                             {player2?.firstName} {player2?.lastName}
                           </p>
                           <div className="flex items-center gap-1 mt-1 justify-end">
@@ -3236,7 +3236,7 @@ const AdminPortal = memo(function AdminPortal({
                         )}
                       </div>
                       <p className="text-xs text-[#6b8fad] mt-1">
-                        {state.adminPassword ? '🔒 Password protected' : 'Anyone can access admin portal'}
+                        {state.adminPassword ? <><Lock className="w-3 h-3 inline mr-1" />Password protected</> : 'Anyone can access admin portal'}
                       </p>
                     </div>
                     
@@ -3276,7 +3276,7 @@ const AdminPortal = memo(function AdminPortal({
                         )}
                       </div>
                       <p className="text-xs text-[#6b8fad] mt-1">
-                        {state.courtkeeperPassword ? '🔒 Password protected' : 'Anyone can access courtkeeper mode'}
+                        {state.courtkeeperPassword ? <><Lock className="w-3 h-3 inline mr-1" />Password protected</> : 'Anyone can access courtkeeper mode'}
                       </p>
                     </div>
                   </div>
@@ -4544,7 +4544,7 @@ const TournamentManager = memo(function TournamentManager({
                           )}
                           {match.status === 'in_progress' && (
                             <span className={`text-[10px] px-2 py-1 rounded text-white animate-pulse flex-shrink-0 whitespace-nowrap ${match.court === 'A' ? 'bg-amber-500' : 'bg-blue-500'}`}>
-                              ● LIVE
+                              <span className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 animate-pulse"></span>LIVE
                             </span>
                           )}
                         </div>
@@ -6114,7 +6114,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       } else {
         setState(prev => ({ ...prev, courtBSelectedMatch: null }))
       }
-      toast('Match started on other court - moving to next', { icon: '↪️', duration: 2000 })
+      toast('Match started on other court - moving to next', { icon: '→', duration: 2000 })
     }
   }, [tournament?.matches, selectedCourt, selectedMatchIdA, selectedMatchIdB, setState])
 
@@ -6628,6 +6628,15 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const [modalDismissedForMatch, setModalDismissedForMatch] = useState<string | null>(null)
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null)
   const [debugMode, setDebugMode] = useState(false)
+  const lastActionRef = useRef<number>(0)
+  
+  // Debounced action wrapper to prevent double-clicks on mobile
+  const debounceAction = (fn: () => void, delay = 200) => {
+    const now = Date.now()
+    if (now - lastActionRef.current < delay) return
+    lastActionRef.current = now
+    fn()
+  }
   
   // dnd-kit sensors for match reordering
   const matchSensors = useSensors(
@@ -6777,7 +6786,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
             </span>
             {currentMatch?.status === 'in_progress' && (
               <span className="px-1.5 py-0.5 bg-emerald-500 text-white rounded text-[10px] font-bold animate-pulse">
-                ● LIVE
+                <span className="inline-block w-1.5 h-1.5 rounded-full bg-current mr-1 animate-pulse"></span>LIVE
               </span>
             )}
             <span className="text-slate-400 font-semibold uppercase">{group?.name || 'No Match'}</span>
@@ -6886,9 +6895,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                 {scoreTypes.slice(0, 4).map(type => (
                   <button
                     key={`p1-${type.id}`}
-                    onClick={() => addScore('player1', type.id)}
+                    onClick={() => debounceAction(() => addScore('player1', type.id))}
                     disabled={gameOver}
-                    className="h-12 sm:h-14 rounded-lg border-2 border-red-500/50 text-red-400 hover:bg-red-500/20 disabled:opacity-30 flex items-center justify-center"
+                    className="h-14 sm:h-16 rounded-lg border-2 border-red-500/50 text-red-400 hover:bg-red-500/20 active:bg-red-500/30 disabled:opacity-30 flex items-center justify-center select-none"
                   >
                     <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
                       {type.letter}
@@ -6898,27 +6907,27 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
               </div>
               <div className="flex gap-2 mt-2">
                 <button
-                  onClick={() => removeHansoku('player1')}
-                  className="w-9 h-9 rounded-lg text-[10px] border border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10 flex items-center justify-center"
+                  onClick={() => debounceAction(() => removeHansoku('player1'))}
+                  className="w-10 h-10 rounded-lg text-[10px] border border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10 active:bg-yellow-500/20 flex items-center justify-center select-none"
                 >
                   <Undo2 className="w-3 h-3" />
                 </button>
                 <button
-                  onClick={() => addHansoku('player1')}
+                  onClick={() => debounceAction(() => addHansoku('player1'))}
                   disabled={p1Hansoku >= p1MaxHansoku || gameOver}
-                  className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30 flex items-center justify-center"
+                  className="flex-1 h-10 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 active:bg-yellow-500/30 disabled:opacity-30 flex items-center justify-center select-none"
                 >
                   <Triangle className="w-4 h-4 fill-current" />
                 </button>
                 <button
-                  onClick={() => removeLastScore('player1')}
-                  className="w-12 h-9 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 flex items-center justify-center"
+                  onClick={() => debounceAction(() => removeLastScore('player1'))}
+                  className="w-12 h-10 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 active:bg-slate-700 flex items-center justify-center select-none"
                 >
                   <Undo2 className="w-4 h-4" />
                 </button>
               </div>
               <button
-                onClick={() => forfeitMatch('player1')}
+                onClick={() => debounceAction(() => forfeitMatch('player1'))}
                 disabled={gameOver}
                 className="w-full mt-2 py-1.5 rounded-lg text-[10px] font-medium border border-red-800/50 text-red-300/70 hover:bg-red-900/30 hover:text-red-300 disabled:opacity-30"
               >
@@ -6933,9 +6942,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                 {scoreTypes.slice(0, 4).map(type => (
                   <button
                     key={`p2-${type.id}`}
-                    onClick={() => addScore('player2', type.id)}
+                    onClick={() => debounceAction(() => addScore('player2', type.id))}
                     disabled={gameOver}
-                    className="h-12 sm:h-14 rounded-lg border-2 border-slate-500/50 text-slate-300 hover:bg-slate-500/20 disabled:opacity-30 flex items-center justify-center"
+                    className="h-14 sm:h-16 rounded-lg border-2 border-slate-500/50 text-slate-300 hover:bg-slate-500/20 active:bg-slate-500/30 disabled:opacity-30 flex items-center justify-center select-none"
                   >
                     <span className="w-9 h-9 rounded-full border-2 border-current flex items-center justify-center text-base font-bold">
                       {type.letter}
@@ -6945,27 +6954,27 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
               </div>
               <div className="flex gap-2 mt-2">
                 <button
-                  onClick={() => removeLastScore('player2')}
-                  className="w-12 h-9 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 flex items-center justify-center"
+                  onClick={() => debounceAction(() => removeLastScore('player2'))}
+                  className="w-12 h-10 rounded-lg border border-slate-600 text-slate-400 hover:bg-slate-700/50 active:bg-slate-700 flex items-center justify-center select-none"
                 >
                   <Undo2 className="w-4 h-4" />
                 </button>
                 <button
-                  onClick={() => addHansoku('player2')}
+                  onClick={() => debounceAction(() => addHansoku('player2'))}
                   disabled={p2Hansoku >= p2MaxHansoku || gameOver}
-                  className="flex-1 h-9 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 disabled:opacity-30 flex items-center justify-center"
+                  className="flex-1 h-10 rounded-lg text-xs border border-yellow-500/50 text-yellow-400 hover:bg-yellow-500/20 active:bg-yellow-500/30 disabled:opacity-30 flex items-center justify-center select-none"
                 >
                   <Triangle className="w-4 h-4 fill-current" />
                 </button>
                 <button
-                  onClick={() => removeHansoku('player2')}
-                  className="w-9 h-9 rounded-lg text-[10px] border border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10 flex items-center justify-center"
+                  onClick={() => debounceAction(() => removeHansoku('player2'))}
+                  className="w-10 h-10 rounded-lg text-[10px] border border-yellow-500/30 text-yellow-600 hover:bg-yellow-500/10 active:bg-yellow-500/20 flex items-center justify-center select-none"
                 >
                   <Undo2 className="w-3 h-3" />
                 </button>
               </div>
               <button
-                onClick={() => forfeitMatch('player2')}
+                onClick={() => debounceAction(() => forfeitMatch('player2'))}
                 disabled={gameOver}
                 className="w-full mt-2 py-1.5 rounded-lg text-[10px] font-medium border border-slate-600/50 text-slate-400/70 hover:bg-slate-700/30 hover:text-slate-300 disabled:opacity-30"
               >
@@ -6979,14 +6988,14 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         {currentMatch?.isHantei && (
           <div className="grid grid-cols-2 gap-3">
             <button
-              onClick={() => completeMatch('player1')}
-              className="h-16 rounded-xl font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 flex items-center justify-center gap-2"
+              onClick={() => debounceAction(() => completeMatch('player1'))}
+              className="h-16 rounded-xl font-bold bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 active:from-red-400 active:to-red-500 flex items-center justify-center gap-2 select-none"
             >
               <Award className="w-5 h-5" /> AKA Wins
             </button>
             <button
-              onClick={() => completeMatch('player2')}
-              className="h-16 rounded-xl font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 flex items-center justify-center gap-2"
+              onClick={() => debounceAction(() => completeMatch('player2'))}
+              className="h-16 rounded-xl font-bold bg-gradient-to-r from-slate-600 to-slate-700 hover:from-slate-500 hover:to-slate-600 active:from-slate-400 active:to-slate-500 flex items-center justify-center gap-2 select-none"
             >
               <Award className="w-5 h-5" /> SHIRO Wins
             </button>
@@ -6997,7 +7006,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         {!group?.isNonBogu && (
           <div className={`rounded-xl p-3 flex items-center gap-3 ${timerSeconds >= timerDuration ? 'bg-amber-950/30 border border-amber-500' : 'bg-slate-800/30'}`}>
             <button
-              onClick={toggleTimer}
+              onClick={() => debounceAction(toggleTimer)}
               className={`w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
                 timerRunning ? 'bg-amber-500 text-black' : 'bg-emerald-500 text-white'
               }`}
@@ -7024,7 +7033,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
             </div>
             
             <button
-              onClick={resetTimer}
+              onClick={() => debounceAction(resetTimer)}
               className="w-12 h-12 rounded-full bg-slate-700 text-slate-300 hover:bg-slate-600 flex items-center justify-center flex-shrink-0"
             >
               <RotateCcw className="w-5 h-5" />
@@ -7058,7 +7067,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                   : 'bg-slate-800 text-slate-500 hover:text-slate-400'
               }`}
             >
-              {debugMode ? '⚡ Debug ON' : '⚙ Debug'}
+              {debugMode ? 'Debug ON' : 'Debug'}
             </button>
           </div>
         )}
@@ -7067,7 +7076,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         {!currentMatch?.isHantei && (
           <div className="grid grid-cols-3 gap-2">
             <button
-              onClick={() => completeMatch('player1')}
+              onClick={() => debounceAction(() => completeMatch('player1'))}
               disabled={!gameOver && !debugMode}
               className={`py-2.5 rounded-lg font-bold text-xs bg-red-600/80 hover:bg-red-600 disabled:opacity-30 ${
                 !gameOver && debugMode ? 'ring-1 ring-amber-500/50' : ''
@@ -7082,7 +7091,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
               Draw
             </button>
             <button
-              onClick={() => completeMatch('player2')}
+              onClick={() => debounceAction(() => completeMatch('player2'))}
               disabled={!gameOver && !debugMode}
               className={`py-2.5 rounded-lg font-bold text-xs bg-slate-500/80 hover:bg-slate-500 disabled:opacity-30 ${
                 !gameOver && debugMode ? 'ring-1 ring-amber-500/50' : ''
@@ -7106,9 +7115,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
               onClick={() => { setShowWinModal(false); setPendingWinner(null); setModalDismissedForMatch(currentMatch?.id || null) }}
               className="absolute top-3 right-3 w-8 h-8 rounded-full bg-slate-800/80 hover:bg-slate-700 text-slate-400 hover:text-white flex items-center justify-center"
             >
-              ✕
+              <X className="w-4 h-4" />
             </button>
-            <div className="text-5xl mb-3">🏆</div>
+            <div className="mb-3"><Trophy className="w-12 h-12 text-amber-400" /></div>
             <div className={`inline-block px-3 py-1 rounded-full text-xs font-bold mb-2 ${
               pendingWinner === 'player1' ? 'bg-red-500 text-white' : 'bg-slate-300 text-slate-900'
             }`}>
@@ -7123,7 +7132,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
             <p className="text-slate-400 text-lg mb-5">wins!</p>
             <div className="space-y-2">
               <button
-                onClick={confirmWin}
+                onClick={() => debounceAction(confirmWin)}
                 className="w-full py-3 rounded-xl font-bold text-lg bg-emerald-600 hover:bg-emerald-500 text-white"
               >
                 Yes, Complete Match
@@ -7157,13 +7166,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
               <div className="flex items-center gap-2 mb-3">
                 <span className="text-slate-400 text-xs">Court:</span>
                 <button
-                  onClick={() => { setSelectedCourt('A'); toast('Now viewing Court A', { icon: '🅰️', duration: 1500 }) }}
+                  onClick={() => { setSelectedCourt('A'); toast('Now viewing Court A', { duration: 1500 }) }}
                   className={`px-4 py-1.5 rounded text-xs font-bold ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400'}`}
                 >
                   A
                 </button>
                 <button
-                  onClick={() => { setSelectedCourt('B'); toast('Now viewing Court B', { icon: '🅱️', duration: 1500 }) }}
+                  onClick={() => { setSelectedCourt('B'); toast('Now viewing Court B', { duration: 1500 }) }}
                   className={`px-4 py-1.5 rounded text-xs font-bold ${selectedCourt === 'B' ? 'bg-blue-500 text-white' : 'bg-slate-800 text-slate-400'}`}
                 >
                   B
