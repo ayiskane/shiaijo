@@ -227,3 +227,10 @@ export const AlertTriangle = ({ className, ...props }: IconProps) => (
     <path fill="currentColor" d="M256 384a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/>
   </svg>
 )
+
+export const CheckToSlot = ({ className, ...props }: IconProps) => (
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512" className={className} {...props}>
+    <path opacity=".4" fill="currentColor" d="M0 128C0 92.7 28.7 64 64 64l448 0c35.3 0 64 28.7 64 64l0 256c0 35.3-28.7 64-64 64L64 448c-35.3 0-64-28.7-64-64L0 128zm128 32a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm32 128a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM128 352a32 32 0 1 0 0-64 32 32 0 1 0 0 64z"/>
+    <path fill="currentColor" d="M527.4 164.7c6.2 6.2 6.2 16.4 0 22.6l-176 176c-6.2 6.2-16.4 6.2-22.6 0l-80-80c-6.2-6.2-6.2-16.4 0-22.6s16.4-6.2 22.6 0L340 329.4 504.7 164.7c6.2-6.2 16.4-6.2 22.6 0z"/>
+  </svg>
+)
