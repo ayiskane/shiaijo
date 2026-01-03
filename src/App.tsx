@@ -3407,6 +3407,9 @@ const GuestsTab = memo(function GuestsTab({ state, setState, onAddGuest, getGrou
       ...prev,
       members: prev.members.map(m => 
         m.id === guestId ? { ...m, ...updates } : m
+      ),
+      guestRegistry: prev.guestRegistry.map(g => 
+        g.id === guestId ? { ...g, ...updates } : g
       )
     }))
   }
@@ -3414,7 +3417,8 @@ const GuestsTab = memo(function GuestsTab({ state, setState, onAddGuest, getGrou
   const deleteGuest = (guestId: string) => {
     setState(prev => ({
       ...prev,
-      members: prev.members.filter(m => m.id !== guestId)
+      members: prev.members.filter(m => m.id !== guestId),
+      guestRegistry: prev.guestRegistry.filter(g => g.id !== guestId)
     }))
     toast.success('Guest removed')
   }
