@@ -172,7 +172,7 @@ const CourtAssignmentDnd = memo(function CourtAssignmentDnd({
       if (oldIndex === newIndex || oldIndex === -1 || newIndex === -1) return
       const newOrder = arrayMove(tournament.groupOrder, oldIndex, newIndex)
       
-      // Auto-stagger courts (A, B, A, B...) for non-shared groups
+      // Auto-stagger courts (B, A, B, A...) for non-shared groups - B first so hantei groups go first
       setState(prev => {
         if (!prev.currentTournament) return prev
         const sharedGroups = prev.sharedGroups || []
@@ -180,7 +180,7 @@ const CourtAssignmentDnd = memo(function CourtAssignmentDnd({
           if (m.status !== 'pending') return m
           if (sharedGroups.includes(m.groupId)) return m
           const groupIdx = newOrder.indexOf(m.groupId)
-          const newCourt = groupIdx % 2 === 0 ? 'A' : 'B'
+          const newCourt = groupIdx % 2 === 0 ? 'B' : 'A'
           return { ...m, court: newCourt as 'A' | 'B' }
         })
         return {
@@ -2308,21 +2308,20 @@ const AdminPortal = memo(function AdminPortal({
     
     const allMatches: Match[] = []
     let globalOrderIndex = 0
-    // Sort groups: regular groups first (Court A), then hantei groups (Court B first)
+    // Sort groups: hantei groups first (Court B), then regular groups (Court A)
     const regularGroups = state.groups.filter(g => participantsByGroup.has(g.id) && !g.isNonBogu).map(g => g.id)
     const hanteiGroups = state.groups.filter(g => participantsByGroup.has(g.id) && g.isNonBogu).map(g => g.id)
     
-    // Interleave: regular groups at even indices (Court A), hantei at odd indices (Court B)
+    // Interleave: hantei groups first (at even indices for Court B), then regular groups (odd indices for Court A)
     // This ensures hantei groups go first on Court B
     const groupOrder: string[] = []
     const maxLen = Math.max(regularGroups.length, hanteiGroups.length)
     for (let i = 0; i < maxLen; i++) {
-      if (i < regularGroups.length) groupOrder.push(regularGroups[i])
       if (i < hanteiGroups.length) groupOrder.push(hanteiGroups[i])
+      if (i < regularGroups.length) groupOrder.push(regularGroups[i])
     }
     
-    // Process groups in order - each group gets assigned to one court
-    // Odd groups (1st, 3rd, 5th) → Court A, Even groups (2nd, 4th, 6th) → Court B
+    // Process groups in order - court order is B/A/B/A so hantei groups (first) go to Court B
     groupOrder.forEach((groupId, groupIndex) => {
       const groupParticipants = participantsByGroup.get(groupId)
       if (!groupParticipants || groupParticipants.length < 2) return
@@ -2330,7 +2329,7 @@ const AdminPortal = memo(function AdminPortal({
       const group = getGroupById(groupId)
       const isHantei = group?.isNonBogu || false
       const matchPairs = generateRoundRobinWithRest(groupParticipants.map(p => p.id))
-      const court = groupIndex % 2 === 0 ? 'A' : 'B'
+      const court = groupIndex % 2 === 0 ? 'B' : 'A'
       
       matchPairs.forEach((pair) => {
         allMatches.push({
@@ -2412,16 +2411,16 @@ const AdminPortal = memo(function AdminPortal({
     const newMatches: Match[] = []
     let globalOrderIndex = 0
     
-    // Sort groups: regular groups first (Court A), then hantei groups (Court B first)
+    // Sort groups: hantei groups first (Court B), then regular groups (Court A)
     const regularGroups = state.groups.filter(g => participantsByGroup.has(g.id) && !g.isNonBogu).map(g => g.id)
     const hanteiGroups = state.groups.filter(g => participantsByGroup.has(g.id) && g.isNonBogu).map(g => g.id)
     
-    // Interleave: regular groups at even indices (Court A), hantei at odd indices (Court B)
+    // Interleave: hantei groups first (Court B), then regular groups (Court A)
     const groupOrder: string[] = []
     const maxLen = Math.max(regularGroups.length, hanteiGroups.length)
     for (let i = 0; i < maxLen; i++) {
-      if (i < regularGroups.length) groupOrder.push(regularGroups[i])
       if (i < hanteiGroups.length) groupOrder.push(hanteiGroups[i])
+      if (i < regularGroups.length) groupOrder.push(regularGroups[i])
     }
     
     groupOrder.forEach((groupId, groupIndex) => {
@@ -2431,7 +2430,7 @@ const AdminPortal = memo(function AdminPortal({
       const group = getGroupById(groupId)
       const isHantei = group?.isNonBogu || false
       const matchPairs = generateRoundRobinWithRest(groupParticipants.map(p => p.id))
-      const court = groupIndex % 2 === 0 ? 'A' : 'B'
+      const court = groupIndex % 2 === 0 ? 'B' : 'A'
       
       matchPairs.forEach((pair) => {
         // Check if this match already exists (same players, same group)
@@ -3723,7 +3722,7 @@ const GroupsManager = memo(function GroupsManager({
             </Button>
           </div>
           <CardDescription className="text-[#8fb3d1] text-xs">
-            Odd positions → Court A (amber) | Even → Court B (blue)
+            Even positions → Court B (blue) | Odd → Court A (amber)
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-2 pt-0">
