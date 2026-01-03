@@ -2301,7 +2301,18 @@ const AdminPortal = memo(function AdminPortal({
     
     const allMatches: Match[] = []
     let globalOrderIndex = 0
-    const groupOrder = state.groups.filter(g => participantsByGroup.has(g.id)).map(g => g.id)
+    // Sort groups: regular groups first (Court A), then hantei groups (Court B first)
+    const regularGroups = state.groups.filter(g => participantsByGroup.has(g.id) && !g.isNonBogu).map(g => g.id)
+    const hanteiGroups = state.groups.filter(g => participantsByGroup.has(g.id) && g.isNonBogu).map(g => g.id)
+    
+    // Interleave: regular groups at even indices (Court A), hantei at odd indices (Court B)
+    // This ensures hantei groups go first on Court B
+    const groupOrder: string[] = []
+    const maxLen = Math.max(regularGroups.length, hanteiGroups.length)
+    for (let i = 0; i < maxLen; i++) {
+      if (i < regularGroups.length) groupOrder.push(regularGroups[i])
+      if (i < hanteiGroups.length) groupOrder.push(hanteiGroups[i])
+    }
     
     // Process groups in order - each group gets assigned to one court
     // Odd groups (1st, 3rd, 5th) → Court A, Even groups (2nd, 4th, 6th) → Court B
@@ -2393,7 +2404,18 @@ const AdminPortal = memo(function AdminPortal({
     
     const newMatches: Match[] = []
     let globalOrderIndex = 0
-    const groupOrder = state.groups.filter(g => participantsByGroup.has(g.id)).map(g => g.id)
+    
+    // Sort groups: regular groups first (Court A), then hantei groups (Court B first)
+    const regularGroups = state.groups.filter(g => participantsByGroup.has(g.id) && !g.isNonBogu).map(g => g.id)
+    const hanteiGroups = state.groups.filter(g => participantsByGroup.has(g.id) && g.isNonBogu).map(g => g.id)
+    
+    // Interleave: regular groups at even indices (Court A), hantei at odd indices (Court B)
+    const groupOrder: string[] = []
+    const maxLen = Math.max(regularGroups.length, hanteiGroups.length)
+    for (let i = 0; i < maxLen; i++) {
+      if (i < regularGroups.length) groupOrder.push(regularGroups[i])
+      if (i < hanteiGroups.length) groupOrder.push(hanteiGroups[i])
+    }
     
     groupOrder.forEach((groupId, groupIndex) => {
       const groupParticipants = participantsByGroup.get(groupId)
@@ -3791,14 +3813,11 @@ const GroupsManager = memo(function GroupsManager({
                   {/* Non-bogu toggle */}
                   <div className="flex items-center gap-1.5">
                     {group.isNonBogu && !editMode && (
-                      <>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/30">Non-Bogu</span>
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
-                      </>
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
                     )}
                     {editMode && (
                       <div className="flex items-center gap-1">
-                        <span className="text-[9px] text-[#6b8fad]">Hantei</span>
+                        <span className="text-[9px] text-[#6b8fad]">Non-bogu</span>
                         <Switch
                           checked={group.isNonBogu}
                           onCheckedChange={(checked) => updateGroup(group.id, { isNonBogu: checked })}
