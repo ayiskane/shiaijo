@@ -3686,8 +3686,13 @@ const GroupsManager = memo(function GroupsManager({
   const [editMode, setEditMode] = useState(false)
   const [editingGroup, setEditingGroup] = useState<Group | null>(null)
   const [newGroupName, setNewGroupName] = useState('')
-  const [draggedGroupId, setDraggedGroupId] = useState<string | null>(null)
-  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [activeGroupId, setActiveGroupId] = useState<string | null>(null)
+
+  const groupSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
 
   const updateGroup = (groupId: string, updates: Partial<Group>) => {
     setState(prev => ({
@@ -3696,17 +3701,24 @@ const GroupsManager = memo(function GroupsManager({
     }))
   }
 
-  const reorderGroups = (draggedId: string, targetId: string) => {
-    if (draggedId === targetId) return
-    setState(prev => {
-      const groups = [...prev.groups]
-      const draggedIdx = groups.findIndex(g => g.id === draggedId)
-      const targetIdx = groups.findIndex(g => g.id === targetId)
-      if (draggedIdx === -1 || targetIdx === -1) return prev
-      const [dragged] = groups.splice(draggedIdx, 1)
-      groups.splice(targetIdx, 0, dragged)
-      return { ...prev, groups }
-    })
+  const handleGroupDragStart = (event: { active: { id: string | number } }) => {
+    setActiveGroupId(event.active.id as string)
+  }
+
+  const handleGroupDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveGroupId(null)
+    
+    if (over && active.id !== over.id) {
+      const oldIndex = state.groups.findIndex(g => g.id === active.id)
+      const newIndex = state.groups.findIndex(g => g.id === over.id)
+      if (oldIndex === newIndex || oldIndex === -1 || newIndex === -1) return
+      
+      setState(prev => ({
+        ...prev,
+        groups: arrayMove(prev.groups, oldIndex, newIndex)
+      }))
+    }
   }
 
   const addGroup = () => {
@@ -3769,181 +3781,51 @@ const GroupsManager = memo(function GroupsManager({
             </div>
           )}
 
-          <div className="space-y-1">
-            {state.groups.map((group, idx) => {
-              const memberCount = state.members.filter(m => m.group === group.id).length
-              const isCourtA = idx % 2 === 0
-              const isDragging = editMode && draggedGroupId === group.id
-              const isDragTarget = editMode && draggedGroupId && draggedGroupId !== group.id
-              const isDropTarget = editMode && dropTargetId === group.id
-              
-              return (
-                <div 
-                  key={group.id}
-                  data-group-id={group.id}
-                  draggable={editMode}
-                  onDragStart={(e) => {
-                    if (!editMode) return
-                    setDraggedGroupId(group.id)
-                    e.dataTransfer.effectAllowed = 'move'
-                  }}
-                  onDragEnd={() => { setDraggedGroupId(null); setDropTargetId(null) }}
-                  onDragOver={(e) => {
-                    if (!editMode || !isDragTarget) return
-                    e.preventDefault()
-                    e.dataTransfer.dropEffect = 'move'
-                    setDropTargetId(group.id)
-                  }}
-                  onDragLeave={() => {
-                    if (dropTargetId === group.id) setDropTargetId(null)
-                  }}
-                  onDrop={(e) => {
-                    e.preventDefault()
-                    if (editMode && draggedGroupId && isDragTarget) {
-                      reorderGroups(draggedGroupId, group.id)
-                    }
-                    setDraggedGroupId(null)
-                    setDropTargetId(null)
-                  }}
-                  className={`relative flex items-center gap-2 p-3 rounded-lg transition-all duration-200 ease-out select-none ${
-                    editMode ? 'cursor-grab active:cursor-grabbing' : ''
-                  } ${
-                    isDragging ? 'opacity-50 scale-95 ring-2 ring-amber-400 z-50' :
-                    isDropTarget ? 'translate-y-1' :
-                    isCourtA 
-                      ? 'bg-amber-950/20 border-l-2 border-l-amber-500' 
-                      : 'bg-blue-950/20 border-l-2 border-l-blue-500'
-                  }`}
-                >
-                  {/* Drop indicator bar */}
-                  {isDropTarget && (
-                    <div className="absolute -top-1.5 left-2 right-2 h-1 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-pulse" />
-                  )}
-                  {/* Drag handle - only show in edit mode */}
-                  {editMode && (
-                    <span
-                      className="text-slate-500 cursor-grab flex-shrink-0 p-1 -m-1"
-                      style={{ touchAction: 'none' }}
-                      onTouchStart={(e) => {
-                        e.stopPropagation()
-                        setDraggedGroupId(group.id)
-                      }}
-                      onTouchMove={(e) => {
-                        if (!draggedGroupId) return
-                        e.preventDefault()
-                        e.stopPropagation()
-                        const touch = e.touches[0]
-                        const target = document.elementFromPoint(touch.clientX, touch.clientY)
-                        const groupEl = target?.closest('[data-group-id]')
-                        if (groupEl) {
-                          const targetId = groupEl.getAttribute('data-group-id')
-                          if (targetId && targetId !== draggedGroupId) {
-                            setDropTargetId(targetId)
-                          }
-                        } else {
-                          setDropTargetId(null)
-                        }
-                      }}
-                      onTouchEnd={() => {
-                        if (draggedGroupId && dropTargetId && draggedGroupId !== dropTargetId) {
-                          reorderGroups(draggedGroupId, dropTargetId)
-                        }
-                        setDraggedGroupId(null)
-                        setDropTargetId(null)
-                      }}
-                    >
-                      <GripVertical className="w-4 h-4" />
-                    </span>
-                  )}
-                  {/* Court badge */}
-                  <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
-                    isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
+          <DndContext
+            sensors={groupSensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleGroupDragStart}
+            onDragEnd={handleGroupDragEnd}
+          >
+            <SortableContext items={state.groups.map(g => g.id)} strategy={verticalListSortingStrategy}>
+              <div className="space-y-1">
+                {state.groups.map((group, idx) => (
+                  <SortableGroupItem
+                    key={group.id}
+                    group={group}
+                    index={idx}
+                    memberCount={state.members.filter(m => m.group === group.id).length}
+                    editMode={editMode}
+                    editingGroup={editingGroup}
+                    setEditingGroup={setEditingGroup}
+                    updateGroup={updateGroup}
+                    deleteGroup={deleteGroup}
+                  />
+                ))}
+              </div>
+            </SortableContext>
+            <DragOverlay dropAnimation={{ duration: 200, easing: 'ease-out' }}>
+              {activeGroupId ? (() => {
+                const activeGroup = state.groups.find(g => g.id === activeGroupId)
+                const activeIndex = state.groups.findIndex(g => g.id === activeGroupId)
+                if (!activeGroup) return null
+                const isCourtA = activeIndex % 2 === 0
+                return (
+                  <div className={`flex items-center gap-2 p-3 rounded-lg shadow-xl border-2 border-amber-400 ${
+                    isCourtA ? 'bg-amber-950/90' : 'bg-blue-950/90'
                   }`}>
-                    {isCourtA ? 'A' : 'B'}
-                  </span>
-                  
-                  {/* Group info */}
-                  {editingGroup?.id === group.id ? (
-                    <Input
-                      value={editingGroup.name}
-                      onChange={e => setEditingGroup({ ...editingGroup, name: e.target.value })}
-                      className="bg-[#1e3a5f] border-[#2a4a6f] flex-1 h-8 text-sm"
-                      autoFocus
-                      onKeyDown={e => {
-                        if (e.key === 'Enter') {
-                          updateGroup(group.id, { name: editingGroup.name })
-                          setEditingGroup(null)
-                        }
-                        if (e.key === 'Escape') setEditingGroup(null)
-                      }}
-                    />
-                  ) : (
-                    <div className="flex-1 min-w-0">
-                      <span className="text-white text-sm font-medium">{group.name}</span>
-                      <span className="text-[#6b8fad] text-xs ml-1">({memberCount})</span>
-                    </div>
-                  )}
-                  
-                  {/* Non-bogu toggle */}
-                  <div className="flex items-center gap-1.5">
-                    {group.isNonBogu && !editMode && (
-                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
-                    )}
-                    {editMode && (
-                      <div className="flex items-center gap-1">
-                        <span className="text-[9px] text-[#6b8fad]">Non-bogu</span>
-                        <Switch
-                          checked={group.isNonBogu}
-                          onCheckedChange={(checked) => updateGroup(group.id, { isNonBogu: checked })}
-                          className="scale-75"
-                        />
-                      </div>
-                    )}
+                    <GripVertical className="w-4 h-4 text-slate-400" />
+                    <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
+                      isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
+                    }`}>
+                      {isCourtA ? 'A' : 'B'}
+                    </span>
+                    <span className="text-white text-sm font-medium">{activeGroup.name}</span>
                   </div>
-                  
-                  {/* Edit/Delete buttons - only in edit mode */}
-                  {editMode && (
-                    <div className="flex gap-0.5">
-                      {editingGroup?.id === group.id ? (
-                        <>
-                          <button
-                            onClick={() => {
-                              updateGroup(group.id, { name: editingGroup.name })
-                              setEditingGroup(null)
-                            }}
-                            className="p-1.5 rounded text-green-400 hover:bg-green-900/30"
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => setEditingGroup(null)}
-                            className="p-1.5 rounded text-slate-400 hover:bg-slate-700/30"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </>
-                      ) : (
-                        <>
-                          <button
-                            onClick={() => setEditingGroup(group)}
-                            className="p-1.5 rounded text-slate-400 hover:bg-slate-700/30"
-                          >
-                            <Edit2 className="w-3 h-3" />
-                          </button>
-                          <button
-                            onClick={() => deleteGroup(group.id)}
-                            className="p-1.5 rounded text-red-400 hover:bg-red-900/30"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </div>
-              )
-            })}
-          </div>
+                )
+              })() : null}
+            </DragOverlay>
+          </DndContext>
         </CardContent>
       </Card>
 
@@ -5767,6 +5649,243 @@ const VolunteersTab = memo(function VolunteersTab({
   )
 })
 
+
+// Sortable Group Item for Groups Manager
+const SortableGroupItem = memo(function SortableGroupItem({
+  group,
+  index,
+  memberCount,
+  editMode,
+  editingGroup,
+  setEditingGroup,
+  updateGroup,
+  deleteGroup,
+}: {
+  group: Group
+  index: number
+  memberCount: number
+  editMode: boolean
+  editingGroup: Group | null
+  setEditingGroup: (group: Group | null) => void
+  updateGroup: (groupId: string, updates: Partial<Group>) => void
+  deleteGroup: (groupId: string) => void
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ 
+    id: group.id,
+    disabled: !editMode 
+  })
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+  
+  const isCourtA = index % 2 === 0
+  
+  return (
+    <div 
+      ref={setNodeRef}
+      style={style}
+      className={`relative flex items-center gap-2 p-3 rounded-lg transition-colors select-none ${
+        isDragging ? 'opacity-50 scale-95 ring-2 ring-amber-400 z-50 bg-[#1a2d42]' :
+        isCourtA 
+          ? 'bg-amber-950/20 border-l-2 border-l-amber-500' 
+          : 'bg-blue-950/20 border-l-2 border-l-blue-500'
+      }`}
+    >
+      {/* Drag handle - only show in edit mode */}
+      {editMode && (
+        <span
+          {...attributes}
+          {...listeners}
+          className="text-slate-500 cursor-grab flex-shrink-0 p-1 -m-1 touch-none"
+        >
+          <GripVertical className="w-4 h-4" />
+        </span>
+      )}
+      {/* Court badge */}
+      <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
+        isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
+      }`}>
+        {isCourtA ? 'A' : 'B'}
+      </span>
+      
+      {/* Group info */}
+      {editingGroup?.id === group.id ? (
+        <Input
+          value={editingGroup.name}
+          onChange={e => setEditingGroup({ ...editingGroup, name: e.target.value })}
+          className="bg-[#1e3a5f] border-[#2a4a6f] flex-1 h-8 text-sm"
+          autoFocus
+          onKeyDown={e => {
+            if (e.key === 'Enter') {
+              updateGroup(group.id, { name: editingGroup.name })
+              setEditingGroup(null)
+            }
+            if (e.key === 'Escape') setEditingGroup(null)
+          }}
+        />
+      ) : (
+        <div className="flex-1 min-w-0">
+          <span className="text-white text-sm font-medium">{group.name}</span>
+          <span className="text-[#6b8fad] text-xs ml-1">({memberCount})</span>
+        </div>
+      )}
+      
+      {/* Non-bogu toggle */}
+      <div className="flex items-center gap-1.5">
+        {group.isNonBogu && !editMode && (
+          <span className="text-[10px] px-1.5 py-0.5 rounded bg-orange-500/20 text-orange-400 border border-orange-500/30">Hantei</span>
+        )}
+        {editMode && (
+          <div className="flex items-center gap-1">
+            <span className="text-[9px] text-[#6b8fad]">Non-bogu</span>
+            <Switch
+              checked={group.isNonBogu}
+              onCheckedChange={(checked) => updateGroup(group.id, { isNonBogu: checked })}
+              className="scale-75"
+            />
+          </div>
+        )}
+      </div>
+      
+      {/* Edit/Delete buttons - only in edit mode */}
+      {editMode && (
+        <div className="flex gap-0.5">
+          {editingGroup?.id === group.id ? (
+            <>
+              <button
+                onClick={() => {
+                  updateGroup(group.id, { name: editingGroup.name })
+                  setEditingGroup(null)
+                }}
+                className="p-1.5 rounded text-green-400 hover:bg-green-900/30"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+              </button>
+              <button
+                onClick={() => setEditingGroup(null)}
+                className="p-1.5 rounded text-slate-400 hover:bg-slate-700/30"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setEditingGroup(group)}
+                className="p-1.5 rounded text-slate-400 hover:bg-slate-700/30"
+              >
+                <Edit2 className="w-3.5 h-3.5" />
+              </button>
+              <button
+                onClick={() => deleteGroup(group.id)}
+                className="p-1.5 rounded text-red-400/70 hover:text-red-400 hover:bg-red-900/30"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
+        </div>
+      )}
+    </div>
+  )
+})
+
+
+// Sortable Match Item for Courtkeeper Match Queue
+const SortableMatchItem = memo(function SortableMatchItem({
+  match,
+  selectedCourt,
+  selectedMatchIdA,
+  selectedMatchIdB,
+  getMemberById,
+  members,
+  useFirstNamesOnly,
+  onSelect,
+  disabled,
+}: {
+  match: Match
+  selectedCourt: 'A' | 'B'
+  selectedMatchIdA: string | null
+  selectedMatchIdB: string | null
+  getMemberById: (id: string) => Member | undefined
+  members: Member[]
+  useFirstNamesOnly: boolean
+  onSelect: (id: string) => void
+  disabled: boolean
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, setActivatorNodeRef } = useSortable({ 
+    id: match.id,
+    disabled 
+  })
+  
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+  
+  const mp1 = getMemberById(match.player1Id)
+  const mp2 = getMemberById(match.player2Id)
+  const isSelectedByThisCourt = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
+  const isSelectedByOtherCourt = match.id === (selectedCourt === 'A' ? selectedMatchIdB : selectedMatchIdA)
+  const isLiveOnThisCourt = match.status === 'in_progress' && match.court === selectedCourt
+  const isLiveOnOtherCourt = match.status === 'in_progress' && match.court !== selectedCourt
+  const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt
+  
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      onClick={() => { if (!isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isDragging) { onSelect(match.id) } }}
+      className={`relative w-full p-2 rounded-lg mb-1 text-xs cursor-pointer select-none transition-colors ${
+        isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400 z-50' :
+        isLiveOnThisCourt ? 'bg-emerald-900/30 border border-emerald-600' 
+        : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
+        : isSelectedByThisCourt ? 'bg-amber-900/30 border border-amber-500'
+        : isSelectedByOtherCourt ? 'bg-slate-800/30 border border-slate-600 opacity-50'
+        : 'bg-slate-800/50 hover:bg-slate-800'
+      }`}
+    >
+      <div className="flex items-center">
+        {canDrag && !isSelectedByThisCourt && !isLiveOnThisCourt && (
+          <span 
+            ref={setActivatorNodeRef}
+            {...attributes}
+            {...listeners}
+            className="text-slate-600 mr-2 cursor-grab active:cursor-grabbing p-2 -m-1 touch-none"
+          >
+            <GripVertical className="w-4 h-4" />
+          </span>
+        )}
+        {isLiveOnThisCourt && (
+          <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+            {selectedCourt}
+          </span>
+        )}
+        {isLiveOnOtherCourt && (
+          <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+            {match.court}
+          </span>
+        )}
+        {isSelectedByThisCourt && !isLiveOnThisCourt && <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
+        {isSelectedByOtherCourt && !isLiveOnOtherCourt && (
+          <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 opacity-60 ${selectedCourt === 'A' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-black'}`}>
+            NEXT {selectedCourt === 'A' ? 'B' : 'A'}
+          </span>
+        )}
+        <span className="text-red-400 truncate flex-1 text-left">
+          {mp1 ? formatDisplayName(mp1, members, useFirstNamesOnly) : '?'}
+        </span>
+        <span className="text-slate-500 px-2">vs</span>
+        <span className="text-slate-300 truncate flex-1 text-right pr-2">
+          {mp2 ? formatDisplayName(mp2, members, useFirstNamesOnly) : '?'}
+        </span>
+      </div>
+    </div>
+  )
+})
+
 // Add Member Form
 const AddMemberForm = memo(function AddMemberForm({ 
   groups,
@@ -6448,9 +6567,28 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const [showWinModal, setShowWinModal] = useState(false)
   const [pendingWinner, setPendingWinner] = useState<'player1' | 'player2' | null>(null)
   const [modalDismissedForMatch, setModalDismissedForMatch] = useState<string | null>(null)
-  const [draggedMatchId, setDraggedMatchId] = useState<string | null>(null)
-  const [dropTargetId, setDropTargetId] = useState<string | null>(null)
+  const [activeMatchId, setActiveMatchId] = useState<string | null>(null)
   const [debugMode, setDebugMode] = useState(false)
+  
+  // dnd-kit sensors for match reordering
+  const matchSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+  
+  const handleMatchDragStart = (event: { active: { id: string | number } }) => {
+    setActiveMatchId(event.active.id as string)
+  }
+  
+  const handleMatchDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event
+    setActiveMatchId(null)
+    
+    if (over && active.id !== over.id) {
+      reorderMatch(active.id as string, over.id as string)
+    }
+  }
   
   // Detect when someone wins and show modal, or close if score undone
   useEffect(() => {
@@ -7065,141 +7203,73 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
               )}
             </div>
             
-            {/* Match Queue List */}
-            <div className="flex-1 overflow-y-auto px-2 pb-2">
-              {groupOrder.map((groupId) => {
-                const groupInfo = getGroupById(groupId)
-                const groupMatches = pendingMatches.filter(m => m.groupId === groupId)
-                if (groupMatches.length === 0) return null
-                
-                return (
-                  <div key={groupId} className="mb-2">
-                    <div className="px-1 py-1 flex items-center gap-1">
-                      {(state.sharedGroups || []).includes(groupId) && (
-                        <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-600 text-white font-bold">A+B</span>
-                      )}
-                      <span className="text-slate-500 text-[10px] font-medium">{groupInfo?.name} ({groupMatches.length})</span>
+            {/* Match Queue List - dnd-kit */}
+            <DndContext
+              sensors={matchSensors}
+              collisionDetection={closestCenter}
+              onDragStart={handleMatchDragStart}
+              onDragEnd={handleMatchDragEnd}
+            >
+              <div className="flex-1 overflow-y-auto px-2 pb-2">
+                {groupOrder.map((groupId) => {
+                  const groupInfo = getGroupById(groupId)
+                  const groupMatches = pendingMatches.filter(m => m.groupId === groupId)
+                  if (groupMatches.length === 0) return null
+                  
+                  return (
+                    <div key={groupId} className="mb-2">
+                      <div className="px-1 py-1 flex items-center gap-1">
+                        {(state.sharedGroups || []).includes(groupId) && (
+                          <span className="text-[8px] px-1 py-0.5 rounded bg-emerald-600 text-white font-bold">A+B</span>
+                        )}
+                        <span className="text-slate-500 text-[10px] font-medium">{groupInfo?.name} ({groupMatches.length})</span>
+                      </div>
+                      <SortableContext items={groupMatches.map(m => m.id)} strategy={verticalListSortingStrategy}>
+                        {groupMatches.map((match) => (
+                          <SortableMatchItem
+                            key={match.id}
+                            match={match}
+                            selectedCourt={selectedCourt}
+                            selectedMatchIdA={selectedMatchIdA}
+                            selectedMatchIdB={selectedMatchIdB}
+                            getMemberById={getMemberById}
+                            members={state.members}
+                            useFirstNamesOnly={state.useFirstNamesOnly}
+                            onSelect={(id) => { selectMatch(id); setShowQueue(false) }}
+                            disabled={match.status !== 'pending'}
+                          />
+                        ))}
+                      </SortableContext>
                     </div>
-                    {groupMatches.map((match) => {
-                      const mp1 = getMemberById(match.player1Id)
-                      const mp2 = getMemberById(match.player2Id)
-                      const isSelectedByThisCourt = match.id === (selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB)
-                      const isSelectedByOtherCourt = match.id === (selectedCourt === 'A' ? selectedMatchIdB : selectedMatchIdA)
-                      const isLiveOnThisCourt = match.status === 'in_progress' && match.court === selectedCourt
-                      const isLiveOnOtherCourt = match.status === 'in_progress' && match.court !== selectedCourt
-                      const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt
-                      const isDragging = draggedMatchId === match.id
-                      const isDragTarget = draggedMatchId && draggedMatchId !== match.id && canDrag
-                      const isDropTarget = dropTargetId === match.id
-                      
-                      return (
-                        <div
-                          key={match.id}
-                          draggable={canDrag}
-                          onDragStart={(e) => {
-                            if (!canDrag) return
-                            setDraggedMatchId(match.id)
-                            e.dataTransfer.effectAllowed = 'move'
-                          }}
-                          onDragEnd={() => { setDraggedMatchId(null); setDropTargetId(null) }}
-                          onDragOver={(e) => {
-                            if (!isDragTarget) return
-                            e.preventDefault()
-                            e.dataTransfer.dropEffect = 'move'
-                            setDropTargetId(match.id)
-                          }}
-                          onDrop={(e) => {
-                            e.preventDefault()
-                            if (draggedMatchId && isDragTarget) {
-                              reorderMatch(draggedMatchId, match.id)
-                            }
-                            setDraggedMatchId(null)
-                            setDropTargetId(null)
-                          }}
-                          data-match-id={match.id}
-                          onClick={() => { if (!isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isDragging) { selectMatch(match.id); setShowQueue(false) } }}
-                          className={`relative w-full p-2 rounded-lg mb-1 text-xs cursor-pointer select-none transition-all duration-200 ease-out ${
-                            isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border border-amber-400 z-50' :
-                            isDropTarget ? 'translate-y-1 bg-slate-800/80' :
-                            isLiveOnThisCourt ? 'bg-emerald-900/30 border border-emerald-600' 
-                            : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
-                            : isSelectedByThisCourt ? 'bg-amber-900/30 border border-amber-500'
-                            : isSelectedByOtherCourt ? 'bg-slate-800/30 border border-slate-600 opacity-50'
-                            : 'bg-slate-800/50 hover:bg-slate-800'
-                          }`}
-                        >
-                          {/* Drop indicator bar */}
-                          {isDropTarget && (
-                            <div className="absolute -top-1.5 left-2 right-2 h-1 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-pulse" />
-                          )}
-                          <div className="flex items-center">
-                            {canDrag && !isSelectedByThisCourt && !isLiveOnThisCourt && (
-                              <span 
-                                className="text-slate-600 mr-2 cursor-grab active:cursor-grabbing p-2 -m-1"
-                                style={{ touchAction: 'none' }}
-                                onTouchStart={(e) => {
-                                  e.stopPropagation()
-                                  setDraggedMatchId(match.id)
-                                }}
-                                onTouchMove={(e) => {
-                                  if (!draggedMatchId) return
-                                  e.preventDefault()
-                                  e.stopPropagation()
-                                  const touch = e.touches[0]
-                                  const target = document.elementFromPoint(touch.clientX, touch.clientY)
-                                  const matchEl = target?.closest('[data-match-id]')
-                                  if (matchEl) {
-                                    const targetId = matchEl.getAttribute('data-match-id')
-                                    if (targetId && targetId !== draggedMatchId) {
-                                      setDropTargetId(targetId)
-                                    }
-                                  } else {
-                                    setDropTargetId(null)
-                                  }
-                                }}
-                                onTouchEnd={() => {
-                                  if (draggedMatchId && dropTargetId && draggedMatchId !== dropTargetId) {
-                                    reorderMatch(draggedMatchId, dropTargetId)
-                                  }
-                                  setDraggedMatchId(null)
-                                  setDropTargetId(null)
-                                }}
-                              ><GripVertical className="w-4 h-4" /></span>
-                            )}
-                            {isLiveOnThisCourt && (
-                              <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
-                                {selectedCourt}
-                              </span>
-                            )}
-                            {isLiveOnOtherCourt && (
-                              <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${match.court === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
-                                {match.court}
-                              </span>
-                            )}
-                            {isSelectedByThisCourt && !isLiveOnThisCourt && <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
-                            {isSelectedByOtherCourt && !isLiveOnOtherCourt && (
-                              <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 opacity-60 ${selectedCourt === 'A' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-black'}`}>
-                                NEXT {selectedCourt === 'A' ? 'B' : 'A'}
-                              </span>
-                            )}
-                            <span className="text-red-400 truncate flex-1 text-left">
-                              {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
-                            </span>
-                            <span className="text-slate-500 px-2">vs</span>
-                            <span className="text-slate-300 truncate flex-1 text-right pr-2">
-                              {mp2 ? formatDisplayName(mp2, state.members, state.useFirstNamesOnly) : '?'}
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    })}
-                  </div>
-                )
-              })}
-              {pendingMatches.length === 0 && (
-                <div className="text-center py-6 text-slate-500 text-xs">No pending matches</div>
-              )}
-            </div>
+                  )
+                })}
+                {pendingMatches.length === 0 && (
+                  <div className="text-center py-6 text-slate-500 text-xs">No pending matches</div>
+                )}
+              </div>
+              <DragOverlay dropAnimation={{ duration: 200, easing: 'ease-out' }}>
+                {activeMatchId ? (() => {
+                  const activeMatch = pendingMatches.find(m => m.id === activeMatchId)
+                  if (!activeMatch) return null
+                  const mp1 = getMemberById(activeMatch.player1Id)
+                  const mp2 = getMemberById(activeMatch.player2Id)
+                  return (
+                    <div className="w-full p-2 rounded-lg text-xs bg-amber-900/80 border-2 border-amber-400 shadow-xl">
+                      <div className="flex items-center">
+                        <GripVertical className="w-4 h-4 text-slate-400 mr-2" />
+                        <span className="text-red-400 truncate flex-1 text-left">
+                          {mp1 ? formatDisplayName(mp1, state.members, state.useFirstNamesOnly) : '?'}
+                        </span>
+                        <span className="text-slate-500 px-2">vs</span>
+                        <span className="text-slate-300 truncate flex-1 text-right">
+                          {mp2 ? formatDisplayName(mp2, state.members, state.useFirstNamesOnly) : '?'}
+                        </span>
+                      </div>
+                    </div>
+                  )
+                })() : null}
+              </DragOverlay>
+            </DndContext>
           </div>
         </>
       )}
