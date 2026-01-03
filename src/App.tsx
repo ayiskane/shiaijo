@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback, memo } from 'react'
+import { useState, useEffect, useRef, useCallback, memo, useMemo } from 'react'
 import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors, DragOverlay } from '@dnd-kit/core'
 import type { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
@@ -3780,6 +3780,7 @@ const GroupsManager = memo(function GroupsManager({
               return (
                 <div 
                   key={group.id}
+                  data-group-id={group.id}
                   draggable={editMode}
                   onDragStart={(e) => {
                     if (!editMode) return
@@ -3819,7 +3820,41 @@ const GroupsManager = memo(function GroupsManager({
                     <div className="absolute -top-1.5 left-2 right-2 h-1 bg-amber-400 rounded-full shadow-[0_0_10px_rgba(251,191,36,0.8)] animate-pulse" />
                   )}
                   {/* Drag handle - only show in edit mode */}
-                  {editMode && <GripVertical className="w-4 h-4 text-slate-500 cursor-grab flex-shrink-0" />}
+                  {editMode && (
+                    <span
+                      className="text-slate-500 cursor-grab flex-shrink-0 p-1 -m-1"
+                      style={{ touchAction: 'none' }}
+                      onTouchStart={(e) => {
+                        e.stopPropagation()
+                        setDraggedGroupId(group.id)
+                      }}
+                      onTouchMove={(e) => {
+                        if (!draggedGroupId) return
+                        e.preventDefault()
+                        e.stopPropagation()
+                        const touch = e.touches[0]
+                        const target = document.elementFromPoint(touch.clientX, touch.clientY)
+                        const groupEl = target?.closest('[data-group-id]')
+                        if (groupEl) {
+                          const targetId = groupEl.getAttribute('data-group-id')
+                          if (targetId && targetId !== draggedGroupId) {
+                            setDropTargetId(targetId)
+                          }
+                        } else {
+                          setDropTargetId(null)
+                        }
+                      }}
+                      onTouchEnd={() => {
+                        if (draggedGroupId && dropTargetId && draggedGroupId !== dropTargetId) {
+                          reorderGroups(draggedGroupId, dropTargetId)
+                        }
+                        setDraggedGroupId(null)
+                        setDropTargetId(null)
+                      }}
+                    >
+                      <GripVertical className="w-4 h-4" />
+                    </span>
+                  )}
                   {/* Court badge */}
                   <span className={`w-6 h-6 rounded flex items-center justify-center text-xs font-bold ${
                     isCourtA ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
