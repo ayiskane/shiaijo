@@ -807,11 +807,26 @@ const sanitizeMatch = (match: Match): Match => ({
 
 const sanitizeTournament = (tournament: Tournament | null): Tournament | null => {
   if (!tournament) return null
+  const matches = (tournament.matches || []).map(sanitizeMatch)
+  // Build groupOrder from matches if missing - preserves order based on match orderIndex
+  let groupOrder = tournament.groupOrder || []
+  if (groupOrder.length === 0 && matches.length > 0) {
+    // Get unique group IDs in order they appear by minimum orderIndex
+    const groupMinOrder = new Map<string, number>()
+    matches.forEach(m => {
+      if (!groupMinOrder.has(m.groupId) || m.orderIndex < groupMinOrder.get(m.groupId)!) {
+        groupMinOrder.set(m.groupId, m.orderIndex)
+      }
+    })
+    groupOrder = Array.from(groupMinOrder.entries())
+      .sort((a, b) => a[1] - b[1])
+      .map(([gId]) => gId)
+  }
   return {
     ...tournament,
-    matches: (tournament.matches || []).map(sanitizeMatch),
+    matches,
     groups: tournament.groups || [],
-    groupOrder: tournament.groupOrder || [],
+    groupOrder,
   }
 }
 
