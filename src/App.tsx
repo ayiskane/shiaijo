@@ -5823,13 +5823,21 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
     m.court === 'B' || (sharedGroups.includes(m.groupId) && m.status !== 'completed')
   ) || []
   
-  // Get group order for queue display (use custom order or tournament's group order)
-  const courtAGroupOrder = state.courtAGroupOrder.length > 0 
-    ? state.courtAGroupOrder 
-    : (tournament?.groupOrder || []).filter(gId => courtAMatches.some(m => m.groupId === gId))
-  const courtBGroupOrder = state.courtBGroupOrder.length > 0 
-    ? state.courtBGroupOrder 
-    : (tournament?.groupOrder || []).filter(gId => courtBMatches.some(m => m.groupId === gId))
+  // Get group order for queue display
+  // IMPORTANT: Filter to only include groups that have pending matches on this court
+  const getValidGroupOrder = (customOrder: string[], tournamentOrder: string[], matches: Match[]) => {
+    const groupsWithMatches = new Set(matches.filter(m => m.status !== 'completed').map(m => m.groupId))
+    // Use custom order if set, but filter to only groups with pending matches
+    if (customOrder.length > 0) {
+      const filtered = customOrder.filter(gId => groupsWithMatches.has(gId))
+      if (filtered.length > 0) return filtered
+    }
+    // Fall back to tournament order filtered by groups with matches
+    return tournamentOrder.filter(gId => groupsWithMatches.has(gId))
+  }
+  
+  const courtAGroupOrder = getValidGroupOrder(state.courtAGroupOrder, tournament?.groupOrder || [], courtAMatches)
+  const courtBGroupOrder = getValidGroupOrder(state.courtBGroupOrder, tournament?.groupOrder || [], courtBMatches)
   
   // Get pending/in-progress matches sorted by group order then match order
   // Shows all non-completed matches including those in_progress on other courts
@@ -6958,11 +6966,14 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                 onClick={() => setShowGroupQueue(!showGroupQueue)}
                 className="w-full px-3 py-2 flex items-center justify-between text-xs font-medium text-slate-400 hover:bg-slate-800/50"
               >
-                <span>Group Queue</span>
+                <span>Group Queue ({groupOrder.length})</span>
                 {showGroupQueue ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
               {showGroupQueue && (
                 <div className="px-3 pb-2 space-y-1">
+                  {groupOrder.length === 0 && (
+                    <p className="text-slate-500 text-[10px] py-2 text-center">No groups on Court {selectedCourt}</p>
+                  )}
                   {groupOrder.map((groupId, gIdx) => {
                     const groupInfo = getGroupById(groupId)
                     const groupMatchCount = pendingMatches.filter(m => m.groupId === groupId).length
