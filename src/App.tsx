@@ -4,15 +4,6 @@ import type { DragEndEvent } from '@dnd-kit/core'
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
 
-// Debounce utility for performance
-const debounce = <T extends (...args: Parameters<T>) => void>(fn: T, delay: number) => {
-  let timeoutId: ReturnType<typeof setTimeout>
-  return (...args: Parameters<T>) => {
-    clearTimeout(timeoutId)
-    timeoutId = setTimeout(() => fn(...args), delay)
-  }
-}
-
 
 // Drag Handle component for sortable items
 // Simple sortable group card - drag via handle only when enabled
@@ -952,14 +943,21 @@ export default function App() {
   }, [])
 
   // Debounced save to prevent excessive writes
-  const debouncedSave = useCallback(
-    debounce((s: AppState) => saveToStorage(s), 500),
-    []
-  )
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   
   useEffect(() => {
-    if (!loading) debouncedSave(state)
-  }, [state, loading, debouncedSave])
+    if (!loading) {
+      // Clear any pending save
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+      // Schedule new save after 500ms
+      saveTimeoutRef.current = setTimeout(() => {
+        saveToStorage(state)
+      }, 500)
+    }
+    return () => {
+      if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current)
+    }
+  }, [state, loading])
 
   useEffect(() => {
     if (portal !== 'select') {
