@@ -297,7 +297,7 @@ import {
   Menu, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Clock,
-  Lock, AlertTriangle, CheckToSlot,
+  Lock, AlertTriangle, MessageCheck,
   SpectatorIcon, CourtkeeperIcon, VolunteerIcon, AdminIcon
 } from './FAIcons'
 
@@ -7124,7 +7124,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
             
             {/* Icon */}
             <div className="flex justify-center mb-4">
-              <CheckToSlot className="w-16 h-16 text-emerald-400" />
+              <MessageCheck className="w-16 h-16 text-emerald-400" />
             </div>
             
             {/* Winner Name */}
