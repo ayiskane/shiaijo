@@ -5024,6 +5024,7 @@ const VolunteersTab = memo(function VolunteersTab({
   const [editingVolunteer, setEditingVolunteer] = useState<Volunteer | null>(null)
   const [editMemberSearch, setEditMemberSearch] = useState('')
   const [editingSignup, setEditingSignup] = useState<{ volunteerId: string, signup: VolunteerSignup } | null>(null)
+  const [historyExpanded, setHistoryExpanded] = useState(false)
 
   const addVolunteer = () => {
     if (!newFirstName.trim() || !newLastName.trim()) return
@@ -5131,52 +5132,22 @@ const VolunteersTab = memo(function VolunteersTab({
       return `${a.lastName} ${a.firstName}`.localeCompare(`${b.lastName} ${b.firstName}`)
     })
 
-  const totalVolunteerMinutes = state.volunteers.reduce((sum, v) => sum + getTotalTime(v).totalMinutes, 0)
-  const totalHours = Math.floor(totalVolunteerMinutes / 60)
-  const totalMins = totalVolunteerMinutes % 60
-
-  // Get courtkeeper volunteers for current tournament
-  const courtkeeperVolunteers = state.currentTournament 
+  // Check if any volunteers are registered for current tournament
+  const tournamentVolunteers = state.currentTournament 
     ? state.volunteers.filter(v => 
-        v.signups.some(s => s.isShiaiSignup && s.tournamentId === state.currentTournament?.id && s.shiaiRole === 'courtkeeper')
+        v.signups.some(s => s.isShiaiSignup && s.tournamentId === state.currentTournament?.id)
       )
     : []
 
   return (
     <div className="space-y-6">
-      {/* Stats */}
-      <div className="grid grid-cols-2 gap-3 sm:gap-4">
-        <Card className="bg-[#142130] border-white/5">
-          <CardContent className="p-4 text-center">
-            <VolunteerIcon className="w-6 h-6 text-pink-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{state.volunteers.length}</p>
-            <p className="text-xs text-[#6b8fad]">Volunteers</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-[#142130] border-white/5">
-          <CardContent className="p-4 text-center">
-            <Clock className="w-6 h-6 text-blue-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{totalHours}h {totalMins}m</p>
-            <p className="text-xs text-[#6b8fad]">Total Time</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-[#142130] border-white/5">
-          <CardContent className="p-4 text-center">
-            <Trophy className="w-6 h-6 text-yellow-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">
-              {state.volunteers.filter(v => getTotalTime(v).totalMinutes >= 600).length}
-            </p>
-            <p className="text-xs text-[#6b8fad]">10+ Hours</p>
-          </CardContent>
-        </Card>
-        <Card className="bg-[#142130] border-white/5">
-          <CardContent className="p-4 text-center">
-            <CourtkeeperIcon className="w-6 h-6 text-orange-400 mx-auto mb-2" />
-            <p className="text-2xl font-bold text-white">{courtkeeperVolunteers.length}</p>
-            <p className="text-xs text-[#6b8fad]">Courtkeepers</p>
-          </CardContent>
-        </Card>
-      </div>
+      {/* No volunteers notice for current tournament */}
+      {state.currentTournament && tournamentVolunteers.length === 0 && (
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg px-4 py-3 flex items-center gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-400 flex-shrink-0" />
+          <p className="text-amber-200 text-sm">Notice: No volunteers found for the current tournament!</p>
+        </div>
+      )}
 
       {/* Volunteer Hours Table */}
       <Card className="bg-[#142130] border-white/5">
@@ -5302,12 +5273,22 @@ const VolunteersTab = memo(function VolunteersTab({
 
       {/* Full History Log */}
       <Card className="bg-[#142130] border-white/5">
-        <CardHeader>
-          <CardTitle className="text-white flex items-center gap-2">
-            <History className="w-5 h-5 text-blue-400" />
-            Complete Volunteer History
+        <CardHeader 
+          className="cursor-pointer hover:bg-white/5 transition-colors rounded-t-lg"
+          onClick={() => setHistoryExpanded(!historyExpanded)}
+        >
+          <CardTitle className="text-white flex items-center justify-between">
+            <span className="flex items-center gap-2">
+              <History className="w-5 h-5 text-blue-400" />
+              Complete Volunteer History
+              <span className="text-sm font-normal text-[#6b8fad]">
+                ({state.volunteers.flatMap(v => v.signups).length} entries)
+              </span>
+            </span>
+            <ChevronDown className={`w-5 h-5 text-[#6b8fad] transition-transform ${historyExpanded ? 'rotate-180' : ''}`} />
           </CardTitle>
         </CardHeader>
+        {historyExpanded && (
         <CardContent>
           {state.volunteers.flatMap(v => v.signups.map(s => ({ volunteer: v, signup: s }))).length === 0 ? (
             <p className="text-[#6b8fad] text-center py-8">No volunteer entries yet</p>
@@ -5354,6 +5335,7 @@ const VolunteersTab = memo(function VolunteersTab({
             </div>
           )}
         </CardContent>
+        )}
       </Card>
 
       {/* Add Volunteer Dialog */}
