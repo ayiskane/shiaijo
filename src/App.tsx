@@ -297,7 +297,7 @@ import {
   Menu, UserPlus, Home,
   CheckCircle2, Table, History, RefreshCw,
   ArrowLeftRight, Award, ChevronLeft, ChevronRight, Undo2, ChevronDown, ChevronUp, Clock,
-  Lock, AlertTriangle, MessageCheck,
+  Lock, AlertTriangle, MessageCheck, 
   SpectatorIcon, CourtkeeperIcon, VolunteerIcon, AdminIcon
 } from './FAIcons'
 
