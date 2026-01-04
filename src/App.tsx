@@ -6394,6 +6394,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const completeMatch = (winner: 'player1' | 'player2' | 'draw') => {
     const matchId = currentMatch?.id
     if (!matchId) return
+    
+    console.log(`[CompleteMatch Debug] Completing match ${matchId} with winner: ${winner}`)
+    console.log(`[CompleteMatch Debug] Match group: ${currentMatch?.groupId}, Round: ${currentMatch?.round || 1}`)
 
     setState(prev => {
       if (!prev.currentTournament) return prev
@@ -6411,6 +6414,14 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         return m
       })
       
+      // Log current state before tiebreaker check
+      const groupId = currentMatch?.groupId
+      const groupMatches = updatedMatches.filter(m => m.groupId === groupId)
+      const completedInGroup = groupMatches.filter(m => m.status === 'completed')
+      const pendingInGroup = groupMatches.filter(m => m.status === 'pending')
+      
+      console.log(`[CompleteMatch Debug] Group ${groupId}: ${completedInGroup.length} completed, ${pendingInGroup.length} pending`)
+      
       // Create a temporary tournament state to check for next round matches
       const tempTournament = { ...prev.currentTournament, matches: updatedMatches }
       
@@ -6419,6 +6430,15 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       
       // Combine all matches
       const allMatches = [...updatedMatches, ...nextRoundMatches]
+      
+      console.log(`[CompleteMatch Debug] After tiebreaker check: ${nextRoundMatches.length} new matches generated`)
+      console.log(`[CompleteMatch Debug] Total matches now: ${allMatches.length}`)
+      
+      const finalPending = allMatches.filter(m => m.groupId === groupId && m.status === 'pending')
+      console.log(`[CompleteMatch Debug] Pending in group ${groupId} after update: ${finalPending.length}`)
+      if (finalPending.length > 0) {
+        console.log(`[CompleteMatch Debug] Pending matches:`, finalPending.map(m => `R${m.round || 1}: ${m.id}`).join(', '))
+      }
       
       // Show toast if new tiebreaker matches were added
       if (nextRoundMatches.length > 0) {
