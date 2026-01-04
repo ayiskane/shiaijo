@@ -620,21 +620,22 @@ const generateNextRoundMatchesForGroup = (
   // Find current max round
   const currentRound = Math.max(...groupMatches.map(m => m.round || 1))
   
+  // Safety: Max 5 tiebreaker rounds to prevent infinite loops
+  const MAX_TIEBREAKER_ROUNDS = 5
+  if (currentRound > MAX_TIEBREAKER_ROUNDS) {
+    return [] // Accept tie after max rounds
+  }
+  
   // Check if all matches in current round are completed
   const currentRoundMatches = groupMatches.filter(m => (m.round || 1) === currentRound)
   const pendingInCurrentRound = currentRoundMatches.filter(m => m.status !== 'completed')
   
-  console.log(`[Tiebreaker Debug] Group: ${groupId}, Round: ${currentRound}, Pending in round: ${pendingInCurrentRound.length}`)
-  
   if (pendingInCurrentRound.length > 0) {
-    console.log(`[Tiebreaker Debug] Still pending matches in round ${currentRound}, not generating new matches`)
     return [] // Current round not complete yet
   }
   
   // Calculate standings using all completed matches
   const standings = calculateStandings(groupId, tournament.matches, members)
-  
-  console.log(`[Tiebreaker Debug] Standings:`, standings.map(s => `${s.playerName}: ${s.points}pts`).join(', '))
   
   if (standings.length < 2) return []
   
@@ -642,21 +643,15 @@ const generateNextRoundMatchesForGroup = (
   const topPoints = standings[0].points
   const tiedAtTop = standings.filter(s => s.points === topPoints)
   
-  console.log(`[Tiebreaker Debug] Top points: ${topPoints}, Players tied at top: ${tiedAtTop.length} (${tiedAtTop.map(s => s.playerName).join(', ')})`)
-  
   if (tiedAtTop.length === 1) {
     // Clear winner - no more matches needed for this group
-    console.log(`[Tiebreaker Debug] Clear winner: ${standings[0].playerName}, no more matches needed`)
     return []
   }
-  
-  console.log(`[Tiebreaker Debug] TIE DETECTED - generating tiebreaker matches`)
   
   // We have ties at the top - need tiebreaker matches
   const tiedPlayerIds = tiedAtTop.map(s => s.playerId)
   
   // Check if all tied players have already played each other in tiebreaker rounds
-  // If so, use ippon differential, then head-to-head
   const tiebreakerMatches = groupMatches.filter(m => 
     (m.round || 1) > 1 && 
     tiedPlayerIds.includes(m.player1Id) && 
@@ -687,21 +682,15 @@ const generateNextRoundMatchesForGroup = (
     playedPairs.add([m.player1Id, m.player2Id].sort().join('-'))
   })
   
-  console.log(`[Tiebreaker Debug] Tiebreaker matches so far: ${tiebreakerMatches.length}, played pairs: ${Array.from(playedPairs).join(', ')}`)
-  
   const newPairs = matchPairs.filter(([p1, p2]) => {
     const pairKey = [p1, p2].sort().join('-')
     return !playedPairs.has(pairKey)
   })
   
-  console.log(`[Tiebreaker Debug] New pairs to generate: ${newPairs.length}`)
-  
   if (newPairs.length === 0) {
     // All tied players have played each other in tiebreakers
     // At this point, we need sudden death - just pick first two
-    console.log(`[Tiebreaker Debug] All pairs played, checking for sudden death. Still tied: ${tiedPlayerIds.length} players`)
     if (tiedPlayerIds.length >= 2) {
-      console.log(`[Tiebreaker Debug] GENERATING SUDDEN DEATH MATCH`)
       newMatches.push({
         id: generateId(),
         groupId,
@@ -745,7 +734,6 @@ const generateNextRoundMatchesForGroup = (
     })
   }
   
-  console.log(`[Tiebreaker Debug] Generated ${newMatches.length} new matches for group ${groupId}`)
   return newMatches
 }
 
@@ -6394,9 +6382,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const completeMatch = (winner: 'player1' | 'player2' | 'draw') => {
     const matchId = currentMatch?.id
     if (!matchId) return
-    
-    console.log(`[CompleteMatch Debug] Completing match ${matchId} with winner: ${winner}`)
-    console.log(`[CompleteMatch Debug] Match group: ${currentMatch?.groupId}, Round: ${currentMatch?.round || 1}`)
 
     setState(prev => {
       if (!prev.currentTournament) return prev
@@ -6414,14 +6399,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         return m
       })
       
-      // Log current state before tiebreaker check
-      const groupId = currentMatch?.groupId
-      const groupMatches = updatedMatches.filter(m => m.groupId === groupId)
-      const completedInGroup = groupMatches.filter(m => m.status === 'completed')
-      const pendingInGroup = groupMatches.filter(m => m.status === 'pending')
-      
-      console.log(`[CompleteMatch Debug] Group ${groupId}: ${completedInGroup.length} completed, ${pendingInGroup.length} pending`)
-      
       // Create a temporary tournament state to check for next round matches
       const tempTournament = { ...prev.currentTournament, matches: updatedMatches }
       
@@ -6430,15 +6407,6 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       
       // Combine all matches
       const allMatches = [...updatedMatches, ...nextRoundMatches]
-      
-      console.log(`[CompleteMatch Debug] After tiebreaker check: ${nextRoundMatches.length} new matches generated`)
-      console.log(`[CompleteMatch Debug] Total matches now: ${allMatches.length}`)
-      
-      const finalPending = allMatches.filter(m => m.groupId === groupId && m.status === 'pending')
-      console.log(`[CompleteMatch Debug] Pending in group ${groupId} after update: ${finalPending.length}`)
-      if (finalPending.length > 0) {
-        console.log(`[CompleteMatch Debug] Pending matches:`, finalPending.map(m => `R${m.round || 1}: ${m.id}`).join(', '))
-      }
       
       // Show toast if new tiebreaker matches were added
       if (nextRoundMatches.length > 0) {
