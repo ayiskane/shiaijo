@@ -624,12 +624,17 @@ const generateNextRoundMatchesForGroup = (
   const currentRoundMatches = groupMatches.filter(m => (m.round || 1) === currentRound)
   const pendingInCurrentRound = currentRoundMatches.filter(m => m.status !== 'completed')
   
+  console.log(`[Tiebreaker Debug] Group: ${groupId}, Round: ${currentRound}, Pending in round: ${pendingInCurrentRound.length}`)
+  
   if (pendingInCurrentRound.length > 0) {
+    console.log(`[Tiebreaker Debug] Still pending matches in round ${currentRound}, not generating new matches`)
     return [] // Current round not complete yet
   }
   
   // Calculate standings using all completed matches
   const standings = calculateStandings(groupId, tournament.matches, members)
+  
+  console.log(`[Tiebreaker Debug] Standings:`, standings.map(s => `${s.playerName}: ${s.points}pts`).join(', '))
   
   if (standings.length < 2) return []
   
@@ -637,10 +642,15 @@ const generateNextRoundMatchesForGroup = (
   const topPoints = standings[0].points
   const tiedAtTop = standings.filter(s => s.points === topPoints)
   
+  console.log(`[Tiebreaker Debug] Top points: ${topPoints}, Players tied at top: ${tiedAtTop.length} (${tiedAtTop.map(s => s.playerName).join(', ')})`)
+  
   if (tiedAtTop.length === 1) {
     // Clear winner - no more matches needed for this group
+    console.log(`[Tiebreaker Debug] Clear winner: ${standings[0].playerName}, no more matches needed`)
     return []
   }
+  
+  console.log(`[Tiebreaker Debug] TIE DETECTED - generating tiebreaker matches`)
   
   // We have ties at the top - need tiebreaker matches
   const tiedPlayerIds = tiedAtTop.map(s => s.playerId)
@@ -677,15 +687,21 @@ const generateNextRoundMatchesForGroup = (
     playedPairs.add([m.player1Id, m.player2Id].sort().join('-'))
   })
   
+  console.log(`[Tiebreaker Debug] Tiebreaker matches so far: ${tiebreakerMatches.length}, played pairs: ${Array.from(playedPairs).join(', ')}`)
+  
   const newPairs = matchPairs.filter(([p1, p2]) => {
     const pairKey = [p1, p2].sort().join('-')
     return !playedPairs.has(pairKey)
   })
   
+  console.log(`[Tiebreaker Debug] New pairs to generate: ${newPairs.length}`)
+  
   if (newPairs.length === 0) {
     // All tied players have played each other in tiebreakers
     // At this point, we need sudden death - just pick first two
+    console.log(`[Tiebreaker Debug] All pairs played, checking for sudden death. Still tied: ${tiedPlayerIds.length} players`)
     if (tiedPlayerIds.length >= 2) {
+      console.log(`[Tiebreaker Debug] GENERATING SUDDEN DEATH MATCH`)
       newMatches.push({
         id: generateId(),
         groupId,
@@ -729,6 +745,7 @@ const generateNextRoundMatchesForGroup = (
     })
   }
   
+  console.log(`[Tiebreaker Debug] Generated ${newMatches.length} new matches for group ${groupId}`)
   return newMatches
 }
 
