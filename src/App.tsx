@@ -906,6 +906,7 @@ export default function App() {
   const [portal, setPortal] = useState<'select' | 'admin' | 'courtkeeper' | 'spectator' | 'volunteer' | 'admin-login' | 'courtkeeper-login'>('select')
   const [passwordInput, setPasswordInput] = useState('')
   const [passwordError, setPasswordError] = useState(false)
+  const [courtkeeperFromMain, setCourtkeeperFromMain] = useState(false)
   const [state, setState] = useState<AppState>(defaultState)
   const [loading, setLoading] = useState(true)
   const isMobile = useDeviceDetection()
@@ -1174,7 +1175,7 @@ export default function App() {
             </button>
             
             <button 
-              onClick={() => state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper')}
+              onClick={() => { setCourtkeeperFromMain(true); state.courtkeeperPassword ? setPortal('courtkeeper-login') : setPortal('courtkeeper') }}
               className="py-4 md:py-5 px-2 rounded-xl md:rounded-2xl text-xs md:text-sm font-medium bg-sky-950/40 backdrop-blur-sm text-sky-300 border border-sky-500/30 shadow-[0_0_15px_rgba(14,165,233,0.15)] hover:bg-sky-900/50 hover:border-sky-400/50 hover:shadow-[0_0_25px_rgba(14,165,233,0.25)] hover:text-sky-200 transition-all duration-300 flex flex-col items-center gap-2"
             >
               <CourtkeeperIcon className="w-6 h-6 md:w-7 md:h-7" />
@@ -1252,6 +1253,8 @@ export default function App() {
       onSwitchPortal={(p) => setPortal(p as any)}
       getMemberById={getMemberById}
       getGroupById={getGroupById}
+      fromMainMenu={courtkeeperFromMain}
+      onCourtSelected={() => setCourtkeeperFromMain(false)}
     />
   )
 }
@@ -5975,7 +5978,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   isMobile,
   onSwitchPortal,
   getMemberById,
-  getGroupById
+  getGroupById,
+  fromMainMenu,
+  onCourtSelected
 }: { 
   state: AppState
   setState: React.Dispatch<React.SetStateAction<AppState>>
@@ -5983,8 +5988,11 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   onSwitchPortal: (portal: string) => void
   getMemberById: (id: string) => Member | undefined
   getGroupById: (id: string) => Group | undefined
+  fromMainMenu?: boolean
+  onCourtSelected?: () => void
 }) {
   const [selectedCourt, setSelectedCourt] = useState<'A' | 'B'>('A')
+  const [showCourtSelect, setShowCourtSelect] = useState(fromMainMenu || false)
   const [lastMatchId, setLastMatchId] = useState<string | null>(null)
   
   const tournament = state.currentTournament
@@ -6763,6 +6771,45 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   return (
     <div className="h-screen bg-[#0a0e14] text-white flex flex-col overflow-hidden">
       <Toaster theme="dark" position={isMobile ? "bottom-center" : "top-center"} />
+      
+      {/* Court Selection Modal - Only shown when entering from main menu */}
+      {showCourtSelect && (
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
+          <div className="bg-[#1a2535] rounded-2xl p-6 max-w-sm w-full text-center border border-slate-700 shadow-2xl">
+            <div className="mb-6">
+              <ShiaijoLogo size={48} glow />
+            </div>
+            <h2 className="text-xl font-bold text-white mb-2">Select Court</h2>
+            <p className="text-slate-400 text-sm mb-6">Which court are you keeping score for?</p>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                onClick={() => { 
+                  setSelectedCourt('A')
+                  setShowCourtSelect(false)
+                  onCourtSelected?.()
+                  toast.success('Now viewing Court A')
+                }}
+                className="py-6 rounded-xl font-bold text-xl bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-300 active:scale-95 transition-all select-none"
+                style={{ touchAction: 'manipulation' }}
+              >
+                Court A
+              </button>
+              <button
+                onClick={() => { 
+                  setSelectedCourt('B')
+                  setShowCourtSelect(false)
+                  onCourtSelected?.()
+                  toast.success('Now viewing Court B')
+                }}
+                className="py-6 rounded-xl font-bold text-xl bg-blue-500 text-white hover:bg-blue-400 active:bg-blue-300 active:scale-95 transition-all select-none"
+                style={{ touchAction: 'manipulation' }}
+              >
+                Court B
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       
       {/* Header */}
       <header className="bg-[#0f1419] border-b border-slate-800 px-3 py-2 flex-shrink-0">
