@@ -6776,7 +6776,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       {showCourtSelect && (
         <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4">
           <div className="bg-[#1a2535] rounded-2xl p-6 max-w-sm w-full text-center border border-slate-700 shadow-2xl">
-            <div className="mb-6">
+            <div className="mb-6 flex items-center justify-center">
               <ShiaijoLogo size={48} glow />
             </div>
             <h2 className="text-xl font-bold text-white mb-2">Select Court</h2>
@@ -6789,7 +6789,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                   onCourtSelected?.()
                   toast.success('Now viewing Court A')
                 }}
-                className="py-6 rounded-xl font-bold text-xl bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-300 active:scale-95 transition-all select-none"
+                className="py-3 rounded-xl font-bold text-lg bg-amber-500 text-black hover:bg-amber-400 active:bg-amber-300 active:scale-95 transition-all select-none"
                 style={{ touchAction: 'manipulation' }}
               >
                 Court A
@@ -6801,7 +6801,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
                   onCourtSelected?.()
                   toast.success('Now viewing Court B')
                 }}
-                className="py-6 rounded-xl font-bold text-xl bg-blue-500 text-white hover:bg-blue-400 active:bg-blue-300 active:scale-95 transition-all select-none"
+                className="py-3 rounded-xl font-bold text-lg bg-blue-500 text-white hover:bg-blue-400 active:bg-blue-300 active:scale-95 transition-all select-none"
                 style={{ touchAction: 'manipulation' }}
               >
                 Court B
