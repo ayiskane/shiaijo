@@ -7105,19 +7105,28 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         )}
 
         {/* Up Next Card */}
-        {nextMatch && (
-          <div className="bg-slate-800/20 rounded-xl p-2 border border-slate-700/30">
-            <div className="flex items-center justify-between text-xs">
-              <span className="text-slate-500 font-medium">UP NEXT</span>
-              <span className="text-slate-600">{nextGroup?.name}</span>
+        {nextMatch && (() => {
+          const selectedMatchId = selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB
+          const isManuallySelected = nextMatch.id === selectedMatchId
+          return (
+            <div className={`bg-slate-800/20 rounded-xl p-2 border ${isManuallySelected ? 'border-amber-500/50' : 'border-slate-700/30'}`}>
+              <div className="flex items-center justify-between text-xs">
+                <div className="flex items-center gap-2">
+                  <span className="text-slate-500 font-medium">UP NEXT</span>
+                  {isManuallySelected && (
+                    <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold">SELECTED</span>
+                  )}
+                </div>
+                <span className="text-slate-600">{nextGroup?.name}</span>
+              </div>
+              <div className="flex items-center justify-center gap-2 mt-1 text-sm">
+                <span className="text-red-400">{nextPlayer1 ? formatDisplayName(nextPlayer1, state.members, state.useFirstNamesOnly) : '?'}</span>
+                <span className="text-slate-500">vs</span>
+                <span className="text-slate-300">{nextPlayer2 ? formatDisplayName(nextPlayer2, state.members, state.useFirstNamesOnly) : '?'}</span>
+              </div>
             </div>
-            <div className="flex items-center justify-center gap-2 mt-1 text-sm">
-              <span className="text-red-400">{nextPlayer1 ? formatDisplayName(nextPlayer1, state.members, state.useFirstNamesOnly) : '?'}</span>
-              <span className="text-slate-500">vs</span>
-              <span className="text-slate-300">{nextPlayer2 ? formatDisplayName(nextPlayer2, state.members, state.useFirstNamesOnly) : '?'}</span>
-            </div>
-          </div>
-        )}
+          )
+        })()}
 
         {/* Debug Mode Toggle */}
         {currentMatch && (
