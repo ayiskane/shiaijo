@@ -6390,11 +6390,15 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         }, 500)
       }
       
+      // Only clear selection if the completed match was the selected one
+      const clearCourtA = prev.courtASelectedMatch === matchId
+      const clearCourtB = prev.courtBSelectedMatch === matchId
+      
       return {
         ...prev,
         currentTournament: { ...prev.currentTournament, matches: allMatches },
-        courtASelectedMatch: selectedCourt === 'A' ? null : prev.courtASelectedMatch,
-        courtBSelectedMatch: selectedCourt === 'B' ? null : prev.courtBSelectedMatch,
+        courtASelectedMatch: clearCourtA ? null : prev.courtASelectedMatch,
+        courtBSelectedMatch: clearCourtB ? null : prev.courtBSelectedMatch,
       }
     })
     
@@ -6444,11 +6448,15 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
       const nextRoundMatches = checkAndGenerateNextRoundMatches(tempTournament, prev.members, getGroupById)
       const allMatches = [...updatedMatches, ...nextRoundMatches]
       
+      // Only clear selection if the forfeited match was the selected one
+      const clearCourtA = prev.courtASelectedMatch === matchId
+      const clearCourtB = prev.courtBSelectedMatch === matchId
+      
       return {
         ...prev,
         currentTournament: { ...prev.currentTournament, matches: allMatches },
-        courtASelectedMatch: selectedCourt === 'A' ? null : prev.courtASelectedMatch,
-        courtBSelectedMatch: selectedCourt === 'B' ? null : prev.courtBSelectedMatch,
+        courtASelectedMatch: clearCourtA ? null : prev.courtASelectedMatch,
+        courtBSelectedMatch: clearCourtB ? null : prev.courtBSelectedMatch,
       }
     })
     
