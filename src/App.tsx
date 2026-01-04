@@ -6076,16 +6076,14 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const isLockedA = inProgressA && hasMatchActivity(inProgressA, state.timerSecondsA)
   const isLockedB = inProgressB && hasMatchActivity(inProgressB, state.timerSecondsB)
   
+  // Current match is either the locked in-progress match, or the first pending match
+  // Selection does NOT change current - it sets the NEXT match
   const currentMatchA = isLockedA
     ? inProgressA
-    : selectedMatchIdA 
-      ? courtAMatches.find(m => m.id === selectedMatchIdA && m.status !== 'completed')
-      : pendingMatchesA.find(m => m.status === 'pending') || inProgressA
+    : inProgressA || pendingMatchesA.find(m => m.status === 'pending')
   const currentMatchB = isLockedB
     ? inProgressB
-    : selectedMatchIdB
-      ? courtBMatches.find(m => m.id === selectedMatchIdB && m.status !== 'completed')
-      : pendingMatchesB.find(m => m.status === 'pending') || inProgressB
+    : inProgressB || pendingMatchesB.find(m => m.status === 'pending')
   
   const currentMatch = selectedCourt === 'A' ? currentMatchA : currentMatchB
   const pendingMatches = selectedCourt === 'A' ? pendingMatchesA : pendingMatchesB
