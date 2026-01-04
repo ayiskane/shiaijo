@@ -383,7 +383,7 @@ interface PlayerStanding {
   gamesLeft: number
   ipponsScored: number
   ipponsAgainst: number
-  results: Map<string, 'W' | 'L' | 'D' | null>
+  results: Map<string, ('W' | 'L' | 'D')[]>
 }
 
 interface VolunteerSignup {
@@ -571,25 +571,31 @@ const calculateStandings = (
     p2Standing.ipponsScored += p2Ippons
     p2Standing.ipponsAgainst += p1Ippons
     
+    // Helper to push result to array
+    const addResult = (standing: PlayerStanding, opponentId: string, result: 'W' | 'L' | 'D') => {
+      const existing = standing.results.get(opponentId) || []
+      standing.results.set(opponentId, [...existing, result])
+    }
+    
     if (match.winner === 'player1') {
       p1Standing.points += 2
       p1Standing.wins += 1
       p2Standing.losses += 1
-      p1Standing.results.set(match.player2Id, 'W')
-      p2Standing.results.set(match.player1Id, 'L')
+      addResult(p1Standing, match.player2Id, 'W')
+      addResult(p2Standing, match.player1Id, 'L')
     } else if (match.winner === 'player2') {
       p2Standing.points += 2
       p2Standing.wins += 1
       p1Standing.losses += 1
-      p1Standing.results.set(match.player2Id, 'L')
-      p2Standing.results.set(match.player1Id, 'W')
+      addResult(p1Standing, match.player2Id, 'L')
+      addResult(p2Standing, match.player1Id, 'W')
     } else if (match.winner === 'draw') {
       p1Standing.points += 1
       p2Standing.points += 1
       p1Standing.draws += 1
       p2Standing.draws += 1
-      p1Standing.results.set(match.player2Id, 'D')
-      p2Standing.results.set(match.player1Id, 'D')
+      addResult(p1Standing, match.player2Id, 'D')
+      addResult(p2Standing, match.player1Id, 'D')
     }
   })
   
@@ -4674,13 +4680,29 @@ const StandingsView = memo(function StandingsView({
                           if (m.id === standing.playerId) {
                             return <td key={m.id} className="p-2 text-center text-[#4a6a8a]">-</td>
                           }
-                          const result = standing.results.get(m.id)
-                          let className = 'p-2 text-center '
-                          if (result === 'W') className += 'text-green-400 bg-green-900/20'
-                          else if (result === 'L') className += 'text-red-400 bg-red-900/20'
-                          else if (result === 'D') className += 'text-[#b8d4ec] bg-[#243a52]/50'
-                          else className += 'text-[#4a6a8a]'
-                          return <td key={m.id} className={className}>{result || '-'}</td>
+                          const results = standing.results.get(m.id) || []
+                          if (results.length === 0) {
+                            return <td key={m.id} className="p-2 text-center text-[#4a6a8a]">-</td>
+                          }
+                          // Show all results (e.g., "W W" for two wins including tiebreaker)
+                          return (
+                            <td key={m.id} className="p-2 text-center">
+                              <div className="flex items-center justify-center gap-0.5">
+                                {results.map((r, i) => (
+                                  <span 
+                                    key={i} 
+                                    className={`px-1 py-0.5 rounded text-xs font-medium ${
+                                      r === 'W' ? 'text-green-400 bg-green-900/30' :
+                                      r === 'L' ? 'text-red-400 bg-red-900/30' :
+                                      'text-[#b8d4ec] bg-[#243a52]/50'
+                                    }`}
+                                  >
+                                    {r}
+                                  </span>
+                                ))}
+                              </div>
+                            </td>
+                          )
                         })}
                       </tr>
                     ))}
