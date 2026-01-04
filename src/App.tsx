@@ -6770,6 +6770,13 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   
   // Get next pending match (after current)
   const getNextMatch = () => {
+    const selectedMatchId = selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB
+    // If there's a manually selected match that's different from current, that's the "next" match
+    if (selectedMatchId && selectedMatchId !== currentMatch?.id) {
+      const selectedMatch = pendingMatches.find(m => m.id === selectedMatchId && m.status === 'pending')
+      if (selectedMatch) return selectedMatch
+    }
+    // Otherwise, get the next match after current in the queue
     const currentIdx = pendingMatches.findIndex(m => m.id === currentMatch?.id)
     return currentIdx >= 0 && currentIdx < pendingMatches.length - 1 
       ? pendingMatches[currentIdx + 1] 
@@ -6779,6 +6786,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const nextPlayer1 = nextMatch ? getMemberById(nextMatch.player1Id) : null
   const nextPlayer2 = nextMatch ? getMemberById(nextMatch.player2Id) : null
   const nextGroup = nextMatch ? getGroupById(nextMatch.groupId) : null
+  // Check if Up Next is a manually selected match (not just the natural next in queue)
+  const selectedMatchId = selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB
+  const isNextManuallySelected = selectedMatchId !== null && selectedMatchId !== currentMatch?.id && nextMatch?.id === selectedMatchId
 
   return (
     <div className="h-screen bg-[#0a0e14] text-white flex flex-col overflow-hidden">
@@ -7105,28 +7115,24 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
         )}
 
         {/* Up Next Card */}
-        {nextMatch && (() => {
-          const selectedMatchId = selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB
-          const isManuallySelected = nextMatch.id === selectedMatchId
-          return (
-            <div className={`bg-slate-800/20 rounded-xl p-2 border ${isManuallySelected ? 'border-amber-500/50' : 'border-slate-700/30'}`}>
-              <div className="flex items-center justify-between text-xs">
-                <div className="flex items-center gap-2">
-                  <span className="text-slate-500 font-medium">UP NEXT</span>
-                  {isManuallySelected && (
-                    <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold">SELECTED</span>
-                  )}
-                </div>
-                <span className="text-slate-600">{nextGroup?.name}</span>
+        {nextMatch && (
+          <div className={`bg-slate-800/20 rounded-xl p-2 border ${isNextManuallySelected ? 'border-amber-500/50' : 'border-slate-700/30'}`}>
+            <div className="flex items-center justify-between text-xs">
+              <div className="flex items-center gap-2">
+                <span className="text-slate-500 font-medium">UP NEXT</span>
+                {isNextManuallySelected && (
+                  <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold">SELECTED</span>
+                )}
               </div>
-              <div className="flex items-center justify-center gap-2 mt-1 text-sm">
-                <span className="text-red-400">{nextPlayer1 ? formatDisplayName(nextPlayer1, state.members, state.useFirstNamesOnly) : '?'}</span>
-                <span className="text-slate-500">vs</span>
-                <span className="text-slate-300">{nextPlayer2 ? formatDisplayName(nextPlayer2, state.members, state.useFirstNamesOnly) : '?'}</span>
-              </div>
+              <span className="text-slate-600">{nextGroup?.name}</span>
             </div>
-          )
-        })()}
+            <div className="flex items-center justify-center gap-2 mt-1 text-sm">
+              <span className="text-red-400">{nextPlayer1 ? formatDisplayName(nextPlayer1, state.members, state.useFirstNamesOnly) : '?'}</span>
+              <span className="text-slate-500">vs</span>
+              <span className="text-slate-300">{nextPlayer2 ? formatDisplayName(nextPlayer2, state.members, state.useFirstNamesOnly) : '?'}</span>
+            </div>
+          </div>
+        )}
 
         {/* Debug Mode Toggle */}
         {currentMatch && (
