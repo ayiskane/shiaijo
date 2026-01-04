@@ -6789,9 +6789,9 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const nextPlayer1 = nextMatch ? getMemberById(nextMatch.player1Id) : null
   const nextPlayer2 = nextMatch ? getMemberById(nextMatch.player2Id) : null
   const nextGroup = nextMatch ? getGroupById(nextMatch.groupId) : null
-  // Check if Up Next is a manually selected match (not just the natural next in queue)
+  // Check if a match is manually selected (queue was modified)
   const selectedMatchId = selectedCourt === 'A' ? selectedMatchIdA : selectedMatchIdB
-  const isNextManuallySelected = selectedMatchId !== null && selectedMatchId !== currentMatch?.id && nextMatch?.id === selectedMatchId
+  const hasManualSelection = selectedMatchId !== null && selectedMatchId !== currentMatch?.id
 
   return (
     <div className="h-screen bg-[#0a0e14] text-white flex flex-col overflow-hidden">
@@ -7119,11 +7119,11 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
 
         {/* Up Next Card */}
         {nextMatch && (
-          <div className={`bg-slate-800/20 rounded-xl p-2 border ${isNextManuallySelected ? 'border-amber-500/50' : 'border-slate-700/30'}`}>
+          <div className={`bg-slate-800/20 rounded-xl p-2 border ${hasManualSelection ? 'border-amber-500/50' : 'border-slate-700/30'}`}>
             <div className="flex items-center justify-between text-xs">
               <div className="flex items-center gap-2">
                 <span className="text-slate-500 font-medium">UP NEXT</span>
-                {isNextManuallySelected && (
+                {hasManualSelection && (
                   <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold">NEXT</span>
                 )}
               </div>
