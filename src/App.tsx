@@ -6005,7 +6005,8 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
 }) {
   const [selectedCourt, setSelectedCourt] = useState<'A' | 'B'>('A')
   const [showCourtSelect, setShowCourtSelect] = useState(fromMainMenu || false)
-  const [lastMatchId, setLastMatchId] = useState<string | null>(null)
+  const [lastMatchIdA, setLastMatchIdA] = useState<string | null>(null)
+  const [lastMatchIdB, setLastMatchIdB] = useState<string | null>(null)
   
   const tournament = state.currentTournament
   
@@ -6106,18 +6107,22 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
   const timerDuration = currentMatch?.timerDuration || 180
   const winTarget = matchType === 'sanbon' ? 2 : 1
 
-  // Auto-reset timer when match changes
+  // Auto-reset timer when match changes on each court (not when switching courts)
   useEffect(() => {
-    if (currentMatch && currentMatch.id !== lastMatchId) {
-      setLastMatchId(currentMatch.id)
-      // Reset timer for new match
-      if (selectedCourt === 'A') {
-        setState(prev => ({ ...prev, timerSecondsA: 0, timerRunningA: false }))
-      } else {
-        setState(prev => ({ ...prev, timerSecondsB: 0, timerRunningB: false }))
-      }
+    if (currentMatchA && currentMatchA.id !== lastMatchIdA) {
+      setLastMatchIdA(currentMatchA.id)
+      // Reset timer for new match on Court A
+      setState(prev => ({ ...prev, timerSecondsA: 0, timerRunningA: false }))
     }
-  }, [currentMatch?.id, selectedCourt, lastMatchId, setState])
+  }, [currentMatchA?.id, lastMatchIdA, setState])
+  
+  useEffect(() => {
+    if (currentMatchB && currentMatchB.id !== lastMatchIdB) {
+      setLastMatchIdB(currentMatchB.id)
+      // Reset timer for new match on Court B
+      setState(prev => ({ ...prev, timerSecondsB: 0, timerRunningB: false }))
+    }
+  }, [currentMatchB?.id, lastMatchIdB, setState])
   
   // Auto-skip: If a manually selected match was started on the other court, clear selection
   useEffect(() => {
