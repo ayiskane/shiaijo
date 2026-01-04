@@ -5853,7 +5853,9 @@ const SortableMatchItem = memo(function SortableMatchItem({
   const isLiveOnOtherCourt = match.status === 'in_progress' && match.court !== selectedCourt
   // For hantei matches, show as "active" if it's the current match (no timer needed)
   const isActiveHantei = isCurrentMatch && match.isHantei && !isLiveOnThisCourt
-  const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isActiveHantei
+  // For regular matches, show "NOW" if it's the current match but not yet started
+  const isCurrentNotStarted = isCurrentMatch && !match.isHantei && match.status === 'pending'
+  const canDrag = match.status === 'pending' && !isLiveOnThisCourt && !isLiveOnOtherCourt && !isSelectedByOtherCourt && !isActiveHantei && !isCurrentNotStarted
   
   return (
     <div
@@ -5864,6 +5866,7 @@ const SortableMatchItem = memo(function SortableMatchItem({
         isDragging ? 'opacity-50 scale-95 bg-amber-900/50 border-2 border-amber-400 z-50' :
         isLiveOnThisCourt ? 'bg-emerald-900/40 border-2 border-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.3)]' 
         : isActiveHantei ? 'bg-orange-900/40 border-2 border-orange-500 shadow-[0_0_8px_rgba(249,115,22,0.3)]'
+        : isCurrentNotStarted ? 'bg-sky-900/40 border-2 border-sky-500 shadow-[0_0_8px_rgba(14,165,233,0.3)]'
         : isLiveOnOtherCourt ? 'bg-emerald-900/20 border border-emerald-700/50 opacity-60'
         : isSelectedByThisCourt ? 'bg-amber-900/40 border-2 border-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.3)]'
         : isSelectedByOtherCourt ? 'bg-slate-800/30 border border-slate-600 opacity-50'
@@ -5871,7 +5874,7 @@ const SortableMatchItem = memo(function SortableMatchItem({
       }`}
     >
       <div className="flex items-center">
-        {canDrag && !isSelectedByThisCourt && !isLiveOnThisCourt && !isActiveHantei && (
+        {canDrag && !isSelectedByThisCourt && !isLiveOnThisCourt && !isActiveHantei && !isCurrentNotStarted && (
           <span 
             ref={setActivatorNodeRef}
             {...attributes}
@@ -5884,9 +5887,14 @@ const SortableMatchItem = memo(function SortableMatchItem({
         {(isLiveOnThisCourt || isActiveHantei) && (
           <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${
             isActiveHantei ? 'bg-orange-500 text-white' :
-            selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'
+            'bg-emerald-500 text-white'
           }`}>
-            {isActiveHantei ? 'HANTEI' : selectedCourt}
+            {isActiveHantei ? 'HANTEI' : 'LIVE'}
+          </span>
+        )}
+        {isCurrentNotStarted && (
+          <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 ${selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-blue-500 text-white'}`}>
+            NOW
           </span>
         )}
         {isLiveOnOtherCourt && (
@@ -5894,7 +5902,7 @@ const SortableMatchItem = memo(function SortableMatchItem({
             {match.court}
           </span>
         )}
-        {isSelectedByThisCourt && !isLiveOnThisCourt && <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
+        {isSelectedByThisCourt && !isLiveOnThisCourt && !isCurrentNotStarted && <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold mr-2">NEXT</span>}
         {isSelectedByOtherCourt && !isLiveOnOtherCourt && (
           <span className={`text-[8px] px-1.5 py-0.5 rounded font-bold mr-2 opacity-60 ${selectedCourt === 'A' ? 'bg-blue-500 text-white' : 'bg-amber-500 text-black'}`}>
             NEXT {selectedCourt === 'A' ? 'B' : 'A'}
