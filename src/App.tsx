@@ -7124,7 +7124,7 @@ const CourtkeeperPortal = memo(function CourtkeeperPortal({
               <div className="flex items-center gap-2">
                 <span className="text-slate-500 font-medium">UP NEXT</span>
                 {isNextManuallySelected && (
-                  <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold">SELECTED</span>
+                  <span className="text-[8px] px-1.5 py-0.5 rounded bg-amber-500 text-black font-bold">NEXT</span>
                 )}
               </div>
               <span className="text-slate-600">{nextGroup?.name}</span>
