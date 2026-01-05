@@ -6,6 +6,7 @@
   import { flip } from 'svelte/animate';
   import { quintOut } from 'svelte/easing';
   import { toast } from 'svelte-sonner';
+  import { SvelteMap } from 'svelte/reactivity';
   import autoAnimate from '@formkit/auto-animate';
   import { 
     LayoutDashboard, Users, FolderOpen, Trophy, ClipboardList, 
@@ -138,8 +139,8 @@
     return map;
   });
   
-  // Local overrides for optimistic UI updates
-  let localCourtOverrides = $state(new Map<string, 'A' | 'B' | 'A+B'>());
+  // Local overrides for optimistic UI updates (SvelteMap is reactive)
+  let localCourtOverrides = new SvelteMap<string, 'A' | 'B' | 'A+B'>();
   
   // Get effective court (local override takes precedence)
   function getEffectiveCourt(groupId: string): 'A' | 'B' | 'A+B' {
@@ -151,7 +152,7 @@
     for (const [groupId, localCourt] of localCourtOverrides) {
       const realCourt = groupCourtMap.get(groupId);
       if (realCourt === localCourt) {
-        localCourtOverrides = new Map([...localCourtOverrides].filter(([id]) => id !== groupId));
+        localCourtOverrides.delete(groupId);
       }
     }
   });
@@ -416,7 +417,7 @@
   async function setGroupCourt(groupId: string, court: 'A' | 'B' | 'A+B') {
     if (!selectedTournament) return;
     // Optimistic update - set local override immediately
-    localCourtOverrides = new Map(localCourtOverrides).set(groupId, court);
+    localCourtOverrides.set(groupId, court);
     try {
       await client.mutation(api.matches.setGroupCourt, { 
         tournamentId: selectedTournament._id, 
@@ -426,7 +427,7 @@
       toast.success(`${getGroupName(groupId)} → Court ${court}`);
     } catch (e) { 
       // Revert optimistic update on error
-      localCourtOverrides = new Map([...localCourtOverrides].filter(([id]) => id !== groupId));
+      localCourtOverrides.delete(groupId);
       toast.error('Failed to set court'); 
     }
   }
@@ -1284,3 +1285,4 @@
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
+
