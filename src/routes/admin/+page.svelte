@@ -5,28 +5,15 @@
   import { slide, fade } from 'svelte/transition';
   import { 
     LayoutDashboard, Users, FolderOpen, Trophy, ClipboardList, 
-    ChevronLeft, ChevronDown, Swords, Eye, Menu, Plus, Trash2, Pencil, X
+    ChevronLeft, ChevronDown, Swords, Eye, Menu, Plus, Trash2, Pencil
   } from 'lucide-svelte';
   
-  // Click outside action for modals
-  function clickOutside(node: HTMLElement, callback: () => void) {
-    const handleClick = (event: MouseEvent) => {
-      if (node && !node.contains(event.target as Node) && !event.defaultPrevented) {
-        callback();
-      }
-    };
-    
-    // Use setTimeout to avoid immediate trigger
-    setTimeout(() => {
-      document.addEventListener('click', handleClick, true);
-    }, 0);
-    
-    return {
-      destroy() {
-        document.removeEventListener('click', handleClick, true);
-      }
-    };
-  }
+  // shadcn-svelte components
+  import * as Dialog from '$lib/components/ui/dialog';
+  import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import { Label } from '$lib/components/ui/label';
+  import { Checkbox } from '$lib/components/ui/checkbox';
   
   // State
   let activeTab = $state('dashboard');
@@ -588,15 +575,15 @@
       {:else if activeTab === 'tournament'}
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
           <h1 class="text-2xl font-bold">Tournament</h1>
-          <button onclick={() => showCreateTournament = true} class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary/90">
-            <Plus class="h-4 w-4" /> New Tournament
-          </button>
+          <Button onclick={() => showCreateTournament = true}>
+            <Plus class="mr-2 h-4 w-4" /> New Tournament
+          </Button>
         </div>
         
         {#if tournaments.length === 0}
           <div class="rounded-xl border border-border bg-card p-6 text-center">
             <p class="mb-4 text-muted-foreground">No tournaments yet</p>
-            <button onclick={() => showCreateTournament = true} class="rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground">Create Your First Tournament</button>
+            <Button onclick={() => showCreateTournament = true}>Create Your First Tournament</Button>
           </div>
         {:else}
           <div class="mb-6">
@@ -647,11 +634,11 @@
               
               <div class="flex flex-wrap gap-2">
                 {#if selectedTournament.status === 'setup'}
-                  <button onclick={addAllParticipants} class="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium hover:bg-blue-700">Add All Members</button>
+                  <Button variant="secondary" onclick={addAllParticipants}>Add All Members</Button>
                   {#if matches.length === 0}
-                    <button onclick={generateMatches} class="rounded-lg bg-green-600 px-4 py-2 text-sm font-medium hover:bg-green-700">Generate Matches</button>
+                    <Button variant="secondary" onclick={generateMatches} class="bg-green-600 hover:bg-green-700 text-white">Generate Matches</Button>
                   {/if}
-                  <button onclick={startTournament} class="rounded-lg bg-primary px-4 py-2 text-sm font-medium hover:bg-primary/90">▶ Start Tournament</button>
+                  <Button onclick={startTournament}>▶ Start Tournament</Button>
                 {/if}
               </div>
             </div>
@@ -661,15 +648,15 @@
       {:else if activeTab === 'groups'}
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
           <h1 class="text-2xl font-bold">Groups</h1>
-          <button onclick={() => { newGroup.id = getNextGroupId(); showAddGroup = true; }} class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary/90">
-            <Plus class="h-4 w-4" /> Add Group
-          </button>
+          <Button onclick={() => { newGroup.id = getNextGroupId(); showAddGroup = true; }}>
+            <Plus class="mr-2 h-4 w-4" /> Add Group
+          </Button>
         </div>
         
         {#if groups.length === 0}
           <div class="rounded-xl border border-border bg-card p-6 text-center">
             <p class="mb-4 text-muted-foreground">No groups yet</p>
-            <button onclick={() => { newGroup.id = 'G1'; showAddGroup = true; }} class="rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground">Create Your First Group</button>
+            <Button onclick={() => { newGroup.id = 'G1'; showAddGroup = true; }}>Create Your First Group</Button>
           </div>
         {:else}
           <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -682,12 +669,12 @@
                 {#if group.isHantei}<span class="inline-block rounded bg-primary/20 px-2 py-0.5 text-xs text-primary">Hantei</span>{/if}
                 <p class="mt-1 text-sm text-muted-foreground">{members.filter(m => m.groupId === group.groupId).length} members</p>
                 <div class="mt-3 flex gap-2">
-                  <button onclick={() => { editingGroup = {...group}; showEditGroup = true; }} class="flex items-center gap-1 rounded bg-secondary px-3 py-1 text-sm hover:bg-secondary/80">
-                    <Pencil class="h-3 w-3" /> Edit
-                  </button>
-                  <button onclick={() => deleteGroup(group._id)} class="flex items-center gap-1 rounded bg-destructive/20 px-3 py-1 text-sm text-destructive hover:bg-destructive/30">
-                    <Trash2 class="h-3 w-3" /> Delete
-                  </button>
+                  <Button variant="secondary" size="sm" onclick={() => { editingGroup = {...group}; showEditGroup = true; }}>
+                    <Pencil class="mr-1 h-3 w-3" /> Edit
+                  </Button>
+                  <Button variant="destructive" size="sm" onclick={() => deleteGroup(group._id)}>
+                    <Trash2 class="mr-1 h-3 w-3" /> Delete
+                  </Button>
                 </div>
               </div>
             {/each}
@@ -698,13 +685,13 @@
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
           <h1 class="text-2xl font-bold">Members ({members.length})</h1>
           <div class="flex flex-wrap gap-2">
-            <button onclick={() => showImportCSV = true} class="rounded-lg bg-secondary px-4 py-2 hover:bg-secondary/80">Import CSV</button>
-            <button onclick={() => { resetMassMembers(); showMassAddMembers = true; }} class="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 font-semibold text-white hover:bg-blue-700">
-              <Users class="h-4 w-4" /> Add Multiple
-            </button>
-            <button onclick={() => showAddMember = true} class="flex items-center gap-2 rounded-lg bg-primary px-4 py-2 font-semibold text-primary-foreground hover:bg-primary/90">
-              <Plus class="h-4 w-4" /> Add Member
-            </button>
+            <Button variant="secondary" onclick={() => showImportCSV = true}>Import CSV</Button>
+            <Button variant="secondary" onclick={() => { resetMassMembers(); showMassAddMembers = true; }} class="bg-blue-600 hover:bg-blue-700 text-white">
+              <Users class="mr-2 h-4 w-4" /> Add Multiple
+            </Button>
+            <Button onclick={() => showAddMember = true}>
+              <Plus class="mr-2 h-4 w-4" /> Add Member
+            </Button>
           </div>
         </div>
         
@@ -773,218 +760,208 @@
   </main>
 </div>
 
-<!-- Modals -->
-{#if showAddGroup}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" role="dialog" aria-modal="true" transition:fade>
-  <div class="relative w-full max-w-sm rounded-xl border border-border bg-card p-6" use:clickOutside={() => showAddGroup = false}>
-    <button onclick={() => showAddGroup = false} class="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-      <X class="h-5 w-5" />
-    </button>
-    <h3 class="mb-4 text-xl font-bold">Add Group</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">Group ID</label>
-        <input type="text" bind:value={newGroup.id} placeholder="e.g., YUD, MUD, G1" class="w-full rounded-lg border border-input bg-background px-4 py-2 focus:border-primary focus:outline-none" />
-      </div>
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">Group Name</label>
-        <input type="text" bind:value={newGroup.name} placeholder="e.g., Youth Division" class="w-full rounded-lg border border-input bg-background px-4 py-2 focus:border-primary focus:outline-none" />
-      </div>
-      <label class="flex items-center gap-2">
-        <input type="checkbox" bind:checked={newGroup.isHantei} class="h-5 w-5 rounded" />
-        <span>Hantei (judgment-based)</span>
-      </label>
-    </div>
-    <div class="mt-6 flex gap-2">
-      <button onclick={() => showAddGroup = false} class="flex-1 rounded-lg bg-secondary py-2 hover:bg-secondary/80">Cancel</button>
-      <button onclick={createGroup} class="flex-1 rounded-lg bg-primary py-2 font-semibold text-primary-foreground hover:bg-primary/90">Create</button>
-    </div>
-  </div>
-</div>
-{/if}
+<!-- Dialogs using shadcn-svelte -->
 
-{#if showEditGroup && editingGroup}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" role="dialog" aria-modal="true" transition:fade>
-  <div class="relative w-full max-w-sm rounded-xl border border-border bg-card p-6" use:clickOutside={() => showEditGroup = false}>
-    <button onclick={() => showEditGroup = false} class="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-      <X class="h-5 w-5" />
-    </button>
-    <h3 class="mb-4 text-xl font-bold">Edit Group</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">Group ID</label>
-        <input type="text" bind:value={editingGroup.groupId} class="w-full rounded-lg border border-input bg-background px-4 py-2 focus:border-primary focus:outline-none" />
+<!-- Add Group Dialog -->
+<Dialog.Root bind:open={showAddGroup}>
+  <Dialog.Content class="sm:max-w-sm">
+    <Dialog.Header>
+      <Dialog.Title>Add Group</Dialog.Title>
+    </Dialog.Header>
+    <div class="space-y-4 py-4">
+      <div class="space-y-2">
+        <Label for="group-id">Group ID</Label>
+        <Input id="group-id" bind:value={newGroup.id} placeholder="e.g., YUD, MUD, G1" />
       </div>
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">Group Name</label>
-        <input type="text" bind:value={editingGroup.name} class="w-full rounded-lg border border-input bg-background px-4 py-2 focus:border-primary focus:outline-none" />
+      <div class="space-y-2">
+        <Label for="group-name">Group Name</Label>
+        <Input id="group-name" bind:value={newGroup.name} placeholder="e.g., Youth Division" />
       </div>
-      <label class="flex items-center gap-2">
-        <input type="checkbox" bind:checked={editingGroup.isHantei} class="h-5 w-5 rounded" />
-        <span>Hantei</span>
-      </label>
+      <div class="flex items-center space-x-2">
+        <Checkbox id="group-hantei" bind:checked={newGroup.isHantei} />
+        <Label for="group-hantei" class="cursor-pointer">Hantei (judgment-based)</Label>
+      </div>
     </div>
-    <div class="mt-6 flex gap-2">
-      <button onclick={() => showEditGroup = false} class="flex-1 rounded-lg bg-secondary py-2 hover:bg-secondary/80">Cancel</button>
-      <button onclick={updateGroup} class="flex-1 rounded-lg bg-primary py-2 font-semibold text-primary-foreground hover:bg-primary/90">Save</button>
-    </div>
-  </div>
-</div>
-{/if}
+    <Dialog.Footer>
+      <Button variant="secondary" onclick={() => showAddGroup = false}>Cancel</Button>
+      <Button onclick={createGroup}>Create</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
-{#if showAddMember}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" role="dialog" aria-modal="true" transition:fade>
-  <div class="relative w-full max-w-sm rounded-xl border border-border bg-card p-6" use:clickOutside={() => showAddMember = false}>
-    <button onclick={() => showAddMember = false} class="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-      <X class="h-5 w-5" />
-    </button>
-    <h3 class="mb-4 text-xl font-bold">Add Member</h3>
-    <div class="space-y-4">
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">First Name</label>
-        <input type="text" bind:value={newMember.firstName} placeholder="John" class="w-full rounded-lg border border-input bg-background px-4 py-2 focus:border-primary focus:outline-none" />
+<!-- Edit Group Dialog -->
+<Dialog.Root bind:open={showEditGroup}>
+  <Dialog.Content class="sm:max-w-sm">
+    <Dialog.Header>
+      <Dialog.Title>Edit Group</Dialog.Title>
+    </Dialog.Header>
+    {#if editingGroup}
+      <div class="space-y-4 py-4">
+        <div class="space-y-2">
+          <Label for="edit-group-id">Group ID</Label>
+          <Input id="edit-group-id" bind:value={editingGroup.groupId} />
+        </div>
+        <div class="space-y-2">
+          <Label for="edit-group-name">Group Name</Label>
+          <Input id="edit-group-name" bind:value={editingGroup.name} />
+        </div>
+        <div class="flex items-center space-x-2">
+          <Checkbox id="edit-group-hantei" bind:checked={editingGroup.isHantei} />
+          <Label for="edit-group-hantei" class="cursor-pointer">Hantei</Label>
+        </div>
       </div>
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">Last Name</label>
-        <input type="text" bind:value={newMember.lastName} placeholder="Doe" class="w-full rounded-lg border border-input bg-background px-4 py-2 focus:border-primary focus:outline-none" />
+    {/if}
+    <Dialog.Footer>
+      <Button variant="secondary" onclick={() => showEditGroup = false}>Cancel</Button>
+      <Button onclick={updateGroup}>Save</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
+<!-- Add Member Dialog -->
+<Dialog.Root bind:open={showAddMember}>
+  <Dialog.Content class="sm:max-w-sm">
+    <Dialog.Header>
+      <Dialog.Title>Add Member</Dialog.Title>
+    </Dialog.Header>
+    <div class="space-y-4 py-4">
+      <div class="space-y-2">
+        <Label for="member-first">First Name</Label>
+        <Input id="member-first" bind:value={newMember.firstName} placeholder="John" />
       </div>
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">Group</label>
-        <select bind:value={newMember.groupId} class="w-full rounded-lg border border-input bg-background px-4 py-2">
+      <div class="space-y-2">
+        <Label for="member-last">Last Name</Label>
+        <Input id="member-last" bind:value={newMember.lastName} placeholder="Doe" />
+      </div>
+      <div class="space-y-2">
+        <Label for="member-group">Group</Label>
+        <select id="member-group" bind:value={newMember.groupId} class="w-full rounded-lg border border-input bg-background px-4 py-2">
           <option value="">Select Group</option>
           {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
         </select>
       </div>
     </div>
-    <div class="mt-6 flex gap-2">
-      <button onclick={() => showAddMember = false} class="flex-1 rounded-lg bg-secondary py-2 hover:bg-secondary/80">Cancel</button>
-      <button onclick={createMember} class="flex-1 rounded-lg bg-primary py-2 font-semibold text-primary-foreground hover:bg-primary/90">Add</button>
-    </div>
-  </div>
-</div>
-{/if}
+    <Dialog.Footer>
+      <Button variant="secondary" onclick={() => showAddMember = false}>Cancel</Button>
+      <Button onclick={createMember}>Add</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
-{#if showMassAddMembers}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" role="dialog" aria-modal="true" transition:fade>
-  <div class="relative w-full max-w-3xl rounded-xl border border-border bg-card p-6 max-h-[90vh] overflow-y-auto" use:clickOutside={() => showMassAddMembers = false}>
-    <button onclick={() => showMassAddMembers = false} class="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-      <X class="h-5 w-5" />
-    </button>
-    <h3 class="mb-4 text-xl font-bold">Add Multiple Members</h3>
-    <p class="mb-4 text-sm text-muted-foreground">Fill in the rows below. Empty rows will be skipped.</p>
+<!-- Mass Add Members Dialog -->
+<Dialog.Root bind:open={showMassAddMembers}>
+  <Dialog.Content class="sm:max-w-3xl max-h-[90vh] overflow-y-auto">
+    <Dialog.Header>
+      <Dialog.Title>Add Multiple Members</Dialog.Title>
+      <Dialog.Description>Fill in the rows below. Empty rows will be skipped.</Dialog.Description>
+    </Dialog.Header>
     
-    <!-- Header -->
-    <div class="mb-2 grid grid-cols-[1fr_1fr_1fr_40px] gap-2 text-sm font-medium text-muted-foreground">
-      <span>First Name</span>
-      <span>Last Name</span>
-      <span>Group</span>
-      <span></span>
-    </div>
-    
-    <!-- Rows -->
-    <div class="space-y-2">
-      {#each massMembers as member, i}
-        <div class="grid grid-cols-[1fr_1fr_1fr_40px] gap-2">
-          <input 
-            type="text" 
-            bind:value={member.firstName} 
-            placeholder="First Name"
-            class="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
-          />
-          <input 
-            type="text" 
-            bind:value={member.lastName} 
-            placeholder="Last Name"
-            class="rounded-lg border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none"
-          />
-          <select 
-            bind:value={member.groupId}
-            class="rounded-lg border border-input bg-background px-3 py-2 text-sm"
-          >
-            <option value="">Select Group</option>
-            {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
-          </select>
-          <button 
-            onclick={() => massMembers = massMembers.filter((_, idx) => idx !== i)}
-            class="flex items-center justify-center text-muted-foreground hover:text-destructive"
-            title="Remove row"
-          >
-            <Trash2 class="h-4 w-4" />
-          </button>
-        </div>
-      {/each}
-    </div>
-    
-    <button 
-      onclick={addMoreRows}
-      class="mt-4 flex items-center gap-2 text-sm text-primary hover:text-primary/80"
-    >
-      <Plus class="h-4 w-4" /> Add 5 more rows
-    </button>
-    
-    <div class="mt-6 flex gap-2">
-      <button onclick={() => showMassAddMembers = false} class="flex-1 rounded-lg bg-secondary py-2 hover:bg-secondary/80">Cancel</button>
-      <button onclick={createMassMembers} class="flex-1 rounded-lg bg-primary py-2 font-semibold text-primary-foreground hover:bg-primary/90">
-        Add Members ({massMembers.filter(m => m.firstName.trim() && m.lastName.trim() && m.groupId).length})
+    <div class="py-4">
+      <!-- Header -->
+      <div class="mb-2 grid grid-cols-[1fr_1fr_1fr_40px] gap-2 text-sm font-medium text-muted-foreground">
+        <span>First Name</span>
+        <span>Last Name</span>
+        <span>Group</span>
+        <span></span>
+      </div>
+      
+      <!-- Rows -->
+      <div class="space-y-2">
+        {#each massMembers as member, i}
+          <div class="grid grid-cols-[1fr_1fr_1fr_40px] gap-2">
+            <Input bind:value={member.firstName} placeholder="First Name" />
+            <Input bind:value={member.lastName} placeholder="Last Name" />
+            <select 
+              bind:value={member.groupId}
+              class="rounded-lg border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Select Group</option>
+              {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
+            </select>
+            <button 
+              onclick={() => massMembers = massMembers.filter((_, idx) => idx !== i)}
+              class="flex items-center justify-center text-muted-foreground hover:text-destructive"
+              title="Remove row"
+            >
+              <Trash2 class="h-4 w-4" />
+            </button>
+          </div>
+        {/each}
+      </div>
+      
+      <button 
+        onclick={addMoreRows}
+        class="mt-4 flex items-center gap-2 text-sm text-primary hover:text-primary/80"
+      >
+        <Plus class="h-4 w-4" /> Add 5 more rows
       </button>
     </div>
-  </div>
-</div>
-{/if}
+    
+    <Dialog.Footer>
+      <Button variant="secondary" onclick={() => showMassAddMembers = false}>Cancel</Button>
+      <Button onclick={createMassMembers}>
+        Add Members ({massMembers.filter(m => m.firstName.trim() && m.lastName.trim() && m.groupId).length})
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
-{#if showImportCSV}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" role="dialog" aria-modal="true" transition:fade>
-  <div class="relative w-full max-w-md rounded-xl border border-border bg-card p-6" use:clickOutside={() => showImportCSV = false}>
-    <button onclick={() => showImportCSV = false} class="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-      <X class="h-5 w-5" />
-    </button>
-    <h3 class="mb-4 text-xl font-bold">Import CSV</h3>
-    <p class="mb-4 text-sm text-muted-foreground">Format: FirstName,LastName,GroupID (one per line)</p>
-    <textarea bind:value={csvText} placeholder="John,Doe,YUD&#10;Jane,Smith,MUD" rows="8" class="w-full rounded-lg border border-input bg-background px-4 py-2 font-mono text-sm focus:border-primary focus:outline-none"></textarea>
-    <div class="mt-6 flex gap-2">
-      <button onclick={() => showImportCSV = false} class="flex-1 rounded-lg bg-secondary py-2 hover:bg-secondary/80">Cancel</button>
-      <button onclick={importCSV} class="flex-1 rounded-lg bg-primary py-2 font-semibold text-primary-foreground hover:bg-primary/90">Import</button>
+<!-- Import CSV Dialog -->
+<Dialog.Root bind:open={showImportCSV}>
+  <Dialog.Content class="sm:max-w-md">
+    <Dialog.Header>
+      <Dialog.Title>Import CSV</Dialog.Title>
+      <Dialog.Description>Format: FirstName,LastName,GroupID (one per line)</Dialog.Description>
+    </Dialog.Header>
+    <div class="py-4">
+      <textarea 
+        bind:value={csvText} 
+        placeholder="John,Doe,YUD&#10;Jane,Smith,MUD" 
+        rows="8" 
+        class="w-full rounded-lg border border-input bg-background px-4 py-2 font-mono text-sm focus:border-primary focus:outline-none"
+      ></textarea>
     </div>
-  </div>
-</div>
-{/if}
+    <Dialog.Footer>
+      <Button variant="secondary" onclick={() => showImportCSV = false}>Cancel</Button>
+      <Button onclick={importCSV}>Import</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
-{#if showCreateTournament}
-<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4" role="dialog" aria-modal="true" transition:fade>
-  <div class="relative w-full max-w-md rounded-xl border border-border bg-card p-6" use:clickOutside={() => showCreateTournament = false}>
-    <button onclick={() => showCreateTournament = false} class="absolute right-4 top-4 text-muted-foreground hover:text-foreground">
-      <X class="h-5 w-5" />
-    </button>
-    <h3 class="mb-4 text-xl font-bold">Create Tournament</h3>
-    <div class="space-y-4">
+<!-- Create Tournament Dialog -->
+<Dialog.Root bind:open={showCreateTournament}>
+  <Dialog.Content class="sm:max-w-md">
+    <Dialog.Header>
+      <Dialog.Title>Create Tournament</Dialog.Title>
+    </Dialog.Header>
+    <div class="space-y-4 py-4">
       <div class="grid grid-cols-2 gap-4">
-        <div>
-          <label class="mb-1 block text-sm text-muted-foreground">Month</label>
-          <select bind:value={newTournament.month} class="w-full rounded-lg border border-input bg-background px-4 py-2">
+        <div class="space-y-2">
+          <Label for="tournament-month">Month</Label>
+          <select id="tournament-month" bind:value={newTournament.month} class="w-full rounded-lg border border-input bg-background px-4 py-2">
             <option value="">Select</option>
             {#each MONTHS as month}<option value={month}>{month}</option>{/each}
           </select>
         </div>
-        <div>
-          <label class="mb-1 block text-sm text-muted-foreground">Year</label>
-          <select bind:value={newTournament.year} class="w-full rounded-lg border border-input bg-background px-4 py-2">
+        <div class="space-y-2">
+          <Label for="tournament-year">Year</Label>
+          <select id="tournament-year" bind:value={newTournament.year} class="w-full rounded-lg border border-input bg-background px-4 py-2">
             {#each [2024, 2025, 2026, 2027] as year}<option value={year}>{year}</option>{/each}
           </select>
         </div>
       </div>
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">Name <span class="text-xs">(optional)</span></label>
-        <input type="text" bind:value={newTournament.name} placeholder={generateTournamentName()} class="w-full rounded-lg border border-input bg-background px-4 py-2 focus:border-primary focus:outline-none" />
+      <div class="space-y-2">
+        <Label for="tournament-name">Name <span class="text-xs text-muted-foreground">(optional)</span></Label>
+        <Input id="tournament-name" bind:value={newTournament.name} placeholder={generateTournamentName()} />
       </div>
-      <div>
-        <label class="mb-1 block text-sm text-muted-foreground">Date</label>
-        <input type="date" bind:value={newTournament.date} class="w-full rounded-lg border border-input bg-background px-4 py-2 focus:border-primary focus:outline-none" />
+      <div class="space-y-2">
+        <Label for="tournament-date">Date</Label>
+        <Input id="tournament-date" type="date" bind:value={newTournament.date} />
       </div>
     </div>
-    <div class="mt-6 flex gap-2">
-      <button onclick={() => showCreateTournament = false} class="flex-1 rounded-lg bg-secondary py-2 hover:bg-secondary/80">Cancel</button>
-      <button onclick={createTournament} class="flex-1 rounded-lg bg-primary py-2 font-semibold text-primary-foreground hover:bg-primary/90">Create</button>
-    </div>
-  </div>
-</div>
-{/if}
+    <Dialog.Footer>
+      <Button variant="secondary" onclick={() => showCreateTournament = false}>Cancel</Button>
+      <Button onclick={createTournament}>Create</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
