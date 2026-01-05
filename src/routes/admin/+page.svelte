@@ -4,7 +4,9 @@
   import { cn } from '$lib/utils';
   import { slide, fade } from 'svelte/transition';
   import { flip } from 'svelte/animate';
+  import { quintOut } from 'svelte/easing';
   import { toast } from 'svelte-sonner';
+  import autoAnimate from '@formkit/auto-animate';
   import { 
     LayoutDashboard, Users, FolderOpen, Trophy, ClipboardList, 
     ChevronLeft, ChevronDown, ChevronRight, Swords, Eye, Menu, Plus, Trash2, Pencil,
@@ -25,6 +27,7 @@
   import { Progress } from '$lib/components/ui/progress';
   import * as Card from '$lib/components/ui/card';
   import { Switch } from '$lib/components/ui/switch';
+  import { Separator } from '$lib/components/ui/separator';
   
   // Convex client for mutations
   const client = useConvexClient();
@@ -76,9 +79,8 @@
   let matches = $derived(matchesQuery.data ?? []);
   
   // Tournament tab state
-  let editTournamentOpen = $state(false);
+  let editTournamentOpen = $state(true);
   let collapsedGroups = $state<Set<string>>(new Set());
-  let editingGroupId = $state<string | null>(null);
   
   // Drag and drop state
   let draggedGroupId = $state<string | null>(null);
@@ -87,6 +89,22 @@
   // Group order for tournament (local state, synced from matches)
   let groupOrder = $state<string[]>([]);
   
+  // Bogu settings
+  let boguTimerDuration = $state(180);
+  let boguMatchType = $state<'sanbon' | 'ippon'>('sanbon');
+  
+  // Non-bogu (Hantei) settings - kihon-waza combos
+  const KIHON_WAZA_OPTIONS = [
+    { id: 'M', label: 'Men', short: 'M' },
+    { id: 'K', label: 'Kote', short: 'K' },
+    { id: 'D', label: 'Do', short: 'D' },
+    { id: 'KM', label: 'Kote-Men', short: 'KM' },
+    { id: 'MK', label: 'Men-Kaeshi-Do', short: 'MKD' },
+  ];
+  
+  let hanteiRound1 = $state<string[]>(['K', 'M']); // 2 combos for round 1
+  let hanteiRound2 = $state<string[]>(['M', 'K', 'D']); // 3 combos for round 2
+  
   // Mass member creation
   type MemberRow = { firstName: string; lastName: string; groupId: string };
   let massMembers = $state<MemberRow[]>(
@@ -94,7 +112,7 @@
   );
   
   const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-  const TIMER_OPTIONS = [60, 120, 180, 240, 300];
+  const TIMER_OPTIONS = [60, 120, 180]; // Only up to 3 minutes
   
   // Derived values
   let activeTournament = $derived(tournaments.find(t => t.status === 'in_progress') || null);
@@ -109,11 +127,16 @@
   let progressPercent = $derived(matches.length > 0 ? Math.round((completedMatches.length / matches.length) * 100) : 0);
   let isComplete = $derived(matches.length > 0 && completedMatches.length === matches.length);
   
-  // Get unique groups from matches
-  let tournamentGroups = $derived(() => {
-    const uniqueGroupIds = [...new Set(matches.map(m => m.groupId))];
-    return uniqueGroupIds.map(id => groups.find(g => g.groupId === id)).filter(Boolean);
-  });
+  // Separate bogu and hantei groups
+  let boguGroups = $derived(groupOrder.filter(gId => {
+    const g = groups.find(gr => gr.groupId === gId);
+    return g && !g.isHantei;
+  }));
+  
+  let hanteiGroups = $derived(groupOrder.filter(gId => {
+    const g = groups.find(gr => gr.groupId === gId);
+    return g && g.isHantei;
+  }));
   
   // Auto-select tournament
   $effect(() => {
@@ -128,6 +151,15 @@
     if (matches.length > 0) {
       const uniqueGroups = [...new Set(matches.map(m => m.groupId))];
       groupOrder = uniqueGroups;
+    }
+  });
+  
+  // Sync bogu settings from first bogu match
+  $effect(() => {
+    const firstBoguMatch = matches.find(m => m.matchType !== 'hantei');
+    if (firstBoguMatch) {
+      boguTimerDuration = firstBoguMatch.timerDuration || 180;
+      boguMatchType = (firstBoguMatch.matchType as 'sanbon' | 'ippon') || 'sanbon';
     }
   });
   
@@ -171,14 +203,6 @@
     collapsedGroups = newSet;
   }
   
-  function collapseAllGroups() {
-    collapsedGroups = new Set(groupOrder);
-  }
-  
-  function expandAllGroups() {
-    collapsedGroups = new Set();
-  }
-  
   // Helper functions
   function getGroupName(groupId: string): string { 
     return groups.find(g => g.groupId === groupId)?.name || groupId; 
@@ -215,6 +239,11 @@
   
   function resetMassMembers() {
     massMembers = Array(5).fill(null).map(() => ({ firstName: '', lastName: '', groupId: '' }));
+  }
+  
+  function getCourtForGroup(groupId: string): 'A' | 'B' | 'A+B' {
+    const match = matches.find(m => m.groupId === groupId);
+    return (match?.court as 'A' | 'B' | 'A+B') || 'A';
   }
   
   // CRUD Operations
@@ -368,32 +397,43 @@
         groupId, 
         court 
       });
-      toast.success(`${getGroupName(groupId)} assigned to Court ${court}`);
+      toast.success(`${getGroupName(groupId)} → Court ${court}`);
     } catch (e) { toast.error('Failed to set court'); }
   }
   
-  async function setGroupMatchType(groupId: string, matchType: 'sanbon' | 'ippon') {
+  async function applyBoguSettings() {
     if (!selectedTournament) return;
     try {
-      await client.mutation(api.matches.setGroupMatchType, { 
-        tournamentId: selectedTournament._id, 
-        groupId, 
-        matchType 
-      });
-      toast.success(`${getGroupName(groupId)} set to ${matchType}`);
-    } catch (e) { toast.error('Failed to set match type'); }
+      // Apply to all bogu groups
+      for (const groupId of boguGroups) {
+        await client.mutation(api.matches.setGroupTimer, { 
+          tournamentId: selectedTournament._id, 
+          groupId, 
+          timerDuration: boguTimerDuration 
+        });
+        await client.mutation(api.matches.setGroupMatchType, { 
+          tournamentId: selectedTournament._id, 
+          groupId, 
+          matchType: boguMatchType 
+        });
+      }
+      toast.success('Bogu settings applied');
+    } catch (e) { toast.error('Failed to apply settings'); }
   }
   
-  async function setGroupTimer(groupId: string, timerDuration: number) {
+  async function applyHanteiSettings() {
     if (!selectedTournament) return;
     try {
-      await client.mutation(api.matches.setGroupTimer, { 
-        tournamentId: selectedTournament._id, 
-        groupId, 
-        timerDuration 
+      // Update tournament hantei config
+      await client.mutation(api.tournaments.update, { 
+        id: selectedTournament._id,
+        hanteiConfig: {
+          round1: hanteiRound1.join('-'),
+          round2: hanteiRound2.join('-'),
+        }
       });
-      toast.success(`${getGroupName(groupId)} timer set to ${formatTimer(timerDuration)}`);
-    } catch (e) { toast.error('Failed to set timer'); }
+      toast.success('Hantei settings applied');
+    } catch (e) { toast.error('Failed to apply settings'); }
   }
   
   // Drag and Drop handlers
@@ -435,6 +475,24 @@
   function handleDragEnd() {
     draggedGroupId = null;
     dragOverGroupId = null;
+  }
+  
+  function moveGroupUp(groupId: string) {
+    const idx = groupOrder.indexOf(groupId);
+    if (idx > 0) {
+      const newOrder = [...groupOrder];
+      [newOrder[idx - 1], newOrder[idx]] = [newOrder[idx], newOrder[idx - 1]];
+      groupOrder = newOrder;
+    }
+  }
+  
+  function moveGroupDown(groupId: string) {
+    const idx = groupOrder.indexOf(groupId);
+    if (idx < groupOrder.length - 1) {
+      const newOrder = [...groupOrder];
+      [newOrder[idx], newOrder[idx + 1]] = [newOrder[idx + 1], newOrder[idx]];
+      groupOrder = newOrder;
+    }
   }
 </script>
 
@@ -533,7 +591,7 @@
         {/if}
       
       {:else if activeTab === 'tournament'}
-        <!-- TOURNAMENT TAB - Enhanced Version -->
+        <!-- TOURNAMENT TAB -->
         <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
           <h1 class="text-2xl font-bold">Tournament</h1>
           <Button onclick={() => showCreateTournament = true}><Plus class="mr-2 h-4 w-4" /> New Tournament</Button>
@@ -651,211 +709,316 @@
                   </Card.Header>
                 </Collapsible.Trigger>
                 <Collapsible.Content>
-                  <Card.Content class="space-y-4 pt-0">
-                    <!-- Timer Options -->
-                    <div class="rounded-lg bg-muted/30 p-3 border border-border">
-                      <span class="text-xs text-muted-foreground block mb-2">Timer Options</span>
+                  <Card.Content class="space-y-6 pt-0">
+                    
+                    <!-- 1. GROUP ORDER & COURT ASSIGNMENTS -->
+                    <div class="space-y-3">
+                      <h4 class="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <GripVertical class="h-4 w-4 text-muted-foreground" />
+                        Group Order & Court Assignments
+                      </h4>
+                      <p class="text-xs text-muted-foreground">Drag groups to reorder. Assign courts for each group.</p>
+                      
+                      {#if groupOrder.length > 0}
+                        <div class="rounded-lg border border-border overflow-hidden" use:autoAnimate>
+                          {#each groupOrder as groupId, idx (groupId)}
+                            {@const group = getGroupById(groupId)}
+                            {@const court = getCourtForGroup(groupId)}
+                            {@const groupMatches = matches.filter(m => m.groupId === groupId)}
+                            {@const completedCount = groupMatches.filter(m => m.status === 'completed').length}
+                            
+                            <div
+                              draggable="true"
+                              ondragstart={(e) => handleDragStart(e, groupId)}
+                              ondragover={(e) => handleDragOver(e, groupId)}
+                              ondragleave={handleDragLeave}
+                              ondrop={(e) => handleDrop(e, groupId)}
+                              ondragend={handleDragEnd}
+                              class={cn(
+                                "flex items-center gap-3 px-3 py-2.5 border-b border-border last:border-b-0 transition-all",
+                                draggedGroupId === groupId && "opacity-50 bg-muted/50",
+                                dragOverGroupId === groupId && "bg-primary/10 border-primary",
+                                "hover:bg-muted/30"
+                              )}
+                            >
+                              <!-- Drag Handle -->
+                              <button class="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing touch-none">
+                                <GripVertical class="h-4 w-4" />
+                              </button>
+                              
+                              <!-- Order Number -->
+                              <span class="w-6 text-center text-xs font-mono text-muted-foreground">{idx + 1}</span>
+                              
+                              <!-- Group Name -->
+                              <span class="flex-1 font-medium text-sm">
+                                {group?.name || groupId}
+                                {#if group?.isHantei}
+                                  <Badge variant="outline" class="ml-2 text-[10px] border-orange-500 text-orange-400">Hantei</Badge>
+                                {/if}
+                              </span>
+                              
+                              <!-- Match Count -->
+                              <span class="text-xs text-muted-foreground">{completedCount}/{groupMatches.length}</span>
+                              
+                              <!-- Court Assignment -->
+                              <div class="flex rounded-md border border-input overflow-hidden">
+                                <button
+                                  onclick={() => setGroupCourt(groupId, 'A')}
+                                  class={cn(
+                                    "px-2.5 py-1 text-xs font-bold transition-colors",
+                                    court === 'A' ? "bg-amber-500 text-black" : "bg-background text-muted-foreground hover:bg-muted"
+                                  )}
+                                >A</button>
+                                <button
+                                  onclick={() => setGroupCourt(groupId, 'A+B')}
+                                  class={cn(
+                                    "px-2.5 py-1 text-xs font-bold transition-colors border-x border-input",
+                                    court === 'A+B' ? "bg-emerald-500 text-white" : "bg-background text-muted-foreground hover:bg-muted"
+                                  )}
+                                >A+B</button>
+                                <button
+                                  onclick={() => setGroupCourt(groupId, 'B')}
+                                  class={cn(
+                                    "px-2.5 py-1 text-xs font-bold transition-colors",
+                                    court === 'B' ? "bg-sky-500 text-white" : "bg-background text-muted-foreground hover:bg-muted"
+                                  )}
+                                >B</button>
+                              </div>
+                            </div>
+                          {/each}
+                        </div>
+                      {:else}
+                        <p class="text-sm text-muted-foreground py-4 text-center">No groups with matches yet. Generate matches first.</p>
+                      {/if}
+                    </div>
+                    
+                    <Separator />
+                    
+                    <!-- 2. BOGU MATCHES SETTINGS -->
+                    <div class="space-y-3">
+                      <h4 class="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <Swords class="h-4 w-4 text-blue-400" />
+                        Bogu Matches
+                      </h4>
+                      
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Timer Options -->
+                        <div class="space-y-2">
+                          <Label class="text-xs text-muted-foreground">Timer Duration</Label>
+                          <div class="flex gap-2">
+                            {#each TIMER_OPTIONS as secs}
+                              <button
+                                onclick={() => boguTimerDuration = secs}
+                                class={cn(
+                                  "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                  boguTimerDuration === secs 
+                                    ? "bg-blue-600 text-white border-blue-600" 
+                                    : "bg-background text-muted-foreground border-input hover:bg-muted"
+                                )}
+                              >
+                                {formatTimer(secs)}
+                              </button>
+                            {/each}
+                          </div>
+                        </div>
+                        
+                        <!-- Match Type -->
+                        <div class="space-y-2">
+                          <Label class="text-xs text-muted-foreground">Match Type</Label>
+                          <div class="flex gap-2">
+                            <button
+                              onclick={() => boguMatchType = 'sanbon'}
+                              class={cn(
+                                "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                boguMatchType === 'sanbon' 
+                                  ? "bg-blue-600 text-white border-blue-600" 
+                                  : "bg-background text-muted-foreground border-input hover:bg-muted"
+                              )}
+                            >
+                              Sanbon (3本)
+                            </button>
+                            <button
+                              onclick={() => boguMatchType = 'ippon'}
+                              class={cn(
+                                "flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border",
+                                boguMatchType === 'ippon' 
+                                  ? "bg-blue-600 text-white border-blue-600" 
+                                  : "bg-background text-muted-foreground border-input hover:bg-muted"
+                              )}
+                            >
+                              Ippon (1本)
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <Button onclick={applyBoguSettings} variant="secondary" size="sm" class="mt-2">
+                        <Check class="mr-2 h-4 w-4" /> Apply to All Bogu Groups
+                      </Button>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <!-- 3. NON-BOGU (HANTEI) MATCHES SETTINGS -->
+                    <div class="space-y-3">
+                      <h4 class="text-sm font-semibold text-foreground flex items-center gap-2">
+                        <Users class="h-4 w-4 text-orange-400" />
+                        Non-Bogu Matches (Hantei)
+                      </h4>
+                      <p class="text-xs text-muted-foreground">Configure kihon-waza combinations for each round.</p>
+                      
+                      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <!-- Round 1: 2 combos -->
+                        <div class="space-y-2">
+                          <Label class="text-xs text-muted-foreground">Round 1 (2 waza)</Label>
+                          <div class="flex gap-2">
+                            {#each [0, 1] as i}
+                              <select
+                                value={hanteiRound1[i] || ''}
+                                onchange={(e) => {
+                                  const newVal = [...hanteiRound1];
+                                  newVal[i] = (e.target as HTMLSelectElement).value;
+                                  hanteiRound1 = newVal;
+                                }}
+                                class="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                              >
+                                {#each KIHON_WAZA_OPTIONS as opt}
+                                  <option value={opt.id}>{opt.label}</option>
+                                {/each}
+                              </select>
+                            {/each}
+                          </div>
+                          <p class="text-[10px] text-muted-foreground font-mono">{hanteiRound1.join(' → ')}</p>
+                        </div>
+                        
+                        <!-- Round 2: 3 combos -->
+                        <div class="space-y-2">
+                          <Label class="text-xs text-muted-foreground">Round 2 (3 waza)</Label>
+                          <div class="flex gap-2">
+                            {#each [0, 1, 2] as i}
+                              <select
+                                value={hanteiRound2[i] || ''}
+                                onchange={(e) => {
+                                  const newVal = [...hanteiRound2];
+                                  newVal[i] = (e.target as HTMLSelectElement).value;
+                                  hanteiRound2 = newVal;
+                                }}
+                                class="flex-1 rounded-lg border border-input bg-background px-3 py-2 text-sm"
+                              >
+                                {#each KIHON_WAZA_OPTIONS as opt}
+                                  <option value={opt.id}>{opt.label}</option>
+                                {/each}
+                              </select>
+                            {/each}
+                          </div>
+                          <p class="text-[10px] text-muted-foreground font-mono">{hanteiRound2.join(' → ')}</p>
+                        </div>
+                      </div>
+                      
+                      <Button onclick={applyHanteiSettings} variant="secondary" size="sm" class="mt-2">
+                        <Check class="mr-2 h-4 w-4" /> Apply Hantei Settings
+                      </Button>
+                    </div>
+                    
+                    <Separator />
+                    
+                    <!-- 4. ACTIONS -->
+                    <div class="space-y-3">
+                      <h4 class="text-sm font-semibold text-foreground">Actions</h4>
                       <div class="flex flex-wrap gap-2">
-                        {#each TIMER_OPTIONS as secs}
-                          {@const isSelected = (selectedTournament.timerOptions || TIMER_OPTIONS).includes(secs)}
-                          <button
-                            onclick={() => {
-                              // Toggle timer option
-                              const current = selectedTournament.timerOptions || TIMER_OPTIONS;
-                              const newOptions = isSelected 
-                                ? current.filter(t => t !== secs)
-                                : [...current, secs].sort((a, b) => a - b);
-                              if (newOptions.length === 0) return;
-                              client.mutation(api.tournaments.update, { 
-                                id: selectedTournament._id, 
-                                timerOptions: newOptions 
-                              });
-                            }}
-                            class={cn(
-                              "px-3 py-1.5 rounded text-sm font-medium transition-all",
-                              isSelected ? "bg-blue-600 text-white" : "bg-muted text-muted-foreground hover:bg-muted/80"
-                            )}
-                          >
-                            {formatTimer(secs)}
-                          </button>
-                        {/each}
+                        <Button onclick={refreshParticipants} variant="outline" size="sm">
+                          <RefreshCw class="mr-2 h-4 w-4" /> Update Participants
+                        </Button>
+                        <Button onclick={resetTournament} variant="outline" size="sm" class="border-amber-700/60 text-amber-400 hover:bg-amber-900/20">
+                          <RotateCcw class="mr-2 h-4 w-4" /> Reset Scores
+                        </Button>
+                        <Button onclick={() => showDeleteConfirm = true} variant="outline" size="sm" class="border-red-700/60 text-red-400 hover:bg-red-900/20">
+                          <Trash2 class="mr-2 h-4 w-4" /> Delete Tournament
+                        </Button>
                       </div>
                     </div>
                     
-                    <!-- Action Buttons -->
-                    <div class="flex flex-wrap gap-2">
-                      <Button onclick={refreshParticipants} variant="outline" size="sm">
-                        <RefreshCw class="mr-2 h-4 w-4" /> Update Participants
-                      </Button>
-                      <Button onclick={resetTournament} variant="outline" size="sm" class="border-amber-700/60 text-amber-400 hover:bg-amber-900/20">
-                        <RotateCcw class="mr-2 h-4 w-4" /> Reset Scores
-                      </Button>
-                      <Button onclick={() => showDeleteConfirm = true} variant="outline" size="sm" class="border-red-700/60 text-red-400 hover:bg-red-900/20">
-                        <Trash2 class="mr-2 h-4 w-4" /> Delete
-                      </Button>
-                    </div>
                   </Card.Content>
                 </Collapsible.Content>
               </Card.Root>
             </Collapsible.Root>
             
-            <!-- Group Order Controls -->
-            {#if groupOrder.length > 0}
-              <div class="mb-4 flex items-center justify-between">
-                <span class="text-sm text-muted-foreground">{groupOrder.length} groups</span>
-                <div class="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onclick={() => collapsedGroups.size === groupOrder.length ? expandAllGroups() : collapseAllGroups()}
-                  >
-                    <ChevronDown class={cn("mr-2 h-4 w-4 transition-transform", collapsedGroups.size === groupOrder.length && "-rotate-90")} />
-                    {collapsedGroups.size === groupOrder.length ? 'Expand All' : 'Collapse All'}
-                  </Button>
-                </div>
-              </div>
-              
-              <!-- Group Cards (Draggable) -->
+            <!-- Match Queue Display (simplified - just shows matches per group) -->
+            {#if groupOrder.length > 0 && matches.length > 0}
               <div class="space-y-3">
-                {#each groupOrder as groupId (groupId)}
-                  {@const group = getGroupById(groupId)}
-                  {@const groupMatches = matches.filter(m => m.groupId === groupId)}
-                  {@const completedCount = groupMatches.filter(m => m.status === 'completed').length}
-                  {@const isCollapsed = collapsedGroups.has(groupId)}
-                  {@const isEditing = editingGroupId === groupId}
-                  {@const firstMatch = groupMatches[0]}
-                  {@const currentCourt = firstMatch?.court || 'A'}
-                  {@const currentMatchType = firstMatch?.matchType || 'sanbon'}
-                  {@const currentTimer = firstMatch?.timerDuration || 180}
-                  {@const isHantei = group?.isHantei}
-                  
-                  <div
-                    draggable="true"
-                    ondragstart={(e) => handleDragStart(e, groupId)}
-                    ondragover={(e) => handleDragOver(e, groupId)}
-                    ondragleave={handleDragLeave}
-                    ondrop={(e) => handleDrop(e, groupId)}
-                    ondragend={handleDragEnd}
-                    animate:flip={{ duration: 200 }}
-                    class={cn(
-                      "rounded-xl border bg-card transition-all",
-                      draggedGroupId === groupId && "opacity-50",
-                      dragOverGroupId === groupId && "border-primary border-2",
-                      currentCourt === 'A' ? "border-amber-700/30" : 
-                      currentCourt === 'B' ? "border-sky-700/30" : 
+                <h3 class="text-sm font-semibold text-muted-foreground">Match Queue</h3>
+                <div class="space-y-2" use:autoAnimate>
+                  {#each groupOrder as groupId (groupId)}
+                    {@const group = getGroupById(groupId)}
+                    {@const groupMatches = matches.filter(m => m.groupId === groupId)}
+                    {@const completedCount = groupMatches.filter(m => m.status === 'completed').length}
+                    {@const court = getCourtForGroup(groupId)}
+                    {@const isCollapsed = collapsedGroups.has(groupId)}
+                    
+                    <div class={cn(
+                      "rounded-xl border bg-card overflow-hidden transition-all",
+                      court === 'A' ? "border-amber-700/30" : 
+                      court === 'B' ? "border-sky-700/30" : 
                       "border-emerald-700/30"
-                    )}
-                  >
-                    <!-- Group Header -->
-                    <div class="flex items-center gap-2 p-3">
-                      <button class="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing">
-                        <GripVertical class="h-4 w-4" />
-                      </button>
-                      <button onclick={() => toggleGroupCollapse(groupId)} class="text-muted-foreground hover:text-foreground">
-                        <ChevronDown class={cn("h-4 w-4 transition-transform", isCollapsed && "-rotate-90")} />
-                      </button>
-                      <Badge class={cn(
-                        "text-[10px] font-bold",
-                        currentCourt === 'A' ? "bg-amber-500 text-black" :
-                        currentCourt === 'B' ? "bg-sky-500 text-white" :
-                        "bg-emerald-500 text-white"
-                      )}>
-                        {currentCourt === 'A+B' ? 'A+B' : currentCourt}
-                      </Badge>
-                      <span class="font-medium flex-1">{group?.name || groupId}</span>
-                      {#if isHantei}
-                        <Badge variant="outline" class="text-[10px] border-orange-500 text-orange-400">Hantei</Badge>
-                      {/if}
+                    )}>
+                      <!-- Group Header -->
                       <button
-                        onclick={() => editingGroupId = isEditing ? null : groupId}
-                        class={cn(
-                          "p-1 rounded transition",
-                          isEditing ? "text-orange-400 bg-orange-500/20" : "text-muted-foreground hover:text-foreground"
-                        )}
+                        onclick={() => toggleGroupCollapse(groupId)}
+                        class="w-full flex items-center gap-2 p-3 hover:bg-muted/30 transition-colors"
                       >
-                        <Pencil class="h-4 w-4" />
-                      </button>
-                      <span class="text-xs text-muted-foreground">{completedCount}/{groupMatches.length}</span>
-                    </div>
-                    
-                    <!-- Group Settings (when editing) -->
-                    {#if isEditing && !isCollapsed}
-                      <div class="flex flex-wrap items-center gap-3 border-t border-border px-3 py-2 bg-muted/30" transition:slide>
-                        {#if !isHantei}
-                          <select
-                            value={currentTimer}
-                            onchange={(e) => setGroupTimer(groupId, parseInt((e.target as HTMLSelectElement).value))}
-                            class="rounded-lg border border-input bg-background px-3 py-1.5 text-sm"
-                          >
-                            {#each (selectedTournament.timerOptions || TIMER_OPTIONS) as secs}
-                              <option value={secs}>{formatTimer(secs)}</option>
-                            {/each}
-                          </select>
-                          <select
-                            value={currentMatchType}
-                            onchange={(e) => setGroupMatchType(groupId, (e.target as HTMLSelectElement).value as 'sanbon' | 'ippon')}
-                            class="rounded-lg border border-input bg-background px-3 py-1.5 text-sm"
-                          >
-                            <option value="sanbon">Sanbon</option>
-                            <option value="ippon">Ippon</option>
-                          </select>
+                        <ChevronDown class={cn("h-4 w-4 text-muted-foreground transition-transform", isCollapsed && "-rotate-90")} />
+                        <Badge class={cn(
+                          "text-[10px] font-bold",
+                          court === 'A' ? "bg-amber-500 text-black" :
+                          court === 'B' ? "bg-sky-500 text-white" :
+                          "bg-emerald-500 text-white"
+                        )}>
+                          {court === 'A+B' ? 'A+B' : court}
+                        </Badge>
+                        <span class="font-medium flex-1 text-left">{group?.name || groupId}</span>
+                        {#if group?.isHantei}
+                          <Badge variant="outline" class="text-[10px] border-orange-500 text-orange-400">Hantei</Badge>
                         {/if}
-                        <div class="ml-auto flex rounded-lg border border-input overflow-hidden">
-                          <button
-                            onclick={() => setGroupCourt(groupId, 'A')}
-                            class={cn("px-3 py-1.5 text-xs font-bold transition", currentCourt === 'A' ? "bg-amber-500 text-black" : "bg-background text-muted-foreground hover:bg-muted")}
-                          >A</button>
-                          <button
-                            onclick={() => setGroupCourt(groupId, 'A+B')}
-                            class={cn("px-3 py-1.5 text-xs font-bold transition", currentCourt === 'A+B' ? "bg-emerald-500 text-white" : "bg-background text-muted-foreground hover:bg-muted")}
-                          >A+B</button>
-                          <button
-                            onclick={() => setGroupCourt(groupId, 'B')}
-                            class={cn("px-3 py-1.5 text-xs font-bold transition", currentCourt === 'B' ? "bg-sky-500 text-white" : "bg-background text-muted-foreground hover:bg-muted")}
-                          >B</button>
-                        </div>
-                      </div>
-                    {/if}
-                    
-                    <!-- Match List -->
-                    {#if !isCollapsed}
-                      <div class="max-h-64 overflow-y-auto border-t border-border">
-                        {#each groupMatches as match, idx}
-                          {@const p1 = getMemberById(match.player1Id)}
-                          {@const p2 = getMemberById(match.player2Id)}
-                          {@const isWinner1 = match.winner === match.player1Id}
-                          {@const isWinner2 = match.winner === match.player2Id}
-                          <div class={cn(
-                            "flex items-center gap-2 px-3 py-2 text-sm border-b border-border last:border-b-0",
-                            match.status === 'completed' ? "bg-muted/30" : 
-                            match.status === 'in_progress' ? "bg-amber-500/10" : ""
-                          )}>
-                            <span class="w-6 text-xs text-muted-foreground">{idx + 1}</span>
-                            <span class={cn("flex-1", isWinner1 && "text-green-400 font-semibold")}>
-                              {p1?.firstName} {p1?.lastName.charAt(0)}.
-                              {#if isWinner1}<Check class="inline h-3 w-3 ml-1" />{/if}
-                            </span>
-                            <span class="text-xs text-muted-foreground">vs</span>
-                            <span class={cn("flex-1 text-right", isWinner2 && "text-green-400 font-semibold")}>
-                              {#if isWinner2}<Check class="inline h-3 w-3 mr-1" />{/if}
-                              {p2?.firstName} {p2?.lastName.charAt(0)}.
-                            </span>
-                            <Badge variant="outline" class={cn(
-                              "text-[10px] ml-2",
-                              match.status === 'completed' ? "border-green-500 text-green-400" :
-                              match.status === 'in_progress' ? "border-amber-500 text-amber-400" :
-                              "border-muted-foreground text-muted-foreground"
+                        <span class="text-xs text-muted-foreground">{completedCount}/{groupMatches.length}</span>
+                      </button>
+                      
+                      <!-- Match List -->
+                      {#if !isCollapsed}
+                        <div class="border-t border-border max-h-48 overflow-y-auto" transition:slide={{ duration: 200 }}>
+                          {#each groupMatches as match, idx}
+                            {@const p1 = getMemberById(match.player1Id)}
+                            {@const p2 = getMemberById(match.player2Id)}
+                            {@const isWinner1 = match.winner === match.player1Id}
+                            {@const isWinner2 = match.winner === match.player2Id}
+                            <div class={cn(
+                              "flex items-center gap-2 px-3 py-2 text-sm border-b border-border last:border-b-0",
+                              match.status === 'completed' ? "bg-muted/30" : 
+                              match.status === 'in_progress' ? "bg-amber-500/10" : ""
                             )}>
-                              {match.status === 'completed' ? '✓' : match.status === 'in_progress' ? '⏱' : '○'}
-                            </Badge>
-                          </div>
-                        {:else}
-                          <p class="py-4 text-center text-sm text-muted-foreground">No matches</p>
-                        {/each}
-                      </div>
-                    {/if}
-                  </div>
-                {/each}
+                              <span class="w-6 text-xs text-muted-foreground text-center">{idx + 1}</span>
+                              <span class={cn("flex-1 truncate", isWinner1 && "text-green-400 font-semibold")}>
+                                {p1?.firstName} {p1?.lastName.charAt(0)}.
+                              </span>
+                              <span class="text-xs text-muted-foreground px-2">vs</span>
+                              <span class={cn("flex-1 truncate text-right", isWinner2 && "text-green-400 font-semibold")}>
+                                {p2?.firstName} {p2?.lastName.charAt(0)}.
+                              </span>
+                              {#if match.status === 'completed'}
+                                <Check class="h-3.5 w-3.5 text-green-500" />
+                              {:else if match.status === 'in_progress'}
+                                <span class="h-2 w-2 rounded-full bg-amber-500 animate-pulse"></span>
+                              {:else}
+                                <span class="h-2 w-2 rounded-full bg-muted-foreground/30"></span>
+                              {/if}
+                            </div>
+                          {:else}
+                            <p class="py-4 text-center text-sm text-muted-foreground">No matches</p>
+                          {/each}
+                        </div>
+                      {/if}
+                    </div>
+                  {/each}
+                </div>
               </div>
             {:else if matches.length === 0 && participants.length === 0}
               <Card.Root class="border-dashed">
@@ -899,8 +1062,8 @@
             {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
           </select>
         </div>
-        <div class="overflow-hidden rounded-xl border border-border bg-card">
-          {#each filteredMembers as member}
+        <div class="overflow-hidden rounded-xl border border-border bg-card" use:autoAnimate>
+          {#each filteredMembers as member (member._id)}
             <div class="flex items-center justify-between border-b border-border px-4 py-3 last:border-b-0 hover:bg-accent/50">
               <div><span class="font-semibold">{member.lastName}, {member.firstName}</span><span class="ml-2 text-sm text-muted-foreground">({getGroupName(member.groupId)})</span></div>
               <button onclick={() => deleteMember(member._id)} class="text-destructive hover:text-destructive/80"><Trash2 class="h-4 w-4" /></button>
@@ -913,8 +1076,8 @@
           <h1 class="text-2xl font-bold">Groups ({groups.length})</h1>
           <Button onclick={() => showAddGroup = true}><Plus class="mr-2 h-4 w-4" /> Add Group</Button>
         </div>
-        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {#each groups as group}
+        <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-3" use:autoAnimate>
+          {#each groups as group (group._id)}
             {@const memberCount = members.filter(m => m.groupId === group.groupId).length}
             <Card.Root>
               <Card.Header class="pb-2">
@@ -951,8 +1114,8 @@
         {#if !selectedTournament}<p class="text-muted-foreground">No tournament selected</p>
         {:else if matches.length === 0}<p class="text-muted-foreground">No matches in this tournament</p>
         {:else}
-          <div class="space-y-4">
-            {#each groups as group}
+          <div class="space-y-4" use:autoAnimate>
+            {#each groups as group (group._id)}
               {@const gm = matches.filter(m => m.groupId === group.groupId)}
               {@const done = gm.filter(m => m.status === 'completed')}
               {#if gm.length > 0}
@@ -992,8 +1155,8 @@
             </Card.Content>
           </Card.Root>
         {:else}
-          <div class="space-y-4">
-            {#each completedTournaments as tournament}
+          <div class="space-y-4" use:autoAnimate>
+            {#each completedTournaments as tournament (tournament._id)}
               <Card.Root>
                 <Card.Header>
                   <Card.Title>{tournament.name}</Card.Title>
@@ -1052,8 +1215,8 @@
     <Dialog.Header><Dialog.Title>Add Multiple Members</Dialog.Title><Dialog.Description>Fill in the rows below. Empty rows will be skipped.</Dialog.Description></Dialog.Header>
     <div class="py-4">
       <div class="mb-2 grid grid-cols-[1fr_1fr_1fr_40px] gap-2 text-sm font-medium text-muted-foreground"><span>First Name</span><span>Last Name</span><span>Group</span><span></span></div>
-      <div class="space-y-2">
-        {#each massMembers as member, i}
+      <div class="space-y-2" use:autoAnimate>
+        {#each massMembers as member, i (i)}
           <div class="grid grid-cols-[1fr_1fr_1fr_40px] gap-2">
             <Input bind:value={member.firstName} placeholder="First Name" />
             <Input bind:value={member.lastName} placeholder="Last Name" />
