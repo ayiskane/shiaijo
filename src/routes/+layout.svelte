@@ -1,9 +1,11 @@
 <script lang="ts">
-	import './layout.css';
 	import '../app.css';
+	import { ModeWatcher } from 'mode-watcher';
 
 	let { children } = $props();
 </script>
+
+<ModeWatcher defaultMode="dark" />
 
 <svelte:head>
 	<link rel="stylesheet" href="/FA/css/all.css" />

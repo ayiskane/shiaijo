@@ -1,6 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
   import { convexQuery, convexMutation } from '$lib/convex';
+  import { cn } from '$lib/utils';
+  import { Button } from '$lib/components/ui/button';
+  import * as Dialog from '$lib/components/ui/dialog';
+  import { Progress } from '$lib/components/ui/progress';
+  import { Badge } from '$lib/components/ui/badge';
+  import * as Sheet from '$lib/components/ui/sheet';
+  import { Swords, Menu, RotateCcw, Play, Pause, Undo2, Flag, Trophy } from 'lucide-svelte';
   
   interface Member { _id: string; firstName: string; lastName: string; groupId: string; }
   interface Group { _id: string; groupId: string; name: string; isHantei: boolean; }
@@ -165,93 +172,228 @@
 
 <svelte:head><title>Courtkeeper - Shiaijo</title></svelte:head>
 
-{#if showCourtSelect}
-<div class="fixed inset-0 bg-[#0a1017] flex items-center justify-center p-4 z-50">
-  <div class="bg-[#142130] rounded-2xl p-6 max-w-sm w-full text-center border border-[#1e3a5f]">
-    <img src="/shiaijo-logo.png" alt="試合場" class="h-20 mx-auto mb-4" />
-    <h2 class="text-lg text-[#8fb3d1] mb-6">Which court are you keeping score for?</h2>
-    <div class="grid grid-cols-2 gap-4">
-      <button onclick={() => selectCourt('A')} class="py-4 rounded-xl font-bold text-lg bg-amber-500 text-black hover:bg-amber-400">Court A</button>
-      <button onclick={() => selectCourt('B')} class="py-4 rounded-xl font-bold text-lg bg-blue-500 text-white hover:bg-blue-400">Court B</button>
+<!-- Court Selection Dialog -->
+<Dialog.Root bind:open={showCourtSelect}>
+  <Dialog.Content class="sm:max-w-sm" showCloseButton={false}>
+    <Dialog.Header class="text-center">
+      <div class="flex justify-center mb-4">
+        <img src="/shiaijologo.png" alt="試合場" class="h-16" />
+      </div>
+      <Dialog.Title>Select Your Court</Dialog.Title>
+      <Dialog.Description>Which court are you keeping score for?</Dialog.Description>
+    </Dialog.Header>
+    <div class="grid grid-cols-2 gap-4 py-4">
+      <Button onclick={() => selectCourt('A')} size="lg" class="h-16 text-lg bg-amber-500 hover:bg-amber-400 text-black font-bold">
+        Court A
+      </Button>
+      <Button onclick={() => selectCourt('B')} size="lg" class="h-16 text-lg bg-blue-500 hover:bg-blue-400 text-white font-bold">
+        Court B
+      </Button>
     </div>
-  </div>
-</div>
-{/if}
+  </Dialog.Content>
+</Dialog.Root>
 
 {#if !showCourtSelect && selectedCourt}
-<div class="min-h-screen bg-[#0a1017] text-white flex flex-col select-none">
-  <header class="bg-[#0f1a24] border-b border-[#1e3a5f] px-4 py-3 flex items-center justify-between">
+<div class="min-h-screen bg-background text-foreground flex flex-col select-none">
+  <!-- Header -->
+  <header class="bg-card border-b border-border px-4 py-3 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <img src="/shiaijo-logo.png" alt="" class="h-8" />
-      <span class="font-bold text-lg {selectedCourt === 'A' ? 'text-amber-400' : 'text-blue-400'}">Court {selectedCourt}</span>
-      {#if currentMatch}<span class="text-sm text-[#6b8fad]">{getGroupName(currentMatch.groupId)}</span>{/if}
+      <img src="/shiaijologo.png" alt="" class="h-8" />
+      <Badge variant={selectedCourt === 'A' ? 'default' : 'secondary'} class={cn(
+        "text-lg font-bold px-3 py-1",
+        selectedCourt === 'A' ? "bg-amber-500 text-black hover:bg-amber-500" : "bg-blue-500 text-white hover:bg-blue-500"
+      )}>
+        Court {selectedCourt}
+      </Badge>
+      {#if currentMatch}
+        <span class="text-sm text-muted-foreground">{getGroupName(currentMatch.groupId)}</span>
+      {/if}
     </div>
-    <button onclick={() => showQueuePanel = !showQueuePanel} class="p-2 rounded-lg bg-[#1e3a5f]">☰</button>
+    <Button variant="outline" size="icon" onclick={() => showQueuePanel = true}>
+      <Menu class="h-5 w-5" />
+    </Button>
   </header>
   
   {#if loading}
-    <div class="flex-1 flex items-center justify-center"><img src="/shiaijo-logo.png" alt="" class="h-24 animate-pulse" /></div>
+    <div class="flex-1 flex items-center justify-center">
+      <div class="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
+    </div>
   {:else if error}
-    <div class="flex-1 flex items-center justify-center flex-col gap-4 text-red-400"><p>{error}</p><button onclick={loadData} class="px-4 py-2 bg-[#1e3a5f] rounded-lg">Retry</button></div>
+    <div class="flex-1 flex items-center justify-center flex-col gap-4 text-destructive">
+      <p>{error}</p>
+      <Button onclick={loadData}>Retry</Button>
+    </div>
   {:else if !tournament}
-    <div class="flex-1 flex items-center justify-center flex-col gap-4"><p class="text-[#6b8fad]">No active tournament</p><a href="/admin" class="px-4 py-2 bg-orange-500 rounded-lg">Go to Admin</a></div>
+    <div class="flex-1 flex items-center justify-center flex-col gap-4">
+      <p class="text-muted-foreground">No active tournament</p>
+      <Button variant="default" asChild>
+        <a href="/admin">Go to Admin</a>
+      </Button>
+    </div>
   {:else if !currentMatch}
-    <div class="flex-1 flex items-center justify-center"><p class="text-[#6b8fad]">No matches for Court {selectedCourt}</p></div>
+    <div class="flex-1 flex items-center justify-center">
+      <p class="text-muted-foreground">No matches for Court {selectedCourt}</p>
+    </div>
   {:else}
     <div class="flex-1 flex flex-col p-3 gap-3">
       <!-- Score Display -->
-      <div class="bg-gradient-to-r from-red-950/80 via-transparent to-slate-800/80 rounded-xl p-4 border border-[#1e3a5f]">
+      <div class="bg-gradient-to-r from-red-950/80 via-card to-slate-800/80 rounded-xl p-4 border border-border">
         <div class="flex items-center justify-between">
-          <div class="flex-1"><p class="text-xs text-red-400 mb-1">AKA</p><p class="text-xl font-bold truncate">{getMemberName(currentMatch.player1Id)}</p>
-            <div class="flex gap-1 mt-2">{#each p1Score as s}<span class="w-7 h-7 rounded-full border-2 border-red-400 text-red-400 flex items-center justify-center text-sm font-bold">{SCORE_LABELS[s]}</span>{/each}</div>
+          <div class="flex-1">
+            <p class="text-xs text-red-400 mb-1 font-semibold">AKA</p>
+            <p class="text-xl font-bold truncate">{getMemberName(currentMatch.player1Id)}</p>
+            <div class="flex gap-1 mt-2">
+              {#each p1Score as s}
+                <span class="w-7 h-7 rounded-full border-2 border-red-400 text-red-400 flex items-center justify-center text-sm font-bold">{SCORE_LABELS[s]}</span>
+              {/each}
+            </div>
           </div>
           <div class="px-4 text-center">
-            <div class="text-4xl font-mono font-bold"><span class="text-red-400">{Math.min(p1Score.length, winTarget)}</span>:<span>{Math.min(p2Score.length, winTarget)}</span></div>
-            <div class="text-amber-400 text-sm mt-1">{p1Hansoku > 0 ? '▲'.repeat(p1Hansoku) : ''} · {p2Hansoku > 0 ? '▲'.repeat(p2Hansoku) : ''}</div>
+            <div class="text-4xl font-mono font-bold">
+              <span class="text-red-400">{Math.min(p1Score.length, winTarget)}</span>
+              <span class="text-muted-foreground">:</span>
+              <span>{Math.min(p2Score.length, winTarget)}</span>
+            </div>
+            <div class="text-amber-400 text-sm mt-1">
+              {p1Hansoku > 0 ? '▲'.repeat(p1Hansoku) : ''} · {p2Hansoku > 0 ? '▲'.repeat(p2Hansoku) : ''}
+            </div>
           </div>
-          <div class="flex-1 text-right"><p class="text-xs text-slate-300 mb-1">SHIRO</p><p class="text-xl font-bold truncate">{getMemberName(currentMatch.player2Id)}</p>
-            <div class="flex gap-1 mt-2 justify-end">{#each p2Score as s}<span class="w-7 h-7 rounded-full border-2 border-slate-300 text-slate-300 flex items-center justify-center text-sm font-bold">{SCORE_LABELS[s]}</span>{/each}</div>
+          <div class="flex-1 text-right">
+            <p class="text-xs text-slate-300 mb-1 font-semibold">SHIRO</p>
+            <p class="text-xl font-bold truncate">{getMemberName(currentMatch.player2Id)}</p>
+            <div class="flex gap-1 mt-2 justify-end">
+              {#each p2Score as s}
+                <span class="w-7 h-7 rounded-full border-2 border-slate-300 text-slate-300 flex items-center justify-center text-sm font-bold">{SCORE_LABELS[s]}</span>
+              {/each}
+            </div>
           </div>
         </div>
       </div>
       
       <!-- Score Buttons -->
       <div class="grid grid-cols-2 gap-3 flex-1">
+        <!-- AKA (Player 1) -->
         <div class="bg-red-950/30 rounded-xl p-3 border border-red-900/50 flex flex-col gap-2">
-          <div class="grid grid-cols-4 gap-2">{#each SCORE_BUTTONS as btn}<button onclick={() => addScore('player1', btn.type)} disabled={gameOver} class="h-14 rounded-xl bg-red-600 hover:bg-red-500 disabled:opacity-50 font-bold text-lg">{btn.label}</button>{/each}</div>
-          <button onclick={() => addHansoku('player1')} disabled={gameOver} class="h-10 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-50 font-semibold">▲ Hansoku</button>
+          <div class="grid grid-cols-4 gap-2">
+            {#each SCORE_BUTTONS as btn}
+              <Button 
+                onclick={() => addScore('player1', btn.type)} 
+                disabled={gameOver} 
+                class="h-14 bg-red-600 hover:bg-red-500 disabled:opacity-50 font-bold text-lg"
+              >
+                {btn.label}
+              </Button>
+            {/each}
+          </div>
+          <Button 
+            onclick={() => addHansoku('player1')} 
+            disabled={gameOver} 
+            class="h-10 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 font-semibold"
+          >
+            ▲ Hansoku
+          </Button>
           <div class="flex gap-2">
-            <button onclick={() => undoScore('player1')} disabled={p1Score.length === 0} class="flex-1 h-10 rounded-lg bg-slate-700 disabled:opacity-30 text-sm">↩ Undo</button>
-            <button onclick={() => declareForfeit('player1')} disabled={gameOver} class="flex-1 h-10 rounded-lg bg-slate-800 text-red-400 border border-red-900/50 text-sm">Forfeit</button>
+            <Button 
+              variant="secondary" 
+              onclick={() => undoScore('player1')} 
+              disabled={p1Score.length === 0} 
+              class="flex-1 h-10"
+            >
+              <Undo2 class="h-4 w-4 mr-1" /> Undo
+            </Button>
+            <Button 
+              variant="outline" 
+              onclick={() => declareForfeit('player1')} 
+              disabled={gameOver} 
+              class="flex-1 h-10 text-destructive border-destructive/50"
+            >
+              <Flag class="h-4 w-4 mr-1" /> Forfeit
+            </Button>
           </div>
         </div>
+        
+        <!-- SHIRO (Player 2) -->
         <div class="bg-slate-800/50 rounded-xl p-3 border border-slate-700 flex flex-col gap-2">
-          <div class="grid grid-cols-4 gap-2">{#each SCORE_BUTTONS as btn}<button onclick={() => addScore('player2', btn.type)} disabled={gameOver} class="h-14 rounded-xl bg-slate-600 hover:bg-slate-500 disabled:opacity-50 font-bold text-lg">{btn.label}</button>{/each}</div>
-          <button onclick={() => addHansoku('player2')} disabled={gameOver} class="h-10 rounded-lg bg-amber-600 hover:bg-amber-500 disabled:opacity-50 font-semibold">Hansoku ▲</button>
+          <div class="grid grid-cols-4 gap-2">
+            {#each SCORE_BUTTONS as btn}
+              <Button 
+                onclick={() => addScore('player2', btn.type)} 
+                disabled={gameOver} 
+                variant="secondary"
+                class="h-14 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 font-bold text-lg"
+              >
+                {btn.label}
+              </Button>
+            {/each}
+          </div>
+          <Button 
+            onclick={() => addHansoku('player2')} 
+            disabled={gameOver} 
+            class="h-10 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 font-semibold"
+          >
+            Hansoku ▲
+          </Button>
           <div class="flex gap-2">
-            <button onclick={() => declareForfeit('player2')} disabled={gameOver} class="flex-1 h-10 rounded-lg bg-slate-800 text-red-400 border border-slate-600 text-sm">Forfeit</button>
-            <button onclick={() => undoScore('player2')} disabled={p2Score.length === 0} class="flex-1 h-10 rounded-lg bg-slate-700 disabled:opacity-30 text-sm">Undo ↩</button>
+            <Button 
+              variant="outline" 
+              onclick={() => declareForfeit('player2')} 
+              disabled={gameOver} 
+              class="flex-1 h-10 text-destructive border-destructive/50"
+            >
+              Forfeit <Flag class="h-4 w-4 ml-1" />
+            </Button>
+            <Button 
+              variant="secondary" 
+              onclick={() => undoScore('player2')} 
+              disabled={p2Score.length === 0} 
+              class="flex-1 h-10"
+            >
+              Undo <Undo2 class="h-4 w-4 ml-1" />
+            </Button>
           </div>
         </div>
       </div>
       
       <!-- Timer -->
-      <div class="rounded-xl p-4 border {timerExpired ? 'bg-amber-950/50 border-amber-500' : 'bg-[#142130] border-[#1e3a5f]'}">
-        {#if timerExpired}<div class="bg-amber-500 text-black font-bold text-center py-2 rounded-lg mb-3">TIME!</div>{:else}<div class="h-2 bg-slate-700 rounded-full mb-3"><div class="h-full bg-emerald-500 transition-all" style="width: {progress}%"></div></div>{/if}
+      <div class={cn(
+        "rounded-xl p-4 border",
+        timerExpired ? "bg-amber-950/50 border-amber-500" : "bg-card border-border"
+      )}>
+        {#if timerExpired}
+          <div class="bg-amber-500 text-black font-bold text-center py-2 rounded-lg mb-3">⏰ TIME!</div>
+        {:else}
+          <Progress value={progress} class="h-2 mb-3" />
+        {/if}
         <div class="flex items-center justify-center gap-4">
-          <button onclick={toggleTimer} class="w-14 h-14 rounded-full font-bold text-lg {timerRunning ? 'bg-amber-500 text-black' : 'bg-emerald-500'}">{timerRunning ? '⏸' : '▶'}</button>
-          <span class="text-4xl font-mono font-bold">{formatTime(elapsedSeconds)}</span>
-          <button onclick={() => elapsedSeconds = 0} class="px-4 py-2 rounded-lg bg-slate-700 text-sm">Reset</button>
+          <Button 
+            onclick={toggleTimer} 
+            size="lg"
+            class={cn(
+              "w-14 h-14 rounded-full font-bold text-lg",
+              timerRunning ? "bg-amber-500 hover:bg-amber-400 text-black" : "bg-emerald-500 hover:bg-emerald-400"
+            )}
+          >
+            {#if timerRunning}
+              <Pause class="h-6 w-6" />
+            {:else}
+              <Play class="h-6 w-6" />
+            {/if}
+          </Button>
+          <span class="text-4xl font-mono font-bold tabular-nums">{formatTime(elapsedSeconds)}</span>
+          <Button variant="secondary" onclick={() => elapsedSeconds = 0}>
+            <RotateCcw class="h-4 w-4 mr-1" /> Reset
+          </Button>
         </div>
       </div>
       
+      <!-- Up Next -->
       {#if pendingMatches.length > 1}
         {@const next = pendingMatches[1]}
-        <div class="bg-[#142130]/50 rounded-lg p-3 border border-[#1e3a5f]/50">
-          <div class="text-xs text-[#6b8fad] mb-1">UP NEXT</div>
+        <div class="bg-card/50 rounded-lg p-3 border border-border/50">
+          <div class="text-xs text-muted-foreground mb-1">UP NEXT</div>
           <div class="flex items-center justify-between">
             <span class="text-sm">{getMemberName(next.player1Id)} vs {getMemberName(next.player2Id)}</span>
-            <span class="text-xs text-[#6b8fad]">{getGroupName(next.groupId)}</span>
+            <Badge variant="outline" class="text-xs">{getGroupName(next.groupId)}</Badge>
           </div>
         </div>
       {/if}
@@ -259,29 +401,74 @@
   {/if}
 </div>
 
-{#if showWinModal && pendingWinner}
-<div class="fixed inset-0 bg-black/80 flex items-center justify-center p-4 z-50">
-  <div class="rounded-2xl p-6 max-w-sm w-full text-center border {pendingWinner === 'player1' ? 'bg-red-950 border-red-700' : 'bg-slate-800 border-slate-600'}">
-    <div class="text-5xl mb-4">🏆</div>
-    <h2 class="text-2xl font-bold mb-6">{pendingWinner === 'player1' ? getMemberName(currentMatch?.player1Id) : getMemberName(currentMatch?.player2Id)} wins!</h2>
-    <div class="grid grid-cols-2 gap-3">
-      <button onclick={confirmWin} class="py-3 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold">Confirm</button>
-      <button onclick={() => { if (pendingWinner) undoScore(pendingWinner); }} class="py-3 rounded-lg bg-slate-700">Undo</button>
-    </div>
-  </div>
-</div>
-{/if}
+<!-- Win Confirmation Dialog -->
+<Dialog.Root bind:open={showWinModal}>
+  <Dialog.Content class={cn(
+    "sm:max-w-sm text-center",
+    pendingWinner === 'player1' ? "border-red-500" : "border-slate-400"
+  )}>
+    <Dialog.Header>
+      <div class="text-5xl mb-4">🏆</div>
+      <Dialog.Title class="text-2xl">
+        {pendingWinner === 'player1' ? getMemberName(currentMatch?.player1Id) : getMemberName(currentMatch?.player2Id)} wins!
+      </Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Footer class="grid grid-cols-2 gap-3 pt-4">
+      <Button variant="default" onclick={confirmWin} class="bg-emerald-600 hover:bg-emerald-500">
+        <Trophy class="h-4 w-4 mr-2" /> Confirm
+      </Button>
+      <Button variant="secondary" onclick={() => { if (pendingWinner) undoScore(pendingWinner); }}>
+        <Undo2 class="h-4 w-4 mr-2" /> Undo
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
-{#if showQueuePanel}
-<div class="fixed inset-0 bg-black/50 z-40" onclick={() => showQueuePanel = false}></div>
-<div class="fixed right-0 top-0 bottom-0 w-72 bg-[#0f1a24] border-l border-[#1e3a5f] z-50 p-4 overflow-auto">
-  <div class="flex justify-between mb-4"><h3 class="font-bold">Queue</h3><button onclick={() => showQueuePanel = false}>✕</button></div>
-  <div class="flex gap-2 mb-4">
-    <button onclick={() => selectedCourt = 'A'} class="flex-1 py-2 rounded-lg font-semibold {selectedCourt === 'A' ? 'bg-amber-500 text-black' : 'bg-slate-700'}">A</button>
-    <button onclick={() => selectedCourt = 'B'} class="flex-1 py-2 rounded-lg font-semibold {selectedCourt === 'B' ? 'bg-blue-500' : 'bg-slate-700'}">B</button>
-  </div>
-  <div class="space-y-2">{#each pendingMatches as m}<div class="p-2 rounded bg-slate-800/50 text-sm">{getMemberName(m.player1Id)} vs {getMemberName(m.player2Id)}</div>{/each}</div>
-  <div class="mt-4 pt-4 border-t border-slate-700"><a href="/admin" class="block text-center py-2 rounded-lg bg-orange-500/20 text-orange-400">Admin Portal</a></div>
-</div>
-{/if}
+<!-- Queue Panel Sheet -->
+<Sheet.Root bind:open={showQueuePanel}>
+  <Sheet.Content side="right" class="w-72">
+    <Sheet.Header>
+      <Sheet.Title>Match Queue</Sheet.Title>
+    </Sheet.Header>
+    <div class="py-4">
+      <div class="flex gap-2 mb-4">
+        <Button 
+          variant={selectedCourt === 'A' ? 'default' : 'secondary'}
+          onclick={() => selectedCourt = 'A'} 
+          class={cn("flex-1", selectedCourt === 'A' && "bg-amber-500 hover:bg-amber-400 text-black")}
+        >
+          Court A
+        </Button>
+        <Button 
+          variant={selectedCourt === 'B' ? 'default' : 'secondary'}
+          onclick={() => selectedCourt = 'B'} 
+          class={cn("flex-1", selectedCourt === 'B' && "bg-blue-500 hover:bg-blue-400")}
+        >
+          Court B
+        </Button>
+      </div>
+      <div class="space-y-2">
+        {#each pendingMatches as m, i}
+          <div class={cn(
+            "p-2 rounded-lg text-sm border",
+            i === 0 ? "bg-primary/10 border-primary/50" : "bg-card border-border"
+          )}>
+            <div class="font-medium">{getMemberName(m.player1Id)}</div>
+            <div class="text-muted-foreground">vs {getMemberName(m.player2Id)}</div>
+            <Badge variant="outline" class="mt-1 text-xs">{getGroupName(m.groupId)}</Badge>
+          </div>
+        {:else}
+          <p class="text-muted-foreground text-sm text-center py-4">No pending matches</p>
+        {/each}
+      </div>
+      <div class="mt-4 pt-4 border-t border-border">
+        <Button variant="outline" class="w-full" asChild>
+          <a href="/admin">
+            <Swords class="h-4 w-4 mr-2" /> Admin Portal
+          </a>
+        </Button>
+      </div>
+    </div>
+  </Sheet.Content>
+</Sheet.Root>
 {/if}
