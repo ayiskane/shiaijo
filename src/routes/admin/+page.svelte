@@ -6,7 +6,7 @@
   import { flip } from 'svelte/animate';
   import { quintOut } from 'svelte/easing';
   import { toast } from 'svelte-sonner';
-  import { SvelteMap } from 'svelte/reactivity';
+  import { SvelteMap, SvelteSet } from 'svelte/reactivity';
   import autoAnimate from '@formkit/auto-animate';
   import { 
     LayoutDashboard, Users, FolderOpen, Trophy, ClipboardList, 
@@ -210,15 +210,49 @@
   // Filters
   let searchQuery = $state('');
   let filterGroup = $state('all');
+  let registrationFilter = $state<'all' | 'registered' | 'unregistered'>('all');
+  
+  // Member selection for bulk registration
+  let selectedMemberIds = new SvelteSet<string>();
+  
+  // Quick lookup for registered members
+  let registeredMemberIds = $derived(new Set(participants.map(p => p.memberId)));
   
   let filteredMembers = $derived(
     members
       .filter(m => {
         const matchesSearch = `${m.firstName} ${m.lastName}`.toLowerCase().includes(searchQuery.toLowerCase());
         const matchesGroup = filterGroup === 'all' || m.groupId === filterGroup;
-        return matchesSearch && matchesGroup;
+        const isRegistered = registeredMemberIds.has(m._id);
+        const matchesRegistration = registrationFilter === 'all' || 
+          (registrationFilter === 'registered' && isRegistered) ||
+          (registrationFilter === 'unregistered' && !isRegistered);
+        return matchesSearch && matchesGroup && matchesRegistration;
       })
       .sort((a, b) => a.lastName.localeCompare(b.lastName))
+  );
+  
+  // Selection helpers
+  function toggleMemberSelection(memberId: string) {
+    if (selectedMemberIds.has(memberId)) {
+      selectedMemberIds.delete(memberId);
+    } else {
+      selectedMemberIds.add(memberId);
+    }
+  }
+  
+  function selectAllFiltered() {
+    for (const m of filteredMembers) {
+      selectedMemberIds.add(m._id);
+    }
+  }
+  
+  function clearSelection() {
+    selectedMemberIds.clear();
+  }
+  
+  let allFilteredSelected = $derived(
+    filteredMembers.length > 0 && filteredMembers.every(m => selectedMemberIds.has(m._id))
   );
   
   function toggleNavGroup(groupId: string) {
@@ -387,6 +421,63 @@
       const result = await client.mutation(api.participants.addAllMembers, { tournamentId: selectedTournament._id });
       toast.success(`Added ${result.addedCount} participants`);
     } catch (e) { toast.error('Failed to add participants'); }
+  }
+  
+  async function registerSelectedMembers() {
+    if (!selectedTournament) return;
+    if (selectedMemberIds.size === 0) { toast.error('No members selected'); return; }
+    try {
+      const memberIds = [...selectedMemberIds] as any[];
+      const result = await client.mutation(api.participants.addMembers, { 
+        tournamentId: selectedTournament._id, 
+        memberIds 
+      });
+      toast.success(`Registered ${result.addedCount} members`);
+      selectedMemberIds.clear();
+    } catch (e) { toast.error('Failed to register members'); }
+  }
+  
+  async function clearAllParticipants() {
+    if (!selectedTournament) return;
+    if (!confirm('Remove all participants from this tournament?')) return;
+    try {
+      const result = await client.mutation(api.participants.clearAll, { tournamentId: selectedTournament._id });
+      toast.success(`Removed ${result.removedCount} participants`);
+    } catch (e) { toast.error('Failed to clear participants'); }
+  }
+  
+  async function toggleMemberRegistration(memberId: string) {
+    if (!selectedTournament) return;
+    const isRegistered = registeredMemberIds.has(memberId);
+    try {
+      if (isRegistered) {
+        await client.mutation(api.participants.removeByMember, { 
+          tournamentId: selectedTournament._id, 
+          memberId: memberId as any 
+        });
+        toast.success('Unregistered');
+      } else {
+        await client.mutation(api.participants.addMembers, { 
+          tournamentId: selectedTournament._id, 
+          memberIds: [memberId] as any[] 
+        });
+        toast.success('Registered');
+      }
+    } catch (e) { toast.error('Failed to update registration'); }
+  }
+  
+  async function registerGroupMembers(groupId: string) {
+    if (!selectedTournament) return;
+    const groupMembers = members.filter(m => m.groupId === groupId);
+    const unregisteredIds = groupMembers.filter(m => !registeredMemberIds.has(m._id)).map(m => m._id);
+    if (unregisteredIds.length === 0) { toast.info('All members in this group are already registered'); return; }
+    try {
+      const result = await client.mutation(api.participants.addMembers, { 
+        tournamentId: selectedTournament._id, 
+        memberIds: unregisteredIds as any[] 
+      });
+      toast.success(`Registered ${result.addedCount} members from ${getGroupName(groupId)}`);
+    } catch (e) { toast.error('Failed to register group'); }
   }
   
   async function generateMatches() {
@@ -1059,28 +1150,127 @@
         {/if}
       
       {:else if activeTab === 'members'}
-        <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <h1 class="text-2xl font-bold">Members ({members.length})</h1>
+        <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h1 class="text-2xl font-bold">Members ({members.length})</h1>
+            {#if selectedTournament}
+              <p class="text-sm text-muted-foreground">{participants.length} registered for {selectedTournament.name}</p>
+            {/if}
+          </div>
           <div class="flex flex-wrap gap-2">
             <Button variant="secondary" size="sm" onclick={() => showImportCSV = true} class="text-xs">CSV</Button>
             <Button variant="secondary" size="sm" onclick={() => { resetMassMembers(); showMassAddMembers = true; }} class="bg-blue-600 hover:bg-blue-700 text-white text-xs"><Users class="mr-1 h-3 w-3" /> Bulk</Button>
             <Button size="sm" onclick={() => showAddMember = true} class="text-xs"><Plus class="mr-1 h-3 w-3" /> Add</Button>
           </div>
         </div>
+        
+        <!-- Registration Actions -->
+        {#if selectedTournament}
+          <div class="mb-4 p-3 rounded-lg border border-border bg-card/50">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="text-xs font-medium text-muted-foreground mr-2">Registration:</span>
+              <Button variant="outline" size="sm" onclick={addAllParticipants} class="text-xs h-7">
+                <UserPlus class="mr-1 h-3 w-3" /> Register All
+              </Button>
+              <Button variant="outline" size="sm" onclick={clearAllParticipants} class="text-xs h-7 text-destructive hover:text-destructive">
+                <X class="mr-1 h-3 w-3" /> Clear All
+              </Button>
+              {#if selectedMemberIds.size > 0}
+                <Button variant="default" size="sm" onclick={registerSelectedMembers} class="text-xs h-7 bg-emerald-600 hover:bg-emerald-700">
+                  <Check class="mr-1 h-3 w-3" /> Register Selected ({selectedMemberIds.size})
+                </Button>
+                <Button variant="ghost" size="sm" onclick={clearSelection} class="text-xs h-7">Clear Selection</Button>
+              {/if}
+            </div>
+          </div>
+        {/if}
+        
+        <!-- Filters -->
         <div class="mb-4 flex flex-col sm:flex-row gap-2">
           <Input type="text" bind:value={searchQuery} placeholder="Search..." class="flex-1" />
           <select bind:value={filterGroup} class="w-full sm:w-auto rounded-lg border border-input bg-card px-3 py-2 text-sm">
             <option value="all">All Groups</option>
             {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
           </select>
+          {#if selectedTournament}
+            <select bind:value={registrationFilter} class="w-full sm:w-auto rounded-lg border border-input bg-card px-3 py-2 text-sm">
+              <option value="all">All Members</option>
+              <option value="registered">✓ Registered ({participants.length})</option>
+              <option value="unregistered">○ Unregistered ({members.length - participants.length})</option>
+            </select>
+          {/if}
         </div>
+        
+        <!-- Group Quick Register -->
+        {#if selectedTournament && filterGroup !== 'all'}
+          {@const groupMemberCount = members.filter(m => m.groupId === filterGroup).length}
+          {@const registeredInGroup = members.filter(m => m.groupId === filterGroup && registeredMemberIds.has(m._id)).length}
+          <div class="mb-4 flex items-center gap-2 text-sm">
+            <span class="text-muted-foreground">{registeredInGroup}/{groupMemberCount} registered in this group</span>
+            {#if registeredInGroup < groupMemberCount}
+              <Button variant="outline" size="sm" onclick={() => registerGroupMembers(filterGroup)} class="text-xs h-6">
+                Register Group
+              </Button>
+            {/if}
+          </div>
+        {/if}
+        
+        <!-- Member List -->
         <div class="overflow-hidden rounded-xl border border-border bg-card" use:autoAnimate>
+          <!-- Header row with select all -->
+          {#if selectedTournament && filteredMembers.length > 0}
+            <div class="flex items-center gap-3 border-b border-border px-3 sm:px-4 py-2 bg-muted/30">
+              <input 
+                type="checkbox" 
+                checked={allFilteredSelected}
+                onchange={() => allFilteredSelected ? clearSelection() : selectAllFiltered()}
+                class="h-4 w-4 rounded border-gray-600 bg-transparent"
+              />
+              <span class="text-xs text-muted-foreground">
+                {selectedMemberIds.size > 0 ? `${selectedMemberIds.size} selected` : 'Select all'}
+              </span>
+            </div>
+          {/if}
           {#each filteredMembers as member (member._id)}
-            <div class="flex items-center justify-between border-b border-border px-3 sm:px-4 py-3 last:border-b-0 hover:bg-accent/50 gap-2">
+            {@const isRegistered = registeredMemberIds.has(member._id)}
+            {@const isSelected = selectedMemberIds.has(member._id)}
+            <div class={cn(
+              "flex items-center gap-3 border-b border-border px-3 sm:px-4 py-3 last:border-b-0 hover:bg-accent/50",
+              isRegistered && "bg-emerald-950/20"
+            )}>
+              <!-- Selection checkbox -->
+              {#if selectedTournament}
+                <input 
+                  type="checkbox" 
+                  checked={isSelected}
+                  onchange={() => toggleMemberSelection(member._id)}
+                  class="h-4 w-4 rounded border-gray-600 bg-transparent shrink-0"
+                />
+              {/if}
+              
+              <!-- Registration toggle -->
+              {#if selectedTournament}
+                <button 
+                  onclick={() => toggleMemberRegistration(member._id)}
+                  class={cn(
+                    "shrink-0 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold transition-colors",
+                    isRegistered 
+                      ? "bg-emerald-500 text-white hover:bg-emerald-600" 
+                      : "bg-muted text-muted-foreground hover:bg-muted/80"
+                  )}
+                  title={isRegistered ? "Click to unregister" : "Click to register"}
+                >
+                  {#if isRegistered}<Check class="h-3 w-3" />{:else}<Plus class="h-3 w-3" />{/if}
+                </button>
+              {/if}
+              
+              <!-- Member info -->
               <div class="min-w-0 flex-1">
                 <span class="font-semibold text-sm truncate block">{member.lastName}, {member.firstName}</span>
                 <span class="text-xs text-muted-foreground truncate block">{getGroupName(member.groupId)}</span>
               </div>
+              
+              <!-- Delete button -->
               <button onclick={() => deleteMember(member._id)} class="text-destructive hover:text-destructive/80 shrink-0"><Trash2 class="h-4 w-4" /></button>
             </div>
           {:else}<p class="py-8 text-center text-muted-foreground">No members found</p>{/each}
@@ -1285,4 +1475,5 @@
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
+
 
