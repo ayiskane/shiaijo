@@ -128,7 +128,7 @@
   let isComplete = $derived(matches.length > 0 && completedMatches.length === matches.length);
   
   // Build a reactive map of group courts from matches
-  let groupCourtMap = $derived(() => {
+  let groupCourtMap = $derived.by(() => {
     const map = new Map<string, 'A' | 'B' | 'A+B'>();
     for (const match of matches) {
       if (!map.has(match.groupId)) {
@@ -713,7 +713,7 @@
                         <div class="rounded-lg border border-border overflow-hidden" use:autoAnimate>
                           {#each groupOrder as groupId, idx (groupId)}
                             {@const group = getGroupById(groupId)}
-                            {@const court = groupCourtMap().get(groupId) || 'A'}
+                            {@const court = groupCourtMap.get(groupId) || 'A'}
                             {@const groupMatches = matches.filter(m => m.groupId === groupId)}
                             {@const completedCount = groupMatches.filter(m => m.status === 'completed').length}
                             
@@ -941,7 +941,7 @@
                     {@const group = getGroupById(groupId)}
                     {@const groupMatches = matches.filter(m => m.groupId === groupId)}
                     {@const completedCount = groupMatches.filter(m => m.status === 'completed').length}
-                    {@const court = groupCourtMap().get(groupId) || 'A'}
+                    {@const court = groupCourtMap.get(groupId) || 'A'}
                     {@const isCollapsed = collapsedGroups.has(groupId)}
                     
                     <div class={cn(
