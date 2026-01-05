@@ -1,12 +1,10 @@
 <script lang="ts">
-  let isDark = $state(true);
-  
-  const spectator = { id: 'spectator', href: '/spectator', kanji: '観', label: 'Spectator', desc: 'Watch live tournament matches' };
+  const spectator = { id: 'spectator', href: '/spectator', kanji: '観', label: 'SPECTATOR', desc: 'Watch live tournament matches' };
   
   const staffPortals = [
-    { id: 'admin', href: '/admin', kanji: '管', label: 'Admin', desc: 'Manage' },
-    { id: 'courtkeeper', href: '/courtkeeper', kanji: '審', label: 'Courtkeeper', desc: 'Score' },
-    { id: 'volunteer', href: '/volunteer', kanji: '奉', label: 'Volunteer', desc: 'Track' },
+    { id: 'admin', href: '/admin', kanji: '管', label: 'ADMIN' },
+    { id: 'courtkeeper', href: '/courtkeeper', kanji: '審', label: 'COURTKEEPER' },
+    { id: 'volunteer', href: '/volunteer', kanji: '奉', label: 'VOLUNTEER' },
   ];
 </script>
 
@@ -14,14 +12,9 @@
   <title>Shiaijo - Kendo Tournament Management</title>
 </svelte:head>
 
-<div class="landing" class:dark={isDark}>
+<div class="landing">
   <!-- Texture overlay -->
   <div class="texture"></div>
-
-  <!-- Theme toggle -->
-  <button class="theme-toggle" onclick={() => isDark = !isDark}>
-    {isDark ? '◐' : '◑'}
-  </button>
 
   <main class="container">
     <!-- Left side - Logo & Title -->
@@ -30,10 +23,6 @@
       
       <div class="logo-wrapper">
         <img src="/shiaijologo.png" alt="Shiaijo" class="logo" />
-      </div>
-      
-      <div class="seal">
-        <span class="seal-kanji">道</span>
       </div>
       
       <div class="brand-name">SHIAIJO</div>
@@ -55,7 +44,7 @@
       </a>
 
       <!-- Staff label -->
-      <div class="staff-label">Staff Portals</div>
+      <div class="staff-label">STAFF PORTALS</div>
 
       <!-- Staff portals row -->
       <div class="staff-row">
@@ -80,25 +69,8 @@
 </div>
 
 <style>
-  /* Theme variables */
+  /* Dark theme variables */
   .landing {
-    /* Light theme */
-    --bg: #f5f2ea;
-    --bg-alt: #ebe7dc;
-    --text: #1a1a1a;
-    --text-muted: #5c5245;
-    --text-faint: #8a8073;
-    --accent: #c43c3c;
-    --card-bg: rgba(255,255,255,0.6);
-    --card-bg-hover: rgba(255,255,255,0.9);
-    --border: rgba(100,80,60,0.1);
-    --border-hover: rgba(100,80,60,0.25);
-    --divider: rgba(100,80,60,0.08);
-    --shadow: 0 20px 50px rgba(100,80,60,0.12);
-  }
-
-  .landing.dark {
-    /* Dark theme */
     --bg: #0c0b09;
     --bg-alt: #141210;
     --text: #ede8de;
@@ -111,6 +83,7 @@
     --border-hover: rgba(255,255,255,0.12);
     --divider: rgba(255,255,255,0.04);
     --shadow: 0 20px 50px rgba(0,0,0,0.35);
+    --font-jp: 'SicYubi-HyojunGakushu', 'Shiaijo JP', serif;
   }
 
   .landing {
@@ -123,40 +96,14 @@
     justify-content: center;
     padding: 40px 24px;
     position: relative;
-    transition: background 0.5s ease;
   }
 
   .texture {
     position: absolute;
     inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
-    opacity: 0.035;
-    pointer-events: none;
-  }
-
-  .landing.dark .texture {
     opacity: 0.02;
-  }
-
-  .theme-toggle {
-    position: absolute;
-    top: 24px;
-    right: 24px;
-    width: 42px;
-    height: 42px;
-    background: var(--card-bg);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    color: var(--text-muted);
-    font-size: 18px;
-    cursor: pointer;
-    z-index: 10;
-    transition: all 0.3s ease;
-  }
-
-  .theme-toggle:hover {
-    background: var(--card-bg-hover);
-    border-color: var(--border-hover);
+    pointer-events: none;
   }
 
   .container {
@@ -193,33 +140,9 @@
   }
 
   .logo {
-    width: 120px;
+    width: 180px;
     height: auto;
-    filter: drop-shadow(0 0 30px rgba(220, 76, 76, 0.2));
-    transition: filter 0.3s ease;
-  }
-
-  .landing.dark .logo {
     filter: drop-shadow(0 0 30px rgba(220, 76, 76, 0.3));
-  }
-
-  .seal {
-    width: 36px;
-    height: 36px;
-    border: 2px solid var(--accent);
-    border-radius: 3px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transform: rotate(8deg);
-    margin-bottom: 16px;
-  }
-
-  .seal-kanji {
-    font-family: var(--font-jp, 'Shiaijo JP', serif);
-    color: var(--accent);
-    font-size: 15px;
-    font-weight: 700;
   }
 
   .brand-name {
@@ -265,7 +188,7 @@
   }
 
   .portal-kanji {
-    font-family: var(--font-jp, 'Shiaijo JP', serif);
+    font-family: var(--font-jp);
     font-size: 42px;
     font-weight: 700;
     color: var(--text);
@@ -281,10 +204,10 @@
   }
 
   .portal-label {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 600;
     color: var(--text);
-    letter-spacing: 0.02em;
+    letter-spacing: 0.1em;
   }
 
   .portal-desc {
@@ -339,9 +262,10 @@
   }
 
   .portal-staff .portal-label {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
     color: var(--text-muted);
+    letter-spacing: 0.15em;
   }
 
   /* Footer */
@@ -365,7 +289,7 @@
   }
 
   .footer-jp {
-    font-family: var(--font-jp, 'Shiaijo JP', serif);
+    font-family: var(--font-jp);
     font-size: 12px;
     color: var(--text-faint);
     letter-spacing: 0.15em;
@@ -410,6 +334,10 @@
   }
 
   @media (max-width: 400px) {
+    .logo {
+      width: 140px;
+    }
+
     .portal-wide {
       padding: 20px;
     }
