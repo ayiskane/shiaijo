@@ -33,6 +33,7 @@
   "dependencies": {
     "convex": "^1.17.0",
     "convex-svelte": "^0.0.12",
-    "lucide-svelte": "^0.469.0"
+    "lucide-svelte": "^0.469.0",
+    "@formkit/auto-animate": "^0.8.2"
   }
 }
