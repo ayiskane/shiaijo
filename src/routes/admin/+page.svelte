@@ -1383,9 +1383,12 @@
             {@const isExpanded = expandedGroupId === group._id}
             <div class={cn("rounded-2xl border-2 overflow-hidden transition-all duration-200", isExpanded ? "border-primary bg-card" : "border-border bg-card/50")}>
               <!-- Group Header - Clickable -->
-              <button
+              <div
+                role="button"
+                tabindex="0"
                 onclick={() => expandedGroupId = isExpanded ? null : group._id}
-                class="w-full p-5 flex items-center gap-4 text-left hover:bg-accent/50 transition-colors min-h-[72px]"
+                onkeydown={(e) => e.key === 'Enter' && (expandedGroupId = isExpanded ? null : group._id)}
+                class="w-full p-5 flex items-center gap-4 text-left hover:bg-accent/50 transition-colors min-h-[72px] cursor-pointer"
               >
                 <!-- Expand Icon -->
                 <div class={cn("flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-all duration-200", isExpanded ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground")}>
@@ -1404,7 +1407,7 @@
                 </div>
                 
                 <!-- Quick Actions -->
-                <div class="flex gap-2 shrink-0" onclick={(e) => e.stopPropagation()}>
+                <div class="flex gap-2 shrink-0" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
                   <button 
                     onclick={() => { editingGroup = { ...group }; showEditGroup = true; }} 
                     class="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
@@ -1418,7 +1421,7 @@
                     <Trash2 class="h-4 w-4" />
                   </button>
                 </div>
-              </button>
+              </div>
               
               <!-- Expanded Content - Members -->
               {#if isExpanded}
@@ -1630,6 +1633,7 @@
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
+
 
 
 
