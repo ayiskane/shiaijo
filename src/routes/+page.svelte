@@ -227,11 +227,23 @@
 
   /* Wide spectator card */
   .portal-wide {
-    padding: 28px 28px;
+    padding: 24px;
   }
 
   .portal-wide .portal-kanji {
-    font-size: 52px;
+    font-size: 48px;
+  }
+  
+  .portal-wide .portal-info {
+    min-width: 0;
+  }
+  
+  .portal-wide .portal-label {
+    font-size: 13px;
+  }
+  
+  .portal-wide .portal-desc {
+    font-size: 11px;
   }
 
   /* Staff section */
@@ -253,8 +265,9 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 20px 12px;
-    gap: 10px;
+    padding: 16px 12px;
+    gap: 8px;
+    aspect-ratio: 1;
   }
 
   .portal-staff .portal-kanji {
@@ -339,11 +352,15 @@
     }
 
     .portal-wide {
-      padding: 20px;
+      padding: 18px;
     }
 
     .portal-wide .portal-kanji {
-      font-size: 40px;
+      font-size: 36px;
+    }
+    
+    .portal-wide .portal-label {
+      font-size: 12px;
     }
 
     .staff-row {
@@ -351,11 +368,15 @@
     }
 
     .portal-staff {
-      padding: 16px 8px;
+      padding: 12px 8px;
     }
 
     .portal-staff .portal-kanji {
       font-size: 28px;
+    }
+    
+    .portal-staff .portal-label {
+      font-size: 9px;
     }
   }
 
