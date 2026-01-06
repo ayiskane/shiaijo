@@ -68,20 +68,22 @@
 </div>
 
 <style>
-  /* Dark theme variables */
+  /* Renbu 練武 Theme - Warm amber from dojo logo */
   .landing {
     --bg: #0c0b09;
     --bg-alt: #141210;
-    --text: #ede8de;
-    --text-muted: #8f8475;
-    --text-faint: #4d4840;
-    --accent: #dc4c4c;
-    --card-bg: rgba(255,255,255,0.03);
-    --card-bg-hover: rgba(255,255,255,0.08);
-    --border: rgba(255,255,255,0.05);
-    --border-hover: rgba(255,255,255,0.12);
-    --divider: rgba(255,255,255,0.04);
+    --text: #fef3c7;
+    --text-muted: #a8a29e;
+    --text-faint: #57534e;
+    --accent: #d97706;
+    --accent-light: #f59e0b;
+    --card-bg: rgba(217, 119, 6, 0.06);
+    --card-bg-hover: rgba(217, 119, 6, 0.12);
+    --border: rgba(217, 119, 6, 0.12);
+    --border-hover: rgba(217, 119, 6, 0.20);
+    --divider: rgba(217, 119, 6, 0.08);
     --shadow: 0 20px 50px rgba(0,0,0,0.35);
+    --glow: rgba(217, 119, 6, 0.3);
     --font-jp: 'SicYubi-HyojunGakushu', 'SicYubi-FudeGyosho', serif;
   }
 
@@ -133,7 +135,7 @@
   .logo {
     width: 180px;
     height: auto;
-    filter: drop-shadow(0 0 30px rgba(220, 76, 76, 0.3));
+    filter: drop-shadow(0 0 30px var(--glow));
   }
 
   .brand-name {
@@ -191,7 +193,7 @@
     color: var(--text);
     line-height: 1;
     flex-shrink: 0;
-    filter: drop-shadow(0 0 20px rgba(220, 76, 76, 0.15));
+    filter: drop-shadow(0 0 20px rgba(217, 119, 6, 0.15));
   }
 
   .portal-info {
@@ -372,6 +374,7 @@
   .staff-row .portal-card:nth-child(2) { animation-delay: 0.15s; }
   .staff-row .portal-card:nth-child(3) { animation-delay: 0.2s; }
 </style>
+
 
 
 
