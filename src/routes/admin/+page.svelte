@@ -614,44 +614,42 @@
 <div class="flex min-h-screen bg-background overflow-x-hidden">
   <!-- Desktop Sidebar -->
   <aside class={cn("hidden md:flex flex-col fixed inset-y-0 left-0 z-20 border-r border-sidebar-border bg-sidebar transition-all duration-300", sidebarCollapsed ? "w-[72px]" : "w-52")}>
-    <div class="flex h-16 items-center gap-3 border-b border-sidebar-border px-4">
+    <div class="flex h-16 items-center gap-3 border-b border-sidebar-border px-4 overflow-hidden">
       <img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 shrink-0 object-contain" />
-      {#if !sidebarCollapsed}<span class="font-jp text-xl text-foreground">試合場</span>{/if}
+      <span class={cn("font-jp text-xl text-foreground whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto")}>試合場</span>
     </div>
     <button onclick={() => sidebarCollapsed = !sidebarCollapsed} class="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar hover:bg-sidebar-accent">
       <ChevronLeft class={cn("h-4 w-4 text-sidebar-foreground transition-transform", sidebarCollapsed && "rotate-180")} />
     </button>
-    <nav class="flex-1 overflow-y-auto py-4">
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4">
       {#each navItems as item}
         <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors", sidebarCollapsed && "justify-center px-0", activeTab === item.id ? "border-l-2 border-sidebar-primary bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-          <div class={cn("flex h-7 w-7 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><svelte:component this={item.icon} class="h-4 w-4" /></div>
-          {#if !sidebarCollapsed}<span>{item.label}</span>{/if}
+          <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><svelte:component this={item.icon} class="h-4 w-4" /></div>
+          <span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>{item.label}</span>
         </button>
       {/each}
       {#each navGroups as group}
         <div class="mt-2">
-          {#if !sidebarCollapsed}
-            <button onclick={() => toggleNavGroup(group.id)} class="flex w-full items-center gap-2 px-3 py-1.5 text-[10px] uppercase tracking-wider text-sidebar-foreground/60 hover:text-sidebar-foreground">
-              <ChevronDown class={cn("h-3 w-3 transition-transform", !expandedNavGroups.has(group.id) && "-rotate-90")} />{group.label}
-            </button>
-          {/if}
+          <button onclick={() => !sidebarCollapsed && toggleNavGroup(group.id)} class={cn("flex w-full items-center gap-2 px-3 py-1.5 text-[10px] uppercase tracking-wider text-sidebar-foreground/60 hover:text-sidebar-foreground transition-all duration-300", sidebarCollapsed ? "opacity-0 h-0 overflow-hidden py-0" : "opacity-100")}>
+            <ChevronDown class={cn("h-3 w-3 transition-transform", !expandedNavGroups.has(group.id) && "-rotate-90")} />{group.label}
+          </button>
           {#if sidebarCollapsed || expandedNavGroups.has(group.id)}
             {#each group.items as item}
               <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors", sidebarCollapsed && "justify-center px-0", activeTab === item.id ? "border-l-2 border-sidebar-primary bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-                <div class={cn("flex h-7 w-7 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><svelte:component this={item.icon} class="h-4 w-4" /></div>
-                {#if !sidebarCollapsed}<span>{item.label}</span>{#if item.id === 'tournament' && activeTournament}<span class="ml-auto rounded-full border border-green-500/30 bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">Live</span>{/if}{/if}
+                <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><svelte:component this={item.icon} class="h-4 w-4" /></div>
+                <span class={cn("whitespace-nowrap transition-all duration-300 flex items-center gap-2", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>{item.label}{#if item.id === 'tournament' && activeTournament}<span class="ml-auto rounded-full border border-green-500/30 bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">Live</span>{/if}</span>
               </button>
             {/each}
           {/if}
         </div>
       {/each}
     </nav>
-    <div class="border-t border-sidebar-border p-3">
-      {#if !sidebarCollapsed}<p class="mb-2 px-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/60">Switch Portal</p>{/if}
+    <div class="border-t border-sidebar-border p-3 overflow-hidden">
+      <p class={cn("mb-2 px-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/60 whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 h-0 mb-0 overflow-hidden" : "opacity-100")}>Switch Portal</p>
       <div class={cn("flex gap-2", sidebarCollapsed ? "flex-col items-center" : "flex-col")}>
-        <a href="/" class={cn("flex items-center gap-2 rounded-lg bg-primary/10 text-primary transition-colors hover:bg-primary/20", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Home class="h-4 w-4" />{#if !sidebarCollapsed}<span>Home</span>{/if}</a>
-        <a href="/courtkeeper" class={cn("flex items-center gap-2 rounded-lg bg-amber-900/30 text-amber-400 transition-colors hover:bg-amber-900/50", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Swords class="h-4 w-4" />{#if !sidebarCollapsed}<span>Courtkeeper</span>{/if}</a>
-        <a href="/spectator" class={cn("flex items-center gap-2 rounded-lg bg-emerald-900/30 text-emerald-400 transition-colors hover:bg-emerald-900/50", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Eye class="h-4 w-4" />{#if !sidebarCollapsed}<span>Spectator</span>{/if}</a>
+        <a href="/" class={cn("flex items-center gap-2 rounded-lg bg-primary/10 text-primary transition-colors hover:bg-primary/20", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Home class="h-4 w-4 shrink-0" /><span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>Home</span></a>
+        <a href="/courtkeeper" class={cn("flex items-center gap-2 rounded-lg bg-amber-900/30 text-amber-400 transition-colors hover:bg-amber-900/50", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Swords class="h-4 w-4 shrink-0" /><span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>Courtkeeper</span></a>
+        <a href="/spectator" class={cn("flex items-center gap-2 rounded-lg bg-emerald-900/30 text-emerald-400 transition-colors hover:bg-emerald-900/50", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Eye class="h-4 w-4 shrink-0" /><span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>Spectator</span></a>
       </div>
     </div>
   </aside>
@@ -1485,6 +1483,7 @@
     </Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
+
 
 
 
