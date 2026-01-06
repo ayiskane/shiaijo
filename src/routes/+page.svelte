@@ -19,13 +19,12 @@
   <main class="container">
     <!-- Left side - Logo & Title -->
     <div class="title-section">
-      <div class="subtitle">TOURNAMENT SYSTEM</div>
-      
       <div class="logo-wrapper">
         <img src="/shiaijologo.png" alt="Shiaijo" class="logo" />
       </div>
       
-      <div class="brand-name">SHIAIJO</div>
+      <div class="brand-name">S H I A I J O</div>
+      <div class="subtitle">Tournament Manager</div>
     </div>
 
     <!-- Divider -->
@@ -126,17 +125,9 @@
     padding-right: 50px;
   }
 
-  .subtitle {
-    font-size: 9px;
-    letter-spacing: 0.5em;
-    color: var(--text-faint);
-    margin-bottom: 20px;
-    text-transform: uppercase;
-  }
-
   .logo-wrapper {
     position: relative;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
   }
 
   .logo {
@@ -146,8 +137,15 @@
   }
 
   .brand-name {
-    font-size: 11px;
-    letter-spacing: 0.4em;
+    font-size: 14px;
+    letter-spacing: 0.35em;
+    color: var(--text);
+    margin-bottom: 6px;
+  }
+
+  .subtitle {
+    font-size: 10px;
+    letter-spacing: 0.15em;
     color: var(--text-faint);
   }
 
@@ -190,10 +188,10 @@
   .portal-kanji {
     font-family: 'SicYubi-HyojunGakushu', serif;
     font-size: 42px;
-    font-weight: 700;
     color: var(--text);
     line-height: 1;
     flex-shrink: 0;
+    filter: drop-shadow(0 0 20px rgba(220, 76, 76, 0.15));
   }
 
   .portal-info {
@@ -374,6 +372,7 @@
   .staff-row .portal-card:nth-child(2) { animation-delay: 0.15s; }
   .staff-row .portal-card:nth-child(3) { animation-delay: 0.2s; }
 </style>
+
 
 
 
