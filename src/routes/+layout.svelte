@@ -16,12 +16,28 @@
 
 <svelte:head>
 	<link rel="stylesheet" href="/FA/css/all.css" />
+	<!-- Preload critical fonts for faster rendering -->
 	<link
 		rel="preload"
-		href="/fonts/shiaijo-jp.ttf"
+		href="/fonts/TitilliumWeb-Regular.woff2"
 		as="font"
-		type="font/ttf"
+		type="font/woff2"
+		crossorigin
+	/>
+	<link
+		rel="preload"
+		href="/fonts/TitilliumWeb-SemiBold.woff2"
+		as="font"
+		type="font/woff2"
+		crossorigin
+	/>
+	<link
+		rel="preload"
+		href="/fonts/TitilliumWeb-Bold.woff2"
+		as="font"
+		type="font/woff2"
 		crossorigin
 	/>
 </svelte:head>
 {@render children()}
+
