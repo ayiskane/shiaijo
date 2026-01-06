@@ -5,7 +5,9 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
   preprocess: vitePreprocess(),
   kit: {
-    adapter: adapter()
+    adapter: adapter(),
+    // Inline CSS under 5KB for faster initial render (reduces HTTP requests)
+    inlineStyleThreshold: 5000
   }
 };
 

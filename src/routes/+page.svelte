@@ -20,7 +20,8 @@
     <!-- Left side - Logo & Title -->
     <div class="title-section">
       <div class="logo-wrapper">
-        <img src="/shiaijologo.png" alt="Shiaijo" class="logo" />
+        <!-- Enhanced image: auto AVIF/WebP, responsive srcset, prevents CLS -->
+        <enhanced:img src="$lib/assets/shiaijologo.png" alt="Shiaijo" class="logo" fetchpriority="high" />
       </div>
       
       <div class="brand-name">S H I A I J O</div>
