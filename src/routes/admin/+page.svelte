@@ -1140,9 +1140,10 @@
       <ChevronLeft class={cn("h-4 w-4 text-sidebar-foreground transition-transform", sidebarCollapsed && "rotate-180")} />
     </button>
     <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4">
-      {#each navItems as item}
+      {#each navItems as item (item.id)}
+        {@const Icon = item.icon}
         <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors", sidebarCollapsed && "justify-center px-0", activeTab === item.id ? "border-l-2 border-sidebar-primary bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-          <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><item.icon class="h-4 w-4" /></div>
+          <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><Icon class="h-4 w-4" /></div>
           <span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>{item.label}</span>
         </button>
       {/each}
@@ -1152,9 +1153,10 @@
             <ChevronDown class={cn("h-3 w-3 transition-transform", !expandedNavGroups.has(group.id) && "-rotate-90")} />{group.label}
           </button>
           {#if sidebarCollapsed || expandedNavGroups.has(group.id)}
-            {#each group.items as item}
+            {#each group.items as item (item.id)}
+              {@const Icon = item.icon}
               <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors", sidebarCollapsed && "justify-center px-0", activeTab === item.id ? "border-l-2 border-sidebar-primary bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-                <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><item.icon class="h-4 w-4" /></div>
+                <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><Icon class="h-4 w-4" /></div>
                 <span class={cn("whitespace-nowrap transition-all duration-300 flex items-center gap-2", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>{item.label}{#if item.id === 'tournament' && activeTournament}<span class="ml-auto rounded-full border border-green-500/30 bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">Live</span>{/if}</span>
               </button>
             {/each}
@@ -1181,12 +1183,20 @@
   
   <!-- Mobile Sidebar Overlay -->
   {#if sidebarOpen}
-    <div class="fixed inset-0 z-40 bg-black/50 md:hidden" onclick={() => sidebarOpen = false} transition:fade></div>
+    <div
+      class="fixed inset-0 z-40 bg-black/50 md:hidden"
+      role="button"
+      tabindex="0"
+      onclick={() => sidebarOpen = false}
+      onkeydown={(e) => (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') && (sidebarOpen = false)}
+      transition:fade
+    ></div>
     <aside class="fixed inset-y-0 left-0 z-50 w-64 border-r border-sidebar-border bg-sidebar md:hidden" transition:slide={{ axis: 'x' }}>
       <div class="flex h-14 items-center gap-3 border-b border-sidebar-border px-4"><img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 object-contain logo-bob" /><span class="font-jp text-xl">試合場</span></div>
       <nav class="p-2">
-        {#each [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'members', label: 'Members', icon: Users }, { id: 'groups', label: 'Groups', icon: FolderOpen }, { id: 'tournament', label: 'Tournament', icon: Trophy }, { id: 'results', label: 'Results', icon: ClipboardList }, { id: 'history', label: 'History', icon: History }] as tab}
-          <button onclick={() => { activeTab = tab.id; sidebarOpen = false; }} class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm", activeTab === tab.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}><tab.icon class="h-4 w-4" />{tab.label}</button>
+        {#each [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'members', label: 'Members', icon: Users }, { id: 'groups', label: 'Groups', icon: FolderOpen }, { id: 'tournament', label: 'Tournament', icon: Trophy }, { id: 'results', label: 'Results', icon: ClipboardList }, { id: 'history', label: 'History', icon: History }] as tab (tab.id)}
+          {@const Icon = tab.icon}
+          <button onclick={() => { activeTab = tab.id; sidebarOpen = false; }} class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm", activeTab === tab.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}><Icon class="h-4 w-4" />{tab.label}</button>
         {/each}
       </nav>
       <div class="absolute inset-x-4 bottom-4 flex flex-col gap-2">
@@ -1213,7 +1223,8 @@
             </div>
           </div>
         {:then Module}
-          <svelte:component this={Module.default}
+          {@const Tab = Module.default}
+          <Tab
             loading={loading}
             {members}
             {groups}
@@ -1239,7 +1250,8 @@
             </div>
           </div>
         {:then Module}
-          <svelte:component this={Module.default}
+          {@const Tab = Module.default}
+          <Tab
             bind:selectedTournamentId
             bind:settingsSheetOpen
             bind:boguTimerDuration
@@ -1319,7 +1331,8 @@
             </div>
           </div>
         {:then Module}
-          <svelte:component this={Module.default}
+          {@const Tab = Module.default}
+          <Tab
             {groups}
             {matches}
             {selectedTournament}
@@ -1346,7 +1359,8 @@
             </div>
           </div>
         {:then Module}
-          <svelte:component this={Module.default}
+          {@const Tab = Module.default}
+          <Tab
             {tournaments}
           />
         {:catch error}

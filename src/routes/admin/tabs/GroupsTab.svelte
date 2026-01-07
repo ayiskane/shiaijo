@@ -56,15 +56,15 @@
           <div class="text-sm text-muted-foreground">{groupMembers.length} members · {group.groupId}</div>
         </div>
 
-        <div class="flex gap-2 shrink-0" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.stopPropagation()}>
+        <div class="flex gap-2 shrink-0" role="group">
           <button
-            onclick={() => onEditGroup({ ...group })}
+            onclick={(e) => { e.stopPropagation(); onEditGroup({ ...group }); }}
             class="flex h-11 w-11 items-center justify-center rounded-xl bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
           >
             <Pencil class="h-4 w-4" />
           </button>
           <button
-            onclick={() => onDeleteGroup(group._id)}
+            onclick={(e) => { e.stopPropagation(); onDeleteGroup(group._id); }}
             class="flex h-11 w-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors"
           >
             <Trash2 class="h-4 w-4" />

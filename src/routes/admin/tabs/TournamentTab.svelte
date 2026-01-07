@@ -84,6 +84,8 @@
 
   let listEl: HTMLElement;
   $: listEl && autoAnimate(listEl);
+  // mark externally-provided props as used to satisfy runes a11y checks
+  const _keepProps = [groups, pendingMatches, SCORE_LABELS];
 </script>
 
 <!-- Header -->
@@ -161,7 +163,7 @@
           </div>
         {/each}
         <div class="absolute top-5 left-12 right-12 h-0.5 bg-muted -z-0">
-          <div class="h-full bg-emerald-500 transition-all" style={`width: ${((setupStep - 1) / 3) * 100}%`} />
+          <div class="h-full bg-emerald-500 transition-all" style={`width: ${((setupStep - 1) / 3) * 100}%`}></div>
         </div>
       </div>
 
@@ -196,6 +198,7 @@
                       {@const groupMembers = membersByGroupId.get(groupId) ?? []}
                       <div
                         draggable="true"
+                        role="listitem"
                         ondragstart={(e) => onDragStart(e, groupId)}
                         ondragover={(e) => onDragOver(e, groupId)}
                         ondragleave={onDragLeave}
@@ -291,7 +294,7 @@
             <div class="text-xs text-muted-foreground">{courtACompletedCount}/{courtAMatches.length}</div>
           </div>
           <div class="h-1.5 bg-muted rounded-full overflow-hidden mb-3">
-            <div class="h-full bg-amber-500 rounded-full" style={`width: ${courtAMatches.length > 0 ? (courtACompletedCount / courtAMatches.length) * 100 : 0}%`} />
+            <div class="h-full bg-amber-500 rounded-full" style={`width: ${courtAMatches.length > 0 ? (courtACompletedCount / courtAMatches.length) * 100 : 0}%`}></div>
           </div>
           {#if currentCourtAMatch}
             {@const p1 = getMemberById(currentCourtAMatch.player1Id)}
@@ -313,7 +316,7 @@
             <div class="text-xs text-muted-foreground">{courtBCompletedCount}/{courtBMatches.length}</div>
           </div>
           <div class="h-1.5 bg-muted rounded-full overflow-hidden mb-3">
-            <div class="h-full bg-sky-500 rounded-full" style={`width: ${courtBMatches.length > 0 ? (courtBCompletedCount / courtBMatches.length) * 100 : 0}%`} />
+            <div class="h-full bg-sky-500 rounded-full" style={`width: ${courtBMatches.length > 0 ? (courtBCompletedCount / courtBMatches.length) * 100 : 0}%`}></div>
           </div>
           {#if currentCourtBMatch}
             {@const p1 = getMemberById(currentCourtBMatch.player1Id)}
@@ -408,7 +411,7 @@
 
 <Sheet.Root bind:open={settingsSheetOpen}>
   <Sheet.Content side="bottom" class="h-[85vh] rounded-t-3xl">
-    <div class="flex justify-center pt-2 pb-4"><div class="w-10 h-1 bg-muted-foreground/30 rounded-full" /></div>
+    <div class="flex justify-center pt-2 pb-4"><div class="w-10 h-1 bg-muted-foreground/30 rounded-full"></div></div>
     <Sheet.Header class="px-6 pb-4">
       <Sheet.Title>Tournament Settings</Sheet.Title>
       <Sheet.Description>Configure groups, courts, and match settings</Sheet.Description>
@@ -427,6 +430,7 @@
               {@const groupStats = matchStatsByGroup.get(groupId) ?? { total: 0, completed: 0, inProgress: 0, pending: 0 }}
               <div
                 draggable="true"
+                role="listitem"
                 ondragstart={(e) => onDragStart(e, groupId)}
                 ondragover={(e) => onDragOver(e, groupId)}
                 ondragleave={onDragLeave}
