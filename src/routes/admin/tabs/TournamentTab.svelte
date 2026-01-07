@@ -453,7 +453,7 @@
 {/if}
 
 <Sheet.Root bind:open={settingsSheetOpen}>
-  <Sheet.Content side="bottom" class="h-[85vh] rounded-t-3xl">
+  <Sheet.Content side="bottom" class="h-[85vh] rounded-t-3xl bg-background border-t border-border z-[100] shadow-2xl shadow-black/60">
     <div class="flex justify-center pt-2 pb-4"><div class="w-10 h-1 bg-muted-foreground/30 rounded-full"></div></div>
     <Sheet.Header class="px-6 pb-4">
       <Sheet.Title>Tournament Settings</Sheet.Title>
