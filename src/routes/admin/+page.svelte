@@ -38,6 +38,7 @@
   const client = useConvexClient();
   const SENSEI_GROUP_ID = 'SEN';
   const SETTINGS_KEYS = ['adminPasscode', 'courtkeeperPasscode'] as const;
+  let dashboardModulePromise: Promise<any> | null = null;
   
   // Apply Sumi theme to admin portal
   onMount(() => {
@@ -1015,9 +1016,41 @@
     draggedGroupId = null;
     dragOverGroupId = null;
   }
+
+  function loadDashboardTab() {
+    if (!dashboardModulePromise) {
+      dashboardModulePromise = import('./tabs/DashboardTab.svelte');
+    }
+    return dashboardModulePromise;
+  }
+
+  let membersModulePromise: Promise<any> | null = null;
+  function loadMembersTab() {
+    if (!membersModulePromise) {
+      membersModulePromise = import('./tabs/MembersTab.svelte');
+    }
+    return membersModulePromise;
+  }
+
+  function loadDashboardTab() {
+    if (!dashboardModulePromise) {
+      dashboardModulePromise = import('./tabs/DashboardTab.svelte');
+    }
+    return dashboardModulePromise;
+  }
 </script>
 
 <svelte:head><title>Admin - 試合場 Shiaijo</title></svelte:head>
+
+<style>
+  :global(.logo-bob) {
+    animation: logo-bob 2.4s ease-in-out infinite;
+  }
+  @keyframes logo-bob {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-4px) scale(1.02); }
+  }
+</style>
 
 {#if !accessUnlocked}
   <div class="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
@@ -1110,7 +1143,7 @@
   <!-- Mobile Header -->
   <header class="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background px-4 md:hidden">
     <button onclick={() => sidebarOpen = true} class="rounded-lg p-2 hover:bg-accent"><Menu class="h-5 w-5" /></button>
-    <div class="flex items-center gap-2"><img src="/shiaijologo.png" alt="Shiaijo" class="h-8 w-8 object-contain" /><span class="font-jp">試合場</span></div>
+    <div class="flex items-center gap-2"><img src="/shiaijologo.png" alt="Shiaijo" class="h-8 w-8 object-contain logo-bob" /><span class="font-jp">試合場</span></div>
     <div class="w-10"></div>
   </header>
   
@@ -1118,7 +1151,7 @@
   {#if sidebarOpen}
     <div class="fixed inset-0 z-40 bg-black/50 md:hidden" onclick={() => sidebarOpen = false} transition:fade></div>
     <aside class="fixed inset-y-0 left-0 z-50 w-64 border-r border-sidebar-border bg-sidebar md:hidden" transition:slide={{ axis: 'x' }}>
-      <div class="flex h-14 items-center gap-3 border-b border-sidebar-border px-4"><img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 object-contain" /><span class="font-jp text-xl">試合場</span></div>
+      <div class="flex h-14 items-center gap-3 border-b border-sidebar-border px-4"><img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 object-contain logo-bob" /><span class="font-jp text-xl">試合場</span></div>
       <nav class="p-2">
         {#each [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'members', label: 'Members', icon: Users }, { id: 'groups', label: 'Groups', icon: FolderOpen }, { id: 'tournament', label: 'Tournament', icon: Trophy }, { id: 'results', label: 'Results', icon: ClipboardList }, { id: 'history', label: 'History', icon: History }] as tab}
           <button onclick={() => { activeTab = tab.id; sidebarOpen = false; }} class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm", activeTab === tab.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}><tab.icon class="h-4 w-4" />{tab.label}</button>
@@ -1138,22 +1171,30 @@
         <div class="space-y-4"><Skeleton class="h-8 w-48" /><div class="grid gap-4 md:grid-cols-3"><Skeleton class="h-24" /><Skeleton class="h-24" /><Skeleton class="h-24" /></div></div>
       
       {:else if activeTab === 'dashboard'}
-        <h1 class="mb-6 text-2xl font-bold">Dashboard</h1>
-        <div class="mb-6 grid gap-4 grid-cols-2 md:grid-cols-3">
-          <div class="rounded-xl border border-border bg-card p-4"><div class="text-2xl sm:text-3xl font-bold text-primary">{members.length}</div><div class="text-xs sm:text-sm text-muted-foreground">Members</div></div>
-          <div class="rounded-xl border border-border bg-card p-4"><div class="text-2xl sm:text-3xl font-bold text-blue-400">{groups.length}</div><div class="text-xs sm:text-sm text-muted-foreground">Groups</div></div>
-          <div class="rounded-xl border border-border bg-card p-4 col-span-2 md:col-span-1"><div class="text-2xl sm:text-3xl font-bold text-green-400">{tournaments.length}</div><div class="text-xs sm:text-sm text-muted-foreground">Tournaments</div></div>
-        </div>
-        {#if activeTournament}
-          <div class="rounded-xl border border-green-500/50 bg-green-900/20 p-4">
-            <div class="mb-2 flex items-center gap-2"><span class="h-2 w-2 animate-pulse rounded-full bg-green-500"></span><h3 class="font-bold text-green-400 truncate">Live: {activeTournament.name}</h3></div>
-            <div class="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm text-muted-foreground"><span>📅 {activeTournament.date}</span><span>⚔️ {completedMatches.length}/{matches.length}</span><span>👥 {participants.length}</span></div>
-            <div class="mt-3">
-              <Progress value={progressPercent} class="h-2" />
-              <p class="mt-1 text-xs text-muted-foreground">{progressPercent}% complete</p>
+        {#await loadDashboardTab()}
+          <div class="space-y-4">
+            <Skeleton class="h-8 w-48" />
+            <div class="grid gap-4 md:grid-cols-3">
+              <Skeleton class="h-24" />
+              <Skeleton class="h-24" />
+              <Skeleton class="h-24" />
             </div>
           </div>
-        {/if}
+        {:then Module}
+          <svelte:component this={Module.default}
+            loading={loading}
+            {members}
+            {groups}
+            {tournaments}
+            {activeTournament}
+            {completedMatches}
+            {matches}
+            {participants}
+            progressPercent={progressPercent}
+          />
+        {:catch error}
+          <div class="text-destructive text-sm">Failed to load dashboard</div>
+        {/await}
       
       {:else if activeTab === 'tournament'}
         <!-- TOURNAMENT TAB - HYBRID LAYOUT -->
@@ -1870,223 +1911,51 @@
         </Sheet.Root>
       
       {:else if activeTab === 'members'}
-        <!-- Sticky Search & Filter Bar -->
-        <div class="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-background/95 backdrop-blur-sm border-b border-border mb-4">
-          <!-- Header with count -->
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <h1 class="text-xl sm:text-2xl font-bold">Members</h1>
-              <p class="text-sm text-muted-foreground">
-                {filteredMembers.length} of {members.length}
-                {#if selectedTournament}· {participants.length} registered{/if}
-              </p>
-            </div>
-            <Button onclick={() => showAddMember = true} variant="outline" size="sm" class="h-9 px-4">
-              <Plus class="mr-2 h-4 w-4" /> Add
-            </Button>
-          </div>
-          
-          <!-- Search -->
-          <div class="relative mb-3">
-            <Input 
-              type="text" 
-              bind:value={searchQuery} 
-              placeholder="Search by name..." 
-              class="h-12 text-base pl-4 pr-10"
-            />
-            {#if searchQuery}
-              <button 
-                onclick={() => searchQuery = ''} 
-                class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-              >
-                <X class="h-5 w-5" />
-              </button>
-            {/if}
-          </div>
-          
-          <!-- Filter Chips -->
-          <div class="flex flex-wrap items-center gap-2">
-            <!-- Group Filter Chip -->
-            <div class="relative">
-              <select 
-                bind:value={filterGroup} 
-                class="h-10 appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors"
-              >
-                <option value="all">All Groups</option>
-                {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
-              </select>
-              <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-            </div>
-            
-            <!-- Registration Filter Chip -->
-            {#if selectedTournament}
-              <div class="relative">
-                <select 
-                  bind:value={registrationFilter} 
-                  class="h-10 appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors"
-                >
-                  <option value="all">All</option>
-                  <option value="registered">✓ Registered</option>
-                  <option value="unregistered">○ Not Registered</option>
-                </select>
-                <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-              </div>
-            {/if}
-            
-            <!-- Clear Filters -->
-            {#if filterGroup !== 'all' || registrationFilter !== 'all' || searchQuery}
-              <button 
-                onclick={() => { filterGroup = 'all'; registrationFilter = 'all'; searchQuery = ''; }}
-                class="h-10 px-4 rounded-full text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
-              >
-                Clear filters
-              </button>
-            {/if}
-            
-            <!-- More Actions -->
-              <div class="ml-auto flex gap-2">
-                <Button variant="ghost" size="sm" onclick={() => showImportCSV = true} class="h-9 px-3 text-xs">
-                  CSV
-                </Button>
-                <Button variant="ghost" size="sm" onclick={openMassEditMembers} class="h-9 px-3 text-xs">
-                  Edit
-                </Button>
-                <Button variant="ghost" size="sm" onclick={() => { resetMassMembers(); showMassAddMembers = true; }} class="h-9 px-3 text-xs">
-                  Bulk
-                </Button>
-              </div>
-          </div>
-        </div>
-        
-        <!-- Quick Actions Bar (when tournament selected) -->
-        {#if selectedTournament}
-          <div class="mb-4 p-4 rounded-2xl border-2 border-border bg-card/50">
-            <div class="flex flex-wrap items-center gap-3">
-              <span class="text-sm font-medium text-muted-foreground">Quick:</span>
-              <Button variant="outline" size="sm" onclick={addAllParticipants} class="h-10 px-4 rounded-xl">
-                <UserPlus class="mr-2 h-4 w-4" /> Register All
-              </Button>
-              <Button variant="outline" size="sm" onclick={clearAllParticipants} class="h-10 px-4 rounded-xl text-destructive hover:text-destructive">
-                <X class="mr-2 h-4 w-4" /> Clear All
-              </Button>
-              {#if selectedMemberIds.size > 0}
-                <Button onclick={registerSelectedMembers} class="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700">
-                  <Check class="mr-2 h-4 w-4" /> Register {selectedMemberIds.size} Selected
-                </Button>
-                <button onclick={clearSelection} class="text-sm text-muted-foreground hover:text-foreground">Clear</button>
-              {/if}
+        {#await loadMembersTab()}
+          <div class="space-y-4">
+            <Skeleton class="h-8 w-48" />
+            <div class="grid gap-4 md:grid-cols-3">
+              <Skeleton class="h-24" />
+              <Skeleton class="h-24" />
+              <Skeleton class="h-24" />
             </div>
           </div>
-        {/if}
-        
-        <!-- Group Quick Register -->
-        {#if selectedTournament && filterGroup !== 'all'}
-          {@const groupMemberCount = members.filter(m => m.groupId === filterGroup).length}
-          {@const registeredInGroup = members.filter(m => m.groupId === filterGroup && registeredMemberIds.has(m._id)).length}
-          <div class="mb-4 flex items-center justify-between p-4 rounded-2xl bg-primary/5 border border-primary/20">
-            <span class="text-sm font-medium">{registeredInGroup} of {groupMemberCount} registered</span>
-            {#if registeredInGroup < groupMemberCount}
-              <Button variant="default" size="sm" onclick={() => registerGroupMembers(filterGroup)} class="h-10 px-4 rounded-xl">
-                Register Entire Group
-              </Button>
-            {/if}
-          </div>
-        {/if}
-        
-        <!-- Member List -->
-        <div class="rounded-2xl border-2 border-border bg-card overflow-hidden" use:autoAnimate>
-          <!-- Select All Header -->
-          {#if selectedTournament && filteredMembers.length > 0}
-            <div class="flex items-center gap-4 px-5 py-3 bg-muted/30 border-b border-border">
-              <input 
-                type="checkbox" 
-                checked={allFilteredSelected}
-                onchange={() => allFilteredSelected ? clearSelection() : selectAllFiltered()}
-                class="h-5 w-5 rounded border-2 border-muted-foreground"
-              />
-              <span class="text-sm text-muted-foreground">
-                {selectedMemberIds.size > 0 ? `${selectedMemberIds.size} selected` : `Select all ${filteredMembers.length}`}
-              </span>
-            </div>
-          {/if}
-          
-          {#each filteredMembers as member (member._id)}
-            {@const isRegistered = registeredMemberIds.has(member._id)}
-            {@const isSelected = selectedMemberIds.has(member._id)}
-            <div class={cn(
-              "flex items-center gap-4 px-5 py-4 border-b border-border last:border-b-0 transition-colors min-h-[72px]",
-              isRegistered && "bg-emerald-950/20",
-              "hover:bg-accent/30 active:bg-accent/50"
-            )}>
-              <!-- Selection checkbox -->
-              {#if selectedTournament}
-                <input 
-                  type="checkbox" 
-                  checked={isSelected}
-                  onchange={() => toggleMemberSelection(member._id)}
-                  class="h-5 w-5 rounded border-2 border-muted-foreground shrink-0"
-                />
-              {/if}
-              
-              <!-- Registration toggle -->
-              {#if selectedTournament}
-                <button 
-                  onclick={() => toggleMemberRegistration(member._id)}
-                  class={cn(
-                    "shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all",
-                    isRegistered 
-                      ? "bg-emerald-500 text-white hover:bg-emerald-600" 
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  )}
-                  title={isRegistered ? "Click to unregister" : "Click to register"}
-                >
-                  {#if isRegistered}<Check class="h-5 w-5" />{:else}<Plus class="h-5 w-5" />{/if}
-                </button>
-              {/if}
-              
-              <!-- Member info -->
-                <div class="min-w-0 flex-1">
-                  <div class="flex items-center gap-2">
-                    <span class="font-semibold text-base truncate">{member.lastName}, {member.firstName}</span>
-                  </div>
-                  <span class="text-sm text-muted-foreground block truncate">{getGroupName(member.groupId)}</span>
-                </div>
-              
-              <!-- Edit button -->
-              <button 
-                onclick={() => openEditMember(member)} 
-                class="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-              >
-                <Pencil class="h-4 w-4" />
-              </button>
-              
-              <!-- Delete button -->
-              <button 
-                onclick={() => deleteMember(member._id)} 
-                class="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
-              >
-                <Trash2 class="h-5 w-5" />
-              </button>
-            </div>
-          {:else}
-            <div class="py-16 text-center">
-              <Users class="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-              <p class="text-lg text-muted-foreground mb-2">No members found</p>
-              {#if searchQuery || filterGroup !== 'all'}
-                <button 
-                  onclick={() => { searchQuery = ''; filterGroup = 'all'; }}
-                  class="text-sm text-primary hover:underline"
-                >
-                  Clear filters
-                </button>
-              {:else}
-                <Button onclick={() => showAddMember = true} variant="outline" class="mt-2">
-                  Add your first member
-                </Button>
-              {/if}
-            </div>
-          {/each}
-        </div>
+        {:then Module}
+          <svelte:component this={Module.default}
+            {members}
+            {groups}
+            {participants}
+            {filteredMembers}
+            {searchQuery}
+            {filterGroup}
+            registrationFilter={registrationFilter}
+            {registeredMemberIds}
+            {selectedMemberIds}
+            allFilteredSelected={allFilteredSelected}
+            selectedTournament={selectedTournament}
+            onSearchChange={(v) => searchQuery = v}
+            onFilterGroupChange={(v) => filterGroup = v}
+            onRegistrationFilterChange={(v) => registrationFilter = v}
+            onResetFilters={() => { filterGroup = 'all'; registrationFilter = 'all'; searchQuery = ''; }}
+            onOpenAddMember={() => showAddMember = true}
+            onOpenImportCSV={() => showImportCSV = true}
+            onOpenMassAdd={() => showMassAddMembers = true}
+            onOpenMassEdit={openMassEditMembers}
+            onAddAllParticipants={addAllParticipants}
+            onClearAllParticipants={clearAllParticipants}
+            onRegisterSelectedMembers={registerSelectedMembers}
+            onRegisterGroupMembers={registerGroupMembers}
+            onToggleMemberSelection={toggleMemberSelection}
+            onClearSelection={clearSelection}
+            onToggleMemberRegistration={toggleMemberRegistration}
+            onOpenEditMember={openEditMember}
+            onDeleteMember={deleteMember}
+            {getGroupName}
+            {resetMassMembers}
+          />
+        {:catch error}
+          <div class="text-destructive text-sm">Failed to load members</div>
+        {/await}
       
       {:else if activeTab === 'groups'}
         <!-- Groups Header -->
