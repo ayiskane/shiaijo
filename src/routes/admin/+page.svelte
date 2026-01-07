@@ -1047,6 +1047,22 @@
     }
     return tournamentModulePromise;
   }
+
+  let resultsModulePromise: Promise<any> | null = null;
+  function loadResultsTab() {
+    if (!resultsModulePromise) {
+      resultsModulePromise = import('./tabs/ResultsTab.svelte');
+    }
+    return resultsModulePromise;
+  }
+
+  let historyModulePromise: Promise<any> | null = null;
+  function loadHistoryTab() {
+    if (!historyModulePromise) {
+      historyModulePromise = import('./tabs/HistoryTab.svelte');
+    }
+    return historyModulePromise;
+  }
 </script>
 
 <svelte:head><title>Admin - 試合場 Shiaijo</title></svelte:head>
@@ -1261,6 +1277,7 @@
             {KIHON_WAZA_OPTIONS}
             {TIMER_OPTIONS}
             {SCORE_LABELS}
+            {buildScoreTimeline}
             onOpenCreateTournament={() => showCreateTournament = true}
             onAddAllParticipants={addAllParticipants}
             onGenerateMatches={generateMatches}
@@ -1290,124 +1307,51 @@
           />
         {:catch error}
           <div class="text-destructive text-sm">Failed to load tournament</div>
-        {/await}      {:else if activeTab === 'results'}
-        <h1 class="mb-6 text-2xl font-bold">Results</h1>
-        {#if !selectedTournament}<p class="text-muted-foreground">No tournament selected</p>
-        {:else if matches.length === 0}<p class="text-muted-foreground">No matches in this tournament</p>
-        {:else}
-          <div class="space-y-4" use:autoAnimate>
-            {#each groups as group (group._id)}
-              {@const gm = matchesByGroupId.get(group.groupId) ?? []}
-              {@const done = completedMatchesByGroupId.get(group.groupId) ?? []}
-              {#if gm.length > 0}
-                <Card.Root>
-                  <Card.Header>
-                    <Card.Title class="flex items-center gap-2 text-base sm:text-lg">
-                      <span class="truncate">{group.name}</span>
-                      <Badge variant="outline" class="text-xs shrink-0">{done.length}/{gm.length}</Badge>
-                    </Card.Title>
-                  </Card.Header>
-                    <Card.Content>
-                      {@const standings = standingsData.standingsByGroupId.get(group.groupId) ?? []}
-                      {@const tiedKeys = standingsData.tieKeysByGroupId.get(group.groupId) ?? new Set()}
-                      {@const top3 = standings.slice(0, 3)}
-                      {@const needsSuddenDeath = top3.some(row => tiedKeys.has(getTieKey(row)))}
-                      {#if standings.length > 0}
-                        <div class="mb-4 rounded-lg border border-border bg-background/40 p-3">
-                          <div class="mb-2 flex items-center justify-between">
-                            <p class="text-[10px] uppercase tracking-wider text-muted-foreground">Standings</p>
-                            {#if needsSuddenDeath}
-                              <Badge variant="outline" class="text-[10px] border-amber-500 text-amber-400">Tie → Sudden Death Needed</Badge>
-                            {/if}
-                          </div>
-                          <div class="grid grid-cols-[1fr_70px_50px_60px] gap-2 text-[10px] uppercase text-muted-foreground">
-                            <span>Player</span>
-                            <span class="text-center">W-T-L</span>
-                            <span class="text-center">Pts</span>
-                            <span class="text-center">Ippons</span>
-                          </div>
-                          <div class="mt-2 space-y-1">
-                            {#each standings as row, idx}
-                              <div class={cn("grid grid-cols-[1fr_70px_50px_60px] gap-2 items-center rounded px-2 py-1 text-xs sm:text-sm", idx < 3 ? "bg-emerald-900/20" : "bg-muted/40")}>
-                                <div class="flex items-center gap-2 truncate">
-                                  <span class="w-5 text-center text-muted-foreground">{idx + 1}</span>
-                                  <span class="truncate">{getMemberName(row.memberId)}</span>
-                                  {#if tiedKeys.has(getTieKey(row))}
-                                    <Badge variant="outline" class="text-[10px] border-amber-500 text-amber-400">TIE</Badge>
-                                  {/if}
-                                  {#if row.suddenDeathWins > 0}
-                                    <Badge variant="outline" class="text-[10px] border-purple-500 text-purple-400">SD {row.suddenDeathWins}</Badge>
-                                  {/if}
-                                </div>
-                                <span class="text-center tabular-nums">{row.wins}-{row.ties}-{row.losses}</span>
-                                <span class="text-center tabular-nums font-semibold">{row.points}</span>
-                                <span class="text-center tabular-nums">{row.ippons}</span>
-                              </div>
-                            {/each}
-                          </div>
-                          <p class="mt-2 text-[10px] text-muted-foreground">Tiebreakers: points → wins → ippons → sudden death.</p>
-                        </div>
-                      {/if}
-                      <div class="space-y-2">
-                        {#each done as match}
-                          {@const p1Win = match.winner === match.player1Id}
-                          {@const isTie = !match.winner}
-                          {@const events = buildScoreTimeline(match)}
-                          <div class="rounded bg-muted/50 px-3 py-2 text-xs sm:text-sm">
-                            <div class="flex items-center gap-2">
-                              <span class={cn("truncate flex-1", p1Win && "font-semibold text-green-400")}>{getMemberName(match.player1Id)}{p1Win ? ' 🏆' : ''}</span>
-                              <span class="text-muted-foreground shrink-0 flex items-center gap-2">
-                                {match.player1Score?.length || 0} - {match.player2Score?.length || 0}
-                                {#if isTie}<Badge variant="outline" class="text-[10px] border-amber-500 text-amber-400">TIE</Badge>{/if}
-                                {#if match.isSuddenDeath}<Badge variant="outline" class="text-[10px] border-purple-500 text-purple-400">SD</Badge>{/if}
-                              </span>
-                              <span class={cn("truncate flex-1 text-right", !p1Win && match.winner && "font-semibold text-green-400")}>{!p1Win && match.winner ? '🏆 ' : ''}{getMemberName(match.player2Id)}</span>
-                            </div>
-                            {#if events.length > 0}
-                              <div class="mt-2 flex flex-wrap gap-2 text-[10px] text-muted-foreground">
-                                {#each events as event}
-                                  <span class="flex items-center gap-1 rounded bg-background/40 px-2 py-1">
-                                    <Badge variant="outline" class={cn("text-[9px] border-transparent", event.player === 'AKA' ? "text-red-400" : "text-slate-300")}>{event.player}</Badge>
-                                    <span>{SCORE_LABELS[event.type] || `Score ${event.type}`}</span>
-                                    <span class="font-mono">{event.time !== undefined ? formatTimer(event.time) : '--:--'}</span>
-                                  </span>
-                                {/each}
-                              </div>
-                            {:else if (match.player1Score?.length || 0) + (match.player2Score?.length || 0) > 0}
-                              <div class="mt-2 text-[10px] text-muted-foreground">Score timeline unavailable (missing timestamps).</div>
-                            {/if}
-                          </div>
-                        {:else}<p class="text-sm text-muted-foreground">No completed matches</p>{/each}
-                      </div>
-                    </Card.Content>
-                </Card.Root>
-              {/if}
-            {/each}
+        {/await}
+
+      {:else if activeTab === 'results'}
+        {#await loadResultsTab()}
+          <div class="space-y-4">
+            <Skeleton class="h-8 w-32" />
+            <div class="space-y-2">
+              <Skeleton class="h-20" />
+              <Skeleton class="h-20" />
+            </div>
           </div>
-        {/if}
-      
+        {:then Module}
+          <svelte:component this={Module.default}
+            {groups}
+            {matches}
+            {selectedTournament}
+            {matchesByGroupId}
+            {completedMatchesByGroupId}
+            {standingsData}
+            {SCORE_LABELS}
+            {buildScoreTimeline}
+            {getTieKey}
+            {getMemberName}
+            {formatTimer}
+          />
+        {:catch error}
+          <div class="text-destructive text-sm">Failed to load results</div>
+        {/await}
+
       {:else if activeTab === 'history'}
-        <h1 class="mb-6 text-2xl font-bold">Tournament History</h1>
-        {@const completedTournaments = tournaments.filter(t => t.status === 'completed')}
-        {#if completedTournaments.length === 0}
-          <Card.Root class="border-dashed">
-            <Card.Content class="flex flex-col items-center justify-center py-12">
-              <History class="mb-4 h-12 w-12 text-muted-foreground/50" />
-              <p class="text-muted-foreground">No completed tournaments yet</p>
-            </Card.Content>
-          </Card.Root>
-        {:else}
-          <div class="space-y-4" use:autoAnimate>
-            {#each completedTournaments as tournament (tournament._id)}
-              <Card.Root>
-                <Card.Header>
-                  <Card.Title class="truncate">{tournament.name}</Card.Title>
-                  <Card.Description>📅 {tournament.date}</Card.Description>
-                </Card.Header>
-              </Card.Root>
-            {/each}
+        {#await loadHistoryTab()}
+          <div class="space-y-4">
+            <Skeleton class="h-8 w-32" />
+            <div class="space-y-2">
+              <Skeleton class="h-16" />
+              <Skeleton class="h-16" />
+            </div>
           </div>
-        {/if}
+        {:then Module}
+          <svelte:component this={Module.default}
+            {tournaments}
+          />
+        {:catch error}
+          <div class="text-destructive text-sm">Failed to load history</div>
+        {/await}
       {/if}
     </div>
   </main>
@@ -1579,6 +1523,11 @@
 </Dialog.Root>
 
 {/if}
+
+
+
+
+
 
 
 

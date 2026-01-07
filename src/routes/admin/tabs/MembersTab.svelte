@@ -60,7 +60,7 @@
     <Input
       type="text"
       value={searchQuery}
-      on:input={(e) => onSearchChange((e.target as HTMLInputElement).value)}
+      oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
       placeholder="Search by name..."
       class="h-12 text-base pl-4 pr-10"
     />
@@ -78,7 +78,7 @@
     <div class="relative">
       <select
         bind:value={filterGroup}
-        on:change={(e) => onFilterGroupChange((e.target as HTMLSelectElement).value)}
+        onchange={(e) => onFilterGroupChange((e.target as HTMLSelectElement).value)}
         class="h-10 appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors"
       >
         <option value="all">All Groups</option>
@@ -91,7 +91,7 @@
       <div class="relative">
         <select
           bind:value={registrationFilter}
-          on:change={(e) => onRegistrationFilterChange((e.target as HTMLSelectElement).value as any)}
+          onchange={(e) => onRegistrationFilterChange((e.target as HTMLSelectElement).value as any)}
           class="h-10 appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors"
         >
           <option value="all">All</option>
