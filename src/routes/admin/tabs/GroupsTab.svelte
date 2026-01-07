@@ -30,14 +30,35 @@
   });
 </script>
 
-<div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-  <div>
-    <h1 class="text-2xl font-bold">Groups ({groups.length})</h1>
-    <p class="text-sm text-muted-foreground">Tap to expand and see members</p>
+<!-- Top Bar - Design 2 -->
+<div class="top-bar sticky top-0 z-10 -mx-4 sm:-mx-6 px-5 py-4 mb-5" style="background: var(--surface); border-bottom: 1px solid var(--border-subtle);">
+  <div class="flex items-center justify-between">
+    <div>
+      <div class="text-[0.6rem] uppercase tracking-widest mb-1" style="color: var(--text-faint);">Admin / Roster</div>
+      <h1 class="font-jp text-lg font-bold" style="color: var(--text-primary);">Group Management</h1>
+    </div>
+    <div class="flex items-center gap-6">
+      <div class="text-center">
+        <div class="text-xl font-bold" style="color: var(--text-primary);">{groups.length}</div>
+        <div class="text-[0.55rem] uppercase" style="color: var(--text-muted);">Groups</div>
+      </div>
+      <div class="w-px h-8" style="background: var(--border-subtle);"></div>
+      <div class="text-center">
+        <div class="text-xl font-bold" style="color: var(--indigo-light);">{groups.filter(g => g.type === 'bogu').length}</div>
+        <div class="text-[0.55rem] uppercase" style="color: var(--text-muted);">Bogu</div>
+      </div>
+      <div class="w-px h-8" style="background: var(--border-subtle);"></div>
+      <div class="text-center">
+        <div class="text-xl font-bold" style="color: var(--accent-fire);">{groups.filter(g => g.type === 'hantei').length}</div>
+        <div class="text-[0.55rem] uppercase" style="color: var(--text-muted);">Hantei</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <Button onclick={onOpenAddGroup} variant="outline" size="sm" class="btn-sm primary">
+        + Add Group
+      </Button>
+    </div>
   </div>
-  <Button onclick={onOpenAddGroup} variant="outline" size="sm" class="h-9 px-4">
-    <UserPlus class="mr-2 h-4 w-4" /> Add
-  </Button>
 </div>
 
 <div class="flex flex-col gap-3" bind:this={listEl}>
