@@ -5,6 +5,7 @@
   import { Button } from '$lib/components/ui/button';
   import * as Card from '$lib/components/ui/card';
   import * as Select from '$lib/components/ui/select';
+  import * as ToggleGroup from '$lib/components/ui/toggle-group';
   import * as Sheet from '$lib/components/ui/sheet';
   import { Progress } from '$lib/components/ui/progress';
   import { Separator } from '$lib/components/ui/separator';
@@ -82,7 +83,7 @@
   export let getMemberById: (id: string) => any;
   export let formatTimer: (secs: number) => string;
 
-  const BUILD_TAG = 'tournament-settings-optim-v3'; // helps verify deploy on Vercel
+  const BUILD_TAG = 'tournament-settings-optim-v4'; // helps verify deploy on Vercel
 
   function openSettings() {
     console.debug('[admin][tournament] settings gear clicked', { selectedTournamentId, status: selectedTournament?.status, build: BUILD_TAG });
