@@ -338,10 +338,11 @@
     @apply justify-center px-2 py-3;
   }
   .sidebar-btn-active {
-    @apply bg-sidebar-accent text-sidebar-primary shadow-[0_8px_24px_rgba(59,130,246,0.22)] border border-sidebar-border;
+    @apply bg-gradient-to-r from-[rgba(30,58,95,0.35)] to-[rgba(20,19,16,0.65)] text-sidebar-primary shadow-[0_8px_24px_rgba(59,130,246,0.18)] border border-sidebar-border;
   }
   .sidebar-icon {
-    @apply flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-accent/30 text-sidebar-foreground;
+    @apply flex h-10 w-10 items-center justify-center rounded-lg text-sidebar-foreground border border-sidebar-border/60 shadow-[0_6px_18px_rgba(0,0,0,0.4)];
+    background: radial-gradient(circle at 30% 30%, rgba(59,130,246,0.14), rgba(26,25,22,0.9));
   }
   .sidebar-label {
     white-space: nowrap;
@@ -364,7 +365,7 @@
     @apply hidden;
   }
   .portal-link {
-    @apply flex items-center gap-2 rounded-lg border border-sidebar-border/60 px-3 py-2 text-xs font-semibold text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition;
+    @apply flex items-center gap-2 rounded-lg border border-sidebar-border/60 px-3 py-2 text-xs font-semibold text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition shadow-[0_10px_24px_rgba(0,0,0,0.2)];
   }
   .portal-link-compact {
     @apply justify-center px-2;
@@ -393,11 +394,17 @@
   .members-compact table {
     @apply w-full;
   }
+  .members-compact thead {
+    border-bottom: 1px solid rgba(61,65,72,0.6);
+  }
   .members-compact thead th {
     @apply font-semibold;
   }
   .members-compact tbody tr:last-child {
     @apply border-b-0;
+  }
+  .members-compact tbody tr {
+    border-color: rgba(61,65,72,0.55);
   }
 }
 

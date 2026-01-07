@@ -185,12 +185,12 @@
               />
             </th>
           {/if}
-          <th class="px-4 py-3 text-left">Member</th>
-          <th class="px-4 py-3 text-left">Group</th>
+          <th class="px-5 py-3 text-left">Member</th>
+          <th class="px-5 py-3 text-left">Group</th>
           {#if selectedTournament}
-            <th class="px-4 py-3 text-left">Status</th>
+            <th class="px-5 py-3 text-left">Status</th>
           {/if}
-          <th class="px-4 py-3 text-right">Actions</th>
+          <th class="px-5 py-3 text-right">Actions</th>
         </tr>
       </thead>
       <tbody>
@@ -211,11 +211,11 @@
             {@const isRegistered = registeredMemberIds.has(member._id)}
             {@const isSelected = selectedMemberIds.has(member._id)}
             <tr class={cn(
-              "border-b border-border/50 transition-colors hover:bg-accent/10",
+              "border-b border-steel/40 transition-colors hover:bg-accent/5",
               isRegistered && "bg-emerald-950/10"
-            )}>
+            )} style="--steel: #3d4148;">
               {#if selectedTournament}
-                <td class="px-4 py-3 align-middle">
+                <td class="px-5 py-3 align-middle">
                   <input
                     type="checkbox"
                     checked={isSelected}
@@ -224,22 +224,21 @@
                   />
                 </td>
               {/if}
-              <td class="px-4 py-3">
+              <td class="px-5 py-3">
                 <div class="flex flex-col gap-1">
                   <span class="font-semibold text-[15px] leading-tight">{member.lastName}, {member.firstName}</span>
-                  <span class="text-xs text-muted-foreground">ID: {member._id}</span>
                 </div>
               </td>
-              <td class="px-4 py-3 text-sm text-muted-foreground">{getGroupName(member.groupId)}</td>
+              <td class="px-5 py-3 text-sm text-muted-foreground">{getGroupName(member.groupId)}</td>
               {#if selectedTournament}
-                <td class="px-4 py-3">
+                <td class="px-5 py-3">
                   <button
                     onclick={() => onToggleMemberRegistration(member._id)}
                     class={cn(
                       "inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-inner transition-all",
                       isRegistered
-                        ? "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50"
-                        : "bg-muted text-muted-foreground border border-border hover:text-foreground"
+                        ? "bg-emerald-500/15 text-emerald-200 border border-emerald-400/50"
+                        : "bg-muted text-muted-foreground border border-steel/60 hover:text-foreground"
                     )}
                     title={isRegistered ? "Unregister from tournament" : "Register for tournament"}
                   >
@@ -251,7 +250,7 @@
                   </button>
                 </td>
               {/if}
-              <td class="px-4 py-3 text-right">
+              <td class="px-5 py-3 text-right">
                 <div class="flex items-center justify-end gap-2">
                   <button
                     onclick={() => onOpenEditMember(member)}
