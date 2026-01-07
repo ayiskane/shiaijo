@@ -2,16 +2,16 @@
 
 ## Status
 - Branch: admin-tab-split
-- Dashboard and Members tabs extracted and lazy-loaded.
-- Groups tab extracted and wired; tournaments/results/history still inline.
-- Uncommitted local: convex/_generated/api.d.ts (generated), admin/+page.svelte, tabs/GroupsTab.svelte, this note update.
+- Dashboard, Members, Groups, Tournament tabs extracted and lazy-loaded.
+- Results and History still inline.
+- Untracked/generated: convex/_generated/api.d.ts; matches.ts/courtkeeper/+page.svelte carry existing local edits.
 
 ## Plan
-- Continue extracting tabs one-by-one (Tournament, Results, History) into `src/routes/admin/tabs/`.
-- For each tab: move markup/logic, pass current props, keep behavior identical; later move queries into tabs for data-scope optimization.
+- Extract Results, then History into `src/routes/admin/tabs/`, committing after each.
 - Keep shell minimal (nav/auth/theme/loading) and lazy-load tab modules with skeleton fallback.
+- Optionally move tab-specific queries into tabs for further scope/weight reduction after split.
 
 ## Next steps
-1) Extract Tournament tab into tabs/TournamentTab.svelte; replace inline block with dynamic import.
-2) Repeat for Results, then History; commit after each tab for easy bisect.
-3) Consider moving tab-specific queries into each tab after extraction for further weight reduction.
+1) Extract Results tab into tabs/ResultsTab.svelte; dynamic import in +page.
+2) Extract History tab similarly.
+3) Re-evaluate moving queries into tabs and trimming shell state.
