@@ -35,6 +35,52 @@ function getElapsedSeconds(match: { timerStartedAt?: number; timerPausedAt?: num
   return 0;
 }
 
+const LOCK_WINDOW_MS = 15_000;
+
+function lockIsActive(match: any, now: number) {
+  return (
+    match.controlOwnerId &&
+    typeof match.controlLockExpiresAt === "number" &&
+    match.controlLockExpiresAt > now
+  );
+}
+
+async function ensureControl(
+  ctx: any,
+  match: any,
+  matchId: string,
+  deviceId: string,
+  now: number
+) {
+  const active = lockIsActive(match, now);
+  if (active && match.controlOwnerId !== deviceId) {
+    throw new Error("Court controls are locked by another facilitator");
+  }
+  if (!active || match.controlOwnerId !== deviceId) {
+    await ctx.db.patch(matchId, {
+      controlOwnerId: deviceId,
+      controlLockExpiresAt: now + LOCK_WINDOW_MS,
+      updatedAt: now,
+    });
+    match.controlOwnerId = deviceId;
+    match.controlLockExpiresAt = now + LOCK_WINDOW_MS;
+  } else {
+    await ctx.db.patch(matchId, {
+      controlLockExpiresAt: now + LOCK_WINDOW_MS,
+      updatedAt: now,
+    });
+    match.controlLockExpiresAt = now + LOCK_WINDOW_MS;
+  }
+}
+
+async function releaseControl(ctx: any, matchId: string) {
+  await ctx.db.patch(matchId, {
+    controlOwnerId: undefined,
+    controlLockExpiresAt: undefined,
+    updatedAt: Date.now(),
+  });
+}
+
 export const getByTournament = query({
   args: { tournamentId: v.id("tournaments") },
   handler: async (ctx, { tournamentId }) => {
@@ -172,11 +218,15 @@ export const addScore = mutation({
     player: v.union(v.literal("player1"), v.literal("player2")),
     scoreType: v.number(),
     elapsedSeconds: v.optional(v.number()),
+    deviceId: v.string(),
   },
-  handler: async (ctx, { matchId, player, scoreType, elapsedSeconds }) => {
+  handler: async (ctx, { matchId, player, scoreType, elapsedSeconds, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     if (match.status === "completed") throw new Error("Match already completed");
+    
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
     
     const p1Scores = [...match.player1Score];
     const p2Scores = [...match.player2Score];
@@ -203,8 +253,10 @@ export const addScore = mutation({
         winner: winner === "player1" ? match.player1Id : match.player2Id,
         status: "completed" as const,
         actualDuration: match.timerPausedAt || 0,
+        controlOwnerId: undefined,
+        controlLockExpiresAt: undefined,
       }),
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
     
     if (winner) {
@@ -220,11 +272,15 @@ export const addHansoku = mutation({
     matchId: v.id("matches"),
     player: v.union(v.literal("player1"), v.literal("player2")),
     elapsedSeconds: v.optional(v.number()),
+    deviceId: v.string(),
   },
-  handler: async (ctx, { matchId, player, elapsedSeconds }) => {
+  handler: async (ctx, { matchId, player, elapsedSeconds, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     if (match.status === "completed") throw new Error("Match already completed");
+    
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
     
     let p1Hansoku = match.player1Hansoku;
     let p2Hansoku = match.player2Hansoku;
@@ -261,8 +317,10 @@ export const addHansoku = mutation({
         winner: winner === "player1" ? match.player1Id : match.player2Id,
         status: "completed" as const,
         actualDuration: match.timerPausedAt || 0,
+        controlOwnerId: undefined,
+        controlLockExpiresAt: undefined,
       }),
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
     
     if (winner) {
@@ -277,11 +335,15 @@ export const undoScore = mutation({
   args: {
     matchId: v.id("matches"),
     player: v.union(v.literal("player1"), v.literal("player2")),
+    deviceId: v.string(),
   },
-  handler: async (ctx, { matchId, player }) => {
+  handler: async (ctx, { matchId, player, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
+
     const p1Scores = [...match.player1Score];
     const p2Scores = [...match.player2Score];
     const p1Times = [...(match.player1ScoreTimes ?? [])];
@@ -303,7 +365,7 @@ export const undoScore = mutation({
       player1ScoreTimes: p1Times,
       player2ScoreTimes: p2Times,
       ...(wasCompleted && { winner: undefined, status: "in_progress" as const }),
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
     
     return { p1Scores, p2Scores, reopened: wasCompleted };
@@ -314,11 +376,15 @@ export const undoHansoku = mutation({
   args: {
     matchId: v.id("matches"),
     player: v.union(v.literal("player1"), v.literal("player2")),
+    deviceId: v.string(),
   },
-  handler: async (ctx, { matchId, player }) => {
+  handler: async (ctx, { matchId, player, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
+
     let p1Hansoku = match.player1Hansoku;
     let p2Hansoku = match.player2Hansoku;
     const p1Scores = [...match.player1Score];
@@ -353,7 +419,7 @@ export const undoHansoku = mutation({
       player2Score: p2Scores,
       player1ScoreTimes: p1Times,
       player2ScoreTimes: p2Times,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
     
     return { p1Hansoku, p2Hansoku };
@@ -361,22 +427,25 @@ export const undoHansoku = mutation({
 });
 
 export const startMatch = mutation({
-  args: { matchId: v.id("matches") },
-  handler: async (ctx, { matchId }) => {
+  args: { matchId: v.id("matches"), deviceId: v.string() },
+  handler: async (ctx, { matchId, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
+
     await ctx.db.patch(matchId, {
       status: "in_progress",
       timerStartedAt: Date.now(),
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
   },
 });
 
 export const toggleTimer = mutation({
-  args: { matchId: v.id("matches") },
-  handler: async (ctx, { matchId }) => {
+  args: { matchId: v.id("matches"), deviceId: v.string() },
+  handler: async (ctx, { matchId, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     
@@ -387,15 +456,44 @@ export const toggleTimer = mutation({
       await ctx.db.patch(matchId, {
         timerPausedAt: elapsed,
         timerStartedAt: undefined,
+        controlOwnerId: undefined,
+        controlLockExpiresAt: undefined,
         updatedAt: now,
       });
     } else if (match.timerPausedAt) {
+      await ensureControl(ctx, match, matchId, deviceId, now);
       await ctx.db.patch(matchId, {
         timerStartedAt: now - (match.timerPausedAt * 1000),
         timerPausedAt: undefined,
         updatedAt: now,
       });
+    } else if (!match.timerStartedAt && match.status === "pending") {
+      // Allow starting timer from a stopped state (unlikely here)
+      await ensureControl(ctx, match, matchId, deviceId, now);
+      await ctx.db.patch(matchId, {
+        timerStartedAt: now,
+        updatedAt: now,
+      });
     }
+  },
+});
+
+export const resetTimer = mutation({
+  args: { matchId: v.id("matches") },
+  handler: async (ctx, { matchId }) => {
+    const match = await ctx.db.get(matchId);
+    if (!match) throw new Error("Match not found");
+    if (match.status === "completed") throw new Error("Match already completed");
+
+    await ctx.db.patch(matchId, {
+      timerStartedAt: undefined,
+      timerPausedAt: 0,
+      controlOwnerId: undefined,
+      controlLockExpiresAt: undefined,
+      updatedAt: Date.now(),
+    });
+
+    return { timerPausedAt: 0 };
   },
 });
 
@@ -403,8 +501,9 @@ export const addTimerTime = mutation({
   args: {
     matchId: v.id("matches"),
     seconds: v.number(),
+    deviceId: v.string(),
   },
-  handler: async (ctx, { matchId, seconds }) => {
+  handler: async (ctx, { matchId, seconds, deviceId }) => {
     if (seconds !== 30 && seconds !== 60) {
       throw new Error("Invalid timer extension");
     }
@@ -412,14 +511,45 @@ export const addTimerTime = mutation({
     if (!match) throw new Error("Match not found");
     if (match.status === "completed") throw new Error("Match already completed");
 
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
+
     const nextDuration = match.timerDuration + seconds;
 
     await ctx.db.patch(matchId, {
       timerDuration: nextDuration,
-      updatedAt: Date.now(),
+      updatedAt: now,
     });
 
     return { timerDuration: nextDuration };
+  },
+});
+
+export const keepAliveControl = mutation({
+  args: { matchId: v.id("matches"), deviceId: v.string() },
+  handler: async (ctx, { matchId, deviceId }) => {
+    const match = await ctx.db.get(matchId);
+    if (!match) throw new Error("Match not found");
+
+    const now = Date.now();
+    if (match.controlOwnerId !== deviceId) {
+      // If lock expired, allow caller to acquire it (only matters while timer running)
+      const active = lockIsActive(match, now);
+      if (active) return { refreshed: false };
+      await ensureControl(ctx, match, matchId, deviceId, now);
+      return { refreshed: true };
+    }
+
+    if (!lockIsActive(match, now)) {
+      await ensureControl(ctx, match, matchId, deviceId, now);
+      return { refreshed: true };
+    }
+
+    await ctx.db.patch(matchId, {
+      controlLockExpiresAt: now + LOCK_WINDOW_MS,
+      updatedAt: now,
+    });
+    return { refreshed: true };
   },
 });
 
@@ -427,11 +557,15 @@ export const declareWinner = mutation({
   args: {
     matchId: v.id("matches"),
     winner: v.union(v.literal("player1"), v.literal("player2")),
+    deviceId: v.string(),
   },
-  handler: async (ctx, { matchId, winner }) => {
+  handler: async (ctx, { matchId, winner, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
+
     const winnerId = winner === "player1" ? match.player1Id : match.player2Id;
     
     await ctx.db.patch(matchId, {
@@ -439,7 +573,9 @@ export const declareWinner = mutation({
       status: "completed",
       actualDuration: match.timerPausedAt || 
         (match.timerStartedAt ? Math.floor((Date.now() - match.timerStartedAt) / 1000) : 0),
-      updatedAt: Date.now(),
+      controlOwnerId: undefined,
+      controlLockExpiresAt: undefined,
+      updatedAt: now,
     });
 
     await ensureSuddenDeathMatches(ctx, match);
@@ -449,18 +585,24 @@ export const declareWinner = mutation({
 export const declareTie = mutation({
   args: {
     matchId: v.id("matches"),
+    deviceId: v.string(),
   },
-  handler: async (ctx, { matchId }) => {
+  handler: async (ctx, { matchId, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     if (match.status === "completed") throw new Error("Match already completed");
+
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
 
     await ctx.db.patch(matchId, {
       winner: undefined,
       status: "completed",
       actualDuration: match.timerPausedAt ||
         (match.timerStartedAt ? Math.floor((Date.now() - match.timerStartedAt) / 1000) : 0),
-      updatedAt: Date.now(),
+      controlOwnerId: undefined,
+      controlLockExpiresAt: undefined,
+      updatedAt: now,
     });
 
     await ensureSuddenDeathMatches(ctx, match);
@@ -472,11 +614,15 @@ export const declareForfeit = mutation({
     matchId: v.id("matches"),
     forfeitingPlayer: v.union(v.literal("player1"), v.literal("player2")),
     elapsedSeconds: v.optional(v.number()),
+    deviceId: v.string(),
   },
-  handler: async (ctx, { matchId, forfeitingPlayer, elapsedSeconds }) => {
+  handler: async (ctx, { matchId, forfeitingPlayer, elapsedSeconds, deviceId }) => {
     const match = await ctx.db.get(matchId);
     if (!match) throw new Error("Match not found");
     
+    const now = Date.now();
+    await ensureControl(ctx, match, matchId, deviceId, now);
+
     const winnerId = forfeitingPlayer === "player1" ? match.player2Id : match.player1Id;
     const p1Scores = [...match.player1Score];
     const p2Scores = [...match.player2Score];
@@ -500,7 +646,9 @@ export const declareForfeit = mutation({
       winner: winnerId,
       status: "completed",
       actualDuration: match.timerPausedAt || 0,
-      updatedAt: Date.now(),
+      controlOwnerId: undefined,
+      controlLockExpiresAt: undefined,
+      updatedAt: now,
     });
 
     await ensureSuddenDeathMatches(ctx, match);

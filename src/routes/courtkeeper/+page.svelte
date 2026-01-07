@@ -80,6 +80,9 @@
   let accessChecked = $state(false);
   let courtkeeperUnlockCode = $state('');
   let selectedSenseiId = $state<string | null>(null);
+  let deviceId = $state('');
+  let now = $state(Date.now());
+  let nowInterval: ReturnType<typeof setInterval> | null = null;
   
   // Hantei scoring state
   let hanteiRound = $state(1);
@@ -137,6 +140,9 @@
   let displaySeconds = $derived(
     timerDisplayMode === 'down' ? Math.max(timerDuration - elapsedSeconds, 0) : elapsedSeconds
   );
+  let lockActive = $derived(!!(currentMatch?.controlOwnerId && currentMatch?.controlLockExpiresAt && currentMatch.controlLockExpiresAt > now));
+  let controlsLockedForMe = $derived(timerRunning && lockActive && currentMatch?.controlOwnerId !== deviceId);
+  let iAmController = $derived(timerRunning && lockActive && currentMatch?.controlOwnerId === deviceId);
   
   // Reset hantei state when match changes
   $effect(() => {
@@ -179,8 +185,17 @@
   function getGroupName(id: string): string { return groupsByGroupId.get(id)?.name || id; }
 
   onMount(() => {
+    const stored = localStorage.getItem('shiaijo_device_id');
+    if (stored) {
+      deviceId = stored;
+    } else {
+      const newId = crypto.randomUUID();
+      deviceId = newId;
+      localStorage.setItem('shiaijo_device_id', newId);
+    }
     accessUnlocked = localStorage.getItem('shiaijo_courtkeeper_unlocked') === 'true';
     accessChecked = true;
+    nowInterval = setInterval(() => now = Date.now(), 1000);
   });
 
   $effect(() => {
@@ -211,8 +226,8 @@
   async function addScore(player: 'player1' | 'player2', scoreType: number) {
     if (!currentMatch || gameOver || isHanteiMatch) return;
     try {
-      if (currentMatch.status === 'pending') await client.mutation(api.matches.startMatch, { matchId: currentMatch._id });
-      const result = await client.mutation(api.matches.addScore, { matchId: currentMatch._id, player, scoreType, elapsedSeconds });
+      if (currentMatch.status === 'pending') await client.mutation(api.matches.startMatch, { matchId: currentMatch._id, deviceId });
+      const result = await client.mutation(api.matches.addScore, { matchId: currentMatch._id, player, scoreType, elapsedSeconds, deviceId });
       if (result.winner) { pendingWinner = player; showWinModal = true; }
     } catch (e) { toast.error('Failed to add score'); }
   }
@@ -220,14 +235,14 @@
   async function addHansoku(player: 'player1' | 'player2') {
     if (!currentMatch || gameOver || isHanteiMatch) return;
     try {
-      const result = await client.mutation(api.matches.addHansoku, { matchId: currentMatch._id, player, elapsedSeconds });
+      const result = await client.mutation(api.matches.addHansoku, { matchId: currentMatch._id, player, elapsedSeconds, deviceId });
       if (result.winner) { pendingWinner = player === 'player1' ? 'player2' : 'player1'; showWinModal = true; }
     } catch (e) { toast.error('Failed to add hansoku'); }
   }
-  
+
   async function undoScore(player: 'player1' | 'player2') {
     if (!currentMatch) return;
-    try { await client.mutation(api.matches.undoScore, { matchId: currentMatch._id, player }); showWinModal = false; pendingWinner = null; } catch (e) { toast.error('Failed to undo'); }
+    try { await client.mutation(api.matches.undoScore, { matchId: currentMatch._id, player, deviceId }); showWinModal = false; pendingWinner = null; } catch (e) { toast.error('Failed to undo'); }
   }
   
   // Hantei scoring
@@ -262,15 +277,24 @@
   
   async function toggleTimer() {
     if (!currentMatch) return;
-    try { await client.mutation(api.matches.toggleTimer, { matchId: currentMatch._id }); } catch (e) { toast.error('Failed to toggle timer'); }
+    try { await client.mutation(api.matches.toggleTimer, { matchId: currentMatch._id, deviceId }); } catch (e) { toast.error('Failed to toggle timer'); }
   }
 
   async function addTime(seconds: number) {
     if (!currentMatch) return;
     try {
-      await client.mutation(api.matches.addTimerTime, { matchId: currentMatch._id, seconds });
+      await client.mutation(api.matches.addTimerTime, { matchId: currentMatch._id, seconds, deviceId });
       toast.success(`Added ${seconds === 30 ? '0:30' : '1:00'} to timer`);
     } catch (e) { toast.error('Failed to add time'); }
+  }
+
+  async function resetTimer() {
+    if (!currentMatch) return;
+    try {
+      await client.mutation(api.matches.resetTimer, { matchId: currentMatch._id });
+      elapsedSeconds = 0;
+      toast.success('Timer reset');
+    } catch (e) { toast.error('Failed to reset timer'); }
   }
 
   async function declareTie() {
@@ -278,7 +302,7 @@
     if (currentMatch.isSuddenDeath) { toast.error('Sudden death cannot be tied'); return; }
     if (!confirm('Declare this match a tie?')) return;
     try {
-      await client.mutation(api.matches.declareTie, { matchId: currentMatch._id });
+      await client.mutation(api.matches.declareTie, { matchId: currentMatch._id, deviceId });
       toast.success('Match recorded as tie');
     } catch (e) { toast.error('Failed to declare tie'); }
   }
@@ -287,7 +311,7 @@
     if (!currentMatch || !pendingWinner) return;
     try { 
       if (isHanteiMatch) await client.mutation(api.matches.declareHanteiWinner, { matchId: currentMatch._id, winner: pendingWinner });
-      else await client.mutation(api.matches.declareWinner, { matchId: currentMatch._id, winner: pendingWinner }); 
+      else await client.mutation(api.matches.declareWinner, { matchId: currentMatch._id, winner: pendingWinner, deviceId }); 
       showWinModal = false; pendingWinner = null; toast.success('Match completed!'); 
     } catch (e) { toast.error('Failed to confirm win'); }
   }
@@ -295,10 +319,19 @@
   async function declareForfeit(player: 'player1' | 'player2') {
     if (!currentMatch) return;
     if (!confirm(`Declare forfeit for ${player === 'player1' ? 'AKA' : 'SHIRO'}?`)) return;
-    try { await client.mutation(api.matches.declareForfeit, { matchId: currentMatch._id, forfeitingPlayer: player, elapsedSeconds }); toast.success('Forfeit recorded'); } catch (e) { toast.error('Failed to record forfeit'); }
+    try { await client.mutation(api.matches.declareForfeit, { matchId: currentMatch._id, forfeitingPlayer: player, elapsedSeconds, deviceId }); toast.success('Forfeit recorded'); } catch (e) { toast.error('Failed to record forfeit'); }
   }
   
-  onDestroy(() => { stopLocalTimer(); });
+  $effect(() => {
+    if (timerRunning && currentMatch?.controlOwnerId === deviceId) {
+      const id = setInterval(() => {
+        if (currentMatch) client.mutation(api.matches.keepAliveControl, { matchId: currentMatch._id, deviceId }).catch(() => {});
+      }, 5000);
+      return () => clearInterval(id);
+    }
+  });
+
+  onDestroy(() => { stopLocalTimer(); if (nowInterval) clearInterval(nowInterval); });
 </script>
 
 {#if !accessUnlocked}
@@ -366,6 +399,11 @@
         <span class="text-sm text-muted-foreground">{getGroupName(currentMatch.groupId)}</span>
         {#if isHanteiMatch}<Badge variant="outline" class="text-xs border-purple-500 text-purple-400">Hantei</Badge>{/if}
         {#if currentMatch.isSuddenDeath}<Badge variant="outline" class="text-xs border-amber-500 text-amber-400">Sudden Death</Badge>{/if}
+        {#if lockActive}
+          <Badge variant="outline" class="text-[10px] border-amber-400 text-amber-300 flex items-center gap-1">
+            <Lock class="h-3 w-3" /> {iAmController ? 'You are facilitating' : 'Another device is facilitating'}
+          </Badge>
+        {/if}
       {/if}
     </div>
     <div class="flex items-center gap-2">
@@ -489,38 +527,50 @@
         </div>
       {:else}
         <!-- BOGU SCORING UI -->
-        <div class="grid grid-cols-2 gap-3 flex-1">
+        <div class="grid grid-cols-2 gap-3 flex-1 relative">
+          {#if controlsLockedForMe}
+            <div class="absolute inset-0 z-20 rounded-xl bg-black/50 backdrop-blur flex flex-col items-center justify-center gap-2 text-center px-4">
+              <Lock class="h-8 w-8 text-amber-400" />
+              <p class="text-xs text-amber-100">Court controls are locked while another facilitator is timing this match.</p>
+            </div>
+          {/if}
           <div class="bg-red-950/30 rounded-xl p-3 border border-red-900/50 flex flex-col gap-2">
-            <div class="grid grid-cols-4 gap-2">{#each SCORE_BUTTONS as btn}<Button onclick={() => addScore('player1', btn.type)} disabled={gameOver} class="h-14 bg-red-600 hover:bg-red-500 disabled:opacity-50 font-bold text-lg">{btn.label}</Button>{/each}</div>
-            <Button onclick={() => addHansoku('player1')} disabled={gameOver} class="h-10 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 font-semibold">▲ Hansoku</Button>
+            <div class="grid grid-cols-4 gap-2">{#each SCORE_BUTTONS as btn}<Button onclick={() => addScore('player1', btn.type)} disabled={gameOver || controlsLockedForMe} class="h-14 bg-red-600 hover:bg-red-500 disabled:opacity-50 font-bold text-lg">{btn.label}</Button>{/each}</div>
+            <Button onclick={() => addHansoku('player1')} disabled={gameOver || controlsLockedForMe} class="h-10 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 font-semibold">▲ Hansoku</Button>
             <div class="flex gap-2">
-              <Button variant="secondary" onclick={() => undoScore('player1')} disabled={p1Score.length === 0} class="flex-1 h-10"><Undo2 class="h-4 w-4 mr-1" /> Undo</Button>
-              <Button variant="outline" onclick={() => declareForfeit('player1')} disabled={gameOver} class="flex-1 h-10 text-destructive border-destructive/50"><Flag class="h-4 w-4 mr-1" /> Forfeit</Button>
+              <Button variant="secondary" onclick={() => undoScore('player1')} disabled={p1Score.length === 0 || controlsLockedForMe} class="flex-1 h-10"><Undo2 class="h-4 w-4 mr-1" /> Undo</Button>
+              <Button variant="outline" onclick={() => declareForfeit('player1')} disabled={gameOver || controlsLockedForMe} class="flex-1 h-10 text-destructive border-destructive/50"><Flag class="h-4 w-4 mr-1" /> Forfeit</Button>
             </div>
           </div>
           <div class="bg-slate-800/50 rounded-xl p-3 border border-slate-700 flex flex-col gap-2">
-            <div class="grid grid-cols-4 gap-2">{#each SCORE_BUTTONS as btn}<Button onclick={() => addScore('player2', btn.type)} disabled={gameOver} variant="secondary" class="h-14 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 font-bold text-lg">{btn.label}</Button>{/each}</div>
-            <Button onclick={() => addHansoku('player2')} disabled={gameOver} class="h-10 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 font-semibold">Hansoku ▲</Button>
+            <div class="grid grid-cols-4 gap-2">{#each SCORE_BUTTONS as btn}<Button onclick={() => addScore('player2', btn.type)} disabled={gameOver || controlsLockedForMe} variant="secondary" class="h-14 bg-slate-600 hover:bg-slate-500 disabled:opacity-50 font-bold text-lg">{btn.label}</Button>{/each}</div>
+            <Button onclick={() => addHansoku('player2')} disabled={gameOver || controlsLockedForMe} class="h-10 bg-amber-600 hover:bg-amber-500 disabled:opacity-50 font-semibold">Hansoku ▲</Button>
             <div class="flex gap-2">
-              <Button variant="outline" onclick={() => declareForfeit('player2')} disabled={gameOver} class="flex-1 h-10 text-destructive border-destructive/50">Forfeit <Flag class="h-4 w-4 ml-1" /></Button>
-              <Button variant="secondary" onclick={() => undoScore('player2')} disabled={p2Score.length === 0} class="flex-1 h-10">Undo <Undo2 class="h-4 w-4 ml-1" /></Button>
+              <Button variant="outline" onclick={() => declareForfeit('player2')} disabled={gameOver || controlsLockedForMe} class="flex-1 h-10 text-destructive border-destructive/50">Forfeit <Flag class="h-4 w-4 ml-1" /></Button>
+              <Button variant="secondary" onclick={() => undoScore('player2')} disabled={p2Score.length === 0 || controlsLockedForMe} class="flex-1 h-10">Undo <Undo2 class="h-4 w-4 ml-1" /></Button>
             </div>
           </div>
         </div>
       {/if}
       
       <!-- Timer -->
-      <div class={cn("rounded-xl p-4 border", timerExpired ? "bg-amber-950/50 border-amber-500" : "bg-card border-border")}>
+      <div class={cn("rounded-xl p-4 border relative overflow-hidden", timerExpired ? "bg-amber-950/50 border-amber-500" : "bg-card border-border")}>
+        {#if controlsLockedForMe}
+          <div class="absolute inset-0 z-20 bg-black/50 backdrop-blur flex flex-col items-center justify-center gap-2">
+            <Lock class="h-7 w-7 text-amber-400" />
+            <p class="text-xs text-amber-100">Timer is controlled by another device</p>
+          </div>
+        {/if}
         {#if timerExpired}<div class="bg-amber-500 text-black font-bold text-center py-2 rounded-lg mb-3">⏰ TIME!</div>{:else}<Progress value={progress} class="h-2 mb-3" />{/if}
         <div class="flex items-center justify-center gap-4">
-          <Button onclick={toggleTimer} size="lg" class={cn("w-14 h-14 rounded-full font-bold text-lg", timerRunning ? "bg-amber-500 hover:bg-amber-400 text-black" : "bg-emerald-500 hover:bg-emerald-400")}>{#if timerRunning}<Pause class="h-6 w-6" />{:else}<Play class="h-6 w-6" />{/if}</Button>
+          <Button onclick={toggleTimer} disabled={controlsLockedForMe} size="lg" class={cn("w-14 h-14 rounded-full font-bold text-lg", timerRunning ? "bg-amber-500 hover:bg-amber-400 text-black" : "bg-emerald-500 hover:bg-emerald-400", controlsLockedForMe && "opacity-60")}>{#if timerRunning}<Pause class="h-6 w-6" />{:else}<Play class="h-6 w-6" />{/if}</Button>
           <span class="text-4xl font-mono font-bold tabular-nums">{formatTime(displaySeconds)}</span>
-          <Button variant="secondary" onclick={() => elapsedSeconds = 0}><RotateCcw class="h-4 w-4 mr-1" /> Reset</Button>
+          <Button variant="secondary" onclick={resetTimer} disabled={controlsLockedForMe}><RotateCcw class="h-4 w-4 mr-1" /> Reset</Button>
         </div>
         <div class="mt-3 flex flex-wrap items-center justify-center gap-2">
-          <Button variant="outline" size="sm" onclick={() => addTime(30)} disabled={!currentMatch || currentMatch.status === 'completed'}>+0:30</Button>
-          <Button variant="outline" size="sm" onclick={() => addTime(60)} disabled={!currentMatch || currentMatch.status === 'completed'}>+1:00</Button>
-          <Button variant="outline" size="sm" onclick={declareTie} disabled={!timerExpired || !currentMatch || currentMatch.status === 'completed' || currentMatch.isSuddenDeath} class="border-amber-500 text-amber-400">Declare Tie</Button>
+          <Button variant="outline" size="sm" onclick={() => addTime(30)} disabled={!currentMatch || currentMatch.status === 'completed' || controlsLockedForMe}>+0:30</Button>
+          <Button variant="outline" size="sm" onclick={() => addTime(60)} disabled={!currentMatch || currentMatch.status === 'completed' || controlsLockedForMe}>+1:00</Button>
+          <Button variant="outline" size="sm" onclick={declareTie} disabled={!timerExpired || !currentMatch || currentMatch.status === 'completed' || currentMatch.isSuddenDeath || controlsLockedForMe} class="border-amber-500 text-amber-400">Declare Tie</Button>
         </div>
       </div>
       
