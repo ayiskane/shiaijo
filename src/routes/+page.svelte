@@ -36,7 +36,7 @@
     <div class="portals-section">
       <div class="section-label">PORTALS</div>
       
-      <!-- Spectator - Full width -->
+      <!-- Spectator - Full width, highlighted -->
       <a href={spectator.href} class="portal-card portal-spectator">
         <span class="portal-kanji">{spectator.kanji}</span>
         <div class="portal-text">
@@ -83,8 +83,14 @@
     --shadow: 0 20px 50px rgba(0,0,0,0.35);
     --glow: rgba(59, 130, 246, 0.3);
     
-    /* Square button size - easy to change */
-    --square-size: 100px; /* 45+ accessible */
+    /* Spectator highlight color - brighter blue */
+    --spectator-bg: rgba(59, 130, 246, 0.15);
+    --spectator-bg-hover: rgba(59, 130, 246, 0.25);
+    --spectator-border: rgba(96, 165, 250, 0.3);
+    --spectator-border-hover: rgba(96, 165, 250, 0.5);
+    
+    /* Square button size */
+    --square-size: 100px;
   }
 
   .landing {
@@ -215,7 +221,7 @@
   }
 
   .portal-arrow {
-    color: var(--text-faint);
+    color: var(--text-muted);
     transition: transform 0.3s ease;
     margin-left: auto;
   }
@@ -224,15 +230,24 @@
     transform: translateX(3px);
   }
 
-  /* Spectator - Full width, good height */
+  /* Spectator - Highlighted, compact */
   .portal-spectator {
-    padding: 20px 24px;
-    gap: 16px;
-    background: linear-gradient(120deg, rgba(59,130,246,0.08), rgba(99,102,241,0.06));
+    padding: 16px 20px;
+    gap: 14px;
+    background: var(--spectator-bg);
+    border-color: var(--spectator-border);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.05);
+  }
+
+  .portal-spectator:hover {
+    background: var(--spectator-bg-hover);
+    border-color: var(--spectator-border-hover);
+    box-shadow: 0 8px 32px rgba(59, 130, 246, 0.2), inset 0 1px 0 rgba(255,255,255,0.08);
   }
 
   .portal-spectator .portal-kanji {
-    font-size: 48px;
+    font-size: 40px;
+    filter: drop-shadow(0 0 16px rgba(96, 165, 250, 0.25));
   }
 
   .portal-spectator .portal-text {
@@ -242,15 +257,17 @@
   }
 
   .portal-spectator .portal-label {
-    font-size: 16px;
+    font-size: 15px;
+    color: #93c5fd;
   }
 
   .portal-spectator .portal-desc {
-    font-size: 13px;
+    font-size: 12px;
   }
 
   .portal-spectator .portal-arrow {
-    font-size: 20px;
+    font-size: 18px;
+    color: #93c5fd;
   }
 
   /* Staff row - 3 square buttons */
@@ -356,20 +373,20 @@
     }
 
     .portal-spectator {
-      padding: 18px 20px;
-      gap: 14px;
+      padding: 14px 18px;
+      gap: 12px;
     }
 
     .portal-spectator .portal-kanji {
-      font-size: 42px;
+      font-size: 36px;
     }
 
     .portal-spectator .portal-label {
-      font-size: 15px;
+      font-size: 14px;
     }
 
     .portal-spectator .portal-desc {
-      font-size: 12px;
+      font-size: 11px;
     }
 
     .staff-row {
@@ -406,21 +423,21 @@
     }
 
     .portal-spectator {
-      padding: 16px 18px;
-      gap: 12px;
+      padding: 12px 16px;
+      gap: 10px;
       border-radius: 12px;
     }
 
     .portal-spectator .portal-kanji {
-      font-size: 36px;
+      font-size: 32px;
     }
 
     .portal-spectator .portal-label {
-      font-size: 14px;
+      font-size: 13px;
     }
 
     .portal-spectator .portal-desc {
-      font-size: 11px;
+      font-size: 10px;
     }
 
     .staff-row {
@@ -441,7 +458,7 @@
     }
   }
 
-  /* Very small screens - minimum usable */
+  /* Very small screens */
   @media (max-width: 320px) {
     .landing {
       --square-size: 70px;
