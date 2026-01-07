@@ -8,6 +8,7 @@
  * @module
  */
 
+import type * as courtState from "../courtState.js";
 import type * as groups from "../groups.js";
 import type * as matches from "../matches.js";
 import type * as members from "../members.js";
@@ -22,6 +23,7 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  courtState: typeof courtState;
   groups: typeof groups;
   matches: typeof matches;
   members: typeof members;

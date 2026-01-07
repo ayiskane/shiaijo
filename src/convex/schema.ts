@@ -86,6 +86,9 @@ export default defineSchema({
     timerStartedAt: v.optional(v.number()),
     timerPausedAt: v.optional(v.number()),
     actualDuration: v.optional(v.number()),
+    // Control locking (per court/match)
+    controlOwnerId: v.optional(v.string()),
+    controlLockExpiresAt: v.optional(v.number()),
     round: v.number(),
     orderIndex: v.number(),
     isSuddenDeath: v.optional(v.boolean()),
