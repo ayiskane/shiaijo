@@ -47,13 +47,17 @@
   
   // Apply Sumi theme to admin portal
   onMount(() => {
-    document.documentElement.classList.add('theme-sumi');
+    const root = document.documentElement;
+    root.classList.add('theme-sumi');
+    root.dataset.theme = 'sumi';
     accessUnlocked = localStorage.getItem('shiaijo_admin_unlocked') === 'true';
     accessChecked = true;
     ensureSenseiGroup();
   });
   onDestroy(() => {
-    document.documentElement.classList.remove('theme-sumi');
+    const root = document.documentElement;
+    root.classList.remove('theme-sumi');
+    delete root.dataset.theme;
   });
 
   // Debug: track tab changes and loading state
