@@ -26,8 +26,8 @@
   <!-- Top Bar -->
   <div class="top-bar">
     <div class="top-bar-left">
-      <div class="top-bar-breadcrumb">Admin</div>
-      <h1 class="top-bar-title">Dashboard</h1>
+      <span class="top-bar-breadcrumb">Admin</span>
+      <span class="top-bar-title">Dashboard</span>
     </div>
     <div class="top-bar-right">
       <div class="top-bar-badge online">
