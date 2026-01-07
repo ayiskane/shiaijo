@@ -14,28 +14,4 @@
 <ModeWatcher defaultMode="dark" />
 <Toaster richColors position="top-center" />
 
-<svelte:head>
-	<!-- Preload critical fonts for faster rendering (already in app.html, but fallback) -->
-	<link
-		rel="preload"
-		href="/fonts/TitilliumWeb-Regular.woff2"
-		as="font"
-		type="font/woff2"
-		crossorigin
-	/>
-	<link
-		rel="preload"
-		href="/fonts/TitilliumWeb-SemiBold.woff2"
-		as="font"
-		type="font/woff2"
-		crossorigin
-	/>
-	<link
-		rel="preload"
-		href="/fonts/TitilliumWeb-Bold.woff2"
-		as="font"
-		type="font/woff2"
-		crossorigin
-	/>
-</svelte:head>
 {@render children()}

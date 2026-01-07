@@ -32,10 +32,12 @@
 		...restProps
 	}: ToggleGroupPrimitive.RootProps & ToggleVariants & { spacing?: number } = $props();
 
-	setToggleGroupCtx({
-		variant,
-		size,
-		spacing,
+	$effect(() => {
+		setToggleGroupCtx({
+			variant,
+			size,
+			spacing,
+		});
 	});
 </script>
 

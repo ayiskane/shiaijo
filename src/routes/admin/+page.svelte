@@ -1142,7 +1142,7 @@
     <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4">
       {#each navItems as item}
         <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors", sidebarCollapsed && "justify-center px-0", activeTab === item.id ? "border-l-2 border-sidebar-primary bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-          <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><svelte:component this={item.icon} class="h-4 w-4" /></div>
+          <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><item.icon class="h-4 w-4" /></div>
           <span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>{item.label}</span>
         </button>
       {/each}
@@ -1154,7 +1154,7 @@
           {#if sidebarCollapsed || expandedNavGroups.has(group.id)}
             {#each group.items as item}
               <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors", sidebarCollapsed && "justify-center px-0", activeTab === item.id ? "border-l-2 border-sidebar-primary bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-                <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><svelte:component this={item.icon} class="h-4 w-4" /></div>
+                <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><item.icon class="h-4 w-4" /></div>
                 <span class={cn("whitespace-nowrap transition-all duration-300 flex items-center gap-2", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>{item.label}{#if item.id === 'tournament' && activeTournament}<span class="ml-auto rounded-full border border-green-500/30 bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">Live</span>{/if}</span>
               </button>
             {/each}
@@ -1186,7 +1186,7 @@
       <div class="flex h-14 items-center gap-3 border-b border-sidebar-border px-4"><img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 object-contain logo-bob" /><span class="font-jp text-xl">試合場</span></div>
       <nav class="p-2">
         {#each [{ id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard }, { id: 'members', label: 'Members', icon: Users }, { id: 'groups', label: 'Groups', icon: FolderOpen }, { id: 'tournament', label: 'Tournament', icon: Trophy }, { id: 'results', label: 'Results', icon: ClipboardList }, { id: 'history', label: 'History', icon: History }] as tab}
-          <button onclick={() => { activeTab = tab.id; sidebarOpen = false; }} class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm", activeTab === tab.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}><svelte:component this={tab.icon} class="h-4 w-4" />{tab.label}</button>
+          <button onclick={() => { activeTab = tab.id; sidebarOpen = false; }} class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm", activeTab === tab.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}><tab.icon class="h-4 w-4" />{tab.label}</button>
         {/each}
       </nav>
       <div class="absolute inset-x-4 bottom-4 flex flex-col gap-2">
