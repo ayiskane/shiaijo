@@ -1250,7 +1250,7 @@
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <Skeleton class="h-32" />
               <Skeleton class="h-32" />
-              <Skeleton class="h-32" class:md:hidden />
+              <Skeleton class="h-32 hidden md:block" />
             </div>
           </div>
         {:then Module}
