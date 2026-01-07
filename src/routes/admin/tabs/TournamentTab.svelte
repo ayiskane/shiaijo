@@ -98,42 +98,42 @@
   });
 </script>
 
-<!-- Top Bar - Design 2 -->
-<div class="top-bar sticky top-0 z-10 -mx-4 sm:-mx-6 px-5 py-4 mb-5" style="background: var(--surface); border-bottom: 1px solid var(--border-subtle);">
-  <div class="flex items-center justify-between">
-    <div>
-      <div class="text-[0.6rem] uppercase tracking-widest mb-1" style="color: var(--text-faint);">Admin / Shiai</div>
-      <div class="flex items-center gap-3">
-        <h1 class="font-jp text-lg font-bold" style="color: var(--text-primary);">Tournament Control</h1>
-        {#if selectedTournament?.status === 'in_progress'}
-          <span class="px-2 py-0.5 rounded text-[0.55rem] font-bold uppercase tracking-wide" style="background: rgba(74, 222, 128, 0.15); color: var(--success);">● Live</span>
-        {/if}
-      </div>
-    </div>
-    {#if selectedTournament}
-      <div class="flex items-center gap-4">
-        <div style="width: 160px;">
-          <div class="flex justify-between text-[0.6rem] mb-1.5">
-            <span style="color: var(--text-muted);">Progress</span>
-            <span class="font-semibold" style="color: var(--text-primary);">{progressPercent}%</span>
-          </div>
-          <div class="h-1.5 rounded-full" style="background: var(--background);">
-            <div class="h-full rounded-full" style="width: {progressPercent}%; background: linear-gradient(90deg, var(--indigo-primary), var(--indigo-light));"></div>
-          </div>
-        </div>
-        <div class="w-px h-8" style="background: var(--border-subtle);"></div>
-        <div class="text-center">
-          <div class="text-xl font-bold" style="color: var(--text-primary);">{matches.length - completedMatches.length}</div>
-          <div class="text-[0.55rem] uppercase" style="color: var(--text-muted);">Matches Left</div>
-        </div>
-      </div>
-    {/if}
-    <div class="flex items-center gap-3">
-      {#if selectedTournament}
-        <button class="btn-sm ghost" onclick={() => settingsSheetOpen = true}>⚙ Settings</button>
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="top-bar-left">
+    <div class="top-bar-breadcrumb">Admin / Shiai</div>
+    <div class="top-bar-title">
+      Tournament Control
+      {#if selectedTournament?.status === 'in_progress'}
+        <span class="top-bar-badge live">Live</span>
       {/if}
-      <button class="btn-sm primary" onclick={onOpenCreateTournament}>+ New Tournament</button>
     </div>
+  </div>
+  {#if selectedTournament}
+    <div class="top-bar-center">
+      <div class="top-bar-stats">
+        <div class="top-bar-progress">
+          <div class="top-bar-progress-header">
+            <span class="top-bar-progress-label">Progress</span>
+            <span class="top-bar-progress-value">{progressPercent}%</span>
+          </div>
+          <div class="top-bar-progress-track">
+            <div class="top-bar-progress-fill" style="width: {progressPercent}%;"></div>
+          </div>
+        </div>
+        <div class="top-bar-divider"></div>
+        <div class="top-bar-stat">
+          <div class="top-bar-stat-value">{matches.length - completedMatches.length}</div>
+          <div class="top-bar-stat-label">Matches Left</div>
+        </div>
+      </div>
+    </div>
+  {/if}
+  <div class="top-bar-right">
+    {#if selectedTournament}
+      <button class="btn-sm ghost" onclick={() => settingsSheetOpen = true}>⚙ Settings</button>
+    {/if}
+    <button class="btn-sm primary" onclick={onOpenCreateTournament}>+ New Tournament</button>
   </div>
 </div>
 
