@@ -56,57 +56,52 @@
 </script>
 
 <!-- Top Bar - Hybrid: Design 2 structure with Design 1 centered tabs -->
-<div class="top-bar sticky top-0 z-10 -mx-4 sm:-mx-6 px-5 py-4 mb-5" style="background: var(--surface); border-bottom: 1px solid var(--border-subtle);">
-  <div class="flex items-center justify-between">
-    <!-- Left: Breadcrumb + Title (Design 2) -->
-    <div>
-      <div class="text-[0.6rem] uppercase tracking-widest mb-1" style="color: var(--text-faint);">Admin / Roster</div>
-      <h1 class="font-jp text-lg font-bold" style="color: var(--text-primary);">Member Management</h1>
-    </div>
-    
-    <!-- Center: Filter Tabs (Design 1 style) -->
-    <div class="flex gap-1 p-1 rounded-lg" style="background: var(--background);">
+<div class="top-bar">
+  <!-- Left: Breadcrumb + Title -->
+  <div class="top-bar-left">
+    <div class="top-bar-breadcrumb">Admin / Roster</div>
+    <h1 class="top-bar-title">Member Management</h1>
+  </div>
+  
+  <!-- Center: Filter Tabs -->
+  <div class="top-bar-center">
+    <div class="top-bar-tabs">
       <button 
         onclick={() => onRegistrationFilterChange('all')}
-        class={cn("px-4 py-2 rounded-md text-xs transition-all", registrationFilter === 'all' ? "text-primary" : "")}
-        style={registrationFilter === 'all' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
+        class={cn("top-bar-tab", registrationFilter === 'all' && "active")}
       >
         All Members
       </button>
       {#if selectedTournament}
         <button 
           onclick={() => onRegistrationFilterChange('registered')}
-          class={cn("px-4 py-2 rounded-md text-xs transition-all")}
-          style={registrationFilter === 'registered' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
+          class={cn("top-bar-tab", registrationFilter === 'registered' && "active")}
         >
           Registered
         </button>
         <button 
           onclick={() => onRegistrationFilterChange('unregistered')}
-          class={cn("px-4 py-2 rounded-md text-xs transition-all")}
-          style={registrationFilter === 'unregistered' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
+          class={cn("top-bar-tab", registrationFilter === 'unregistered' && "active")}
         >
           Unregistered
         </button>
       {/if}
     </div>
-    
-    <!-- Right Side: Search + Actions -->
-    <div class="flex items-center gap-3">
-      <div class="flex items-center gap-2 px-3 py-1.5 rounded-md" style="background: var(--background); border: 1px solid var(--border-subtle); width: 180px;">
-        <Search class="h-3 w-3" style="color: var(--text-faint);" />
-        <input 
-          type="text" 
-          value={searchQuery}
-          oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
-          placeholder="Search..."
-          class="bg-transparent border-none outline-none text-xs w-full"
-          style="color: var(--text-primary);"
-        />
-      </div>
-      <button onclick={onOpenImportCSV} class="btn-sm ghost">Export</button>
-      <button onclick={onOpenAddMember} class="btn-sm primary">+ Add Member</button>
+  </div>
+  
+  <!-- Right Side: Search + Actions -->
+  <div class="top-bar-right">
+    <div class="top-bar-search">
+      <Search class="h-3.5 w-3.5" />
+      <input 
+        type="text" 
+        value={searchQuery}
+        oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
+        placeholder="Search..."
+      />
     </div>
+    <button onclick={onOpenImportCSV} class="btn-sm ghost">Export</button>
+    <button onclick={onOpenAddMember} class="btn-sm primary">+ Add Member</button>
   </div>
 </div>
 
