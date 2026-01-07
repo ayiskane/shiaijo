@@ -453,7 +453,9 @@
 {/if}
 
 <Sheet.Root bind:open={settingsSheetOpen}>
-  <Sheet.Content side="bottom" class="h-[85vh] rounded-t-3xl bg-background border-t border-border z-[100] shadow-2xl shadow-black/60">
+  <Sheet.Portal>
+    <Sheet.Overlay class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[120]" />
+    <Sheet.Content side="bottom" class="sheet-panel h-[85vh] rounded-t-3xl bg-background/98 border-t border-border z-[130] shadow-[0_-24px_60px_rgba(0,0,0,0.55)] text-foreground">
     <div class="flex justify-center pt-2 pb-4"><div class="w-10 h-1 bg-muted-foreground/30 rounded-full"></div></div>
     <Sheet.Header class="px-6 pb-4">
       <Sheet.Title>Tournament Settings</Sheet.Title>
@@ -639,5 +641,6 @@
         </div>
       </div>
     </div>
-  </Sheet.Content>
+    </Sheet.Content>
+  </Sheet.Portal>
 </Sheet.Root>
