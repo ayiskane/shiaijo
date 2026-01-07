@@ -1155,47 +1155,114 @@
 {:else}
   <div class="flex min-h-screen bg-background overflow-x-hidden">
   <!-- Desktop Sidebar -->
-  <aside class={cn("hidden md:flex flex-col fixed inset-y-0 left-0 z-20 border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl shadow-[20px_0_40px_rgba(0,0,0,0.35)] transition-all duration-300", sidebarCollapsed ? "w-16" : "w-[280px]")}>
-    <div class={cn("flex h-16 items-center gap-3 border-b border-sidebar-border px-4", sidebarCollapsed && "justify-center px-2")}>
-      <img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 shrink-0 object-contain drop-shadow-lg" />
-      <span class={cn("font-jp text-xl text-foreground whitespace-nowrap transition-all duration-300 sidebar-text", sidebarCollapsed ? "sidebar-text-hidden" : "sidebar-text-visible")}>試合場</span>
+  <aside class={cn("hidden md:flex flex-col fixed inset-y-0 left-0 z-20 transition-all duration-300", sidebarCollapsed ? "w-16" : "w-[280px]")} style="background: var(--surface); border-right: 1px solid var(--border-subtle);">
+    <!-- Header with Logo -->
+    <div class={cn("flex items-center border-b px-4", sidebarCollapsed ? "h-16 justify-center px-2" : "h-auto py-6 flex-col gap-4")} style="border-color: var(--border-subtle);">
+      <div class={cn("flex items-center", sidebarCollapsed ? "" : "gap-3 w-full")}>
+        <div class="flex h-10 w-10 items-center justify-center rounded-xl shrink-0" style="background: linear-gradient(135deg, var(--indigo-primary), var(--indigo-deep)); box-shadow: var(--shadow-glow-indigo);">
+          <img src="/shiaijologo.png" alt="Shiaijo" class="h-7 w-7 object-contain" />
+        </div>
+        <span class={cn("font-jp text-xl whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "hidden" : "block")} style="color: var(--text-primary);">試合場</span>
+      </div>
+      <!-- Search box for expanded sidebar -->
+      {#if !sidebarCollapsed}
+        <div class="search-box w-full">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="var(--text-faint)"><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/></svg>
+          <input type="text" placeholder="Search..." />
+        </div>
+      {/if}
     </div>
-    <button onclick={() => sidebarCollapsed = !sidebarCollapsed} class="absolute -right-3 top-20 flex h-7 w-7 items-center justify-center rounded-full border border-sidebar-border bg-sidebar hover:bg-sidebar-accent shadow-lg">
-      <ChevronLeft class={cn("h-4 w-4 text-sidebar-foreground transition-transform", sidebarCollapsed && "rotate-180")} />
+    
+    <!-- Collapse/Expand Toggle -->
+    <button onclick={() => sidebarCollapsed = !sidebarCollapsed} class="absolute -right-3 top-20 flex h-7 w-7 items-center justify-center rounded-full shadow-lg z-10" style="background: var(--surface); border: 1px solid var(--border-subtle);">
+      <ChevronLeft class={cn("h-4 w-4 transition-transform", sidebarCollapsed && "rotate-180")} style="color: var(--text-secondary);" />
     </button>
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 px-2">
-      {#each navItems as item (item.id)}
-        {@const Icon = item.icon}
-        <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("sidebar-btn", sidebarCollapsed && "sidebar-btn-compact", activeTab === item.id && "sidebar-btn-active")}>
-          <div class="sidebar-icon"><Icon class="h-4 w-4" /></div>
-          <span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>{item.label}</span>
-        </button>
-      {/each}
-      {#each navGroups as group}
-        <div class="mt-2">
-          <button onclick={() => !sidebarCollapsed && toggleNavGroup(group.id)} class={cn("sidebar-group", sidebarCollapsed && "sidebar-group-hidden")}>
-            <ChevronDown class={cn("h-3 w-3 transition-transform", !expandedNavGroups.has(group.id) && "-rotate-90")} />
-            <span class={cn(sidebarCollapsed && "sidebar-text-hidden")}>{group.label}</span>
-          </button>
-          {#if sidebarCollapsed || expandedNavGroups.has(group.id)}
+    
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 px-3">
+      {#if sidebarCollapsed}
+        <!-- Collapsed: Icon-only navigation with tooltips -->
+        <div class="flex flex-col items-center gap-1">
+          {#each navItems as item (item.id)}
+            {@const Icon = item.icon}
+            <button onclick={() => activeTab = item.id} class={cn("nav-icon-item", activeTab === item.id && "active")}>
+              <Icon class="h-5 w-5" />
+              <span class="tooltip">{item.label}</span>
+            </button>
+          {/each}
+          
+          <div class="nav-divider"></div>
+          
+          {#each navGroups as group}
             {#each group.items as item (item.id)}
               {@const Icon = item.icon}
-              <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("sidebar-btn ml-2", sidebarCollapsed && "sidebar-btn-compact", activeTab === item.id && "sidebar-btn-active")}>
-                <div class="sidebar-icon"><Icon class="h-4 w-4" /></div>
-                <span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>{item.label}{#if item.id === 'tournament' && activeTournament}<span class="live-pill">Live</span>{/if}</span>
+              <button onclick={() => activeTab = item.id} class={cn("nav-icon-item", activeTab === item.id && "active")}>
+                <Icon class="h-5 w-5" />
+                <span class="tooltip">{item.label}{#if item.id === 'tournament' && activeTournament} (Live){/if}</span>
               </button>
             {/each}
-          {/if}
+          {/each}
         </div>
-      {/each}
+      {:else}
+        <!-- Expanded: Full navigation with sections -->
+        {#each navItems as item (item.id)}
+          {@const Icon = item.icon}
+          <button onclick={() => activeTab = item.id} class={cn("nav-item w-full", activeTab === item.id && "active")}>
+            <Icon class="h-[18px] w-[18px]" />
+            <span class="nav-item-text">{item.label}</span>
+          </button>
+        {/each}
+        
+        {#each navGroups as group}
+          <div class="nav-section">
+            <button onclick={() => toggleNavGroup(group.id)} class="w-full nav-section-title flex items-center gap-2 cursor-pointer hover:opacity-80">
+              <ChevronDown class={cn("h-3 w-3 transition-transform", !expandedNavGroups.has(group.id) && "-rotate-90")} />
+              {group.label}
+            </button>
+            {#if expandedNavGroups.has(group.id)}
+              {#each group.items as item (item.id)}
+                {@const Icon = item.icon}
+                <button onclick={() => activeTab = item.id} class={cn("nav-item w-full", activeTab === item.id && "active")}>
+                  <Icon class="h-[18px] w-[18px]" />
+                  <span class="nav-item-text">{item.label}</span>
+                  {#if item.id === 'tournament' && activeTournament}
+                    <span class="nav-badge">Live</span>
+                  {/if}
+                </button>
+              {/each}
+            {/if}
+          </div>
+        {/each}
+      {/if}
     </nav>
+    
+    <!-- Footer -->
     <div class="sidebar-footer">
-      <p class={cn("footer-label", sidebarCollapsed && "footer-label-hidden")}>Switch Portal</p>
-      <div class={cn("flex gap-2", sidebarCollapsed ? "flex-col items-center" : "flex-col")}>
-        <a href="/" class={cn("portal-link home", sidebarCollapsed && "portal-link-compact")}><Home class="h-4 w-4 shrink-0" /><span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>Home</span></a>
-        <a href="/courtkeeper" class={cn("portal-link court", sidebarCollapsed && "portal-link-compact")}><Swords class="h-4 w-4 shrink-0" /><span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>Courtkeeper</span></a>
-        <a href="/spectator" class={cn("portal-link spec", sidebarCollapsed && "portal-link-compact")}><Eye class="h-4 w-4 shrink-0" /><span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>Spectator</span></a>
-      </div>
+      {#if sidebarCollapsed}
+        <!-- Collapsed footer: icons only -->
+        <div class="flex flex-col items-center gap-2">
+          <a href="/" class="nav-icon-item" title="Home"><Home class="h-5 w-5" /></a>
+          <a href="/courtkeeper" class="nav-icon-item" title="Courtkeeper"><Swords class="h-5 w-5" /></a>
+          <a href="/spectator" class="nav-icon-item" title="Spectator"><Eye class="h-5 w-5" /></a>
+          <div class="user-icon mt-2">AD</div>
+        </div>
+      {:else}
+        <!-- Expanded footer: full links + user card -->
+        <p class="footer-label">Switch Portal</p>
+        <div class="flex flex-col gap-2">
+          <a href="/" class="portal-link home"><Home class="h-4 w-4 shrink-0" /><span>Home</span></a>
+          <a href="/courtkeeper" class="portal-link court"><Swords class="h-4 w-4 shrink-0" /><span>Courtkeeper</span></a>
+          <a href="/spectator" class="portal-link spec"><Eye class="h-4 w-4 shrink-0" /><span>Spectator</span></a>
+        </div>
+        <div class="user-card mt-3">
+          <div class="user-avatar">AD</div>
+          <div class="flex-1">
+            <div class="user-name">Admin</div>
+            <div class="user-role">Administrator</div>
+          </div>
+          <div class="user-status"></div>
+        </div>
+      {/if}
     </div>
   </aside>
   
