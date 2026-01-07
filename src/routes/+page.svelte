@@ -38,7 +38,20 @@
     <div class="portals-section">
       <div class="staff-label">PORTALS</div>
       <div class="portal-grid">
-        <a href={spectator.href} class="portal-card portal-spectator">
+        {#each staffPortals as portal}
+          <a href={portal.href} class="portal-card portal-square portal-staff">
+            <div class="portal-info">
+              <span class="portal-kanji">{portal.kanji}</span>
+              <div class="portal-text">
+                <span class="portal-label">{portal.label}</span>
+                <span class="portal-desc subtle">Manage matches, members, and logistics.</span>
+              </div>
+            </div>
+            <span class="portal-arrow">→</span>
+          </a>
+        {/each}
+
+        <a href={spectator.href} class="portal-card portal-spectator portal-wide">
           <div class="portal-info">
             <span class="portal-kanji">{spectator.kanji}</span>
             <div class="portal-text">
@@ -48,13 +61,6 @@
           </div>
           <span class="portal-arrow">→</span>
         </a>
-
-        {#each staffPortals as portal}
-          <a href={portal.href} class="portal-card portal-staff">
-            <span class="portal-kanji">{portal.kanji}</span>
-            <span class="portal-label">{portal.label}</span>
-          </a>
-        {/each}
       </div>
     </div>
   </main>
