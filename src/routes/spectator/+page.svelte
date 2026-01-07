@@ -1,3 +1,7 @@
+<script lang="ts" context="module">
+  export const ssr = false;
+</script>
+
 <script lang="ts">
   import { useQuery } from 'convex-svelte';
   import { asset } from '$app/paths';
