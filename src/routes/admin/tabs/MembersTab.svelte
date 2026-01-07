@@ -95,52 +95,68 @@
 <!-- Sticky Controls -->
 <div class="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 pt-3 pb-4 bg-background/95 backdrop-blur-sm space-y-3">
   {#if selectedTournament}
-    <div class="glass-panel border border-border/70 px-4 sm:px-5 py-3.5 flex flex-wrap items-center gap-3 text-accessible-sm">
-      <span class="text-[17px] font-semibold text-foreground">Quick actions</span>
-      <Button size="sm" class="h-11 px-4 text-[15px]" onclick={onAddAllParticipants}>
-        <UserPlus class="mr-2 h-4 w-4" /> Register all
-      </Button>
-      <Button size="sm" variant="outline" class="h-11 px-4 text-[15px]" onclick={onClearAllParticipants}>
-        <X class="mr-2 h-4 w-4" /> Clear all
-      </Button>
-
-      <div class="relative" role="group" onmouseleave={() => addMenuOpen = false}>
-        <div class="flex rounded-xl overflow-hidden border border-border/70 bg-card/70">
-          <Button size="sm" class="h-11 px-4 text-[15px] rounded-none" onclick={onOpenAddMember}>
-            <Plus class="mr-2 h-4 w-4" /> Add member
-          </Button>
-          <button
-            class="px-3 h-11 bg-card/60 hover:bg-accent/30 border-l border-border/70 text-muted-foreground"
-            aria-label="More add options"
-            aria-haspopup="menu"
-            aria-expanded={addMenuOpen}
-            aria-controls="add-menu-options"
-            onclick={() => addMenuOpen = !addMenuOpen}
-          >
-            <ChevronDown class="h-4 w-4" />
-          </button>
+    <div class="glass-panel border border-border/70 px-4 sm:px-5 py-3 flex flex-wrap items-center gap-3 text-accessible-sm">
+      <div class="flex items-center gap-3 pr-3 border-r border-border/60">
+        <div class="h-10 w-10 rounded-xl bg-indigo-900/50 border border-border/70 flex items-center justify-center shadow-sm">
+          <Users class="h-5 w-5 text-indigo-200" />
         </div>
-        {#if addMenuOpen}
-          <div id="add-menu-options" class="absolute mt-2 w-52 rounded-xl border border-border/70 bg-popover shadow-xl glass-panel p-2 z-20" role="menu">
-            <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/20 text-[15px]" role="menuitem" onclick={() => { addMenuOpen = false; onOpenAddMember(); }}>Add single</button>
-            <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/20 text-[15px]" role="menuitem" onclick={() => { addMenuOpen = false; resetMassMembers(); onOpenMassAdd(); }}>Bulk add</button>
-            <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/20 text-[15px]" role="menuitem" onclick={() => { addMenuOpen = false; onOpenImportCSV(); }}>Import CSV</button>
+        <div class="leading-tight">
+          <div class="text-[11px] uppercase tracking-[0.18em] text-muted-foreground/90">Admin / Members</div>
+          <div class="flex items-center gap-2">
+            <span class="text-[15px] font-semibold text-foreground">Quick actions</span>
+            {#if selectedTournament?.name}
+              <span class="pill-soft px-2.5 py-1 text-[12px]">{selectedTournament.name}</span>
+            {/if}
           </div>
+        </div>
+      </div>
+
+      <div class="flex flex-wrap items-center gap-2 flex-1">
+        <Button size="sm" variant="secondary" class="h-10 px-3 text-[14px] rounded-lg border border-border/70 bg-surface/70 hover:bg-accent/10" onclick={onAddAllParticipants}>
+          <UserPlus class="mr-2 h-4 w-4" /> Register all
+        </Button>
+        <Button size="sm" variant="outline" class="h-10 px-3 text-[14px] rounded-lg border-border/70" onclick={onClearAllParticipants}>
+          <X class="mr-2 h-4 w-4" /> Clear all
+        </Button>
+
+        <div class="relative" role="group" onmouseleave={() => addMenuOpen = false}>
+          <div class="flex rounded-lg overflow-hidden border border-border/70 bg-card/70">
+            <Button size="sm" class="h-10 px-3 text-[14px] rounded-none" onclick={onOpenAddMember}>
+              <Plus class="mr-2 h-4 w-4" /> Add member
+            </Button>
+            <button
+              class="px-3 h-10 bg-card/60 hover:bg-accent/30 border-l border-border/70 text-muted-foreground"
+              aria-label="More add options"
+              aria-haspopup="menu"
+              aria-expanded={addMenuOpen}
+              aria-controls="add-menu-options"
+              onclick={() => addMenuOpen = !addMenuOpen}
+            >
+              <ChevronDown class="h-4 w-4" />
+            </button>
+          </div>
+          {#if addMenuOpen}
+            <div id="add-menu-options" class="absolute mt-2 w-52 rounded-xl border border-border/70 bg-popover shadow-xl glass-panel p-2 z-20" role="menu">
+              <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/20 text-[14px]" role="menuitem" onclick={() => { addMenuOpen = false; onOpenAddMember(); }}>Add single</button>
+              <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/20 text-[14px]" role="menuitem" onclick={() => { addMenuOpen = false; resetMassMembers(); onOpenMassAdd(); }}>Bulk add</button>
+              <button class="w-full text-left px-3 py-2 rounded-lg hover:bg-accent/20 text-[14px]" role="menuitem" onclick={() => { addMenuOpen = false; onOpenImportCSV(); }}>Import CSV</button>
+            </div>
+          {/if}
+        </div>
+
+        <Button size="sm" variant="secondary" class="h-10 px-3 text-[14px] rounded-lg border border-border/70 bg-surface/70 hover:bg-accent/10" onclick={onOpenMassEdit}>
+          <Pencil class="mr-2 h-4 w-4" /> Edit selected
+        </Button>
+        {#if selectedMemberIds.size > 0}
+          <Button size="sm" variant="secondary" class="h-10 px-3 text-[14px] rounded-lg border border-border/70 bg-surface/70 hover:bg-accent/10" onclick={onRegisterSelectedMembers}>
+            <Check class="mr-2 h-4 w-4" /> Register selected
+          </Button>
         {/if}
       </div>
 
-      <Button size="sm" variant="secondary" class="h-11 px-4 text-[15px]" onclick={onOpenMassEdit}>
-        <Pencil class="mr-2 h-4 w-4" /> Edit selected
-      </Button>
-      {#if selectedMemberIds.size > 0}
-        <Button size="sm" variant="secondary" class="h-11 px-4 text-[15px]" onclick={onRegisterSelectedMembers}>
-          <Check class="mr-2 h-4 w-4" /> Register selected
-        </Button>
-      {/if}
-
-      <div class="ml-auto flex items-center gap-3 text-muted-foreground text-sm">
-        <span class="pill-soft px-3 py-1 text-[13px]">{selectedMemberIds.size} selected</span>
-        <span class="pill-soft px-3 py-1 text-[13px]">{participants.length} registered</span>
+      <div class="hidden sm:flex items-center gap-2 text-muted-foreground text-xs">
+        <span class="pill-soft px-2.5 py-1 text-[12px]">{selectedMemberIds.size} selected</span>
+        <span class="pill-soft px-2.5 py-1 text-[12px]">{participants.length} registered</span>
       </div>
     </div>
   {/if}
@@ -152,7 +168,7 @@
       </div>
       <div>
         <p class="text-[18px] font-semibold leading-tight">Member Directory</p>
-        <p class="text-[13px] text-muted-foreground">{filteredMembers.length} of {members.length} members</p>
+        <p class="text-[13px] text-muted-foreground">Showing {startIndex + 1}–{endIndex} of {filteredMembers.length} (total {members.length})</p>
       </div>
     </div>
 
@@ -230,31 +246,6 @@
 
 <!-- Data Table Card -->
 <div class="table-card" bind:this={listContainer}>
-  <!-- Table Header -->
-  <div class="table-header">
-    <h2 class="table-title">Member Directory</h2>
-    <div class="table-actions">
-      <!-- Group Filter -->
-      <div class="relative">
-        <select
-          bind:value={filterGroup}
-          onchange={(e) => onFilterGroupChange((e.target as HTMLSelectElement).value)}
-          class={cn("filter-btn cursor-pointer appearance-none pr-8", filterGroup !== 'all' && "active")}
-        >
-          <option value="all">All Groups</option>
-          {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
-        </select>
-        <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 pointer-events-none" style="color: var(--text-muted);" />
-      </div>
-      
-      {#if filterGroup !== 'all' || registrationFilter !== 'all' || searchQuery}
-        <button onclick={onResetFilters} class="filter-btn">
-          <X class="h-3 w-3" /> Clear
-        </button>
-      {/if}
-    </div>
-  </div>
-  
   <!-- Table -->
   <div class="overflow-x-auto">
     <table class="data-table">
