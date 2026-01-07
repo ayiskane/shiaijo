@@ -108,7 +108,7 @@
     display: flex;
     align-items: center;
     gap: 48px;
-    max-width: 680px;
+    max-width: 600px;
     width: 100%;
     position: relative;
     z-index: 1;
@@ -129,13 +129,13 @@
   }
 
   .logo {
-    width: 150px;
+    width: 140px;
     height: auto;
     filter: drop-shadow(0 0 30px var(--glow));
   }
 
   .brand-name {
-    font-size: 13px;
+    font-size: 12px;
     letter-spacing: 0.35em;
     color: var(--text);
     margin-bottom: 4px;
@@ -150,7 +150,7 @@
   /* Divider */
   .divider {
     width: 1px;
-    height: 180px;
+    height: 160px;
     background: var(--divider);
     flex-shrink: 0;
   }
@@ -161,7 +161,8 @@
     display: flex;
     flex-direction: column;
     gap: 10px;
-    max-width: 320px;
+    width: 270px;
+    max-width: 270px;
   }
 
   .section-label {
@@ -246,26 +247,28 @@
   /* Staff row - 3 square buttons */
   .staff-row {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(3, 80px);
     gap: 10px;
+    justify-content: space-between;
   }
 
   .portal-staff {
+    width: 80px;
+    height: 80px;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     gap: 6px;
-    aspect-ratio: 1 / 1;
-    padding: 12px 8px;
+    padding: 0;
     animation-delay: var(--delay, 0s);
   }
 
   .portal-staff .portal-kanji {
-    font-size: 32px;
+    font-size: 30px;
   }
 
   .portal-staff .portal-label {
-    font-size: 9px;
+    font-size: 8px;
     letter-spacing: 0.1em;
   }
 
@@ -327,7 +330,7 @@
     }
 
     .logo {
-      width: 130px;
+      width: 120px;
     }
 
     .divider {
@@ -336,8 +339,8 @@
     }
 
     .portals-section {
-      width: 100%;
-      max-width: 300px;
+      width: 250px;
+      max-width: 250px;
     }
 
     .portal-spectator {
@@ -358,34 +361,41 @@
     }
 
     .staff-row {
+      grid-template-columns: repeat(3, 74px);
       gap: 8px;
     }
 
+    .portal-staff {
+      width: 74px;
+      height: 74px;
+    }
+
     .portal-staff .portal-kanji {
-      font-size: 28px;
+      font-size: 26px;
     }
 
     .portal-staff .portal-label {
-      font-size: 8px;
+      font-size: 7px;
     }
   }
 
   /* Small mobile */
   @media (max-width: 400px) {
     .landing {
-      padding: 32px 20px;
+      padding: 32px 16px;
     }
 
     .logo {
-      width: 110px;
+      width: 100px;
     }
 
     .brand-name {
-      font-size: 11px;
+      font-size: 10px;
     }
 
     .portals-section {
-      max-width: 260px;
+      width: 220px;
+      max-width: 220px;
       gap: 8px;
     }
 
@@ -404,21 +414,23 @@
     }
 
     .staff-row {
+      grid-template-columns: repeat(3, 64px);
       gap: 6px;
     }
 
     .portal-staff {
+      width: 64px;
+      height: 64px;
       border-radius: 10px;
-      gap: 4px;
     }
 
     .portal-staff .portal-kanji {
-      font-size: 24px;
+      font-size: 22px;
     }
 
     .portal-staff .portal-label {
-      font-size: 7px;
-      letter-spacing: 0.08em;
+      font-size: 6px;
+      letter-spacing: 0.06em;
     }
   }
 </style>
