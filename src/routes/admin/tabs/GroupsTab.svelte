@@ -33,8 +33,8 @@
 <!-- Top Bar -->
 <div class="top-bar">
   <div class="top-bar-left">
-    <div class="top-bar-breadcrumb">Admin / Roster</div>
-    <h1 class="top-bar-title">Group Management</h1>
+    <span class="top-bar-breadcrumb">Admin</span>
+    <span class="top-bar-title">Group Management</span>
   </div>
   <div class="top-bar-center">
     <div class="top-bar-stats">
