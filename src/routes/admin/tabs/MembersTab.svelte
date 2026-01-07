@@ -3,9 +3,8 @@
   import autoAnimate from '@formkit/auto-animate';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
-  import { Label } from '$lib/components/ui/label';
   import { cn } from '$lib/utils';
-  import { Check, Plus, UserPlus, X, ChevronDown, Trash2, Pencil, Users } from '@lucide/svelte';
+  import { Check, Plus, UserPlus, X, ChevronDown, Trash2, Pencil, Users, Search, Filter } from '@lucide/svelte';
 
   export let members: any[] = [];
   export let groups: any[] = [];
@@ -41,6 +40,11 @@
   let listContainer: HTMLElement;
   $: listContainer && autoAnimate(listContainer);
 
+  // Get initials from name
+  function getInitials(firstName: string, lastName: string): string {
+    return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  }
+
   onMount(() => {
     console.debug('[admin] MembersTab mounted', {
       membersCount: members.length,
@@ -51,124 +55,167 @@
   });
 </script>
 
-<!-- Sticky Search & Filter Bar -->
-<div class="sticky top-0 z-10 -mx-4 sm:-mx-6 px-4 sm:px-6 py-4 bg-background/95 backdrop-blur-sm border-b border-border mb-4">
-  <div class="flex items-center justify-between mb-3">
-    <div>
-      <h1 class="text-xl sm:text-2xl font-bold">Members</h1>
-      <p class="text-sm text-muted-foreground">
-        {filteredMembers.length} of {members.length}
-        {#if selectedTournament}· {participants.length} registered{/if}
-      </p>
+<!-- Top Bar - matching compact-data design -->
+<div class="top-bar sticky top-0 z-10 -mx-4 sm:-mx-6 px-5 py-3 mb-5" style="background: var(--surface); border-bottom: 1px solid var(--border-subtle);">
+  <div class="flex items-center gap-6">
+    <!-- Breadcrumb -->
+    <div class="text-xs" style="color: var(--text-muted);">
+      Admin / <span style="color: var(--text-primary);">Member Management</span>
     </div>
-    <Button onclick={onOpenAddMember} variant="outline" size="sm" class="h-9 px-4">
-      <Plus class="mr-2 h-4 w-4" /> Add
-    </Button>
-  </div>
-
-  <div class="relative mb-3">
-    <Input
-      type="text"
-      value={searchQuery}
-      oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
-      placeholder="Search by name..."
-      class="h-12 text-base pl-4 pr-10"
-    />
-    {#if searchQuery}
-      <button
-        onclick={() => onSearchChange('')}
-        class="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-muted-foreground hover:text-foreground"
-      >
-        <X class="h-5 w-5" />
-      </button>
-    {/if}
-  </div>
-
-  <div class="flex flex-wrap items-center gap-2">
-    <div class="relative">
-      <select
-        bind:value={filterGroup}
-        onchange={(e) => onFilterGroupChange((e.target as HTMLSelectElement).value)}
-        class="h-10 appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors"
-      >
-        <option value="all">All Groups</option>
-        {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
-      </select>
-      <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-    </div>
-
-    {#if selectedTournament}
-      <div class="relative">
-        <select
-          bind:value={registrationFilter}
-          onchange={(e) => onRegistrationFilterChange((e.target as HTMLSelectElement).value as any)}
-          class="h-10 appearance-none rounded-full border border-border bg-card pl-4 pr-10 text-sm font-medium cursor-pointer hover:bg-accent/50 transition-colors"
+    
+    <!-- Center Tabs -->
+    <div class="flex-1 flex justify-center">
+      <div class="flex gap-1 p-1 rounded-lg" style="background: var(--background);">
+        <button 
+          onclick={() => onRegistrationFilterChange('all')}
+          class={cn("px-4 py-2 rounded-md text-xs transition-all", registrationFilter === 'all' ? "text-primary" : "")}
+          style={registrationFilter === 'all' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
         >
-          <option value="all">All</option>
-          <option value="registered">✓ Registered</option>
-          <option value="unregistered">○ Not Registered</option>
-        </select>
-        <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+          All Members
+        </button>
+        {#if selectedTournament}
+          <button 
+            onclick={() => onRegistrationFilterChange('registered')}
+            class={cn("px-4 py-2 rounded-md text-xs transition-all")}
+            style={registrationFilter === 'registered' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
+          >
+            Registered
+          </button>
+          <button 
+            onclick={() => onRegistrationFilterChange('unregistered')}
+            class={cn("px-4 py-2 rounded-md text-xs transition-all")}
+            style={registrationFilter === 'unregistered' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
+          >
+            Unregistered
+          </button>
+        {/if}
       </div>
-    {/if}
-
-    {#if filterGroup !== 'all' || registrationFilter !== 'all' || searchQuery}
-      <button
-        onclick={onResetFilters}
-        class="h-10 px-4 rounded-full text-sm font-medium text-primary hover:bg-primary/10 transition-colors"
-      >
-        Clear filters
-      </button>
-    {/if}
-
-    <div class="ml-auto flex gap-2">
-      <Button variant="ghost" size="sm" onclick={onOpenImportCSV} class="h-9 px-3 text-xs">CSV</Button>
-      <Button variant="ghost" size="sm" onclick={onOpenMassEdit} class="h-9 px-3 text-xs">Edit</Button>
-      <Button variant="ghost" size="sm" onclick={() => { resetMassMembers(); onOpenMassAdd(); }} class="h-9 px-3 text-xs">Bulk</Button>
+    </div>
+    
+    <!-- Right Side: Search + Actions -->
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-md" style="background: var(--background); border: 1px solid var(--border-subtle); width: 200px;">
+        <Search class="h-3 w-3" style="color: var(--text-faint);" />
+        <input 
+          type="text" 
+          value={searchQuery}
+          oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
+          placeholder="Search members..."
+          class="bg-transparent border-none outline-none text-xs w-full"
+          style="color: var(--text-primary);"
+        />
+      </div>
+      <button onclick={onOpenImportCSV} class="btn-sm ghost">Export</button>
+      <button onclick={onOpenAddMember} class="btn-sm primary">+ Add Member</button>
     </div>
   </div>
 </div>
 
+<!-- Stats Strip -->
+<div class="stats-strip">
+  <div class="stat-mini">
+    <div class="stat-mini-icon indigo">👥</div>
+    <div class="stat-mini-content">
+      <div class="stat-mini-value">{members.length}</div>
+      <div class="stat-mini-label">Total Members</div>
+    </div>
+  </div>
+  <div class="stat-mini">
+    <div class="stat-mini-icon success">✓</div>
+    <div class="stat-mini-content">
+      <div class="stat-mini-value">{participants.length}</div>
+      <div class="stat-mini-label">Registered</div>
+    </div>
+  </div>
+  <div class="stat-mini">
+    <div class="stat-mini-icon warning">⏳</div>
+    <div class="stat-mini-content">
+      <div class="stat-mini-value">{members.length - participants.length}</div>
+      <div class="stat-mini-label">Not Registered</div>
+    </div>
+  </div>
+  <div class="stat-mini">
+    <div class="stat-mini-icon fire">🔥</div>
+    <div class="stat-mini-content">
+      <div class="stat-mini-value">{filteredMembers.length}</div>
+      <div class="stat-mini-label">Showing</div>
+    </div>
+  </div>
+</div>
+
+<!-- Quick Actions for Tournament -->
 {#if selectedTournament}
-  <div class="mb-4 p-4 rounded-2xl border-2 border-border bg-card/50">
+  <div class="mb-5 p-4 rounded-xl" style="background: var(--surface); border: 1px solid var(--border-subtle);">
     <div class="flex flex-wrap items-center gap-3">
-      <span class="text-sm font-medium text-muted-foreground">Quick:</span>
-      <Button variant="outline" size="sm" onclick={onAddAllParticipants} class="h-10 px-4 rounded-xl">
-        <UserPlus class="mr-2 h-4 w-4" /> Register All
-      </Button>
-      <Button variant="outline" size="sm" onclick={onClearAllParticipants} class="h-10 px-4 rounded-xl text-destructive hover:text-destructive">
-        <X class="mr-2 h-4 w-4" /> Clear All
-      </Button>
+      <span class="text-xs font-medium" style="color: var(--text-muted);">Quick Actions:</span>
+      <button onclick={onAddAllParticipants} class="btn-sm ghost">
+        <UserPlus class="h-3.5 w-3.5" /> Register All
+      </button>
+      <button onclick={onClearAllParticipants} class="btn-sm ghost" style="color: var(--error);">
+        <X class="h-3.5 w-3.5" /> Clear All
+      </button>
       {#if selectedMemberIds.size > 0}
-        <Button onclick={onRegisterSelectedMembers} class="h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700">
-          <Check class="mr-2 h-4 w-4" /> Register {selectedMemberIds.size} Selected
-        </Button>
-        <button onclick={onClearSelection} class="text-sm text-muted-foreground hover:text-foreground">Clear</button>
+        <button onclick={onRegisterSelectedMembers} class="btn-sm primary">
+          <Check class="h-3.5 w-3.5" /> Register {selectedMemberIds.size} Selected
+        </button>
+        <button onclick={onClearSelection} class="text-xs hover:underline" style="color: var(--text-muted);">Clear selection</button>
       {/if}
+      <div class="ml-auto flex gap-2">
+        <button onclick={onOpenMassEdit} class="btn-sm ghost">Bulk Edit</button>
+        <button onclick={() => { resetMassMembers(); onOpenMassAdd(); }} class="btn-sm ghost">Bulk Add</button>
+      </div>
     </div>
   </div>
 {/if}
 
+<!-- Group Registration Banner -->
 {#if selectedTournament && filterGroup !== 'all'}
   {@const groupMemberCount = members.filter(m => m.groupId === filterGroup).length}
   {@const registeredInGroup = members.filter(m => m.groupId === filterGroup && registeredMemberIds.has(m._id)).length}
-  <div class="mb-4 flex items-center justify-between p-4 rounded-2xl bg-primary/5 border border-primary/20">
-    <span class="text-sm font-medium">{registeredInGroup} of {groupMemberCount} registered</span>
+  <div class="mb-5 flex items-center justify-between p-4 rounded-xl" style="background: var(--indigo-glow); border: 1px solid rgba(59, 130, 246, 0.3);">
+    <span class="text-sm font-medium">{registeredInGroup} of {groupMemberCount} registered in {getGroupName(filterGroup)}</span>
     {#if registeredInGroup < groupMemberCount}
-      <Button variant="default" size="sm" onclick={() => onRegisterGroupMembers(filterGroup)} class="h-10 px-4 rounded-xl">
+      <button onclick={() => onRegisterGroupMembers(filterGroup)} class="btn-sm primary">
         Register Entire Group
-      </Button>
+      </button>
     {/if}
   </div>
 {/if}
 
-<div class="rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-lg shadow-[rgba(0,0,0,0.35)] members-compact overflow-hidden" bind:this={listContainer}>
+<!-- Data Table Card -->
+<div class="table-card" bind:this={listContainer}>
+  <!-- Table Header -->
+  <div class="table-header">
+    <h2 class="table-title">Member Directory</h2>
+    <div class="table-actions">
+      <!-- Group Filter -->
+      <div class="relative">
+        <select
+          bind:value={filterGroup}
+          onchange={(e) => onFilterGroupChange((e.target as HTMLSelectElement).value)}
+          class={cn("filter-btn cursor-pointer appearance-none pr-8", filterGroup !== 'all' && "active")}
+        >
+          <option value="all">All Groups</option>
+          {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
+        </select>
+        <ChevronDown class="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 pointer-events-none" style="color: var(--text-muted);" />
+      </div>
+      
+      {#if filterGroup !== 'all' || registrationFilter !== 'all' || searchQuery}
+        <button onclick={onResetFilters} class="filter-btn">
+          <X class="h-3 w-3" /> Clear
+        </button>
+      {/if}
+    </div>
+  </div>
+  
+  <!-- Table -->
   <div class="overflow-x-auto">
-    <table class="min-w-full text-sm">
-      <thead class="bg-card/60 text-muted-foreground uppercase tracking-[0.08em] text-[11px]">
-        <tr class="border-b border-border/60">
+    <table class="data-table">
+      <thead>
+        <tr>
           {#if selectedTournament}
-            <th class="w-12 px-4 py-3 text-left">
+            <th style="width: 40px;">
               <input
                 type="checkbox"
                 checked={allFilteredSelected}
@@ -181,28 +228,29 @@
                     });
                   }
                 }}
-                class="h-4 w-4 rounded border-2 border-muted-foreground"
+                class="h-4 w-4 rounded"
+                style="accent-color: var(--indigo-primary);"
               />
             </th>
           {/if}
-          <th class="px-5 py-3 text-left">Member</th>
-          <th class="px-5 py-3 text-left">Group</th>
+          <th>Member</th>
+          <th>Group</th>
           {#if selectedTournament}
-            <th class="px-5 py-3 text-left">Status</th>
+            <th>Status</th>
           {/if}
-          <th class="px-5 py-3 text-right">Actions</th>
+          <th></th>
         </tr>
       </thead>
       <tbody>
         {#if filteredMembers.length === 0}
           <tr>
-            <td colspan={selectedTournament ? 5 : 3} class="py-12 text-center text-muted-foreground">
-              <Users class="h-10 w-10 mx-auto mb-3 opacity-50" />
-              <p class="text-base mb-2">No members found</p>
+            <td colspan={selectedTournament ? 5 : 3} class="py-16 text-center" style="color: var(--text-muted);">
+              <Users class="h-12 w-12 mx-auto mb-4 opacity-40" />
+              <p class="text-base mb-3">No members found</p>
               {#if searchQuery || filterGroup !== 'all'}
-                <button onclick={onResetFilters} class="text-primary hover:underline text-sm">Clear filters</button>
+                <button onclick={onResetFilters} class="text-sm hover:underline" style="color: var(--indigo-light);">Clear filters</button>
               {:else}
-                <Button onclick={onOpenAddMember} variant="outline" class="mt-2">Add your first member</Button>
+                <button onclick={onOpenAddMember} class="btn-sm primary mx-auto">Add your first member</button>
               {/if}
             </td>
           </tr>
@@ -210,61 +258,67 @@
           {#each filteredMembers as member (member._id)}
             {@const isRegistered = registeredMemberIds.has(member._id)}
             {@const isSelected = selectedMemberIds.has(member._id)}
-            <tr class={cn(
-              "border-b border-steel/40 transition-colors hover:bg-accent/5",
-              isRegistered && "bg-emerald-950/10"
-            )} style="--steel: #3d4148;">
+            <tr class={cn(isRegistered && "bg-emerald-950/10")}>
               {#if selectedTournament}
-                <td class="px-5 py-3 align-middle">
+                <td>
                   <input
                     type="checkbox"
                     checked={isSelected}
                     onchange={() => onToggleMemberSelection(member._id)}
-                    class="h-4 w-4 rounded border-2 border-muted-foreground"
+                    class="h-4 w-4 rounded"
+                    style="accent-color: var(--indigo-primary);"
                   />
                 </td>
               {/if}
-              <td class="px-5 py-3">
-                <div class="flex flex-col gap-1">
-                  <span class="font-semibold text-[15px] leading-tight">{member.lastName}, {member.firstName}</span>
+              <td>
+                <div class="cell-member">
+                  <div class="cell-avatar">{getInitials(member.firstName, member.lastName)}</div>
+                  <div>
+                    <div class="cell-name">{member.lastName}, {member.firstName}</div>
+                  </div>
                 </div>
               </td>
-              <td class="px-5 py-3 text-sm text-muted-foreground">{getGroupName(member.groupId)}</td>
+              <td>
+                <span class="cell-badge" class:dan={getGroupName(member.groupId).includes('Dan')} class:kyu={getGroupName(member.groupId).includes('Kyu')}>
+                  {getGroupName(member.groupId)}
+                </span>
+              </td>
               {#if selectedTournament}
-                <td class="px-5 py-3">
+                <td>
                   <button
                     onclick={() => onToggleMemberRegistration(member._id)}
                     class={cn(
-                      "inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-inner transition-all",
-                      isRegistered
-                        ? "bg-emerald-500/15 text-emerald-200 border border-emerald-400/50"
-                        : "bg-muted text-muted-foreground border border-steel/60 hover:text-foreground"
+                      "inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded text-[11px] font-semibold uppercase tracking-wide transition-all",
                     )}
+                    style={isRegistered 
+                      ? "background: rgba(74, 222, 128, 0.12); color: var(--success); border: 1px solid rgba(74, 222, 128, 0.4);" 
+                      : "background: var(--muted); color: var(--text-muted); border: 1px solid var(--border-subtle);"}
                     title={isRegistered ? "Unregister from tournament" : "Register for tournament"}
                   >
                     {#if isRegistered}
-                      <Check class="h-3.5 w-3.5" /> Registered
+                      <Check class="h-3 w-3" /> Registered
                     {:else}
-                      <Plus class="h-3.5 w-3.5" /> Register
+                      <Plus class="h-3 w-3" /> Register
                     {/if}
                   </button>
                 </td>
               {/if}
-              <td class="px-5 py-3 text-right">
-                <div class="flex items-center justify-end gap-2">
+              <td>
+                <div class="cell-actions">
                   <button
                     onclick={() => onOpenEditMember(member)}
-                    class="icon-btn"
+                    class="action-btn"
                     aria-label="Edit member"
                   >
-                    <Pencil class="h-4 w-4" />
+                    <Pencil class="h-3.5 w-3.5" />
                   </button>
                   <button
                     onclick={() => onDeleteMember(member._id)}
-                    class="icon-btn danger"
+                    class="action-btn"
+                    style="color: var(--error);"
                     aria-label="Delete member"
                   >
-                    <Trash2 class="h-4 w-4" />
+                    <Trash2 class="h-3.5 w-3.5" />
                   </button>
                 </div>
               </td>
@@ -273,5 +327,13 @@
         {/if}
       </tbody>
     </table>
+  </div>
+  
+  <!-- Table Footer -->
+  <div class="table-footer">
+    <div class="table-info">Showing {filteredMembers.length} of {members.length} members</div>
+    <div class="pagination">
+      <!-- Pagination would go here if needed -->
+    </div>
   </div>
 </div>
