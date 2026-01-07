@@ -1267,7 +1267,6 @@
             {selectedMemberIds}
             {allFilteredSelected}
             {selectedTournament}
-            {selectedTournament}
             onSearchChange={(v) => searchQuery = v}
             onFilterGroupChange={(v) => filterGroup = v}
             onRegistrationFilterChange={(v) => registrationFilter = v}
