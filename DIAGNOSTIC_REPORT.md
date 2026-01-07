@@ -6,7 +6,7 @@
 
 ## 🔧 Issues Fixed
 
-### 1. Landing Page CSS (HIGH PRIORITY)
+### 1. Landing Page CSS (HIGH PRIORITY) ✅
 **Problem:** Unused CSS selectors causing build warnings
 - `.portal-wide` selector referenced but class not in HTML
 - `.staff-row .portal-card:nth-child(N)` selectors with no matching elements
@@ -17,7 +17,7 @@
 - Used CSS custom property `--delay` for staggered animations
 - All CSS selectors now match existing elements
 
-### 2. Deprecated `<svelte:component>` (MEDIUM PRIORITY)
+### 2. Deprecated `<svelte:component>` (MEDIUM PRIORITY) ✅
 **Problem:** Svelte 5 warns about deprecated `<svelte:component this={...}>` syntax
 - 3 occurrences in `admin/+page.svelte`
 
@@ -25,19 +25,29 @@
 - Changed to Svelte 5 dynamic component syntax: `<item.icon class="..." />`
 - Components are dynamic by default in runes mode
 
-### 3. Duplicate Font Preloading (LOW PRIORITY)
+### 3. Japanese Font Subsetting (MEDIUM PRIORITY) ✅
+**Problem:** Japanese fonts were 8.7MB total (huge initial download)
+
+**Analysis:**
+- App only uses 13 unique Japanese characters: `合場奉審武管練色藍観試道錬`
+- Full CJK font files contained 20,000+ unused glyphs
+
+**Fix Applied:**
+- Used `pyftsubset` (fonttools) to create subset fonts
+- Before: 8.7MB → After: 18KB (**99.8% reduction!**)
+
+| Font | Before | After | Reduction |
+|------|--------|-------|-----------|
+| SicYubi-HyojunGakushu | 4.5MB | 9.2KB | 99.8% |
+| SicYubi-FudeGyosho | 4.2MB | 8.6KB | 99.8% |
+| **Total** | **8.7MB** | **18KB** | **99.8%** |
+
+### 4. Duplicate Font Preloading (LOW PRIORITY) ✅
 **Problem:** Same fonts preloaded in both `app.html` and `+layout.svelte`
 
 **Fix Applied:**
 - Removed duplicate `<link rel="preload">` from `+layout.svelte`
 - `app.html` preloading is sufficient
-
-### 4. Image Import Issue (LOW PRIORITY)
-**Problem:** Used `asset()` function incorrectly for static images
-
-**Fix Applied:**
-- Changed to direct path `/shiaijologo.png` for static assets
-- Images in `static/` don't need Vite processing
 
 ---
 
@@ -51,12 +61,13 @@
 | `spectator/+page.svelte` | 409 | 25KB | ✅ OK |
 | `+page.svelte` (landing) | 290 | 9KB | ✅ Fixed |
 
-### Font Files
+### Font Files (After Optimization)
 | Font | Size | Format | Notes |
 |------|------|--------|-------|
-| SicYubi-HyojunGakushu | 4.5MB | WOFF2 | Japanese - full CJK set |
-| SicYubi-FudeGyosho | 4.2MB | WOFF2 | Japanese - full CJK set |
-| TitilliumWeb-* | 18-22KB | WOFF2 | ✅ Optimized |
+| SicYubi-HyojunGakushu | 9.2KB | WOFF2 | ✅ Subsetted (13 chars) |
+| SicYubi-FudeGyosho | 8.6KB | WOFF2 | ✅ Subsetted (13 chars) |
+| TitilliumWeb-* | 18-22KB | WOFF2 | ✅ Already optimized |
+| **Total Fonts** | **148KB** | | ✅ Down from 8.8MB |
 
 ### Build Output
 - Client bundle: ~200KB (gzipped)
@@ -67,7 +78,7 @@
 
 ## ⚠️ Remaining Recommendations
 
-### HIGH PRIORITY
+### MEDIUM PRIORITY
 
 #### 1. Split Admin Page into Components
 The 2,490-line `admin/+page.svelte` should be refactored:
@@ -91,15 +102,9 @@ Benefits:
 - Faster HMR during development
 - Easier to maintain
 
-### MEDIUM PRIORITY
+### LOW PRIORITY
 
-#### 2. Japanese Font Subsetting
-Current: 8.7MB total for Japanese fonts
-- Consider subsetting to only include kanji used in the app
-- Tool: `fonttools` with `pyftsubset`
-- Could reduce to ~100KB if only using specific characters
-
-#### 3. TypeScript Errors
+#### 2. TypeScript Errors
 ```bash
 src/convex/tournaments.ts(178,11): error TS2322
 src/lib/components/ui/badge/index.ts: export errors
@@ -107,12 +112,10 @@ src/lib/components/ui/badge/index.ts: export errors
 - Convex type issues in tournaments.ts
 - Shadcn component export mismatches (may need updating)
 
-### LOW PRIORITY
-
-#### 4. Add Error Boundaries
+#### 3. Add Error Boundaries
 No error boundary components found - users see blank screens on errors.
 
-#### 5. Loading States
+#### 4. Loading States
 Consider skeleton loaders for Convex data fetching.
 
 ---
@@ -120,7 +123,7 @@ Consider skeleton loaders for Convex data fetching.
 ## ✅ What's Working Well
 
 1. **Tailwind v4 Setup** - Using Vite plugin correctly
-2. **Font Loading** - Preloading + font-display: swap
+2. **Font Loading** - Preloading + font-display: swap + subsetted fonts
 3. **Convex Integration** - Proper setup with convex-svelte
 4. **Accessibility** - Touch targets and contrast settings
 5. **Dark Mode** - mode-watcher integration
@@ -128,21 +131,41 @@ Consider skeleton loaders for Convex data fetching.
 
 ---
 
-## 🚀 Performance Optimizations Already Applied
+## 🚀 Performance Optimizations Applied
 
 - [x] Self-hosted fonts (no Google Fonts CDN)
 - [x] Font preloading for critical fonts
-- [x] unicode-range for Japanese fonts
+- [x] **Font subsetting (8.7MB → 18KB)**
 - [x] Compound indexes on Convex tables
 - [x] Tailwind v4 with Vite plugin
 - [x] CSS inlining threshold set
 - [x] No PostCSS overhead
+- [x] Svelte 5 dynamic components (no deprecated patterns)
 
 ---
 
-## Commands Run
+## Japanese Characters Used
+
+The app uses only these 13 kanji characters:
+```
+合 場 奉 審 武 管 練 色 藍 観 試 道 錬
+```
+
+These appear in:
+- `試合場` (Shiaijo - tournament venue)
+- `練武道場` / `錬武道場` (Renbu Dojo)
+- `観` (Spectator), `管` (Admin), `審` (Courtkeeper), `奉` (Volunteer)
+- `藍色` (Ai-iro - indigo color theme)
+
+---
+
+## Commands Used
 
 ```bash
-# Fixed build passes with no warnings
+# Font subsetting
+pip install fonttools brotli
+pyftsubset font.woff2 --text="合場奉審武管練色藍観試道錬" --flavor=woff2
+
+# Build verification
 npm run build  # ✅ Success in ~70s
 ```
