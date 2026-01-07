@@ -91,6 +91,7 @@
     
     /* Square button size */
     --square-size: 100px;
+    --portal-gap: 12px;
   }
 
   .landing {
@@ -171,7 +172,7 @@
     flex-direction: column;
     gap: 12px;
     /* Width = 3 squares + 2 gaps */
-    width: calc(var(--square-size) * 3 + 12px * 2);
+    width: calc(var(--square-size) * 3 + var(--portal-gap) * 2);
   }
 
   .section-label {
@@ -190,6 +191,7 @@
     background: var(--card-bg);
     border: 1px solid var(--border);
     border-radius: 14px;
+    box-sizing: border-box;
     text-decoration: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: fadeIn 0.5s ease-out backwards;
@@ -235,7 +237,7 @@
     padding: 16px 20px;
     gap: 14px;
     height: var(--square-size);
-    width: 100%;
+    width: calc(var(--square-size) * 3 + var(--portal-gap) * 2);
     background: var(--spectator-bg);
     border-color: var(--spectator-border);
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.05);
@@ -276,7 +278,7 @@
   .staff-row {
     display: grid;
     grid-template-columns: repeat(3, var(--square-size));
-    gap: 12px;
+    gap: var(--portal-gap);
   }
 
   .portal-staff {
@@ -370,8 +372,9 @@
     }
 
     .portals-section {
-      width: calc(var(--square-size) * 3 + 10px * 2);
-      gap: 10px;
+      --portal-gap: 10px;
+      width: calc(var(--square-size) * 3 + var(--portal-gap) * 2);
+      gap: var(--portal-gap);
     }
 
     .portal-spectator {
@@ -392,7 +395,7 @@
     }
 
     .staff-row {
-      gap: 10px;
+      gap: var(--portal-gap);
     }
 
     .portal-staff .portal-kanji {
@@ -420,8 +423,9 @@
     }
 
     .portals-section {
-      width: calc(var(--square-size) * 3 + 8px * 2);
-      gap: 8px;
+      --portal-gap: 8px;
+      width: calc(var(--square-size) * 3 + var(--portal-gap) * 2);
+      gap: var(--portal-gap);
     }
 
     .portal-spectator {
@@ -443,7 +447,7 @@
     }
 
     .staff-row {
-      gap: 8px;
+      gap: var(--portal-gap);
     }
 
     .portal-staff {
