@@ -23,7 +23,22 @@
     </div>
   </div>
 {:else}
-  <h1 class="mb-6 text-2xl font-bold">Dashboard</h1>
+  <!-- Top Bar - Design 2 -->
+  <div class="top-bar sticky top-0 z-10 -mx-4 sm:-mx-6 px-5 py-4 mb-5" style="background: var(--surface); border-bottom: 1px solid var(--border-subtle);">
+    <div class="flex items-center justify-between">
+      <div>
+        <div class="text-[0.6rem] uppercase tracking-widest mb-1" style="color: var(--text-faint);">Admin</div>
+        <h1 class="font-jp text-lg font-bold" style="color: var(--text-primary);">Dashboard</h1>
+      </div>
+      <div class="flex items-center gap-3">
+        <div class="flex items-center gap-2 px-3 py-2 rounded-lg" style="background: rgba(74, 222, 128, 0.1); border: 1px solid rgba(74, 222, 128, 0.2);">
+          <span class="w-2 h-2 rounded-full" style="background: var(--success);"></span>
+          <span class="text-xs" style="color: var(--success);">All Systems Online</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <div class="mb-6 grid gap-4 grid-cols-2 md:grid-cols-3">
     <div class="rounded-xl border border-border bg-card p-4">
       <div class="text-2xl sm:text-3xl font-bold text-primary">{members.length}</div>
