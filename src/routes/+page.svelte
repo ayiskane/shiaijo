@@ -235,6 +235,7 @@
     padding: 16px 20px;
     gap: 14px;
     height: var(--square-size);
+    width: 100%;
     background: var(--spectator-bg);
     border-color: var(--spectator-border);
     box-shadow: 0 0 20px rgba(59, 130, 246, 0.1), inset 0 1px 0 rgba(255,255,255,0.05);
