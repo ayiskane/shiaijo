@@ -162,96 +162,117 @@
   </div>
 {/if}
 
-<div class="rounded-2xl border-2 border-border bg-card overflow-hidden" bind:this={listContainer}>
-  {#if selectedTournament && filteredMembers.length > 0}
-    <div class="flex items-center gap-4 px-5 py-3 bg-muted/30 border-b border-border">
-      <input
-        type="checkbox"
-        checked={allFilteredSelected}
-        onchange={() => {
-          if (allFilteredSelected) {
-            onClearSelection();
-          } else {
-            filteredMembers.forEach(m => onToggleMemberSelection(m._id));
-          }
-        }}
-        class="h-5 w-5 rounded border-2 border-muted-foreground"
-      />
-      <span class="text-sm text-muted-foreground">
-        {selectedMemberIds.size > 0 ? `${selectedMemberIds.size} selected` : `Select all ${filteredMembers.length}`}
-      </span>
-    </div>
-  {/if}
-
-  {#each filteredMembers as member (member._id)}
-    {@const isRegistered = registeredMemberIds.has(member._id)}
-    {@const isSelected = selectedMemberIds.has(member._id)}
-    <div class={cn(
-      "flex items-center gap-4 px-5 py-4 border-b border-border last:border-b-0 transition-colors min-h-[72px]",
-      isRegistered && "bg-emerald-950/20",
-      "hover:bg-accent/30 active:bg-accent/50"
-    )}>
-      {#if selectedTournament}
-        <input
-          type="checkbox"
-          checked={isSelected}
-          onchange={() => onToggleMemberSelection(member._id)}
-          class="h-5 w-5 rounded border-2 border-muted-foreground shrink-0"
-        />
-      {/if}
-
-      {#if selectedTournament}
-        <button
-          onclick={() => onToggleMemberRegistration(member._id)}
-          class={cn(
-            "shrink-0 w-11 h-11 rounded-xl flex items-center justify-center transition-all",
-            isRegistered 
-              ? "bg-emerald-500 text-white hover:bg-emerald-600" 
-              : "bg-muted text-muted-foreground hover:bg-muted/80"
-          )}
-          title={isRegistered ? "Click to unregister" : "Click to register"}
-        >
-          {#if isRegistered}<Check class="h-5 w-5" />{:else}<Plus class="h-5 w-5" />{/if}
-        </button>
-      {/if}
-
-      <div class="min-w-0 flex-1">
-        <div class="flex items-center gap-2">
-          <span class="font-semibold text-base truncate">{member.lastName}, {member.firstName}</span>
-        </div>
-        <span class="text-sm text-muted-foreground block truncate">{getGroupName(member.groupId)}</span>
-      </div>
-
-      <button
-        onclick={() => onOpenEditMember(member)}
-        class="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
-      >
-        <Pencil class="h-4 w-4" />
-      </button>
-
-      <button
-        onclick={() => onDeleteMember(member._id)}
-        class="shrink-0 w-11 h-11 flex items-center justify-center rounded-xl text-destructive/70 hover:text-destructive hover:bg-destructive/10 transition-colors"
-      >
-        <Trash2 class="h-5 w-5" />
-      </button>
-    </div>
-  {:else}
-    <div class="py-16 text-center">
-      <Users class="h-12 w-12 mx-auto mb-4 text-muted-foreground/50" />
-      <p class="text-lg text-muted-foreground mb-2">No members found</p>
-      {#if searchQuery || filterGroup !== 'all'}
-        <button
-          onclick={onResetFilters}
-          class="text-sm text-primary hover:underline"
-        >
-          Clear filters
-        </button>
-      {:else}
-        <Button onclick={onOpenAddMember} variant="outline" class="mt-2">
-          Add your first member
-        </Button>
-      {/if}
-    </div>
-  {/each}
+<div class="rounded-2xl border border-border bg-card/80 backdrop-blur-sm shadow-lg shadow-[rgba(0,0,0,0.35)] members-compact overflow-hidden" bind:this={listContainer}>
+  <div class="overflow-x-auto">
+    <table class="min-w-full text-sm">
+      <thead class="bg-card/60 text-muted-foreground uppercase tracking-[0.08em] text-[11px]">
+        <tr class="border-b border-border/60">
+          {#if selectedTournament}
+            <th class="w-12 px-4 py-3 text-left">
+              <input
+                type="checkbox"
+                checked={allFilteredSelected}
+                onchange={() => {
+                  if (allFilteredSelected) {
+                    onClearSelection();
+                  } else {
+                    filteredMembers.forEach((m) => {
+                      if (!selectedMemberIds.has(m._id)) onToggleMemberSelection(m._id);
+                    });
+                  }
+                }}
+                class="h-4 w-4 rounded border-2 border-muted-foreground"
+              />
+            </th>
+          {/if}
+          <th class="px-4 py-3 text-left">Member</th>
+          <th class="px-4 py-3 text-left">Group</th>
+          {#if selectedTournament}
+            <th class="px-4 py-3 text-left">Status</th>
+          {/if}
+          <th class="px-4 py-3 text-right">Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {#if filteredMembers.length === 0}
+          <tr>
+            <td colspan={selectedTournament ? 5 : 3} class="py-12 text-center text-muted-foreground">
+              <Users class="h-10 w-10 mx-auto mb-3 opacity-50" />
+              <p class="text-base mb-2">No members found</p>
+              {#if searchQuery || filterGroup !== 'all'}
+                <button onclick={onResetFilters} class="text-primary hover:underline text-sm">Clear filters</button>
+              {:else}
+                <Button onclick={onOpenAddMember} variant="outline" class="mt-2">Add your first member</Button>
+              {/if}
+            </td>
+          </tr>
+        {:else}
+          {#each filteredMembers as member (member._id)}
+            {@const isRegistered = registeredMemberIds.has(member._id)}
+            {@const isSelected = selectedMemberIds.has(member._id)}
+            <tr class={cn(
+              "border-b border-border/50 transition-colors hover:bg-accent/10",
+              isRegistered && "bg-emerald-950/10"
+            )}>
+              {#if selectedTournament}
+                <td class="px-4 py-3 align-middle">
+                  <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onchange={() => onToggleMemberSelection(member._id)}
+                    class="h-4 w-4 rounded border-2 border-muted-foreground"
+                  />
+                </td>
+              {/if}
+              <td class="px-4 py-3">
+                <div class="flex flex-col gap-1">
+                  <span class="font-semibold text-[15px] leading-tight">{member.lastName}, {member.firstName}</span>
+                  <span class="text-xs text-muted-foreground">ID: {member._id}</span>
+                </div>
+              </td>
+              <td class="px-4 py-3 text-sm text-muted-foreground">{getGroupName(member.groupId)}</td>
+              {#if selectedTournament}
+                <td class="px-4 py-3">
+                  <button
+                    onclick={() => onToggleMemberRegistration(member._id)}
+                    class={cn(
+                      "inline-flex items-center gap-2 rounded-full px-3 py-2 text-xs font-semibold shadow-inner transition-all",
+                      isRegistered
+                        ? "bg-emerald-500/20 text-emerald-200 border border-emerald-400/50"
+                        : "bg-muted text-muted-foreground border border-border hover:text-foreground"
+                    )}
+                    title={isRegistered ? "Unregister from tournament" : "Register for tournament"}
+                  >
+                    {#if isRegistered}
+                      <Check class="h-3.5 w-3.5" /> Registered
+                    {:else}
+                      <Plus class="h-3.5 w-3.5" /> Register
+                    {/if}
+                  </button>
+                </td>
+              {/if}
+              <td class="px-4 py-3 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <button
+                    onclick={() => onOpenEditMember(member)}
+                    class="icon-btn"
+                    aria-label="Edit member"
+                  >
+                    <Pencil class="h-4 w-4" />
+                  </button>
+                  <button
+                    onclick={() => onDeleteMember(member._id)}
+                    class="icon-btn danger"
+                    aria-label="Delete member"
+                  >
+                    <Trash2 class="h-4 w-4" />
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {/each}
+        {/if}
+      </tbody>
+    </table>
+  </div>
 </div>

@@ -485,7 +485,7 @@
   let registrationFilter = $state<'all' | 'registered' | 'unregistered'>('all');
   
   // Member selection for bulk registration
-  let selectedMemberIds = new SvelteSet<string>();
+  let selectedMemberIds = $state(new SvelteSet<string>());
   
   // Quick lookup for registered members
   let registeredMemberIds = $derived(new Set(participants.map(p => p.memberId)));
@@ -1155,45 +1155,46 @@
 {:else}
   <div class="flex min-h-screen bg-background overflow-x-hidden">
   <!-- Desktop Sidebar -->
-  <aside class={cn("hidden md:flex flex-col fixed inset-y-0 left-0 z-20 border-r border-sidebar-border bg-sidebar transition-all duration-300", sidebarCollapsed ? "w-[72px]" : "w-52")}>
-    <div class="flex h-16 items-center gap-3 border-b border-sidebar-border px-4 overflow-hidden">
-      <img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 shrink-0 object-contain" />
-      <span class={cn("font-jp text-xl text-foreground whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto")}>試合場</span>
+  <aside class={cn("hidden md:flex flex-col fixed inset-y-0 left-0 z-20 border-r border-sidebar-border bg-sidebar/95 backdrop-blur-xl shadow-[20px_0_40px_rgba(0,0,0,0.35)] transition-all duration-300", sidebarCollapsed ? "w-16" : "w-[280px]")}>
+    <div class={cn("flex h-16 items-center gap-3 border-b border-sidebar-border px-4", sidebarCollapsed && "justify-center px-2")}>
+      <img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 shrink-0 object-contain drop-shadow-lg" />
+      <span class={cn("font-jp text-xl text-foreground whitespace-nowrap transition-all duration-300 sidebar-text", sidebarCollapsed ? "sidebar-text-hidden" : "sidebar-text-visible")}>試合場</span>
     </div>
-    <button onclick={() => sidebarCollapsed = !sidebarCollapsed} class="absolute -right-3 top-20 flex h-6 w-6 items-center justify-center rounded-full border border-sidebar-border bg-sidebar hover:bg-sidebar-accent">
+    <button onclick={() => sidebarCollapsed = !sidebarCollapsed} class="absolute -right-3 top-20 flex h-7 w-7 items-center justify-center rounded-full border border-sidebar-border bg-sidebar hover:bg-sidebar-accent shadow-lg">
       <ChevronLeft class={cn("h-4 w-4 text-sidebar-foreground transition-transform", sidebarCollapsed && "rotate-180")} />
     </button>
-    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4">
+    <nav class="flex-1 overflow-y-auto overflow-x-hidden py-4 space-y-1 px-2">
       {#each navItems as item (item.id)}
         {@const Icon = item.icon}
-        <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors", sidebarCollapsed && "justify-center px-0", activeTab === item.id ? "border-l-2 border-sidebar-primary bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-          <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><Icon class="h-4 w-4" /></div>
-          <span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>{item.label}</span>
+        <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("sidebar-btn", sidebarCollapsed && "sidebar-btn-compact", activeTab === item.id && "sidebar-btn-active")}>
+          <div class="sidebar-icon"><Icon class="h-4 w-4" /></div>
+          <span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>{item.label}</span>
         </button>
       {/each}
       {#each navGroups as group}
         <div class="mt-2">
-          <button onclick={() => !sidebarCollapsed && toggleNavGroup(group.id)} class={cn("flex w-full items-center gap-2 px-3 py-1.5 text-[10px] uppercase tracking-wider text-sidebar-foreground/60 hover:text-sidebar-foreground transition-all duration-300", sidebarCollapsed ? "opacity-0 h-0 overflow-hidden py-0" : "opacity-100")}>
-            <ChevronDown class={cn("h-3 w-3 transition-transform", !expandedNavGroups.has(group.id) && "-rotate-90")} />{group.label}
+          <button onclick={() => !sidebarCollapsed && toggleNavGroup(group.id)} class={cn("sidebar-group", sidebarCollapsed && "sidebar-group-hidden")}>
+            <ChevronDown class={cn("h-3 w-3 transition-transform", !expandedNavGroups.has(group.id) && "-rotate-90")} />
+            <span class={cn(sidebarCollapsed && "sidebar-text-hidden")}>{group.label}</span>
           </button>
           {#if sidebarCollapsed || expandedNavGroups.has(group.id)}
             {#each group.items as item (item.id)}
               {@const Icon = item.icon}
-              <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("flex w-full items-center gap-3 px-3 py-2.5 text-sm transition-colors", sidebarCollapsed && "justify-center px-0", activeTab === item.id ? "border-l-2 border-sidebar-primary bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}>
-                <div class={cn("flex h-7 w-7 shrink-0 items-center justify-center rounded-md", activeTab === item.id ? "bg-sidebar-primary/20" : "bg-sidebar-accent")}><Icon class="h-4 w-4" /></div>
-                <span class={cn("whitespace-nowrap transition-all duration-300 flex items-center gap-2", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>{item.label}{#if item.id === 'tournament' && activeTournament}<span class="ml-auto rounded-full border border-green-500/30 bg-green-500/20 px-1.5 py-0.5 text-[10px] text-green-400">Live</span>{/if}</span>
+              <button onclick={() => activeTab = item.id} title={sidebarCollapsed ? item.label : undefined} class={cn("sidebar-btn ml-2", sidebarCollapsed && "sidebar-btn-compact", activeTab === item.id && "sidebar-btn-active")}>
+                <div class="sidebar-icon"><Icon class="h-4 w-4" /></div>
+                <span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>{item.label}{#if item.id === 'tournament' && activeTournament}<span class="live-pill">Live</span>{/if}</span>
               </button>
             {/each}
           {/if}
         </div>
       {/each}
     </nav>
-    <div class="border-t border-sidebar-border p-3 overflow-hidden">
-      <p class={cn("mb-2 px-1 text-[10px] uppercase tracking-wider text-sidebar-foreground/60 whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 h-0 mb-0 overflow-hidden" : "opacity-100")}>Switch Portal</p>
+    <div class="sidebar-footer">
+      <p class={cn("footer-label", sidebarCollapsed && "footer-label-hidden")}>Switch Portal</p>
       <div class={cn("flex gap-2", sidebarCollapsed ? "flex-col items-center" : "flex-col")}>
-        <a href="/" class={cn("flex items-center gap-2 rounded-lg bg-primary/10 text-primary transition-colors hover:bg-primary/20", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Home class="h-4 w-4 shrink-0" /><span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>Home</span></a>
-        <a href="/courtkeeper" class={cn("flex items-center gap-2 rounded-lg bg-amber-900/30 text-amber-400 transition-colors hover:bg-amber-900/50", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Swords class="h-4 w-4 shrink-0" /><span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>Courtkeeper</span></a>
-        <a href="/spectator" class={cn("flex items-center gap-2 rounded-lg bg-emerald-900/30 text-emerald-400 transition-colors hover:bg-emerald-900/50", sidebarCollapsed ? "h-10 w-10 justify-center" : "px-3 py-2 text-sm")}><Eye class="h-4 w-4 shrink-0" /><span class={cn("whitespace-nowrap transition-all duration-300", sidebarCollapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100")}>Spectator</span></a>
+        <a href="/" class={cn("portal-link home", sidebarCollapsed && "portal-link-compact")}><Home class="h-4 w-4 shrink-0" /><span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>Home</span></a>
+        <a href="/courtkeeper" class={cn("portal-link court", sidebarCollapsed && "portal-link-compact")}><Swords class="h-4 w-4 shrink-0" /><span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>Courtkeeper</span></a>
+        <a href="/spectator" class={cn("portal-link spec", sidebarCollapsed && "portal-link-compact")}><Eye class="h-4 w-4 shrink-0" /><span class={cn("sidebar-label", sidebarCollapsed && "sidebar-text-hidden")}>Spectator</span></a>
       </div>
     </div>
   </aside>
@@ -1231,7 +1232,7 @@
   {/if}
   
   <!-- Main Content -->
-  <main class={cn("flex-1 pt-14 transition-all duration-300 md:pt-0 w-full min-w-0 overflow-x-hidden", sidebarCollapsed ? "md:ml-[72px]" : "md:ml-52")}>
+  <main class={cn("flex-1 pt-14 transition-all duration-300 md:pt-0 w-full min-w-0 overflow-x-hidden", sidebarCollapsed ? "md:ml-16" : "md:ml-[280px]")}>
     <div class="p-4 sm:p-6 max-w-6xl mx-auto w-full overflow-x-hidden">
       {#if activeTab === 'dashboard'}
         {#await loadDashboardTab()}
@@ -1286,7 +1287,7 @@
           onRegisterSelectedMembers={registerSelectedMembers}
           onRegisterGroupMembers={registerGroupMembers}
           onToggleMemberSelection={toggleMemberSelection}
-          onClearSelection={() => selectedMemberIds = new Set()}
+          onClearSelection={() => selectedMemberIds = new SvelteSet()}
           onToggleMemberRegistration={toggleMemberRegistration}
           onOpenEditMember={(member) => { editingMember = { ...member }; showEditMember = true; }}
           onDeleteMember={deleteMember}

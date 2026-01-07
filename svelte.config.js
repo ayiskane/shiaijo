@@ -5,7 +5,10 @@ import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 const config = {
   preprocess: vitePreprocess(),
   kit: {
-    adapter: adapter(),
+    adapter: adapter({
+      // Pin runtime to Vercel-supported LTS to avoid local Node 24 builds failing
+      runtime: 'nodejs22.x'
+    }),
     // Inline CSS under 5KB for faster initial render
     inlineStyleThreshold: 5000
   }

@@ -207,6 +207,11 @@
   --shiro: #c8ccd4;
 }
 
+/* Members compact table look */
+.members-compact {
+  --row-bg: rgba(255,255,255,0.02);
+}
+
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -323,6 +328,76 @@
   .sidebar-text-visible {
     opacity: 1;
     width: auto;
+  }
+
+  /* Compact / Split sidebar styles */
+  .sidebar-btn {
+    @apply relative flex items-center gap-3 w-full rounded-xl px-3 py-2 text-sm text-sidebar-foreground/80 transition-all duration-200 hover:bg-sidebar-accent hover:text-sidebar-foreground;
+  }
+  .sidebar-btn-compact {
+    @apply justify-center px-2 py-3;
+  }
+  .sidebar-btn-active {
+    @apply bg-sidebar-accent text-sidebar-primary shadow-[0_8px_24px_rgba(59,130,246,0.22)] border border-sidebar-border;
+  }
+  .sidebar-icon {
+    @apply flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-accent/30 text-sidebar-foreground;
+  }
+  .sidebar-label {
+    white-space: nowrap;
+    overflow: hidden;
+    transition: opacity 0.2s ease-out, width 0.3s ease-out;
+  }
+  .sidebar-group {
+    @apply flex items-center gap-2 px-3 py-2 text-[13px] font-semibold uppercase tracking-[0.08em] text-sidebar-foreground/70 transition-colors;
+  }
+  .sidebar-group-hidden {
+    @apply justify-center px-2;
+  }
+  .sidebar-footer {
+    @apply border-t border-sidebar-border px-3 py-4 space-y-2;
+  }
+  .footer-label {
+    @apply text-[11px] uppercase tracking-[0.12em] text-sidebar-foreground/60;
+  }
+  .footer-label-hidden {
+    @apply hidden;
+  }
+  .portal-link {
+    @apply flex items-center gap-2 rounded-lg border border-sidebar-border/60 px-3 py-2 text-xs font-semibold text-sidebar-foreground/80 hover:text-sidebar-foreground hover:bg-sidebar-accent/50 transition;
+  }
+  .portal-link-compact {
+    @apply justify-center px-2;
+  }
+  .portal-link.home {
+    @apply bg-gradient-to-r from-indigo-900/20 to-indigo-500/10;
+  }
+  .portal-link.court {
+    @apply bg-gradient-to-r from-sky-900/20 to-sky-500/10;
+  }
+  .portal-link.spec {
+    @apply bg-gradient-to-r from-emerald-900/20 to-emerald-500/10;
+  }
+  .live-pill {
+    @apply ml-2 rounded-full bg-emerald-600/80 px-2 py-0.5 text-[10px] uppercase text-white;
+  }
+
+  .icon-btn {
+    @apply inline-flex h-9 w-9 items-center justify-center rounded-lg border border-border/60 bg-card/60 text-muted-foreground hover:bg-accent/40 hover:text-foreground transition;
+  }
+  .icon-btn.danger {
+    @apply text-destructive border-destructive/40 hover:bg-destructive/10;
+  }
+
+  /* Compact members table */
+  .members-compact table {
+    @apply w-full;
+  }
+  .members-compact thead th {
+    @apply font-semibold;
+  }
+  .members-compact tbody tr:last-child {
+    @apply border-b-0;
   }
 }
 
