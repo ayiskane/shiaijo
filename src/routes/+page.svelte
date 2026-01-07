@@ -36,7 +36,7 @@
     <div class="portals-section">
       <div class="section-label">PORTALS</div>
       
-      <!-- Spectator - Full width -->
+      <!-- Spectator - Full width, compact -->
       <a href={spectator.href} class="portal-card portal-spectator">
         <span class="portal-kanji">{spectator.kanji}</span>
         <div class="portal-text">
@@ -46,7 +46,7 @@
         <span class="portal-arrow">→</span>
       </a>
 
-      <!-- Staff portals - 3 columns, same height -->
+      <!-- Staff portals - 3 square buttons -->
       <div class="staff-row">
         {#each staffPortals as portal, i}
           <a href={portal.href} class="portal-card portal-staff" style="--delay: {0.1 + i * 0.05}s">
@@ -82,9 +82,6 @@
     --divider: rgba(59, 130, 246, 0.08);
     --shadow: 0 20px 50px rgba(0,0,0,0.35);
     --glow: rgba(59, 130, 246, 0.3);
-    
-    /* Consistent card height */
-    --card-height: 88px;
   }
 
   .landing {
@@ -110,8 +107,8 @@
   .container {
     display: flex;
     align-items: center;
-    gap: 50px;
-    max-width: 700px;
+    gap: 48px;
+    max-width: 680px;
     width: 100%;
     position: relative;
     z-index: 1;
@@ -124,28 +121,28 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding-right: 40px;
+    padding-right: 32px;
   }
 
   .logo-wrapper {
-    margin-bottom: 16px;
+    margin-bottom: 14px;
   }
 
   .logo {
-    width: 160px;
+    width: 150px;
     height: auto;
     filter: drop-shadow(0 0 30px var(--glow));
   }
 
   .brand-name {
-    font-size: 14px;
+    font-size: 13px;
     letter-spacing: 0.35em;
     color: var(--text);
-    margin-bottom: 6px;
+    margin-bottom: 4px;
   }
 
   .subtitle {
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 0.15em;
     color: var(--text-faint);
   }
@@ -153,7 +150,7 @@
   /* Divider */
   .divider {
     width: 1px;
-    height: 220px;
+    height: 180px;
     background: var(--divider);
     flex-shrink: 0;
   }
@@ -163,27 +160,26 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 12px;
-    max-width: 340px;
+    gap: 10px;
+    max-width: 320px;
   }
 
   .section-label {
-    font-size: 10px;
+    font-size: 9px;
     letter-spacing: 0.3em;
     color: var(--text-faint);
     text-transform: uppercase;
-    margin-left: 4px;
-    margin-bottom: 4px;
+    margin-left: 2px;
+    margin-bottom: 2px;
   }
 
   /* Portal cards base */
   .portal-card {
     display: flex;
     align-items: center;
-    height: var(--card-height);
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 12px;
     text-decoration: none;
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     animation: fadeIn 0.5s ease-out backwards;
@@ -192,7 +188,7 @@
   .portal-card:hover {
     background: var(--card-bg-hover);
     border-color: var(--border-hover);
-    transform: translateY(-3px);
+    transform: translateY(-2px);
     box-shadow: var(--shadow);
   }
 
@@ -201,7 +197,7 @@
     color: var(--text);
     line-height: 1;
     flex-shrink: 0;
-    filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.15));
+    filter: drop-shadow(0 0 12px rgba(59, 130, 246, 0.12));
   }
 
   .portal-label {
@@ -211,43 +207,43 @@
   }
 
   .portal-desc {
-    font-size: 11px;
+    font-size: 10px;
     color: var(--text-muted);
   }
 
   .portal-arrow {
-    font-size: 18px;
+    font-size: 16px;
     color: var(--text-faint);
     transition: transform 0.3s ease;
     margin-left: auto;
   }
 
   .portal-card:hover .portal-arrow {
-    transform: translateX(4px);
+    transform: translateX(3px);
   }
 
-  /* Spectator - Full width card */
+  /* Spectator - Compact full width */
   .portal-spectator {
-    padding: 0 24px;
-    gap: 16px;
-    background: linear-gradient(120deg, rgba(59,130,246,0.10), rgba(99,102,241,0.08));
+    padding: 14px 18px;
+    gap: 14px;
+    background: linear-gradient(120deg, rgba(59,130,246,0.08), rgba(99,102,241,0.06));
   }
 
   .portal-spectator .portal-kanji {
-    font-size: 48px;
+    font-size: 36px;
   }
 
   .portal-spectator .portal-text {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
   }
 
   .portal-spectator .portal-label {
-    font-size: 14px;
+    font-size: 12px;
   }
 
-  /* Staff row - 3 equal columns */
+  /* Staff row - 3 square buttons */
   .staff-row {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -259,6 +255,7 @@
     justify-content: center;
     align-items: center;
     gap: 6px;
+    aspect-ratio: 1 / 1;
     padding: 12px 8px;
     animation-delay: var(--delay, 0s);
   }
@@ -268,14 +265,14 @@
   }
 
   .portal-staff .portal-label {
-    font-size: 10px;
-    letter-spacing: 0.12em;
+    font-size: 9px;
+    letter-spacing: 0.1em;
   }
 
   /* Footer */
   .footer {
     position: absolute;
-    bottom: 24px;
+    bottom: 20px;
     left: 50%;
     transform: translateX(-50%);
   }
@@ -294,7 +291,7 @@
 
   .footer-jp {
     font-family: 'SicYubi-FudeGyosho', serif;
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-faint);
     letter-spacing: 0.15em;
   }
@@ -305,14 +302,14 @@
   }
 
   .footer-en {
-    font-size: 10px;
+    font-size: 9px;
     color: var(--text-faint);
     letter-spacing: 0.15em;
   }
 
   /* Animation */
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(12px); }
+    from { opacity: 0; transform: translateY(10px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
@@ -322,7 +319,7 @@
   @media (max-width: 700px) {
     .container {
       flex-direction: column;
-      gap: 32px;
+      gap: 28px;
     }
 
     .title-section {
@@ -330,26 +327,38 @@
     }
 
     .logo {
-      width: 140px;
+      width: 130px;
     }
 
     .divider {
-      width: 60px;
+      width: 50px;
       height: 1px;
     }
 
     .portals-section {
       width: 100%;
-      max-width: 360px;
+      max-width: 300px;
     }
 
-    /* Keep same layout - spectator full, 3 cols below */
     .portal-spectator {
-      padding: 0 20px;
+      padding: 12px 16px;
+      gap: 12px;
     }
 
     .portal-spectator .portal-kanji {
-      font-size: 42px;
+      font-size: 32px;
+    }
+
+    .portal-spectator .portal-label {
+      font-size: 11px;
+    }
+
+    .portal-spectator .portal-desc {
+      font-size: 9px;
+    }
+
+    .staff-row {
+      gap: 8px;
     }
 
     .portal-staff .portal-kanji {
@@ -357,44 +366,49 @@
     }
 
     .portal-staff .portal-label {
-      font-size: 9px;
+      font-size: 8px;
     }
   }
 
   /* Small mobile */
   @media (max-width: 400px) {
     .landing {
-      --card-height: 76px;
+      padding: 32px 20px;
+    }
+
+    .logo {
+      width: 110px;
+    }
+
+    .brand-name {
+      font-size: 11px;
     }
 
     .portals-section {
-      max-width: 320px;
-      gap: 10px;
+      max-width: 260px;
+      gap: 8px;
     }
 
     .portal-spectator {
-      padding: 0 16px;
-      gap: 12px;
+      padding: 10px 14px;
+      gap: 10px;
+      border-radius: 10px;
     }
 
     .portal-spectator .portal-kanji {
-      font-size: 36px;
+      font-size: 28px;
     }
 
     .portal-spectator .portal-label {
-      font-size: 12px;
-    }
-
-    .portal-spectator .portal-desc {
       font-size: 10px;
     }
 
     .staff-row {
-      gap: 8px;
+      gap: 6px;
     }
 
     .portal-staff {
-      padding: 10px 6px;
+      border-radius: 10px;
       gap: 4px;
     }
 
@@ -403,35 +417,8 @@
     }
 
     .portal-staff .portal-label {
-      font-size: 8px;
-      letter-spacing: 0.08em;
-    }
-  }
-
-  /* Very small screens */
-  @media (max-width: 340px) {
-    .landing {
-      --card-height: 68px;
-    }
-
-    .logo {
-      width: 120px;
-    }
-
-    .portals-section {
-      max-width: 280px;
-    }
-
-    .portal-spectator .portal-kanji {
-      font-size: 30px;
-    }
-
-    .portal-staff .portal-kanji {
-      font-size: 20px;
-    }
-
-    .portal-staff .portal-label {
       font-size: 7px;
+      letter-spacing: 0.08em;
     }
   }
 </style>
