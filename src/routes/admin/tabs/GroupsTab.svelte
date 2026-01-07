@@ -1,6 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import autoAnimate from '@formkit/auto-animate';
+  import { slide } from 'svelte/transition';
   import { Badge } from '$lib/components/ui/badge';
   import { Button } from '$lib/components/ui/button';
   import * as Card from '$lib/components/ui/card';

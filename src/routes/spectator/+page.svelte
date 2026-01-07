@@ -16,15 +16,16 @@
   const tournamentsQuery = useQuery(api.tournaments.list, () => ({}));
   const membersQuery = useQuery(api.members.list, () => ({}));
   const groupsQuery = useQuery(api.groups.list, () => ({}));
-  const participantsQuery = useQuery(
-    api.participants.list,
-    () => tournament?._id ? { tournamentId: tournament._id } : 'skip'
-  );
   
   let tournaments = $derived(tournamentsQuery.data ?? []);
   let members = $derived(membersQuery.data ?? []);
   let groups = $derived(groupsQuery.data ?? []);
   let tournament = $derived(tournaments.find(t => t.status === 'in_progress') || null);
+  
+  const participantsQuery = useQuery(
+    api.participants.list,
+    () => tournament?._id ? { tournamentId: tournament._id } : 'skip'
+  );
   let participants = $derived(participantsQuery.data ?? []);
   let loading = $derived(tournamentsQuery.isLoading || membersQuery.isLoading || groupsQuery.isLoading || participantsQuery.isLoading);
   
