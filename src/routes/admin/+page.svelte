@@ -1239,6 +1239,67 @@
           <div class="text-destructive text-sm">Failed to load dashboard</div>
         {/await}
       
+      {:else if activeTab === 'members'}
+        {#await loadMembersTab()}
+          <div class="space-y-4">
+            <Skeleton class="h-8 w-48" />
+            <div class="grid gap-4 md:grid-cols-2">
+              <Skeleton class="h-10" />
+              <Skeleton class="h-10" />
+            </div>
+            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <Skeleton class="h-32" />
+              <Skeleton class="h-32" />
+              <Skeleton class="h-32" class:md:hidden />
+            </div>
+          </div>
+        {:then Module}
+          {@const Tab = Module.default}
+          <Tab
+            {members}
+            {groups}
+            {selectedTournament}
+            registrationFilter={registrationFilter}
+            filterGroup={filterGroup}
+            searchQuery={searchQuery}
+            selectedMemberIds={selectedMemberIds}
+            onSearchChange={(v) => searchQuery = v}
+            onFilterGroupChange={(v) => filterGroup = v}
+            onRegistrationFilterChange={(v) => registrationFilter = v}
+            onResetFilters={() => { searchQuery = ''; filterGroup = 'all'; registrationFilter = 'all'; }}
+            onToggleMemberSelection={toggleMemberSelection}
+            onToggleMemberRegistration={toggleMemberRegistration}
+            onClearSelection={() => selectedMemberIds = new Set()}
+          />
+        {:catch error}
+          <div class="text-destructive text-sm">Failed to load members</div>
+        {/await}
+
+      {:else if activeTab === 'groups'}
+        {#await loadGroupsTab()}
+          <div class="space-y-4">
+            <Skeleton class="h-8 w-48" />
+            <div class="grid gap-4 md:grid-cols-2">
+              <Skeleton class="h-16" />
+              <Skeleton class="h-16" />
+            </div>
+          </div>
+        {:then Module}
+          {@const Tab = Module.default}
+          <Tab
+            {groups}
+            {members}
+            {getGroupName}
+            onExpand={setExpandedGroup}
+            onAddGroup={() => showAddGroup = true}
+            onEditGroup={(g) => { editingGroup = g; showEditGroup = true; }}
+            onDeleteGroup={deleteGroup}
+            onAddMemberToGroup={(groupId) => { newMember.groupId = groupId; showAddMember = true; }}
+          />
+        {:catch error}
+          <div class="text-destructive text-sm">Failed to load groups</div>
+        {/await}
+
       {:else if activeTab === 'tournament'}
         {#await loadTournamentTab()}
           <div class="space-y-4">
