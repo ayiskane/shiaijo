@@ -1,13 +1,37 @@
-@import "tailwindcss";
+/* =============================================================================
+   SHIAIJO - Main Stylesheet
+   =============================================================================
+   Table of Contents:
+   1. Imports
+   2. Font Definitions
+   3. Theme Variables
+      3.1 Light Theme (default)
+      3.2 Renbu Theme (dark - landing, spectator, courtkeeper)
+      3.3 Sumi Theme (dark - admin portal)
+   4. Tailwind Theme Integration
+   5. Base Styles
+   6. Components
+      6.1 Layout - Sidebar
+      6.2 Layout - Navigation
+      6.3 Layout - Top Bar
+      6.4 UI - Buttons
+      6.5 UI - Cards & Badges
+      6.6 UI - Tables
+      6.7 UI - Stats
+      6.8 UI - Forms
+   7. Utilities
+   8. Accessibility & Media Queries
+   ============================================================================= */
 
+/* =============================================================================
+   1. IMPORTS
+   ============================================================================= */
+@import "tailwindcss";
 @import "tw-animate-css";
 
-/* ===========================================
-   SELF-HOSTED FONTS (Optimized WOFF2)
-   - Better performance than Google Fonts CDN
-   - No third-party requests
-   - GDPR compliant
-   =========================================== */
+/* =============================================================================
+   2. FONT DEFINITIONS
+   ============================================================================= */
 
 /* Titillium Web - Primary UI Font */
 @font-face {
@@ -58,7 +82,7 @@
   font-display: swap;
 }
 
-/* Japanese fonts - for kanji and Japanese characters */
+/* Japanese fonts */
 @font-face {
   font-family: 'SicYubi-HyojunGakushu';
   src: url('/fonts/SicYubi-HyojunGakushu.woff2') format('woff2');
@@ -75,14 +99,24 @@
   font-display: swap;
 }
 
+/* =============================================================================
+   3. THEME VARIABLES
+   ============================================================================= */
+
 @custom-variant dark (&:is(.dark *));
 
+/* -----------------------------------------------------------------------------
+   3.1 Light Theme (default)
+   ----------------------------------------------------------------------------- */
 :root {
   /* Font variables */
   --font-default: 'Titillium Web', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   --font-jp: 'SicYubi-HyojunGakushu', 'SicYubi-FudeGyosho', serif;
   
+  /* Layout */
   --radius: 0.625rem;
+  
+  /* Colors */
   --background: oklch(1 0 0);
   --foreground: oklch(0.129 0.042 264.695);
   --card: oklch(1 0 0);
@@ -101,11 +135,15 @@
   --border: oklch(0.929 0.013 255.508);
   --input: oklch(0.929 0.013 255.508);
   --ring: oklch(0.704 0.04 256.788);
+  
+  /* Charts */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+  
+  /* Sidebar */
   --sidebar: oklch(0.984 0.003 247.858);
   --sidebar-foreground: oklch(0.129 0.042 264.695);
   --sidebar-primary: oklch(0.208 0.042 265.755);
@@ -116,35 +154,38 @@
   --sidebar-ring: oklch(0.704 0.04 256.788);
 }
 
+/* -----------------------------------------------------------------------------
+   3.2 Renbu Theme (dark - landing, spectator, courtkeeper)
+   Warm amber from the Renbu logo, earthy dojo tones
+   ----------------------------------------------------------------------------- */
 .dark {
-  /* ===========================================
-     RENBU 練武 Theme (Default)
-     Warm amber from the Renbu logo, earthy dojo tones
-     Used by: Landing, Spectator, Courtkeeper
-     =========================================== */
-  --background: oklch(0.13 0.01 60);           /* #0c0b09 - Deep warm black */
-  --foreground: oklch(0.95 0.02 85);           /* #fef3c7 - Warm cream */
+  --background: oklch(0.13 0.01 60);
+  --foreground: oklch(0.95 0.02 85);
   --card: oklch(0.16 0.01 55);
   --card-foreground: oklch(0.95 0.02 85);
   --popover: oklch(0.18 0.01 55);
   --popover-foreground: oklch(0.95 0.02 85);
-  --primary: oklch(0.70 0.16 70);              /* #d97706 - Amber */
+  --primary: oklch(0.70 0.16 70);
   --primary-foreground: oklch(0.13 0.01 60);
-  --secondary: oklch(0.50 0.02 60);            /* Warm slate */
+  --secondary: oklch(0.50 0.02 60);
   --secondary-foreground: oklch(0.95 0.02 85);
   --muted: oklch(0.22 0.01 55);
-  --muted-foreground: oklch(0.65 0.02 70);     /* #a8a29e - Warm gray */
-  --accent: oklch(0.70 0.16 70);               /* Amber accent */
+  --muted-foreground: oklch(0.65 0.02 70);
+  --accent: oklch(0.70 0.16 70);
   --accent-foreground: oklch(0.13 0.01 60);
-  --destructive: oklch(0.60 0.20 25);          /* Red for errors */
-  --border: oklch(0.70 0.16 70 / 12%);         /* Amber tinted border */
+  --destructive: oklch(0.60 0.20 25);
+  --border: oklch(0.70 0.16 70 / 12%);
   --input: oklch(0.70 0.16 70 / 8%);
   --ring: oklch(0.70 0.16 70);
+  
+  /* Charts */
   --chart-1: oklch(0.70 0.16 70);
   --chart-2: oklch(0.60 0.15 150);
   --chart-3: oklch(0.70 0.15 60);
   --chart-4: oklch(0.55 0.20 280);
   --chart-5: oklch(0.65 0.15 200);
+  
+  /* Sidebar */
   --sidebar: oklch(0.14 0.01 55);
   --sidebar-foreground: oklch(0.95 0.02 85);
   --sidebar-primary: oklch(0.70 0.16 70);
@@ -154,7 +195,7 @@
   --sidebar-border: oklch(0.70 0.16 70 / 10%);
   --sidebar-ring: oklch(0.70 0.16 70);
   
-  /* Theme-specific colors */
+  /* Theme-specific */
   --theme-accent: #d97706;
   --theme-accent-light: #f59e0b;
   --theme-glow: rgba(217, 119, 6, 0.3);
@@ -162,25 +203,25 @@
   --shiro: #d1d5db;
 }
 
-/* ===========================================
-   SUMI 墨 Theme (Admin Portal)
-   Katana Ai-iro variant: indigo accent + STEEL borders + forge fire
-   Based on compact-data and split-panel design
-   =========================================== */
+/* -----------------------------------------------------------------------------
+   3.3 Sumi Theme (dark - admin portal)
+   Indigo accent + steel borders + forge fire highlights
+   ----------------------------------------------------------------------------- */
 .dark.theme-sumi {
-  /* Background palette */
+  /* Background hierarchy */
   --background: #0C0B09;
   --background-elevated: #0F0E0C;
   --surface: #141310;
   --surface-elevated: #1A1916;
   
+  /* Base colors */
   --foreground: #EAEAEC;
   --card: #141310;
   --card-foreground: #EAEAEC;
   --popover: #1A1916;
   --popover-foreground: #EAEAEC;
   
-  /* Indigo accent for primary actions */
+  /* Indigo accent system */
   --primary: #3b82f6;
   --primary-foreground: #0C0B09;
   --indigo-deep: #1e3a5f;
@@ -188,7 +229,7 @@
   --indigo-light: #60a5fa;
   --indigo-glow: rgba(59, 130, 246, 0.15);
   
-  /* Steel neutrals - used for borders */
+  /* Steel neutral system */
   --steel-dark: #3d4148;
   --steel-mid: #5c6370;
   --steel-light: #9ca0ad;
@@ -217,7 +258,7 @@
   --text-muted: #5c6370;
   --text-faint: #3d4148;
   
-  /* STEEL BORDERS - NOT indigo */
+  /* Steel borders (not indigo) */
   --border: rgba(92, 99, 112, 0.2);
   --border-subtle: rgba(92, 99, 112, 0.2);
   --border-default: rgba(92, 99, 112, 0.35);
@@ -250,7 +291,7 @@
   --sidebar-border: rgba(92, 99, 112, 0.2);
   --sidebar-ring: #3b82f6;
   
-  /* Theme-specific colors */
+  /* Theme-specific */
   --theme-accent: #3b82f6;
   --theme-accent-light: #60a5fa;
   --theme-glow: rgba(59, 130, 246, 0.25);
@@ -258,16 +299,18 @@
   --shiro: #c8ccd4;
 }
 
-/* Members compact table look */
-.members-compact {
-  --row-bg: rgba(255,255,255,0.02);
-}
+/* =============================================================================
+   4. TAILWIND THEME INTEGRATION
+   ============================================================================= */
 
 @theme inline {
+  /* Radii */
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
+  
+  /* Colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -299,22 +342,28 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
-  /* Font family theme variables */
+  
+  /* Fonts */
   --font-family-sans: var(--font-default);
   --font-family-jp: var(--font-jp);
 }
+
+/* =============================================================================
+   5. BASE STYLES
+   ============================================================================= */
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  
   body {
     @apply bg-background text-foreground;
-    font-family: 'Titillium Web', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: var(--font-default);
   }
 }
 
-/* Paper texture overlay for dark mode */
+/* Paper texture overlay for dark themes */
 .dark::before,
 .theme-sumi::before {
   content: '';
@@ -326,46 +375,36 @@
   z-index: 0;
 }
 
-/* Ensure content is above texture */
 .dark > *,
 .theme-sumi > * {
   position: relative;
   z-index: 1;
 }
 
-/* Custom card hover effect matching landing page */
+/* =============================================================================
+   6. COMPONENTS
+   ============================================================================= */
+
 @layer components {
-  .card-hover {
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* ---------------------------------------------------------------------------
+     6.1 Layout - Sidebar
+     --------------------------------------------------------------------------- */
+  
+  /* Sidebar container states */
+  .sidebar-compact {
+    width: 64px;
+    background: var(--surface);
+    border-right: 1px solid var(--border-subtle);
   }
-  .card-hover:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+
+  .sidebar-expanded {
+    width: 220px;
+    background: var(--surface);
+    border-right: 1px solid var(--border-subtle);
   }
   
-  /* Glow effects using theme accent */
-  .glow-accent {
-    filter: drop-shadow(0 0 20px var(--theme-glow, rgba(217, 119, 6, 0.15)));
-  }
-  
-  .glow-accent-strong {
-    filter: drop-shadow(0 0 30px var(--theme-glow, rgba(217, 119, 6, 0.3)));
-  }
-  
-  /* Renbu amber glow */
-  .glow-renbu {
-    filter: drop-shadow(0 0 20px rgba(217, 119, 6, 0.25));
-  }
-  
-  /* Sumi subtle glow */
-  .glow-sumi {
-    filter: drop-shadow(0 0 15px rgba(168, 162, 158, 0.15));
-  }
-  
-  /* ===========================================
-     SIDEBAR TRANSITION HELPERS
-     Smooth expand/collapse without text squish
-     =========================================== */
+  /* Sidebar text transitions */
   .sidebar-text {
     white-space: nowrap;
     overflow: hidden;
@@ -382,24 +421,54 @@
     opacity: 1;
     width: auto;
   }
-
-  /* ===========================================
-     COMPACT SIDEBAR STYLES (64px collapsed)
-     Matches compact-data design
-     =========================================== */
-  .sidebar-compact {
-    width: 64px;
-    background: var(--surface);
-    border-right: 1px solid var(--border-subtle);
+  
+  /* Sidebar footer */
+  .sidebar-footer {
+    @apply border-t px-3 py-4 space-y-2;
+    border-color: var(--border-subtle);
   }
-
-  .sidebar-expanded {
-    width: 220px;
-    background: var(--surface);
-    border-right: 1px solid var(--border-subtle);
+  
+  .footer-label {
+    @apply text-[11px] uppercase tracking-[0.12em];
+    color: var(--text-faint);
   }
-
-  /* Nav icon item for collapsed sidebar */
+  
+  /* Portal links */
+  .portal-link {
+    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition;
+    border: 1px solid var(--border-subtle);
+    color: var(--text-muted);
+    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
+  }
+  
+  .portal-link:hover {
+    color: var(--text-secondary);
+    background: var(--surface-elevated);
+  }
+  
+  .portal-link.home:hover {
+    background: rgba(251, 191, 36, 0.1);
+    color: #fbbf24;
+    border-color: rgba(251, 191, 36, 0.3);
+  }
+  
+  .portal-link.court:hover {
+    background: rgba(56, 189, 248, 0.1);
+    color: #38bdf8;
+    border-color: rgba(56, 189, 248, 0.3);
+  }
+  
+  .portal-link.spec:hover {
+    background: rgba(52, 211, 153, 0.1);
+    color: #34d399;
+    border-color: rgba(52, 211, 153, 0.3);
+  }
+  
+  /* ---------------------------------------------------------------------------
+     6.2 Layout - Navigation
+     --------------------------------------------------------------------------- */
+  
+  /* Nav icon items (collapsed sidebar) */
   .nav-icon-item {
     width: 44px;
     height: 44px;
@@ -411,6 +480,8 @@
     cursor: pointer;
     transition: all 0.2s;
     position: relative;
+    background: transparent;
+    border: none;
   }
   
   .nav-icon-item:hover {
@@ -435,6 +506,7 @@
     border-radius: 0 2px 2px 0;
   }
   
+  /* Nav tooltips */
   .nav-icon-item .tooltip {
     position: absolute;
     left: 54px;
@@ -448,12 +520,14 @@
     pointer-events: none;
     transition: opacity 0.2s;
     z-index: 100;
+    color: var(--text-primary);
+    box-shadow: var(--shadow-md);
   }
   
   .nav-icon-item:hover .tooltip {
     opacity: 1;
   }
-
+  
   /* Nav divider */
   .nav-divider {
     width: 24px;
@@ -461,193 +535,8 @@
     background: var(--border-subtle);
     margin: 12px auto;
   }
-
-  /* Compact / Split sidebar styles */
-  .sidebar-btn {
-    @apply relative flex items-center gap-3 w-full rounded-xl px-3 py-2 text-sm transition-all duration-200;
-    color: var(--text-muted);
-  }
-  .sidebar-btn:hover {
-    background: var(--surface-elevated);
-    color: var(--text-secondary);
-  }
-  .sidebar-btn-compact {
-    @apply justify-center px-2 py-3;
-  }
-  .sidebar-btn-active {
-    background: var(--indigo-glow);
-    color: var(--indigo-light);
-  }
-  .sidebar-icon {
-    @apply flex h-10 w-10 items-center justify-center rounded-lg;
-    background: radial-gradient(circle at 30% 30%, rgba(59,130,246,0.14), rgba(26,25,22,0.9));
-    border: 1px solid var(--border-subtle);
-    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.4);
-    color: var(--text-secondary);
-  }
-  .sidebar-btn-active .sidebar-icon {
-    color: var(--indigo-light);
-  }
-  .sidebar-label {
-    white-space: nowrap;
-    overflow: hidden;
-    transition: opacity 0.2s ease-out, width 0.3s ease-out;
-    font-size: 0.8rem;
-  }
-  .sidebar-group {
-    @apply flex items-center gap-2 px-3 py-2 text-[11px] font-semibold uppercase tracking-[0.2em];
-    color: var(--text-faint);
-  }
-  .sidebar-group-hidden {
-    @apply justify-center px-2;
-  }
-  .sidebar-footer {
-    @apply border-t px-3 py-4 space-y-2;
-    border-color: var(--border-subtle);
-  }
-  .footer-label {
-    @apply text-[11px] uppercase tracking-[0.12em];
-    color: var(--text-faint);
-  }
-  .footer-label-hidden {
-    @apply hidden;
-  }
-  .portal-link {
-    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition;
-    border: 1px solid var(--border-subtle);
-    color: var(--text-muted);
-    box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
-  }
-  .portal-link:hover {
-    color: var(--text-secondary);
-    background: var(--surface-elevated);
-  }
-  .portal-link-compact {
-    @apply justify-center px-2;
-  }
-  .portal-link.home {
-    @apply bg-gradient-to-r from-indigo-900/20 to-indigo-500/10;
-  }
-  .portal-link.court {
-    @apply bg-gradient-to-r from-sky-900/20 to-sky-500/10;
-  }
-  .portal-link.spec {
-    @apply bg-gradient-to-r from-emerald-900/20 to-emerald-500/10;
-  }
-  .live-pill {
-    @apply ml-2 rounded-full bg-emerald-600/80 px-2 py-0.5 text-[10px] uppercase text-white;
-  }
-
-  /* User card for expanded sidebar */
-  .user-card {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 12px;
-    background: var(--surface-elevated);
-    border-radius: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
   
-  .user-card:hover {
-    background: var(--background);
-  }
-  
-  .user-avatar {
-    width: 42px;
-    height: 42px;
-    background: linear-gradient(135deg, var(--indigo-deep), var(--indigo-primary));
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.8rem;
-    color: white;
-    font-weight: 700;
-  }
-  
-  .user-name {
-    font-size: 0.8rem;
-    color: var(--text-primary);
-    font-weight: 700;
-  }
-  
-  .user-role {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-  }
-  
-  .user-status {
-    width: 10px;
-    height: 10px;
-    background: var(--success);
-    border-radius: 50%;
-    border: 2px solid var(--surface-elevated);
-  }
-
-  /* User icon for collapsed sidebar */
-  .user-icon {
-    width: 36px;
-    height: 36px;
-    background: var(--steel-dark);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.65rem;
-    color: var(--steel-light);
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  
-  .user-icon:hover {
-    background: var(--steel-mid);
-  }
-
-  /* Search box for expanded sidebar */
-  .search-box {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    background: var(--background);
-    border: 1px solid var(--border-subtle);
-    border-radius: 10px;
-    padding: 12px 14px;
-  }
-  
-  .search-box:focus-within {
-    border-color: var(--border-default);
-  }
-  
-  .search-box input {
-    background: transparent;
-    border: none;
-    outline: none;
-    color: var(--text-primary);
-    font-family: inherit;
-    font-size: 0.75rem;
-    width: 100%;
-  }
-  
-  .search-box input::placeholder {
-    color: var(--text-faint);
-  }
-
-  /* Nav section for expanded sidebar */
-  .nav-section {
-    margin-bottom: 28px;
-  }
-  
-  .nav-section-title {
-    font-size: 0.55rem;
-    letter-spacing: 0.2em;
-    text-transform: uppercase;
-    color: var(--text-faint);
-    padding: 0 12px;
-    margin-bottom: 10px;
-  }
-  
+  /* Nav items (expanded sidebar) */
   .nav-item {
     display: flex;
     align-items: center;
@@ -658,6 +547,10 @@
     cursor: pointer;
     transition: all 0.2s ease;
     margin-bottom: 4px;
+    background: transparent;
+    border: none;
+    text-align: left;
+    width: 100%;
   }
   
   .nav-item:hover {
@@ -674,6 +567,7 @@
     width: 18px;
     height: 18px;
     opacity: 0.7;
+    flex-shrink: 0;
   }
   
   .nav-item.active svg {
@@ -685,37 +579,194 @@
     font-size: 0.8rem;
   }
   
+  /* Nav sections */
+  .nav-section {
+    margin-bottom: 28px;
+  }
+  
+  .nav-section-title {
+    font-size: 0.55rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 0 12px;
+    margin-bottom: 10px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: opacity 0.2s ease;
+  }
+  
+  .nav-section-title:hover {
+    opacity: 0.8;
+  }
+  
+  /* Nav badge */
   .nav-badge {
     background: var(--accent-fire);
     color: white;
     font-size: 0.55rem;
-    padding: 2px 8px;
+    padding: 3px 8px;
     border-radius: 8px;
     font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
-
+  
+  .nav-badge-count {
+    background: var(--surface-elevated);
+    color: var(--text-muted);
+    font-size: 0.6rem;
+    padding: 2px 8px;
+    border-radius: 6px;
+    font-weight: 600;
+  }
+  
+  .live-pill {
+    @apply ml-2 rounded-full bg-emerald-600/80 px-2 py-0.5 text-[10px] uppercase text-white;
+  }
+  
+  /* ---------------------------------------------------------------------------
+     6.3 Layout - Top Bar
+     --------------------------------------------------------------------------- */
+  
+  .top-bar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border-subtle);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  
+  .top-bar-breadcrumb {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--text-faint);
+    margin-bottom: 4px;
+  }
+  
+  .top-bar-title {
+    font-family: var(--font-jp);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--text-primary);
+  }
+  
+  /* ---------------------------------------------------------------------------
+     6.4 UI - Buttons
+     --------------------------------------------------------------------------- */
+  
+  .btn-sm {
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-family: inherit;
+    font-size: 0.65rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  
+  .btn-sm.primary {
+    background: var(--indigo-primary);
+    color: white;
+  }
+  
+  .btn-sm.primary:hover {
+    background: var(--indigo-light);
+    box-shadow: var(--shadow-glow-indigo);
+  }
+  
+  .btn-sm.ghost {
+    background: transparent;
+    color: var(--text-muted);
+  }
+  
+  .btn-sm.ghost:hover {
+    background: var(--surface-elevated);
+    color: var(--text-secondary);
+  }
+  
   .icon-btn {
     @apply inline-flex h-9 w-9 items-center justify-center rounded-lg transition;
     border: 1px solid var(--border-subtle);
-    background: rgba(255,255,255,0.02);
+    background: rgba(255, 255, 255, 0.02);
     color: var(--text-muted);
   }
+  
   .icon-btn:hover {
     background: var(--surface-elevated);
     color: var(--text-secondary);
     border-color: var(--border-default);
   }
+  
   .icon-btn.danger {
     color: var(--destructive);
     border-color: rgba(248, 113, 113, 0.4);
   }
+  
   .icon-btn.danger:hover {
     background: rgba(248, 113, 113, 0.1);
   }
-
-  /* ===========================================
-     DATA TABLE STYLES (compact-data design)
-     =========================================== */
+  
+  /* ---------------------------------------------------------------------------
+     6.5 UI - Cards & Badges
+     --------------------------------------------------------------------------- */
+  
+  .card-hover {
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.35);
+  }
+  
+  /* Cell badges */
+  .cell-badge {
+    display: inline-block;
+    font-size: 0.55rem;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-weight: 700;
+  }
+  
+  .cell-badge.active {
+    background: rgba(74, 222, 128, 0.12);
+    color: var(--success);
+  }
+  
+  .cell-badge.pending {
+    background: rgba(251, 191, 36, 0.12);
+    color: var(--warning);
+  }
+  
+  .cell-badge.inactive {
+    background: rgba(248, 113, 113, 0.12);
+    color: var(--error);
+  }
+  
+  .cell-badge.dan {
+    background: var(--indigo-glow);
+    color: var(--indigo-light);
+  }
+  
+  .cell-badge.kyu {
+    background: var(--accent-fire-glow);
+    color: var(--accent-fire);
+  }
+  
+  /* ---------------------------------------------------------------------------
+     6.6 UI - Tables
+     --------------------------------------------------------------------------- */
+  
   .table-card {
     background: var(--surface);
     border: 1px solid var(--border-subtle);
@@ -767,7 +818,7 @@
     color: var(--indigo-light);
   }
 
-  /* Data Table */
+  /* Data table */
   .data-table {
     width: 100%;
     border-collapse: collapse;
@@ -813,7 +864,7 @@
     color: var(--text-primary);
   }
 
-  /* Cell Types */
+  /* Cell types */
   .cell-member {
     display: flex;
     align-items: center;
@@ -841,41 +892,6 @@
   .cell-sub {
     font-size: 0.6rem;
     color: var(--text-muted);
-  }
-  
-  .cell-badge {
-    display: inline-block;
-    font-size: 0.55rem;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    padding: 3px 8px;
-    border-radius: 4px;
-    font-weight: 700;
-  }
-  
-  .cell-badge.active {
-    background: rgba(74, 222, 128, 0.12);
-    color: var(--success);
-  }
-  
-  .cell-badge.pending {
-    background: rgba(251, 191, 36, 0.12);
-    color: var(--warning);
-  }
-  
-  .cell-badge.inactive {
-    background: rgba(248, 113, 113, 0.12);
-    color: var(--error);
-  }
-  
-  .cell-badge.dan {
-    background: var(--indigo-glow);
-    color: var(--indigo-light);
-  }
-  
-  .cell-badge.kyu {
-    background: var(--accent-fire-glow);
-    color: var(--accent-fire);
   }
   
   .cell-mono {
@@ -914,7 +930,7 @@
     border-color: var(--border-default);
   }
 
-  /* Table Footer */
+  /* Table footer & pagination */
   .table-footer {
     display: flex;
     justify-content: space-between;
@@ -929,7 +945,6 @@
     color: var(--text-muted);
   }
 
-  /* Pagination */
   .pagination {
     display: flex;
     gap: 4px;
@@ -961,7 +976,37 @@
     color: white;
   }
 
-  /* Stats Strip (compact-data style) */
+  /* Members compact table */
+  .members-compact table {
+    @apply w-full;
+  }
+  
+  .members-compact thead {
+    border-bottom: 1px solid var(--border-subtle);
+  }
+  
+  .members-compact thead th {
+    @apply font-semibold;
+    background: var(--background);
+    color: var(--text-faint);
+  }
+  
+  .members-compact tbody tr:last-child {
+    @apply border-b-0;
+  }
+  
+  .members-compact tbody tr {
+    border-color: var(--border-subtle);
+  }
+  
+  .members-compact tbody tr:hover {
+    background: var(--surface-elevated);
+  }
+  
+  /* ---------------------------------------------------------------------------
+     6.7 UI - Stats
+     --------------------------------------------------------------------------- */
+  
   .stats-strip {
     display: flex;
     gap: 16px;
@@ -1005,7 +1050,9 @@
     background: rgba(251, 191, 36, 0.12);
   }
   
-  .stat-mini-content { flex: 1; }
+  .stat-mini-content {
+    flex: 1;
+  }
   
   .stat-mini-value {
     font-size: 1.4rem;
@@ -1028,81 +1075,34 @@
     gap: 4px;
   }
   
-  .stat-mini-trend.down { color: var(--error); }
-
-  /* Buttons */
-  .btn-sm {
-    padding: 6px 14px;
-    border-radius: 6px;
-    font-family: inherit;
-    font-size: 0.65rem;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    border: none;
-    display: flex;
-    align-items: center;
-    gap: 6px;
+  .stat-mini-trend.down {
+    color: var(--error);
   }
   
-  .btn-sm.primary {
-    background: var(--indigo-primary);
-    color: white;
+  /* ---------------------------------------------------------------------------
+     6.8 UI - Glow Effects
+     --------------------------------------------------------------------------- */
+  
+  .glow-accent {
+    filter: drop-shadow(0 0 20px var(--theme-glow, rgba(217, 119, 6, 0.15)));
   }
   
-  .btn-sm.primary:hover {
-    background: var(--indigo-light);
+  .glow-accent-strong {
+    filter: drop-shadow(0 0 30px var(--theme-glow, rgba(217, 119, 6, 0.3)));
   }
   
-  .btn-sm.ghost {
-    background: transparent;
-    color: var(--text-muted);
+  .glow-renbu {
+    filter: drop-shadow(0 0 20px rgba(217, 119, 6, 0.25));
   }
   
-  .btn-sm.ghost:hover {
-    background: var(--surface-elevated);
-    color: var(--text-secondary);
+  .glow-sumi {
+    filter: drop-shadow(0 0 15px rgba(168, 162, 158, 0.15));
   }
-
-  /* Compact members table */
-  .members-compact table {
-    @apply w-full;
-  }
-  .members-compact thead {
-    border-bottom: 1px solid var(--border-subtle);
-  }
-  .members-compact thead th {
-    @apply font-semibold;
-    background: var(--background);
-    color: var(--text-faint);
-  }
-  .members-compact tbody tr:last-child {
-    @apply border-b-0;
-  }
-  .members-compact tbody tr {
-    border-color: var(--border-subtle);
-  }
-  .members-compact tbody tr:hover {
-    background: var(--surface-elevated);
-  }
-}
-
-/* Utility class for explicitly using Japanese font */
-.font-jp {
-  font-family: var(--font-jp);
-}
-
-/* ===========================================
-   MOBILE-FIRST ACCESSIBILITY (45+ Users)
-   Based on WCAG 2.1 and research guidelines
-   - Touch targets: minimum 44x44px
-   - Font size: minimum 16px, prefer 18px
-   - High contrast ratios
-   - Clear visual feedback
-   =========================================== */
-
-/* Touch target sizing - minimum 44x44px for older users */
-@layer components {
+  
+  /* ---------------------------------------------------------------------------
+     6.9 Accessibility - Touch Targets
+     --------------------------------------------------------------------------- */
+  
   .touch-target {
     min-height: 44px;
     min-width: 44px;
@@ -1113,29 +1113,25 @@
     min-width: 52px;
   }
   
-  /* Large, readable buttons for 45+ users */
   .btn-accessible {
     min-height: 48px;
     padding: 12px 24px;
     font-size: 16px;
     font-weight: 500;
     border-radius: 12px;
-    touch-action: manipulation; /* Prevent double-tap zoom */
+    touch-action: manipulation;
   }
   
-  /* Clear focus states for accessibility */
   .focus-accessible:focus-visible {
     outline: 3px solid var(--ring);
     outline-offset: 2px;
   }
   
-  /* High contrast card for better readability */
   .card-accessible {
     border-width: 2px;
     padding: 20px;
   }
   
-  /* Large text variants */
   .text-accessible {
     font-size: 18px;
     line-height: 1.6;
@@ -1146,7 +1142,6 @@
     line-height: 1.5;
   }
   
-  /* Spacing for easier tapping */
   .gap-accessible {
     gap: 16px;
   }
@@ -1156,28 +1151,38 @@
   }
 }
 
-/* Mobile-first base adjustments */
+/* =============================================================================
+   7. UTILITIES
+   ============================================================================= */
+
+/* Japanese font utility */
+.font-jp {
+  font-family: var(--font-jp);
+}
+
+/* =============================================================================
+   8. ACCESSIBILITY & MEDIA QUERIES
+   ============================================================================= */
+
+/* Mobile adjustments */
 @media (max-width: 768px) {
-  /* Increase base font size on mobile for readability */
   html {
     font-size: 16px;
   }
   
-  /* Ensure buttons are easily tappable */
-  button, 
+  button,
   [role="button"],
   a {
     min-height: 44px;
     touch-action: manipulation;
   }
   
-  /* Increase spacing between interactive elements */
   .space-y-2 > * + * {
     margin-top: 12px;
   }
 }
 
-/* Reduce motion for users who prefer it */
+/* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -1188,7 +1193,7 @@
   }
 }
 
-/* High contrast mode support */
+/* High contrast mode */
 @media (prefers-contrast: high) {
   :root {
     --border: oklch(1 0 0 / 20%);
