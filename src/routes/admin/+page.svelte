@@ -39,6 +39,11 @@
   const SENSEI_GROUP_ID = 'SEN';
   const SETTINGS_KEYS = ['adminPasscode', 'courtkeeperPasscode'] as const;
   let dashboardModulePromise: Promise<any> | null = null;
+
+  // Eager-loaded admin tabs to avoid lazy-load stalls in production
+  import MembersTab from './tabs/MembersTab.svelte';
+  import GroupsTab from './tabs/GroupsTab.svelte';
+  import TournamentTab from './tabs/TournamentTab.svelte';
   
   // Apply Sumi theme to admin portal
   onMount(() => {
@@ -1240,96 +1245,54 @@
         {/await}
       
       {:else if activeTab === 'members'}
-        {#await loadMembersTab()}
-          <div class="space-y-4">
-            <Skeleton class="h-8 w-48" />
-            <div class="grid gap-4 md:grid-cols-2">
-              <Skeleton class="h-10" />
-              <Skeleton class="h-10" />
-            </div>
-            <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <Skeleton class="h-32" />
-              <Skeleton class="h-32" />
-              <Skeleton class="h-32 hidden md:block" />
-            </div>
-          </div>
-        {:then Module}
-          {@const Tab = Module.default}
-          <Tab
-            {members}
-            {groups}
-            {participants}
-            {filteredMembers}
-            {searchQuery}
-            {filterGroup}
-            {registrationFilter}
-            {registeredMemberIds}
-            {selectedMemberIds}
-            {allFilteredSelected}
-            {selectedTournament}
-            onSearchChange={(v) => searchQuery = v}
-            onFilterGroupChange={(v) => filterGroup = v}
-            onRegistrationFilterChange={(v) => registrationFilter = v}
-            onResetFilters={() => { searchQuery = ''; filterGroup = 'all'; registrationFilter = 'all'; }}
-            onOpenAddMember={() => showAddMember = true}
-            onOpenImportCSV={() => showImportCSV = true}
-            onOpenMassAdd={() => showMassAddMembers = true}
-            onOpenMassEdit={() => openMassEditMembers()}
-            onAddAllParticipants={addAllParticipants}
-            onClearAllParticipants={clearParticipants}
-            onRegisterSelectedMembers={registerSelectedMembers}
-            onRegisterGroupMembers={registerGroupMembers}
-            onToggleMemberSelection={toggleMemberSelection}
-            onClearSelection={() => selectedMemberIds = new Set()}
-            onToggleMemberRegistration={toggleMemberRegistration}
-            onOpenEditMember={(member) => { editingMember = { ...member }; showEditMember = true; }}
-            onDeleteMember={deleteMember}
-            {getGroupName}
-            resetMassMembers={resetMassMembers}
-          />
-        {:catch error}
-          <div class="text-destructive text-sm">Failed to load members</div>
-        {/await}
+        <MembersTab
+          {members}
+          {groups}
+          {participants}
+          {filteredMembers}
+          {searchQuery}
+          {filterGroup}
+          {registrationFilter}
+          {registeredMemberIds}
+          {selectedMemberIds}
+          {allFilteredSelected}
+          {selectedTournament}
+          onSearchChange={(v) => searchQuery = v}
+          onFilterGroupChange={(v) => filterGroup = v}
+          onRegistrationFilterChange={(v) => registrationFilter = v}
+          onResetFilters={() => { searchQuery = ''; filterGroup = 'all'; registrationFilter = 'all'; }}
+          onOpenAddMember={() => showAddMember = true}
+          onOpenImportCSV={() => showImportCSV = true}
+          onOpenMassAdd={() => showMassAddMembers = true}
+          onOpenMassEdit={() => openMassEditMembers()}
+          onAddAllParticipants={addAllParticipants}
+          onClearAllParticipants={clearParticipants}
+          onRegisterSelectedMembers={registerSelectedMembers}
+          onRegisterGroupMembers={registerGroupMembers}
+          onToggleMemberSelection={toggleMemberSelection}
+          onClearSelection={() => selectedMemberIds = new Set()}
+          onToggleMemberRegistration={toggleMemberRegistration}
+          onOpenEditMember={(member) => { editingMember = { ...member }; showEditMember = true; }}
+          onDeleteMember={deleteMember}
+          {getGroupName}
+          resetMassMembers={resetMassMembers}
+        />
 
       {:else if activeTab === 'groups'}
-        {#await loadGroupsTab()}
-          <div class="space-y-4">
-            <Skeleton class="h-8 w-48" />
-            <div class="grid gap-4 md:grid-cols-2">
-              <Skeleton class="h-16" />
-              <Skeleton class="h-16" />
-            </div>
-          </div>
-        {:then Module}
-          {@const Tab = Module.default}
-          <Tab
-            {groups}
-            {membersByGroupId}
-            expandedGroupId={expandedGroupId}
-            onExpand={setExpandedGroup}
-            onOpenAddGroup={() => showAddGroup = true}
-            onEditGroup={(g) => { editingGroup = g; showEditGroup = true; }}
-            onDeleteGroup={deleteGroup}
-            onAddMemberToGroup={(groupId) => { newMember.groupId = groupId; showAddMember = true; }}
-            onDeleteMember={deleteMember}
-          />
-        {:catch error}
-          <div class="text-destructive text-sm">Failed to load groups</div>
-        {/await}
+        <GroupsTab
+          {groups}
+          {membersByGroupId}
+          expandedGroupId={expandedGroupId}
+          onExpand={setExpandedGroup}
+          onOpenAddGroup={() => showAddGroup = true}
+          onEditGroup={(g) => { editingGroup = g; showEditGroup = true; }}
+          onDeleteGroup={deleteGroup}
+          onAddMemberToGroup={(groupId) => { newMember.groupId = groupId; showAddMember = true; }}
+          onDeleteMember={deleteMember}
+        />
 
       {:else if activeTab === 'tournament'}
-        {#await loadTournamentTab()}
-          <div class="space-y-4">
-            <Skeleton class="h-8 w-48" />
-            <div class="grid gap-4 md:grid-cols-3">
-              <Skeleton class="h-24" />
-              <Skeleton class="h-24" />
-              <Skeleton class="h-24" />
-            </div>
-          </div>
-        {:then Module}
-          {@const Tab = Module.default}
-          <Tab
+        <TournamentTab
             bind:selectedTournamentId
             bind:settingsSheetOpen
             bind:boguTimerDuration
@@ -1394,10 +1357,7 @@
             {getEffectiveCourt}
             {getMemberById}
             {formatTimer}
-          />
-        {:catch error}
-          <div class="text-destructive text-sm">Failed to load tournament</div>
-        {/await}
+        />
 
       {:else if activeTab === 'results'}
         {#await loadResultsTab()}
