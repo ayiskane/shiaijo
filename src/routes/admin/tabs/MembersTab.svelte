@@ -4,7 +4,7 @@
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
   import { cn } from '$lib/utils';
-  import { Check, Plus, UserPlus, X, ChevronDown, Trash2, Pencil, Users, Search, Filter } from '@lucide/svelte';
+  import { Check, Plus, UserPlus, X, ChevronDown, ChevronLeft, ChevronRight, Trash2, Pencil, Users, Search, Filter } from '@lucide/svelte';
 
   export let members: any[] = [];
   export let groups: any[] = [];
@@ -40,9 +40,45 @@
   let listContainer: HTMLElement;
   $: listContainer && autoAnimate(listContainer);
 
+  // Pagination state
+  let currentPage = 1;
+  let itemsPerPage = 10;
+  
+  // Reset to page 1 when filters change
+  $: if (filteredMembers) currentPage = 1;
+  
+  // Calculate pagination
+  $: totalPages = Math.ceil(filteredMembers.length / itemsPerPage);
+  $: startIndex = (currentPage - 1) * itemsPerPage;
+  $: endIndex = Math.min(startIndex + itemsPerPage, filteredMembers.length);
+  $: paginatedMembers = filteredMembers.slice(startIndex, endIndex);
+  
+  // Generate page numbers to show
+  $: pageNumbers = (() => {
+    const pages: (number | string)[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      if (currentPage <= 3) {
+        pages.push(1, 2, 3, 4, '...', totalPages);
+      } else if (currentPage >= totalPages - 2) {
+        pages.push(1, '...', totalPages - 3, totalPages - 2, totalPages - 1, totalPages);
+      } else {
+        pages.push(1, '...', currentPage - 1, currentPage, currentPage + 1, '...', totalPages);
+      }
+    }
+    return pages;
+  })();
+
   // Get initials from name
   function getInitials(firstName: string, lastName: string): string {
     return `${firstName?.[0] || ''}${lastName?.[0] || ''}`.toUpperCase();
+  }
+  
+  function goToPage(page: number) {
+    if (page >= 1 && page <= totalPages) {
+      currentPage = page;
+    }
   }
 
   onMount(() => {
@@ -249,7 +285,7 @@
             </td>
           </tr>
         {:else}
-          {#each filteredMembers as member (member._id)}
+          {#each paginatedMembers as member (member._id)}
             {@const isRegistered = registeredMemberIds.has(member._id)}
             {@const isSelected = selectedMemberIds.has(member._id)}
             <tr class={cn(isRegistered && "bg-emerald-950/10")}>
@@ -323,11 +359,57 @@
     </table>
   </div>
   
-  <!-- Table Footer -->
+  <!-- Table Footer with Pagination -->
   <div class="table-footer">
-    <div class="table-info">Showing {filteredMembers.length} of {members.length} members</div>
-    <div class="pagination">
-      <!-- Pagination would go here if needed -->
+    <div class="table-info">
+      Showing {startIndex + 1}–{endIndex} of {filteredMembers.length} members
     </div>
+    
+    {#if totalPages > 1}
+      <div class="pagination">
+        <!-- Items per page selector -->
+        <div class="pagination-per-page">
+          <span>Rows:</span>
+          <select bind:value={itemsPerPage} class="pagination-select">
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+            <option value={100}>100</option>
+          </select>
+        </div>
+        
+        <!-- Page navigation -->
+        <div class="pagination-nav">
+          <button 
+            class="pagination-btn"
+            onclick={() => goToPage(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft class="h-4 w-4" />
+          </button>
+          
+          {#each pageNumbers as page}
+            {#if page === '...'}
+              <span class="pagination-ellipsis">...</span>
+            {:else}
+              <button
+                class={cn("pagination-btn", currentPage === page && "active")}
+                onclick={() => goToPage(page as number)}
+              >
+                {page}
+              </button>
+            {/if}
+          {/each}
+          
+          <button 
+            class="pagination-btn"
+            onclick={() => goToPage(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            <ChevronRight class="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+    {/if}
   </div>
 </div>
