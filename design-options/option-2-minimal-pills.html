@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Option 2 - Minimal Pills</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #0C0B09;
+            --surface: #141310;
+            --surface-elevated: #1A1916;
+            --indigo-primary: #3b82f6;
+            --indigo-light: #60a5fa;
+            --indigo-glow: rgba(59, 130, 246, 0.15);
+            --accent-fire: #E86F3A;
+            --accent-fire-glow: rgba(232, 111, 58, 0.2);
+            --text-primary: #EAEAEC;
+            --text-secondary: #9ca0ad;
+            --text-muted: #5c6370;
+            --text-faint: #3d4148;
+            --border-subtle: rgba(92, 99, 112, 0.2);
+            --border-default: rgba(92, 99, 112, 0.35);
+            --success: #4ade80;
+            --warning: #fbbf24;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--background);
+            color: var(--text-primary);
+            padding: 40px;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.02;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            z-index: 1000;
+        }
+        
+        .title {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+        
+        /* OPTION 2: Minimal Pills */
+        .pills-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .stat-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 8px 14px;
+            background: var(--surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            transition: all 0.2s;
+        }
+        
+        .stat-pill:hover {
+            border-color: var(--border-default);
+            background: var(--surface-elevated);
+        }
+        
+        .stat-pill .pill-value {
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .stat-pill .pill-label {
+            color: var(--text-muted);
+        }
+        
+        .stat-pill .pill-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        
+        .stat-pill .pill-dot.indigo { background: var(--indigo-primary); }
+        .stat-pill .pill-dot.success { background: var(--success); }
+        .stat-pill .pill-dot.warning { background: var(--warning); }
+        .stat-pill .pill-dot.fire { background: var(--accent-fire); }
+        
+        .stat-pill.highlight {
+            background: var(--indigo-glow);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .stat-pill.highlight .pill-value {
+            color: var(--indigo-light);
+        }
+        
+        .spacer { flex: 1; }
+        
+        .showing-text {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+        
+        .showing-text strong {
+            color: var(--text-secondary);
+        }
+        
+        /* Sample table preview */
+        .table-preview {
+            background: var(--surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .table-preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .table-preview-title {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 0.95rem;
+        }
+        
+        .table-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .table-row:last-child { border-bottom: none; }
+        
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--surface-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            margin-right: 12px;
+        }
+        
+        .member-name {
+            font-size: 0.8rem;
+            flex: 1;
+        }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge.active {
+            background: rgba(74, 222, 128, 0.12);
+            color: var(--success);
+        }
+    </style>
+</head>
+<body>
+    <div class="title">Option 2: Minimal Pills</div>
+    <p class="subtitle">Lightweight pill badges that are easy to scan. Less visual weight than cards.</p>
+    
+    <!-- The new stats pills design -->
+    <div class="pills-row">
+        <div class="stat-pill">
+            <span class="pill-dot indigo"></span>
+            <span class="pill-value">248</span>
+            <span class="pill-label">total</span>
+        </div>
+        
+        <div class="stat-pill">
+            <span class="pill-dot success"></span>
+            <span class="pill-value">186</span>
+            <span class="pill-label">registered</span>
+        </div>
+        
+        <div class="stat-pill">
+            <span class="pill-dot warning"></span>
+            <span class="pill-value">62</span>
+            <span class="pill-label">pending</span>
+        </div>
+        
+        <div class="spacer"></div>
+        
+        <div class="stat-pill highlight">
+            <span class="pill-value">248</span>
+            <span class="pill-label">showing</span>
+        </div>
+    </div>
+    
+    <!-- Table preview -->
+    <div class="table-preview">
+        <div class="table-preview-header">
+            <div class="table-preview-title">Member Directory</div>
+        </div>
+        <div class="table-row">
+            <div class="member-avatar">TK</div>
+            <div class="member-name">Tanaka Kenji</div>
+            <span class="badge active">Active</span>
+        </div>
+        <div class="table-row">
+            <div class="member-avatar">SM</div>
+            <div class="member-name">Suzuki Mei</div>
+            <span class="badge active">Active</span>
+        </div>
+        <div class="table-row">
+            <div class="member-avatar">NH</div>
+            <div class="member-name">Nakamura Hiro</div>
+            <span class="badge active">Active</span>
+        </div>
+    </div>
+</body>
+</html>
