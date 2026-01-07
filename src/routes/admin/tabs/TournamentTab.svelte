@@ -5,7 +5,6 @@
   import { Button } from '$lib/components/ui/button';
   import * as Card from '$lib/components/ui/card';
   import * as Select from '$lib/components/ui/select';
-  import * as ToggleGroup from '$lib/components/ui/toggle-group';
   import * as Sheet from '$lib/components/ui/sheet';
   import { Progress } from '$lib/components/ui/progress';
   import { Separator } from '$lib/components/ui/separator';
@@ -83,8 +82,14 @@
   export let getMemberById: (id: string) => any;
   export let formatTimer: (secs: number) => string;
 
+  function openSettings() {
+    console.debug('[admin][tournament] settings gear clicked', { selectedTournamentId, status: selectedTournament?.status });
+    onOpenSettings();
+  }
+
   let listEl: HTMLElement;
   $: listEl && autoAnimate(listEl);
+  $: console.debug('[admin][tournament] settingsSheetOpen', settingsSheetOpen, 'tournament', selectedTournamentId, 'status', selectedTournament?.status);
   // mark externally-provided props as used to satisfy runes a11y checks
   const _keepProps = [groups, pendingMatches, SCORE_LABELS];
 
@@ -262,11 +267,24 @@
                           </div>
                           <span class="text-xs text-muted-foreground">{groupMembers.length} members</span>
                         </div>
-                        <ToggleGroup.Root type="single" value={court} onValueChange={(value) => value && onSetGroupCourt(groupId, value)} class="shrink-0">
-                          <ToggleGroup.Item value="A" aria-label="Court A" class="w-9 h-9 text-xs font-bold data-[state=on]:bg-amber-500 data-[state=on]:text-black">A</ToggleGroup.Item>
-                          <ToggleGroup.Item value="A+B" aria-label="Both Courts" class="w-9 h-9 text-xs font-bold data-[state=on]:bg-emerald-500 data-[state=on]:text-white">+</ToggleGroup.Item>
-                          <ToggleGroup.Item value="B" aria-label="Court B" class="w-9 h-9 text-xs font-bold data-[state=on]:bg-sky-500 data-[state=on]:text-white">B</ToggleGroup.Item>
-                        </ToggleGroup.Root>
+                        <div class="flex gap-1 shrink-0" role="group" aria-label="Select court">
+                          {#each ['A','A+B','B'] as c}
+                            <button
+                              class={cn(
+                                'w-9 h-9 rounded-md text-xs font-bold border transition-colors',
+                                court === c
+                                  ? c === 'A' ? 'bg-amber-500 text-black border-amber-500'
+                                  : c === 'B' ? 'bg-sky-500 text-white border-sky-500'
+                                  : 'bg-emerald-500 text-white border-emerald-500'
+                                  : 'bg-muted text-muted-foreground border-border hover:bg-accent/30'
+                              )}
+                              aria-pressed={court === c}
+                              onclick={() => onSetGroupCourt(groupId, c)}
+                            >
+                              {c === 'A+B' ? '+' : c}
+                            </button>
+                          {/each}
+                        </div>
                       </div>
                     {/each}
                   </div>
@@ -292,7 +310,7 @@
                 <Button onclick={onStartTournament} class="bg-emerald-500 hover:bg-emerald-600">
                   <Play class="mr-2 h-4 w-4" /> Start Tournament
                 </Button>
-                <Button onclick={onOpenSettings} variant="outline">
+                <Button onclick={openSettings} variant="outline">
                   <Settings class="mr-2 h-4 w-4" /> Configure
                 </Button>
               </div>
@@ -310,7 +328,7 @@
           <Badge class={cn('px-3 py-1', isComplete ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse')}>
             {isComplete ? '✓ Done' : '● Live'}
           </Badge>
-          <Button onclick={onOpenSettings} variant="outline" size="icon" class="h-10 w-10">
+          <Button onclick={openSettings} variant="outline" size="icon" class="h-10 w-10">
             <Settings class="h-5 w-5" />
           </Button>
         </div>
@@ -492,11 +510,24 @@
                   <div class="font-medium truncate">{group?.name || groupId}</div>
                   <span class="text-xs text-muted-foreground">{groupStats.completed}/{groupStats.total} matches</span>
                 </div>
-                <ToggleGroup.Root type="single" value={court} onValueChange={(value) => value && onSetGroupCourt(groupId, value)} class="shrink-0">
-                  <ToggleGroup.Item value="A" aria-label="Court A" class="px-3 py-2 text-xs font-bold data-[state=on]:bg-amber-500 data-[state=on]:text-black">A</ToggleGroup.Item>
-                  <ToggleGroup.Item value="A+B" aria-label="Both Courts" class="px-2 py-2 text-xs font-bold data-[state=on]:bg-emerald-500 data-[state=on]:text-white">+</ToggleGroup.Item>
-                  <ToggleGroup.Item value="B" aria-label="Court B" class="px-3 py-2 text-xs font-bold data-[state=on]:bg-sky-500 data-[state=on]:text-white">B</ToggleGroup.Item>
-                </ToggleGroup.Root>
+                <div class="flex gap-1 shrink-0" role="group" aria-label="Select court">
+                  {#each ['A','A+B','B'] as c}
+                    <button
+                      class={cn(
+                        'px-3 py-2 rounded-md text-xs font-bold border transition-colors',
+                        court === c
+                          ? c === 'A' ? 'bg-amber-500 text-black border-amber-500'
+                          : c === 'B' ? 'bg-sky-500 text-white border-sky-500'
+                          : 'bg-emerald-500 text-white border-emerald-500'
+                          : 'bg-muted text-muted-foreground border-border hover:bg-accent/30'
+                      )}
+                      aria-pressed={court === c}
+                      onclick={() => onSetGroupCourt(groupId, c)}
+                    >
+                      {c === 'A+B' ? '+' : c}
+                    </button>
+                  {/each}
+                </div>
               </div>
             {/each}
           </div>
