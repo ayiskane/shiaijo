@@ -65,7 +65,6 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+3000-303F, U+3040-309F, U+30A0-30FF, U+4E00-9FFF, U+FF00-FFEF, U+2E80-2EFF, U+3200-32FF, U+3400-4DBF, U+20000-2A6DF;
 }
 
 @font-face {
@@ -74,7 +73,6 @@
   font-weight: 400;
   font-style: normal;
   font-display: swap;
-  unicode-range: U+3000-303F, U+3040-309F, U+30A0-30FF, U+4E00-9FFF, U+FF00-FFEF, U+2E80-2EFF, U+3200-32FF, U+3400-4DBF, U+20000-2A6DF;
 }
 
 @custom-variant dark (&:is(.dark *));
