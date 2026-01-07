@@ -55,52 +55,51 @@
   });
 </script>
 
-<!-- Top Bar - matching compact-data design -->
-<div class="top-bar sticky top-0 z-10 -mx-4 sm:-mx-6 px-5 py-3 mb-5" style="background: var(--surface); border-bottom: 1px solid var(--border-subtle);">
-  <div class="flex items-center gap-6">
-    <!-- Breadcrumb -->
-    <div class="text-xs" style="color: var(--text-muted);">
-      Admin / <span style="color: var(--text-primary);">Member Management</span>
+<!-- Top Bar - Hybrid: Design 2 structure with Design 1 centered tabs -->
+<div class="top-bar sticky top-0 z-10 -mx-4 sm:-mx-6 px-5 py-4 mb-5" style="background: var(--surface); border-bottom: 1px solid var(--border-subtle);">
+  <div class="flex items-center justify-between">
+    <!-- Left: Breadcrumb + Title (Design 2) -->
+    <div>
+      <div class="text-[0.6rem] uppercase tracking-widest mb-1" style="color: var(--text-faint);">Admin / Roster</div>
+      <h1 class="font-jp text-lg font-bold" style="color: var(--text-primary);">Member Management</h1>
     </div>
     
-    <!-- Center Tabs -->
-    <div class="flex-1 flex justify-center">
-      <div class="flex gap-1 p-1 rounded-lg" style="background: var(--background);">
+    <!-- Center: Filter Tabs (Design 1 style) -->
+    <div class="flex gap-1 p-1 rounded-lg" style="background: var(--background);">
+      <button 
+        onclick={() => onRegistrationFilterChange('all')}
+        class={cn("px-4 py-2 rounded-md text-xs transition-all", registrationFilter === 'all' ? "text-primary" : "")}
+        style={registrationFilter === 'all' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
+      >
+        All Members
+      </button>
+      {#if selectedTournament}
         <button 
-          onclick={() => onRegistrationFilterChange('all')}
-          class={cn("px-4 py-2 rounded-md text-xs transition-all", registrationFilter === 'all' ? "text-primary" : "")}
-          style={registrationFilter === 'all' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
+          onclick={() => onRegistrationFilterChange('registered')}
+          class={cn("px-4 py-2 rounded-md text-xs transition-all")}
+          style={registrationFilter === 'registered' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
         >
-          All Members
+          Registered
         </button>
-        {#if selectedTournament}
-          <button 
-            onclick={() => onRegistrationFilterChange('registered')}
-            class={cn("px-4 py-2 rounded-md text-xs transition-all")}
-            style={registrationFilter === 'registered' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
-          >
-            Registered
-          </button>
-          <button 
-            onclick={() => onRegistrationFilterChange('unregistered')}
-            class={cn("px-4 py-2 rounded-md text-xs transition-all")}
-            style={registrationFilter === 'unregistered' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
-          >
-            Unregistered
-          </button>
-        {/if}
-      </div>
+        <button 
+          onclick={() => onRegistrationFilterChange('unregistered')}
+          class={cn("px-4 py-2 rounded-md text-xs transition-all")}
+          style={registrationFilter === 'unregistered' ? "background: var(--surface-elevated); color: var(--text-primary);" : "color: var(--text-muted);"}
+        >
+          Unregistered
+        </button>
+      {/if}
     </div>
     
     <!-- Right Side: Search + Actions -->
     <div class="flex items-center gap-3">
-      <div class="flex items-center gap-2 px-3 py-1.5 rounded-md" style="background: var(--background); border: 1px solid var(--border-subtle); width: 200px;">
+      <div class="flex items-center gap-2 px-3 py-1.5 rounded-md" style="background: var(--background); border: 1px solid var(--border-subtle); width: 180px;">
         <Search class="h-3 w-3" style="color: var(--text-faint);" />
         <input 
           type="text" 
           value={searchQuery}
           oninput={(e) => onSearchChange((e.target as HTMLInputElement).value)}
-          placeholder="Search members..."
+          placeholder="Search..."
           class="bg-transparent border-none outline-none text-xs w-full"
           style="color: var(--text-primary);"
         />
