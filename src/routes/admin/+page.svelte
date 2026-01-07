@@ -1258,18 +1258,35 @@
           <Tab
             {members}
             {groups}
+            {participants}
+            {filteredMembers}
+            {searchQuery}
+            {filterGroup}
+            {registrationFilter}
+            {registeredMemberIds}
+            {selectedMemberIds}
+            {allFilteredSelected}
             {selectedTournament}
-            registrationFilter={registrationFilter}
-            filterGroup={filterGroup}
-            searchQuery={searchQuery}
-            selectedMemberIds={selectedMemberIds}
+            {selectedTournament}
             onSearchChange={(v) => searchQuery = v}
             onFilterGroupChange={(v) => filterGroup = v}
             onRegistrationFilterChange={(v) => registrationFilter = v}
             onResetFilters={() => { searchQuery = ''; filterGroup = 'all'; registrationFilter = 'all'; }}
+            onOpenAddMember={() => showAddMember = true}
+            onOpenImportCSV={() => showImportCSV = true}
+            onOpenMassAdd={() => showMassAddMembers = true}
+            onOpenMassEdit={() => openMassEditMembers()}
+            onAddAllParticipants={addAllParticipants}
+            onClearAllParticipants={clearParticipants}
+            onRegisterSelectedMembers={registerSelectedMembers}
+            onRegisterGroupMembers={registerGroupMembers}
             onToggleMemberSelection={toggleMemberSelection}
-            onToggleMemberRegistration={toggleMemberRegistration}
             onClearSelection={() => selectedMemberIds = new Set()}
+            onToggleMemberRegistration={toggleMemberRegistration}
+            onOpenEditMember={(member) => { editingMember = { ...member }; showEditMember = true; }}
+            onDeleteMember={deleteMember}
+            {getGroupName}
+            resetMassMembers={resetMassMembers}
           />
         {:catch error}
           <div class="text-destructive text-sm">Failed to load members</div>
@@ -1288,13 +1305,14 @@
           {@const Tab = Module.default}
           <Tab
             {groups}
-            {members}
-            {getGroupName}
+            {membersByGroupId}
+            expandedGroupId={expandedGroupId}
             onExpand={setExpandedGroup}
-            onAddGroup={() => showAddGroup = true}
+            onOpenAddGroup={() => showAddGroup = true}
             onEditGroup={(g) => { editingGroup = g; showEditGroup = true; }}
             onDeleteGroup={deleteGroup}
             onAddMemberToGroup={(groupId) => { newMember.groupId = groupId; showAddMember = true; }}
+            onDeleteMember={deleteMember}
           />
         {:catch error}
           <div class="text-destructive text-sm">Failed to load groups</div>
