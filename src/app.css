@@ -315,7 +315,8 @@
 }
 
 /* Paper texture overlay for dark mode */
-.dark::before {
+.dark::before,
+.theme-sumi::before {
   content: '';
   position: fixed;
   inset: 0;
@@ -326,7 +327,8 @@
 }
 
 /* Ensure content is above texture */
-.dark > * {
+.dark > *,
+.theme-sumi > * {
   position: relative;
   z-index: 1;
 }
@@ -392,7 +394,7 @@
   }
 
   .sidebar-expanded {
-    width: 280px;
+    width: 220px;
     background: var(--surface);
     border-right: 1px solid var(--border-subtle);
   }
