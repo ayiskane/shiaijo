@@ -1,12 +1,11 @@
 <script lang="ts">
-  import { asset } from '$app/paths';
-  const shiaijoLogo = asset('/shiaijologo.png');
+  const shiaijoLogo = '/shiaijologo.png';
   
   const spectator = { id: 'spectator', href: '/spectator', kanji: '観', label: 'SPECTATOR', desc: 'Watch live tournament matches' };
   
   const staffPortals = [
     { id: 'admin', href: '/admin', kanji: '管', label: 'ADMIN' },
-    { id: 'courtkeeper', href: '/courtkeeper', kanji: '審', label: 'COURTKEEPER' },
+    { id: 'courtkeeper', href: '/courtkeeper', kanji: '審', label: 'COURT' },
     { id: 'volunteer', href: '/volunteer', kanji: '奉', label: 'VOLUNTEER' },
   ];
 </script>
@@ -23,7 +22,6 @@
     <!-- Left side - Logo & Title -->
     <div class="title-section">
       <div class="logo-wrapper">
-        <!-- Vite-processed image with hash for caching, explicit dimensions prevent CLS -->
         <img src={shiaijoLogo} alt="Shiaijo" class="logo" width="180" height="180" fetchpriority="high" />
       </div>
       
@@ -36,21 +34,22 @@
 
     <!-- Right side - Portals -->
     <div class="portals-section">
-      <div class="staff-label">PORTALS</div>
-      <div class="portal-grid">
-        <a href={spectator.href} class="portal-card portal-spectator">
-          <div class="portal-info">
-            <span class="portal-kanji">{spectator.kanji}</span>
-            <div class="portal-text">
-              <span class="portal-label">{spectator.label}</span>
-              <span class="portal-desc">{spectator.desc}</span>
-            </div>
-          </div>
-          <span class="portal-arrow">→</span>
-        </a>
+      <div class="section-label">PORTALS</div>
+      
+      <!-- Spectator - Full width -->
+      <a href={spectator.href} class="portal-card portal-spectator">
+        <span class="portal-kanji">{spectator.kanji}</span>
+        <div class="portal-text">
+          <span class="portal-label">{spectator.label}</span>
+          <span class="portal-desc">{spectator.desc}</span>
+        </div>
+        <span class="portal-arrow">→</span>
+      </a>
 
-        {#each staffPortals as portal}
-          <a href={portal.href} class="portal-card portal-staff">
+      <!-- Staff portals - 3 columns, same height -->
+      <div class="staff-row">
+        {#each staffPortals as portal, i}
+          <a href={portal.href} class="portal-card portal-staff" style="--delay: {0.1 + i * 0.05}s">
             <span class="portal-kanji">{portal.kanji}</span>
             <span class="portal-label">{portal.label}</span>
           </a>
@@ -70,15 +69,12 @@
 </div>
 
 <style>
-  /* Ai-iro 藍色 Theme - Traditional indigo "Japan Blue" */
+  /* Theme variables */
   .landing {
     --bg: #0c0b09;
-    --bg-alt: #0d1117;
     --text: #e0e7ff;
     --text-muted: #94a3b8;
     --text-faint: #475569;
-    --accent: #3b82f6;
-    --accent-light: #60a5fa;
     --card-bg: rgba(59, 130, 246, 0.06);
     --card-bg-hover: rgba(59, 130, 246, 0.12);
     --border: rgba(59, 130, 246, 0.12);
@@ -86,7 +82,9 @@
     --divider: rgba(59, 130, 246, 0.08);
     --shadow: 0 20px 50px rgba(0,0,0,0.35);
     --glow: rgba(59, 130, 246, 0.3);
-    --font-jp: 'SicYubi-HyojunGakushu', 'SicYubi-FudeGyosho', serif;
+    
+    /* Consistent card height */
+    --card-height: 88px;
   }
 
   .landing {
@@ -113,7 +111,7 @@
     display: flex;
     align-items: center;
     gap: 50px;
-    max-width: 750px;
+    max-width: 700px;
     width: 100%;
     position: relative;
     z-index: 1;
@@ -126,16 +124,15 @@
     flex-direction: column;
     align-items: center;
     text-align: center;
-    padding-right: 50px;
+    padding-right: 40px;
   }
 
   .logo-wrapper {
-    position: relative;
     margin-bottom: 16px;
   }
 
   .logo {
-    width: 180px;
+    width: 160px;
     height: auto;
     filter: drop-shadow(0 0 30px var(--glow));
   }
@@ -156,7 +153,7 @@
   /* Divider */
   .divider {
     width: 1px;
-    height: 280px;
+    height: 220px;
     background: var(--divider);
     flex-shrink: 0;
   }
@@ -167,132 +164,112 @@
     display: flex;
     flex-direction: column;
     gap: 12px;
+    max-width: 340px;
   }
 
-  /* Portal cards */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.3em;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    margin-left: 4px;
+    margin-bottom: 4px;
+  }
+
+  /* Portal cards base */
   .portal-card {
     display: flex;
     align-items: center;
-    gap: 16px;
-    padding: 20px 24px;
-    height: 100%;
+    height: var(--card-height);
     background: var(--card-bg);
     border: 1px solid var(--border);
-    border-radius: 16px;
+    border-radius: 14px;
     text-decoration: none;
-    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    animation: fadeIn 0.5s ease-out backwards;
   }
 
   .portal-card:hover {
     background: var(--card-bg-hover);
     border-color: var(--border-hover);
-    transform: translateY(-4px);
+    transform: translateY(-3px);
     box-shadow: var(--shadow);
   }
 
   .portal-kanji {
     font-family: 'SicYubi-HyojunGakushu', serif;
-    font-size: 42px;
     color: var(--text);
     line-height: 1;
     flex-shrink: 0;
-    filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.15));
-  }
-
-  .portal-info {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    filter: drop-shadow(0 0 15px rgba(59, 130, 246, 0.15));
   }
 
   .portal-label {
-    font-size: 14px;
     font-weight: 600;
     color: var(--text);
     letter-spacing: 0.1em;
   }
 
   .portal-desc {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--text-muted);
   }
 
   .portal-arrow {
-    font-size: 20px;
+    font-size: 18px;
     color: var(--text-faint);
     transition: transform 0.3s ease;
+    margin-left: auto;
   }
 
   .portal-card:hover .portal-arrow {
     transform: translateX(4px);
   }
 
-  .staff-label {
-    font-size: 10px;
-    letter-spacing: 0.3em;
-    color: var(--text-faint);
-    text-transform: uppercase;
-    margin: 8px 0 4px 4px;
-  }
-
-  .portal-grid {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 14px;
-    align-items: stretch;
-    grid-auto-rows: clamp(170px, 18vw, 220px);
-  }
-
+  /* Spectator - Full width card */
   .portal-spectator {
-    grid-column: 1 / -1;
-    align-items: center;
-    justify-content: space-between;
-    padding: 24px 28px;
-    background: linear-gradient(120deg, rgba(59,130,246,0.12), rgba(99,102,241,0.10));
-  }
-
-  .portal-spectator .portal-info {
-    flex-direction: row;
-    align-items: center;
-    gap: 14px;
+    padding: 0 24px;
+    gap: 16px;
+    background: linear-gradient(120deg, rgba(59,130,246,0.10), rgba(99,102,241,0.08));
   }
 
   .portal-spectator .portal-kanji {
-    font-size: 54px;
+    font-size: 48px;
   }
 
   .portal-spectator .portal-text {
     display: flex;
     flex-direction: column;
-    gap: 4px;
+    gap: 2px;
   }
 
   .portal-spectator .portal-label {
     font-size: 14px;
   }
 
-  .portal-spectator .portal-desc {
-    font-size: 12px;
+  /* Staff row - 3 equal columns */
+  .staff-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
   }
 
   .portal-staff {
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    padding: 18px 12px;
-    gap: 8px;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px;
+    animation-delay: var(--delay, 0s);
   }
 
   .portal-staff .portal-kanji {
-    font-size: 36px;
+    font-size: 32px;
   }
 
   .portal-staff .portal-label {
-    font-size: 11px;
-    font-weight: 600;
-    color: var(--text);
-    letter-spacing: 0.16em;
+    font-size: 10px;
+    letter-spacing: 0.12em;
   }
 
   /* Footer */
@@ -333,82 +310,128 @@
     letter-spacing: 0.15em;
   }
 
-  /* Responsive */
+  /* Animation */
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ========== RESPONSIVE ========== */
+  
+  /* Tablet - Stack vertically */
   @media (max-width: 700px) {
     .container {
       flex-direction: column;
-      gap: 40px;
+      gap: 32px;
     }
 
     .title-section {
       padding-right: 0;
-      padding-bottom: 30px;
+    }
+
+    .logo {
+      width: 140px;
     }
 
     .divider {
-      width: 80px;
+      width: 60px;
       height: 1px;
     }
 
     .portals-section {
       width: 100%;
-      max-width: 420px;
+      max-width: 360px;
     }
 
-    .portal-grid {
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      grid-auto-rows: clamp(150px, 42vw, 200px);
-    }
-
+    /* Keep same layout - spectator full, 3 cols below */
     .portal-spectator {
-      grid-column: 1 / -1;
-      padding: 20px;
-    }
-  }
-
-  @media (max-width: 400px) {
-    .logo {
-      width: 140px;
+      padding: 0 20px;
     }
 
-    .portal-grid {
-      grid-template-columns: 1fr;
-      grid-auto-rows: clamp(150px, 55vw, 200px);
-    }
-
-    .portal-spectator {
-      padding: 18px;
-    }
-
-    .portal-staff {
-      flex-direction: row;
-      justify-content: flex-start;
-      gap: 12px;
+    .portal-spectator .portal-kanji {
+      font-size: 42px;
     }
 
     .portal-staff .portal-kanji {
       font-size: 28px;
     }
+
+    .portal-staff .portal-label {
+      font-size: 9px;
+    }
   }
 
-  /* Animations */
-  @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(15px); }
-    to { opacity: 1; transform: translateY(0); }
+  /* Small mobile */
+  @media (max-width: 400px) {
+    .landing {
+      --card-height: 76px;
+    }
+
+    .portals-section {
+      max-width: 320px;
+      gap: 10px;
+    }
+
+    .portal-spectator {
+      padding: 0 16px;
+      gap: 12px;
+    }
+
+    .portal-spectator .portal-kanji {
+      font-size: 36px;
+    }
+
+    .portal-spectator .portal-label {
+      font-size: 12px;
+    }
+
+    .portal-spectator .portal-desc {
+      font-size: 10px;
+    }
+
+    .staff-row {
+      gap: 8px;
+    }
+
+    .portal-staff {
+      padding: 10px 6px;
+      gap: 4px;
+    }
+
+    .portal-staff .portal-kanji {
+      font-size: 24px;
+    }
+
+    .portal-staff .portal-label {
+      font-size: 8px;
+      letter-spacing: 0.08em;
+    }
   }
 
-  .portal-card {
-    animation: fadeIn 0.5s ease-out backwards;
-  }
+  /* Very small screens */
+  @media (max-width: 340px) {
+    .landing {
+      --card-height: 68px;
+    }
 
-  .portal-grid .portal-card:nth-child(1) { animation-delay: 0.05s; }
-  .portal-grid .portal-card:nth-child(2) { animation-delay: 0.1s; }
-  .portal-grid .portal-card:nth-child(3) { animation-delay: 0.15s; }
-  .portal-grid .portal-card:nth-child(4) { animation-delay: 0.2s; }
+    .logo {
+      width: 120px;
+    }
+
+    .portals-section {
+      max-width: 280px;
+    }
+
+    .portal-spectator .portal-kanji {
+      font-size: 30px;
+    }
+
+    .portal-staff .portal-kanji {
+      font-size: 20px;
+    }
+
+    .portal-staff .portal-label {
+      font-size: 7px;
+    }
+  }
 </style>
-
-
-
-
-
-
