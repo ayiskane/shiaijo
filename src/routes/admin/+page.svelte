@@ -1218,10 +1218,7 @@
   <!-- Main Content -->
   <main class={cn("flex-1 pt-14 transition-all duration-300 md:pt-0 w-full min-w-0 overflow-x-hidden", sidebarCollapsed ? "md:ml-[72px]" : "md:ml-52")}>
     <div class="p-4 sm:p-6 max-w-6xl mx-auto w-full overflow-x-hidden">
-      {#if loading}
-        <div class="space-y-4"><Skeleton class="h-8 w-48" /><div class="grid gap-4 md:grid-cols-3"><Skeleton class="h-24" /><Skeleton class="h-24" /><Skeleton class="h-24" /></div></div>
-      
-      {:else if activeTab === 'dashboard'}
+      {#if activeTab === 'dashboard'}
         {#await loadDashboardTab()}
           <div class="space-y-4">
             <Skeleton class="h-8 w-48" />
