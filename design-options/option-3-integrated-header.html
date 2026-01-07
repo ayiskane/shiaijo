@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Design Option 3 - Integrated Header Stats</title>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+JP:wght@400;700;900&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --background: #0C0B09;
+            --surface: #141310;
+            --surface-elevated: #1A1916;
+            --indigo-primary: #3b82f6;
+            --indigo-light: #60a5fa;
+            --indigo-glow: rgba(59, 130, 246, 0.15);
+            --accent-fire: #E86F3A;
+            --accent-fire-glow: rgba(232, 111, 58, 0.2);
+            --text-primary: #EAEAEC;
+            --text-secondary: #9ca0ad;
+            --text-muted: #5c6370;
+            --text-faint: #3d4148;
+            --border-subtle: rgba(92, 99, 112, 0.2);
+            --border-default: rgba(92, 99, 112, 0.35);
+            --success: #4ade80;
+            --warning: #fbbf24;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Mono', monospace;
+            background: var(--background);
+            color: var(--text-primary);
+            padding: 40px;
+            min-height: 100vh;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.02;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+            z-index: 1000;
+        }
+        
+        .title {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+        
+        .subtitle {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 32px;
+        }
+        
+        /* OPTION 3: Stats integrated into table card header */
+        .table-card {
+            background: var(--surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        
+        .table-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+        
+        .table-title {
+            font-family: 'Noto Serif JP', serif;
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        
+        /* Inline mini stats in header */
+        .header-stats {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding-left: 16px;
+            border-left: 1px solid var(--border-subtle);
+        }
+        
+        .header-stat {
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        
+        .header-stat-value {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .header-stat-value.indigo { color: var(--indigo-light); }
+        .header-stat-value.success { color: var(--success); }
+        .header-stat-value.warning { color: var(--warning); }
+        
+        .header-stat-label {
+            font-size: 0.6rem;
+            color: var(--text-faint);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .header-stat-divider {
+            color: var(--text-faint);
+            font-size: 0.75rem;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-sm {
+            padding: 6px 14px;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.65rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+        
+        .btn-sm.primary {
+            background: var(--indigo-primary);
+            color: white;
+        }
+        
+        .btn-sm.ghost {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-subtle);
+        }
+        
+        .table-body {
+            padding: 0;
+        }
+        
+        .table-row {
+            display: flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        
+        .table-row:last-child { border-bottom: none; }
+        
+        .member-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: var(--surface-elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            margin-right: 12px;
+        }
+        
+        .member-name {
+            font-size: 0.8rem;
+            flex: 1;
+        }
+        
+        .badge {
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 0.6rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge.active {
+            background: rgba(74, 222, 128, 0.12);
+            color: var(--success);
+        }
+        
+        .table-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 20px;
+            background: var(--background);
+            border-top: 1px solid var(--border-subtle);
+            font-size: 0.65rem;
+            color: var(--text-muted);
+        }
+        
+        .table-footer strong {
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="title">Option 3: Integrated Header Stats</div>
+    <p class="subtitle">Stats embedded directly in the table card header. No separate stats strip needed.</p>
+    
+    <!-- Stats integrated into table header -->
+    <div class="table-card">
+        <div class="table-card-header">
+            <div class="header-left">
+                <div class="table-title">Member Directory</div>
+                <div class="header-stats">
+                    <div class="header-stat">
+                        <span class="header-stat-value indigo">248</span>
+                        <span class="header-stat-label">total</span>
+                    </div>
+                    <span class="header-stat-divider">·</span>
+                    <div class="header-stat">
+                        <span class="header-stat-value success">186</span>
+                        <span class="header-stat-label">registered</span>
+                    </div>
+                    <span class="header-stat-divider">·</span>
+                    <div class="header-stat">
+                        <span class="header-stat-value warning">62</span>
+                        <span class="header-stat-label">pending</span>
+                    </div>
+                </div>
+            </div>
+            <div class="header-actions">
+                <button class="btn-sm ghost">Export</button>
+                <button class="btn-sm primary">+ Add Member</button>
+            </div>
+        </div>
+        
+        <div class="table-body">
+            <div class="table-row">
+                <div class="member-avatar">TK</div>
+                <div class="member-name">Tanaka Kenji</div>
+                <span class="badge active">Active</span>
+            </div>
+            <div class="table-row">
+                <div class="member-avatar">SM</div>
+                <div class="member-name">Suzuki Mei</div>
+                <span class="badge active">Active</span>
+            </div>
+            <div class="table-row">
+                <div class="member-avatar">NH</div>
+                <div class="member-name">Nakamura Hiro</div>
+                <span class="badge active">Active</span>
+            </div>
+        </div>
+        
+        <div class="table-footer">
+            <span>Showing <strong>248</strong> of 248 members</span>
+            <span>Page 1 of 13</span>
+        </div>
+    </div>
+</body>
+</html>
