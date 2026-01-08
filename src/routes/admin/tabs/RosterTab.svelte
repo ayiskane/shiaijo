@@ -579,9 +579,22 @@
             </div>
           {:else}
             {#each paginatedMembers as member (member._id)}
-              <Card.Root class={cn("p-2.5", member.archived && "opacity-50")}>
+              {@const canRegister = selectedTournament && selectedTournament.status !== 'completed' && !member.archived}
+              {@const isRegistered = registeredMemberIds.has(member._id)}
+              <Card.Root 
+                class={cn(
+                  "p-2.5 transition-colors",
+                  member.archived && "opacity-50",
+                  canRegister && "cursor-pointer active:bg-muted/50",
+                  canRegister && isRegistered && "border-green-600/50 bg-green-950/20"
+                )}
+                onclick={() => canRegister && onToggleMemberRegistration(member._id)}
+              >
                 <div class="flex items-center gap-2.5">
-                  <div class="cell-avatar-gradient shrink-0" style="width: 36px; height: 36px; font-size: 12px;">
+                  <div class={cn(
+                    "cell-avatar-gradient shrink-0",
+                    canRegister && isRegistered && "ring-2 ring-green-600"
+                  )} style="width: 36px; height: 36px; font-size: 12px;">
                     {getInitials(member.firstName, member.lastName)}
                   </div>
                   <div class="flex-1 min-w-0">
@@ -590,16 +603,16 @@
                       <Badge variant="outline" class="text-[10px] px-1.5 py-0">{getGroupName(member.groupId)}</Badge>
                       {#if member.archived}
                         <Badge variant="secondary" class="text-[10px] px-1.5 py-0">Archived</Badge>
-                      {:else if selectedTournament && registeredMemberIds.has(member._id)}
+                      {:else if selectedTournament && isRegistered}
                         <Badge variant="default" class="text-[10px] px-1.5 py-0 bg-green-600">Registered</Badge>
                       {/if}
                     </div>
                   </div>
                   <div class="flex items-center">
-                    <Button variant="ghost" size="sm" class="h-7 w-7 p-0" onclick={() => onOpenEditMember(member)}>
+                    <Button variant="ghost" size="sm" class="h-7 w-7 p-0" onclick={(e) => { e.stopPropagation(); onOpenEditMember(member); }}>
                       <Pencil class="w-3.5 h-3.5" />
                     </Button>
-                    <Button variant="ghost" size="sm" class="h-7 w-7 p-0 text-destructive" onclick={() => onDeleteMember(member._id)}>
+                    <Button variant="ghost" size="sm" class="h-7 w-7 p-0 text-destructive" onclick={(e) => { e.stopPropagation(); onDeleteMember(member._id); }}>
                       <Trash2 class="w-3.5 h-3.5" />
                     </Button>
                   </div>
@@ -676,5 +689,6 @@
     border-collapse: collapse;
   }
 </style>
+
 
 
