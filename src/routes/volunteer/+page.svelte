@@ -301,7 +301,10 @@
             Confirm sign-up
           </Button>
         {:else}
-          <p class="muted">We’ll open sign-ups when a tournament is scheduled.</p>
+          <div class="empty">
+            <p class="muted">There are no planned tournaments right now. Please check back later.</p>
+            <Button variant="outline" onclick={() => (window.location.href = '/')}>Return to main menu</Button>
+          </div>
         {/if}
       </section>
     </div>
@@ -489,6 +492,15 @@
   }
   .capitalize {
     text-transform: capitalize;
+  }
+  .empty {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+    border: 1px dashed rgba(59, 130, 246, 0.25);
+    border-radius: 12px;
+    background: rgba(59, 130, 246, 0.05);
   }
   @media (max-width: 900px) {
     .card.wide {
