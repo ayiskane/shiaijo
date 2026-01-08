@@ -74,7 +74,7 @@
   <footer class="footer">
     <a href="https://renbudojo.com" target="_blank" rel="noopener noreferrer" class="footer-link">
       <span class="footer-jp">練武道場</span>
-      <span class="footer-dot">·</span>
+      <img src="/renbu-logo.png" alt="Renbu logo" class="footer-logo" />
       <span class="footer-en">RENBU DOJO</span>
     </a>
   </footer>
@@ -330,7 +330,7 @@
   .footer-link {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     text-decoration: none;
     transition: opacity 0.3s ease;
   }
@@ -349,6 +349,14 @@
   .footer-dot {
     color: var(--text-faint);
     opacity: 0.4;
+  }
+
+  .footer-logo {
+    height: 18px;
+    width: auto;
+    object-fit: contain;
+    display: inline-block;
+    filter: drop-shadow(0 2px 6px rgba(0,0,0,0.45));
   }
 
   .footer-en {
