@@ -485,16 +485,16 @@
 
 {:else}
 <!-- Mobile: Tabbed Interface -->
-<div class="h-full flex flex-col">
-  <Tabs.Root value={mobileTab} onValueChange={(v) => mobileTab = v} class="flex-1 flex flex-col">
-    <div class="sticky top-0 z-10 bg-background/95 backdrop-blur-sm border-b">
+<div class="flex flex-col h-full min-h-0">
+  <Tabs.Root value={mobileTab} onValueChange={(v) => mobileTab = v} class="flex-1 flex flex-col min-h-0">
+    <div class="shrink-0 bg-background border-b">
       <div class="px-4 py-2">
         <Tabs.List class="w-full grid grid-cols-2">
-          <Tabs.Trigger value="members" class="flex items-center gap-2">
+          <Tabs.Trigger value="members" class="flex items-center justify-center gap-2">
             <Users class="w-4 h-4" />
             Members ({members.length})
           </Tabs.Trigger>
-          <Tabs.Trigger value="groups" class="flex items-center gap-2">
+          <Tabs.Trigger value="groups" class="flex items-center justify-center gap-2">
             <FolderOpen class="w-4 h-4" />
             Groups ({groups.length})
           </Tabs.Trigger>
@@ -502,9 +502,9 @@
       </div>
     </div>
     
-    <Tabs.Content value="members" class="flex-1 flex flex-col mt-0">
+    <Tabs.Content value="members" class="flex-1 flex flex-col min-h-0 data-[state=inactive]:hidden">
       <!-- Search and filters -->
-      <div class="px-4 py-3 space-y-2 border-b">
+      <div class="shrink-0 px-4 py-3 space-y-2 border-b">
         <div class="relative">
           <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
           <Input 
@@ -541,7 +541,7 @@
       </div>
       
       <!-- Member Cards -->
-      <div class="flex-1 overflow-auto p-4 space-y-2" bind:this={listContainer}>
+      <div class="flex-1 overflow-y-auto p-4 space-y-2" bind:this={listContainer}>
         {#each paginatedMembers as member (member._id)}
           <Card.Root class="p-3">
             <div class="flex items-center gap-3">
@@ -595,15 +595,15 @@
       
       <!-- FAB for add -->
       <Button 
-        class="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg"
+        class="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-20"
         onclick={onOpenAddMember}
       >
         <Plus class="w-6 h-6" />
       </Button>
     </Tabs.Content>
     
-    <Tabs.Content value="groups" class="flex-1 flex flex-col mt-0">
-      <div class="flex-1 overflow-auto p-4 space-y-2">
+    <Tabs.Content value="groups" class="flex-1 flex flex-col min-h-0 data-[state=inactive]:hidden">
+      <div class="flex-1 overflow-y-auto p-4 space-y-2">
         {#each groups as group (group._id)}
           <Card.Root class={cn("p-3", group.hantei && "border-l-4 border-orange-500")}>
             <div class="flex items-center gap-3">
@@ -611,7 +611,7 @@
               <div class="flex-1 min-w-0">
                 <div class="font-medium">{group.name}</div>
                 <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                  <span>{getGroupMemberCount(group._id)} members</span>
+                  <span>{getGroupMemberCount(group.groupId)} members</span>
                   {#if group.hantei}
                     <Badge variant="outline" class="text-orange-500 border-orange-500 text-xs">Hantei</Badge>
                   {/if}
@@ -622,7 +622,7 @@
               </div>
               <div class="flex items-center gap-1">
                 {#if selectedTournament}
-                  <Button variant="outline" size="sm" onclick={() => onRegisterGroupMembers(group._id)}>
+                  <Button variant="outline" size="sm" onclick={() => onRegisterGroupMembers(group.groupId)}>
                     <UserPlus class="w-4 h-4" />
                   </Button>
                 {/if}
@@ -640,7 +640,7 @@
       
       <!-- FAB for add group -->
       <Button 
-        class="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg"
+        class="fixed bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-20"
         onclick={onOpenAddGroup}
       >
         <Plus class="w-6 h-6" />
@@ -649,20 +649,20 @@
   </Tabs.Root>
   
   <!-- Bottom stats bar -->
-  <div class="mobile-stats-bar">
-    <div class="mobile-stat">
-      <div class="mobile-stat-value">{members.length}</div>
-      <div class="mobile-stat-label">Members</div>
+  <div class="shrink-0 flex items-center justify-around py-3 px-4 bg-surface border-t border-border">
+    <div class="text-center">
+      <div class="text-lg font-bold">{members.length}</div>
+      <div class="text-[10px] uppercase tracking-wide text-muted-foreground">Members</div>
     </div>
     {#if selectedTournament}
-      <div class="mobile-stat">
-        <div class="mobile-stat-value">{totalRegistered}</div>
-        <div class="mobile-stat-label">Registered</div>
+      <div class="text-center">
+        <div class="text-lg font-bold">{totalRegistered}</div>
+        <div class="text-[10px] uppercase tracking-wide text-muted-foreground">Registered</div>
       </div>
     {/if}
-    <div class="mobile-stat">
-      <div class="mobile-stat-value">{groups.length}</div>
-      <div class="mobile-stat-label">Groups</div>
+    <div class="text-center">
+      <div class="text-lg font-bold">{groups.length}</div>
+      <div class="text-[10px] uppercase tracking-wide text-muted-foreground">Groups</div>
     </div>
   </div>
 </div>
@@ -673,6 +673,7 @@
     border-collapse: collapse;
   }
 </style>
+
 
 
 
