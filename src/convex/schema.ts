@@ -7,6 +7,7 @@ export default defineSchema({
     firstName: v.string(),
     lastName: v.string(),
     groupId: v.string(), // Reference to group by custom ID (e.g., "YUD", "MUD")
+    dojo: v.optional(v.string()),
     isGuest: v.boolean(),
     isAdmin: v.optional(v.boolean()),
     archived: v.optional(v.boolean()),

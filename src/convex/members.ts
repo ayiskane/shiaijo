@@ -26,6 +26,7 @@ export const create = mutation({
     lastName: v.string(),
     groupId: v.string(),
     isGuest: v.boolean(),
+    dojo: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert("members", {
@@ -43,6 +44,7 @@ export const update = mutation({
     lastName: v.optional(v.string()),
     groupId: v.optional(v.string()),
     archived: v.optional(v.boolean()),
+    dojo: v.optional(v.string()),
   },
   handler: async (ctx, { id, ...updates }) => {
     const nextUpdates: Record<string, unknown> = { ...updates };
@@ -68,6 +70,7 @@ export const bulkCreate = mutation({
       groupId: v.string(),
       isGuest: v.boolean(),
       archived: v.optional(v.boolean()),
+      dojo: v.optional(v.string()),
     })),
   },
   handler: async (ctx, { members }) => {
@@ -91,6 +94,8 @@ export const bulkUpdate = mutation({
       firstName: v.optional(v.string()),
       lastName: v.optional(v.string()),
       groupId: v.optional(v.string()),
+      archived: v.optional(v.boolean()),
+      dojo: v.optional(v.string()),
     })),
   },
   handler: async (ctx, { members }) => {

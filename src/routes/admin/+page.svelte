@@ -44,6 +44,7 @@ import {
 
   // Eager-loaded admin tabs to avoid lazy-load stalls in production
   import RosterTab from './tabs/RosterTab.svelte';
+  import GuestsTab from './tabs/GuestsTab.svelte';
   import TournamentTab from './tabs/TournamentTab.svelte';
   
   // Apply Sumi theme to admin portal
@@ -75,6 +76,7 @@ import {
   let groups = $derived(groupsQuery.data ?? []);
   let members = $derived(membersQuery.data ?? []);
   let tournaments = $derived(tournamentsQuery.data ?? []);
+  let guests = $derived(members.filter(m => m.isGuest));
   let loading = $derived(groupsQuery.isLoading || membersQuery.isLoading || tournamentsQuery.isLoading);
   let settingsLoading = $derived(settingsQuery.isLoading);
   let settings = $derived(settingsQuery.data ?? { adminPasscode: null, courtkeeperPasscode: null });
@@ -108,6 +110,10 @@ import {
   let expandedGroupId = $state<string | null>(null);
   let newGroup = $state({ id: '', name: '', isHantei: false });
   let newMember = $state({ firstName: '', lastName: '', groupId: '' });
+  let newGuest = $state({ firstName: '', lastName: '', dojo: '', groupId: '' });
+  let bulkGuestsText = $state('');
+  let registerGuestsToTournament = $state(true);
+  let registerGuestsGroupId = $state('');
   let csvText = $state('');
   let newTournament = $state({ name: '', date: '', month: '', year: new Date().getFullYear() });
   let tournamentDateValue = $state(null as import('@internationalized/date').DateValue | null);
@@ -509,11 +515,11 @@ import {
   // Navigation
   const navItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'settings', label: 'Settings', icon: Settings },
   ];
   const navGroups = [
     { id: 'roster', label: 'Roster', items: [
       { id: 'roster', label: 'Roster', icon: Users },
+      { id: 'guests', label: 'Guests', icon: UserPlus },
     ]},
     { id: 'shiai', label: 'Shiai', items: [
       { id: 'tournament', label: 'Tournament', icon: Trophy },
@@ -825,6 +831,75 @@ function selectAllFiltered() {
       showAddMember = false;
       toast.success('Member added');
     } catch (e) { toast.error('Failed to create member'); }
+  }
+
+  async function createGuest() {
+    if (!newGuest.firstName || !newGuest.lastName) { toast.error('Enter first and last name'); return; }
+    const groupId = newGuest.groupId || (groups[0]?.groupId ?? '');
+    try {
+      const id = await client.mutation(api.members.create, { firstName: newGuest.firstName, lastName: newGuest.lastName, groupId, isGuest: true, dojo: newGuest.dojo ?? '' } as any);
+      if (registerGuestsToTournament && selectedTournamentId) {
+        await client.mutation(api.participants.add, { tournamentId: selectedTournamentId, memberId: id as any, groupId });
+      }
+      newGuest = { firstName: '', lastName: '', dojo: '', groupId: '' };
+      toast.success('Guest added');
+    } catch (e) {
+      console.error(e);
+      toast.error('Failed to add guest');
+    }
+  }
+
+  async function bulkAddGuests() {
+    const lines = bulkGuestsText.split('\n').map(l => l.trim()).filter(Boolean);
+    if (lines.length === 0) { toast.error('Paste some rows first'); return; }
+    const guestsToCreate = [];
+    for (const line of lines) {
+      const [firstName, lastName, dojo = '', groupId = registerGuestsGroupId || groups[0]?.groupId || ''] = line.split(',').map(s => s.trim());
+      if (!firstName || !lastName) continue;
+      guestsToCreate.push({ firstName, lastName, groupId, isGuest: true, dojo });
+    }
+    if (guestsToCreate.length === 0) { toast.error('No valid rows found'); return; }
+    try {
+      const ids = await client.mutation(api.members.bulkCreate, { members: guestsToCreate as any });
+      if (registerGuestsToTournament && selectedTournamentId) {
+        await client.mutation(api.participants.addBulk, {
+          tournamentId: selectedTournamentId,
+          participants: ids.map((id: any, idx: number) => ({
+            memberId: id,
+            groupId: guestsToCreate[idx].groupId,
+          })),
+        });
+      }
+      bulkGuestsText = '';
+      toast.success(`Added ${ids.length} guests`);
+    } catch (e) {
+      console.error(e);
+      toast.error('Bulk add failed');
+    }
+  }
+
+  async function updateGuestGroup(memberId: string, groupId: string) {
+    try {
+      await client.mutation(api.members.update, { id: memberId as any, groupId });
+      if (selectedTournamentId) {
+        const isRegistered = registeredMemberIds.has(memberId as any);
+        if (isRegistered) {
+          await client.mutation(api.participants.add, { tournamentId: selectedTournamentId, memberId: memberId as any, groupId });
+        }
+      }
+    } catch (e) { console.error(e); toast.error('Could not update group'); }
+  }
+
+  async function toggleGuestRegistration(memberId: string, groupId: string, checked: boolean) {
+    if (!selectedTournamentId) { toast.error('Select a tournament'); return; }
+    try {
+      if (checked) {
+        await client.mutation(api.participants.add, { tournamentId: selectedTournamentId, memberId: memberId as any, groupId });
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('Unable to update registration');
+    }
   }
   
   async function createMassMembers() {
@@ -1377,12 +1452,22 @@ function selectAllFiltered() {
       {#if sidebarCollapsed}
         <!-- Collapsed footer: portal icons only -->
         <div class="flex flex-col items-center gap-2">
+          <button class={cn("nav-icon-item", activeTab === 'settings' && "active")} title="Settings" onclick={() => activeTab = 'settings'}>
+            <Settings class="h-5 w-5" />
+          </button>
           <a href="/" class="nav-icon-item" title="Home"><Home class="h-5 w-5" /></a>
           <a href="/courtkeeper" class="nav-icon-item" title="Courtkeeper"><Swords class="h-5 w-5" /></a>
           <a href="/spectator" class="nav-icon-item" title="Spectator"><Eye class="h-5 w-5" /></a>
         </div>
       {:else}
         <!-- Expanded footer: portal links only (no user card) -->
+        <button
+          onclick={() => activeTab = 'settings'}
+          class={cn("portal-link home", activeTab === 'settings' && "bg-sidebar-accent text-sidebar-primary")}
+        >
+          <Settings class="h-4 w-4 shrink-0" />
+          <span>Settings</span>
+        </button>
         <p class="footer-label">Switch Portal</p>
         <div class="flex flex-col gap-2">
           <a href="/" class="portal-link home"><Home class="h-4 w-4 shrink-0" /><span>Home</span></a>
@@ -1417,12 +1502,19 @@ function selectAllFiltered() {
           { id: 'tournament', label: 'Tournament', icon: Trophy },
           { id: 'results', label: 'Results', icon: ClipboardList },
           { id: 'history', label: 'History', icon: History },
-          { id: 'settings', label: 'Settings', icon: Settings },
         ] as tab (tab.id)}
           {@const Icon = tab.icon}
           <button onclick={() => { activeTab = tab.id; sidebarOpen = false; }} class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors", activeTab === tab.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}><Icon class="h-4 w-4" />{tab.label}</button>
         {/each}
       </nav>
+      <div class="p-2 border-t border-sidebar-border">
+        <button
+          onclick={() => { activeTab = 'settings'; sidebarOpen = false; }}
+          class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors", activeTab === 'settings' ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}
+        >
+          <Settings class="h-4 w-4" /> Settings
+        </button>
+      </div>
       <div class="absolute inset-x-4 bottom-4 flex flex-col gap-2">
         <a href="/courtkeeper" class="flex items-center justify-center gap-2 rounded-lg bg-sky-900/50 py-2 text-sm text-sky-300 transition-colors hover:bg-sky-900/70"><Swords class="h-4 w-4" /> Courtkeeper</a>
         <a href="/spectator" class="flex items-center justify-center gap-2 rounded-lg bg-emerald-900/50 py-2 text-sm text-emerald-300 transition-colors hover:bg-emerald-900/70"><Eye class="h-4 w-4" /> Spectator</a>
@@ -1475,6 +1567,23 @@ function selectAllFiltered() {
           onOpenEditGroup={(g) => { editingGroup = g; showEditGroup = true; }}
           onDeleteGroup={deleteGroup}
           onAddMemberToGroup={(groupId) => { newMember.groupId = groupId; showAddMember = true; }}
+        />
+      </div>
+    {:else if activeTab === 'guests'}
+      <div class="p-4 sm:p-6 max-w-6xl mx-auto w-full">
+        <GuestsTab
+          {guests}
+          {groups}
+          {selectedTournament}
+          registeredMemberIds={registeredMemberIds}
+          onCreateGuest={createGuest}
+          onBulkAddGuests={bulkAddGuests}
+          onUpdateGuestGroup={updateGuestGroup}
+          onToggleGuestRegistration={toggleGuestRegistration}
+          bind:newGuest
+          bind:bulkGuestsText
+          bind:registerGuestsGroupId
+          bind:registerGuestsToTournament
         />
       </div>
     {:else}
