@@ -448,13 +448,14 @@
   }
   
   .footer-label {
-    @apply text-[13px] uppercase tracking-[0.12em];
+    @apply text-[14px] uppercase tracking-[0.12em];
     color: var(--text-faint);
   }
   
   /* Portal links */
   .portal-link {
-    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition;
+    @apply flex items-center gap-2 rounded-lg px-3 py-2.5 font-semibold transition;
+    font-size: 1rem; /* 16px */
     border: 1px solid var(--border-subtle);
     color: var(--text-muted);
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
@@ -595,7 +596,7 @@
   
   .nav-item-text {
     flex: 1;
-    font-size: 1rem;
+    font-size: 1.0625rem; /* 17px */
   }
   
   /* Nav sections */
@@ -604,7 +605,7 @@
   }
   
   .nav-section-title {
-    font-size: 0.75rem;
+    font-size: 0.8125rem; /* 13px */
     letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-faint);
@@ -2141,6 +2142,7 @@
     --border: oklch(1 0 0 / 25%);
   }
 }
+
 
 
 
