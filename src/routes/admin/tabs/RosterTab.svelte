@@ -257,7 +257,7 @@
     </div>
     
     <!-- Members Table (Right) -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <div class="members-panel">
       <!-- Action Bar -->
       <div class="px-4 py-2 border-b border-border/50 flex items-center justify-between bg-muted/10">
         <div class="flex items-center gap-2">
@@ -645,3 +645,4 @@
     border-collapse: collapse;
   }
 </style>
+
