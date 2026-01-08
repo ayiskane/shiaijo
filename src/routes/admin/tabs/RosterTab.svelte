@@ -14,7 +14,7 @@
   
   import { 
     Users, FolderOpen, Search, Plus, Pencil, Trash2, 
-    Check, X, ChevronDown, ChevronLeft, ChevronRight, UserPlus, RefreshCw
+    Check, X, ChevronDown, ChevronLeft, ChevronRight, UserPlus, RefreshCw, Archive
   } from '@lucide/svelte';
   
   export let members: any[] = [];
@@ -47,6 +47,7 @@
   export let onToggleMemberRegistration: (id: string) => void;
   export let onOpenEditMember: (member: any) => void;
   export let onDeleteMember: (id: string) => void;
+  export let onArchiveMember: (id: string, archived: boolean) => void;
   export let getGroupName: (groupId: string) => string;
   export let resetMassMembers: () => void;
   
@@ -62,6 +63,7 @@
   let addMenuOpen = false;
   let selectedGroupIdForFilter: string | null = null;
   let mobileTab = 'members';
+  let groupsEditMode = false;
   
   $: listContainer && autoAnimate(listContainer);
   
@@ -173,9 +175,21 @@
     <div class="groups-panel">
       <div class="groups-panel-header">
         <span class="groups-panel-title">Groups</span>
-        <Button variant="ghost" size="sm" class="h-7 w-7 p-0" onclick={onOpenAddGroup}>
-          <Plus class="w-4 h-4" />
-        </Button>
+        <div class="flex items-center gap-1">
+          {#if groupsEditMode}
+            <Button variant="default" size="sm" class="h-7 px-2 text-xs" onclick={() => groupsEditMode = false}>
+              <Check class="w-3.5 h-3.5 mr-1" />
+              Done
+            </Button>
+          {:else}
+            <Button variant="ghost" size="sm" class="h-7 w-7 p-0" onclick={() => groupsEditMode = true} title="Edit groups">
+              <Pencil class="w-4 h-4" />
+            </Button>
+            <Button variant="ghost" size="sm" class="h-7 w-7 p-0" onclick={onOpenAddGroup} title="Add group">
+              <Plus class="w-4 h-4" />
+            </Button>
+          {/if}
+        </div>
       </div>
       <div class="groups-panel-list">
         <!-- All Members option -->
@@ -202,54 +216,49 @@
             role="button"
             tabindex="0"
             class={cn(
-              "group-item group",
+              "group-item",
               selectedGroupIdForFilter === group._id && "active",
-              group.hantei && "hantei"
+              group.hantei && "hantei",
+              groupsEditMode && "editing"
             )}
-            onclick={() => selectGroup(group._id)}
-            onkeydown={(e) => e.key === 'Enter' && selectGroup(group._id)}
+            onclick={() => !groupsEditMode && selectGroup(group._id)}
+            onkeydown={(e) => e.key === 'Enter' && !groupsEditMode && selectGroup(group._id)}
           >
             <div class="group-item-icon">
               <FolderOpen class="w-4 h-4" />
             </div>
             <div class="group-item-info">
-              <div class="group-item-name">{group.name}</div>
-              <div class="group-item-meta">
-                {getGroupMemberCount(group._id)} members
-                {#if group.hantei}
-                  <span class="text-[var(--accent-fire)] ml-1">• Hantei</span>
-                {/if}
+              <div class="group-item-name" title={group.name}>{group.name}</div>
+              {#if groupsEditMode}
+                <div class="group-item-meta">
+                  {getGroupMemberCount(group._id)} members
+                  {#if group.hantei}
+                    <span class="text-[var(--accent-fire)] ml-1">• Hantei</span>
+                  {/if}
+                </div>
+              {/if}
+            </div>
+            {#if groupsEditMode}
+              <div class="group-item-actions visible">
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  class="h-6 w-6 p-0"
+                  onclick={(e) => { e.stopPropagation(); onOpenEditGroup(group); }}
+                >
+                  <Pencil class="w-3 h-3" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  class="h-6 w-6 p-0 text-destructive"
+                  onclick={(e) => { e.stopPropagation(); onDeleteGroup(group._id); }}
+                >
+                  <Trash2 class="w-3 h-3" />
+                </Button>
               </div>
-            </div>
-            <span class="group-item-count">{getGroupMemberCount(group._id)}</span>
-            <div class="group-item-actions">
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                class="h-6 w-6 p-0"
-                onclick={(e) => { e.stopPropagation(); onOpenEditGroup(group); }}
-              >
-                <Pencil class="w-3 h-3" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                class="h-6 w-6 p-0 text-destructive"
-                onclick={(e) => { e.stopPropagation(); onDeleteGroup(group._id); }}
-              >
-                <Trash2 class="w-3 h-3" />
-              </Button>
-            </div>
-            {#if selectedTournament}
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                class="h-6 px-2 text-xs hidden group-hover:flex"
-                onclick={(e) => { e.stopPropagation(); onRegisterGroupMembers(group._id); }}
-              >
-                <UserPlus class="w-3 h-3 mr-1" />
-                Register
-              </Button>
+            {:else}
+              <span class="group-item-count">{getGroupMemberCount(group._id)}</span>
             {/if}
           </div>
         {/each}
@@ -332,7 +341,7 @@
           </thead>
           <tbody bind:this={listContainer}>
             {#each paginatedMembers as member (member._id)}
-              <tr class="border-b hover:bg-muted/30 transition-colors">
+              <tr class={cn("border-b hover:bg-muted/30 transition-colors", member.archived && "opacity-50")}>
                 <td class="px-3 py-2">
                   <input 
                     type="checkbox" 
@@ -381,6 +390,15 @@
                 {/if}
                 <td class="px-3 py-2">
                   <div class="flex items-center justify-end gap-1">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      class={cn("h-7 w-7 p-0", member.archived && "text-muted-foreground")}
+                      onclick={() => onArchiveMember(member._id, !member.archived)}
+                      title={member.archived ? "Unarchive member" : "Archive member"}
+                    >
+                      <Archive class="w-3.5 h-3.5" />
+                    </Button>
                     <Button variant="ghost" size="sm" class="h-7 w-7 p-0" onclick={() => onOpenEditMember(member)}>
                       <Pencil class="w-3.5 h-3.5" />
                     </Button>
@@ -645,4 +663,5 @@
     border-collapse: collapse;
   }
 </style>
+
 
