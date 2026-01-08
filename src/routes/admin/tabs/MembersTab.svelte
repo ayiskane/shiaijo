@@ -164,7 +164,7 @@
       </div>
       <div>
         <p class="text-[18px] font-semibold leading-tight">Member Directory</p>
-        <p class="text-[13px] text-muted-foreground">Showing {startIndex + 1}–{endIndex} of {filteredMembers.length} (total {members.length})</p>
+        <p class="text-[13px] text-muted-foreground">Showing {startIndex + 1}–{endIndex} of {filteredMembers.length}</p>
       </div>
     </div>
 
@@ -187,7 +187,7 @@
       {/if}
     </div>
 
-    <div class="flex items-center gap-2">
+    <div class="flex items-center gap-3">
       <Select.Root value={filterGroup} onValueChange={(v) => onFilterGroupChange(v)}>
         <Select.Trigger class="glass-input h-11 min-w-[150px] rounded-xl pl-4 pr-8 text-[15px] font-medium">
           <Select.Value placeholder="All groups" />
@@ -229,6 +229,10 @@
           Clear
         </button>
       {/if}
+
+      <span class="hidden sm:inline-flex pill-soft px-2.5 py-1 text-[12px] text-muted-foreground">
+        {selectedMemberIds.size} selected
+      </span>
     </div>
   </div>
   <!-- Table -->

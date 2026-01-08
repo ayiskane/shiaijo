@@ -493,7 +493,7 @@ import {
   let registrationFilter = $state<'all' | 'registered' | 'unregistered'>('all');
   
   // Member selection for bulk registration
-  let selectedMemberIds = $state(new SvelteSet<string>());
+let selectedMemberIds = $state(new SvelteSet<string>());
   
   // Quick lookup for registered members
   let registeredMemberIds = $derived(new Set(participants.map(p => p.memberId)));
@@ -513,27 +513,25 @@ import {
   );
   
   // Selection helpers
-  function toggleMemberSelection(memberId: string) {
-    if (selectedMemberIds.has(memberId)) {
-      selectedMemberIds.delete(memberId);
-    } else {
-      selectedMemberIds.add(memberId);
-    }
-  }
-  
-  function clearSelection() {
-    selectedMemberIds.clear();
-  }
+function toggleMemberSelection(memberId: string) {
+  const next = new SvelteSet(selectedMemberIds);
+  next.has(memberId) ? next.delete(memberId) : next.add(memberId);
+  selectedMemberIds = next;
+}
+
+function clearSelection() {
+  selectedMemberIds = new SvelteSet();
+}
   
   let allFilteredSelected = $derived(
     filteredMembers.length > 0 && filteredMembers.every(m => selectedMemberIds.has(m._id))
   );
 
-  function selectAllFiltered() {
-    for (const m of filteredMembers) {
-      selectedMemberIds.add(m._id);
-    }
-  }
+function selectAllFiltered() {
+  const next = new SvelteSet(selectedMemberIds);
+  for (const m of filteredMembers) next.add(m._id);
+  selectedMemberIds = next;
+}
   
   function toggleNavGroup(groupId: string) {
     const newSet = new Set(expandedNavGroups);
