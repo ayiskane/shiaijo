@@ -187,31 +187,35 @@
     </div>
 
     <div class="flex items-center gap-2">
-      <div class="relative">
-        <select
-          bind:value={filterGroup}
-          onchange={(e) => onFilterGroupChange((e.target as HTMLSelectElement).value)}
-          class="glass-input h-11 appearance-none rounded-xl pl-4 pr-10 text-[15px] font-medium cursor-pointer"
-        >
-          <option value="all">All groups</option>
-          {#each groups as g}<option value={g.groupId}>{g.name}</option>{/each}
-        </select>
-        <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-      </div>
+      <Select.Root value={filterGroup} onValueChange={(v) => onFilterGroupChange(v)}>
+        <Select.Trigger class="glass-input h-11 min-w-[150px] rounded-xl pl-4 pr-10 text-[15px] font-medium">
+          <Select.Value placeholder="All groups" />
+          <Select.Icon class="absolute right-3">
+            <ChevronDown class="h-4 w-4 text-muted-foreground" />
+          </Select.Icon>
+        </Select.Trigger>
+        <Select.Content class="z-30">
+          <Select.Item value="all">All groups</Select.Item>
+          {#each groups as g}
+            <Select.Item value={g.groupId}>{g.name}</Select.Item>
+          {/each}
+        </Select.Content>
+      </Select.Root>
 
       {#if selectedTournament}
-        <div class="relative">
-          <select
-            bind:value={registrationFilter}
-            onchange={(e) => onRegistrationFilterChange((e.target as HTMLSelectElement).value as any)}
-            class="glass-input h-11 appearance-none rounded-xl pl-4 pr-10 text-[15px] font-medium cursor-pointer"
-          >
-            <option value="all">All</option>
-            <option value="registered">Registered</option>
-            <option value="unregistered">Not registered</option>
-          </select>
-          <ChevronDown class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
-        </div>
+        <Select.Root value={registrationFilter} onValueChange={(v) => onRegistrationFilterChange(v as any)}>
+          <Select.Trigger class="glass-input h-11 min-w-[130px] rounded-xl pl-4 pr-10 text-[15px] font-medium">
+            <Select.Value placeholder="All" />
+            <Select.Icon class="absolute right-3">
+              <ChevronDown class="h-4 w-4 text-muted-foreground" />
+            </Select.Icon>
+          </Select.Trigger>
+          <Select.Content class="z-30">
+            <Select.Item value="all">All</Select.Item>
+            <Select.Item value="registered">Registered</Select.Item>
+            <Select.Item value="unregistered">Not registered</Select.Item>
+          </Select.Content>
+        </Select.Root>
       {/if}
 
       {#if filterGroup !== 'all' || registrationFilter !== 'all' || searchQuery}
