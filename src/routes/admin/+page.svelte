@@ -1376,39 +1376,10 @@ function selectAllFiltered() {
   {/if}
   
   <!-- Main Content -->
-  <main class={cn("flex-1 pt-14 transition-all duration-300 md:pt-0 w-full min-w-0 overflow-x-hidden", sidebarCollapsed ? "md:ml-16" : "md:ml-[220px]")}>
-    <div class="p-4 sm:p-6 max-w-6xl mx-auto w-full overflow-x-hidden">
-      {#if activeTab === 'dashboard'}
-        {#await loadDashboardTab()}
-          <div class="space-y-4">
-            <Skeleton class="h-8 w-48" />
-            <div class="grid gap-4 md:grid-cols-3">
-              <Skeleton class="h-24" />
-              <Skeleton class="h-24" />
-              <Skeleton class="h-24" />
-            </div>
-          </div>
-        {:then Module}
-          {@const Tab = Module.default}
-          <Tab
-            loading={loading}
-            {members}
-            {groups}
-            {tournaments}
-            {activeTournament}
-            {completedMatches}
-            {matches}
-            {participants}
-            progressPercent={progressPercent}
-            onSeedDemoData={seedDemoData}
-            onClearDemoData={clearDemoData}
-            {seeding}
-          />
-        {:catch error}
-          <div class="text-destructive text-sm">Failed to load dashboard</div>
-        {/await}
-      
-      {:else if activeTab === 'roster'}
+  <main class={cn("flex-1 pt-14 transition-all duration-300 md:pt-0 w-full min-w-0 overflow-x-hidden h-[calc(100vh-56px)] md:h-screen", sidebarCollapsed ? "md:ml-16" : "md:ml-[220px]")}>
+    {#if activeTab === 'roster'}
+      <!-- Roster tab uses full width without padding constraints -->
+      <div class="h-full w-full">
         <RosterTab
           {members}
           {groups}
@@ -1446,7 +1417,39 @@ function selectAllFiltered() {
           onDeleteGroup={deleteGroup}
           onAddMemberToGroup={(groupId) => { newMember.groupId = groupId; showAddMember = true; }}
         />
-
+      </div>
+    {:else}
+    <div class="p-4 sm:p-6 max-w-6xl mx-auto w-full overflow-x-hidden">
+      {#if activeTab === 'dashboard'}
+        {#await loadDashboardTab()}
+          <div class="space-y-4">
+            <Skeleton class="h-8 w-48" />
+            <div class="grid gap-4 md:grid-cols-3">
+              <Skeleton class="h-24" />
+              <Skeleton class="h-24" />
+              <Skeleton class="h-24" />
+            </div>
+          </div>
+        {:then Module}
+          {@const Tab = Module.default}
+          <Tab
+            loading={loading}
+            {members}
+            {groups}
+            {tournaments}
+            {activeTournament}
+            {completedMatches}
+            {matches}
+            {participants}
+            progressPercent={progressPercent}
+            onSeedDemoData={seedDemoData}
+            onClearDemoData={clearDemoData}
+            {seeding}
+          />
+        {:catch error}
+          <div class="text-destructive text-sm">Failed to load dashboard</div>
+        {/await}
+      
       {:else if activeTab === 'tournament'}
         <TournamentTab
             bind:selectedTournamentId
@@ -1614,6 +1617,7 @@ function selectAllFiltered() {
         </div>
       {/if}
     </div>
+    {/if}
   </main>
 </div>
 
@@ -1861,4 +1865,5 @@ function selectAllFiltered() {
 </Dialog.Root>
 
 {/if}
+
 
