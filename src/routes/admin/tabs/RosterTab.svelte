@@ -127,6 +127,15 @@
   // Create a map of groupId to group for quick lookup
   $: groupsMap = new Map(groups.map(g => [g.groupId, g]));
   
+  // Reactive group member counts - recalculate when members change
+  $: groupMemberCounts = (() => {
+    const counts = new Map<string, number>();
+    for (const m of members) {
+      counts.set(m.groupId, (counts.get(m.groupId) || 0) + 1);
+    }
+    return counts;
+  })();
+  
   function isHanteiGroup(groupId: string): boolean {
     return groupsMap.get(groupId)?.hantei === true;
   }
@@ -145,7 +154,7 @@
   }
   
   function getGroupMemberCount(groupId: string): number {
-    return membersByGroupId.get(groupId)?.length || 0;
+    return groupMemberCounts.get(groupId) || 0;
   }
 </script>
 
@@ -749,6 +758,7 @@
     border-collapse: collapse;
   }
 </style>
+
 
 
 
