@@ -880,10 +880,13 @@ function selectAllFiltered() {
   async function importCSV() {
     const lines = csvText.trim().split('\n').filter(l => l.trim());
     const toAdd = lines.map(line => {
-      const [firstName, lastName, groupId] = line.split(',').map(s => s.trim());
-      return firstName && lastName && groupId ? { firstName, lastName, groupId, isGuest: false } : null;
+      const parts = line.split(',').map(s => s.trim());
+      const [firstName, lastName, groupId, archivedStr] = parts;
+      if (!firstName || !lastName || !groupId) return null;
+      const archived = archivedStr?.toUpperCase() === 'TRUE';
+      return { firstName, lastName, groupId, isGuest: false, archived };
     }).filter(Boolean);
-    if (toAdd.length === 0) { toast.error('No valid rows. Format: FirstName,LastName,GroupID'); return; }
+    if (toAdd.length === 0) { toast.error('No valid rows. Format: FirstName,LastName,GroupID,isArchived'); return; }
     try {
       await client.mutation(api.members.bulkCreate, { members: toAdd });
       csvText = '';
@@ -1797,8 +1800,8 @@ function selectAllFiltered() {
   
   <Dialog.Root bind:open={showImportCSV}>
   <Dialog.Content class="sm:max-w-md max-w-[calc(100vw-2rem)]">
-    <Dialog.Header><Dialog.Title>Import CSV</Dialog.Title><Dialog.Description>FirstName,LastName,GroupID</Dialog.Description></Dialog.Header>
-    <div class="py-4"><textarea bind:value={csvText} placeholder="John,Doe,YUD&#10;Jane,Smith,MUD" rows="6" class="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-xs sm:text-sm focus:border-primary focus:outline-none"></textarea></div>
+    <Dialog.Header><Dialog.Title>Import CSV</Dialog.Title><Dialog.Description>FirstName,LastName,GroupID,isArchived (isArchived is optional, defaults to FALSE)</Dialog.Description></Dialog.Header>
+    <div class="py-4"><textarea bind:value={csvText} placeholder="Soshi,Ara,C,FALSE&#10;John,Doe,YUD&#10;Jane,Smith,MUD,TRUE" rows="6" class="w-full rounded-lg border border-input bg-background px-3 py-2 font-mono text-xs sm:text-sm focus:border-primary focus:outline-none"></textarea></div>
     <Dialog.Footer class="flex-col sm:flex-row gap-2"><Button variant="secondary" onclick={() => showImportCSV = false} class="w-full sm:w-auto">Cancel</Button><Button onclick={importCSV} class="w-full sm:w-auto">Import</Button></Dialog.Footer>
   </Dialog.Content>
 </Dialog.Root>
