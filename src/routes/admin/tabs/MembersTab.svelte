@@ -398,3 +398,5 @@
     {/if}
   </div>
 </div>
+
+</div> <!-- sticky controls -->
