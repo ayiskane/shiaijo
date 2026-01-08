@@ -571,7 +571,7 @@
         </div>
         
         <!-- Member Cards -->
-        <div class="flex-1 overflow-y-auto p-4 space-y-2" bind:this={listContainer}>
+        <div class="flex-1 overflow-y-auto px-4 py-2 space-y-2" bind:this={listContainer}>
           {#if paginatedMembers.length === 0}
             <div class="flex flex-col items-center justify-center py-12 text-muted-foreground">
               <Users class="w-12 h-12 mb-3 opacity-50" />
@@ -579,37 +579,28 @@
             </div>
           {:else}
             {#each paginatedMembers as member (member._id)}
-              <Card.Root class={cn("p-3", member.archived && "opacity-50")}>
-                <div class="flex items-center gap-3">
-                  <input 
-                    type="checkbox" 
-                    checked={selectedMemberIds.has(member._id)}
-                    onchange={() => onToggleMemberSelection(member._id)}
-                    class="rounded border-input"
-                  />
-                  <div class="cell-avatar-gradient" style="width: 40px; height: 40px; font-size: 14px;">
+              <Card.Root class={cn("p-2.5", member.archived && "opacity-50")}>
+                <div class="flex items-center gap-2.5">
+                  <div class="cell-avatar-gradient shrink-0" style="width: 36px; height: 36px; font-size: 12px;">
                     {getInitials(member.firstName, member.lastName)}
                   </div>
                   <div class="flex-1 min-w-0">
-                    <div class="font-medium">{member.firstName} {member.lastName}</div>
-                    <div class="flex items-center gap-2 text-xs text-muted-foreground">
-                      <Badge variant="outline" class="text-xs">{getGroupName(member.groupId)}</Badge>
+                    <div class="font-medium text-sm leading-tight">{member.firstName} {member.lastName}</div>
+                    <div class="flex items-center gap-1.5 mt-0.5">
+                      <Badge variant="outline" class="text-[10px] px-1.5 py-0">{getGroupName(member.groupId)}</Badge>
                       {#if member.archived}
-                        <Badge variant="secondary" class="text-xs">Archived</Badge>
+                        <Badge variant="secondary" class="text-[10px] px-1.5 py-0">Archived</Badge>
                       {:else if selectedTournament && registeredMemberIds.has(member._id)}
-                        <Badge variant="default" class="text-xs bg-green-600">
-                          <Check class="w-3 h-3 mr-0.5" />
-                          Registered
-                        </Badge>
+                        <Badge variant="default" class="text-[10px] px-1.5 py-0 bg-green-600">Registered</Badge>
                       {/if}
                     </div>
                   </div>
-                  <div class="flex items-center gap-1">
-                    <Button variant="ghost" size="sm" class="h-8 w-8 p-0" onclick={() => onOpenEditMember(member)}>
-                      <Pencil class="w-4 h-4" />
+                  <div class="flex items-center">
+                    <Button variant="ghost" size="sm" class="h-7 w-7 p-0" onclick={() => onOpenEditMember(member)}>
+                      <Pencil class="w-3.5 h-3.5" />
                     </Button>
-                    <Button variant="ghost" size="sm" class="h-8 w-8 p-0 text-destructive" onclick={() => onDeleteMember(member._id)}>
-                      <Trash2 class="w-4 h-4" />
+                    <Button variant="ghost" size="sm" class="h-7 w-7 p-0 text-destructive" onclick={() => onDeleteMember(member._id)}>
+                      <Trash2 class="w-3.5 h-3.5" />
                     </Button>
                   </div>
                 </div>
@@ -619,14 +610,14 @@
         </div>
         
         <!-- Mobile pagination -->
-        <div class="shrink-0 px-4 py-3 border-t bg-background flex items-center justify-between">
-          <span class="text-sm text-muted-foreground">{startIndex + 1}-{endIndex} of {displayedMembers.length}</span>
-          <div class="flex items-center gap-1">
-            <Button variant="ghost" size="sm" disabled={currentPage === 1} onclick={() => goToPage(currentPage - 1)}>
+        <div class="shrink-0 px-4 py-2 border-t bg-background flex items-center justify-between">
+          <span class="text-xs text-muted-foreground">{startIndex + 1}-{endIndex} of {displayedMembers.length}</span>
+          <div class="flex items-center gap-0.5">
+            <Button variant="ghost" size="sm" class="h-7 w-7 p-0" disabled={currentPage === 1} onclick={() => goToPage(currentPage - 1)}>
               <ChevronLeft class="w-4 h-4" />
             </Button>
-            <span class="text-sm px-2">{currentPage} / {totalPages || 1}</span>
-            <Button variant="ghost" size="sm" disabled={currentPage === totalPages} onclick={() => goToPage(currentPage + 1)}>
+            <span class="text-xs px-1.5">{currentPage}/{totalPages || 1}</span>
+            <Button variant="ghost" size="sm" class="h-7 w-7 p-0" disabled={currentPage === totalPages} onclick={() => goToPage(currentPage + 1)}>
               <ChevronRight class="w-4 h-4" />
             </Button>
           </div>
@@ -670,27 +661,9 @@
     {/if}
   </div>
   
-  <!-- Bottom stats bar -->
-  <div class="shrink-0 flex items-center justify-around py-2 px-4 bg-background border-t">
-    <div class="text-center">
-      <div class="text-base font-bold">{members.length}</div>
-      <div class="text-[9px] uppercase tracking-wide text-muted-foreground">Members</div>
-    </div>
-    {#if selectedTournament}
-      <div class="text-center">
-        <div class="text-base font-bold">{totalRegistered}</div>
-        <div class="text-[9px] uppercase tracking-wide text-muted-foreground">Registered</div>
-      </div>
-    {/if}
-    <div class="text-center">
-      <div class="text-base font-bold">{groups.length}</div>
-      <div class="text-[9px] uppercase tracking-wide text-muted-foreground">Groups</div>
-    </div>
-  </div>
-  
   <!-- FAB -->
   <Button 
-    class="absolute bottom-16 right-4 h-12 w-12 rounded-full shadow-lg z-20"
+    class="absolute bottom-4 right-4 h-12 w-12 rounded-full shadow-lg z-20"
     onclick={() => mobileTab === 'members' ? onOpenAddMember() : onOpenAddGroup()}
   >
     <Plus class="w-5 h-5" />
@@ -703,4 +676,5 @@
     border-collapse: collapse;
   }
 </style>
+
 
