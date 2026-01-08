@@ -153,7 +153,12 @@
   </div>
 {/if}
 
-  <div class="glass-panel border border-border/70 px-4 sm:px-5 py-3.5 flex flex-wrap items-center gap-3 text-accessible-sm">
+  </div>
+</div>
+
+<!-- Data Table Card -->
+<div class="table-card" bind:this={listContainer}>
+  <div class="table-hero flex flex-wrap items-center gap-3 px-4 sm:px-5 pt-4 pb-3 border-b border-border/70">
     <div class="flex items-center gap-3 mr-4">
       <div class="h-11 w-11 rounded-xl bg-indigo-900/60 border border-border/60 flex items-center justify-center">
         <Users class="h-5 w-5 text-accent-foreground" />
@@ -221,23 +226,6 @@
       {/if}
     </div>
   </div>
-</div>
-
-{#if selectedTournament && filterGroup !== 'all'}
-  {@const groupMemberCount = members.filter(m => m.groupId === filterGroup).length}
-  {@const registeredInGroup = members.filter(m => m.groupId === filterGroup && registeredMemberIds.has(m._id)).length}
-  <div class="mb-5 flex items-center justify-between p-4 rounded-xl" style="background: var(--indigo-glow); border: 1px solid rgba(59, 130, 246, 0.3);">
-    <span class="text-sm font-medium">{registeredInGroup} of {groupMemberCount} registered in {getGroupName(filterGroup)}</span>
-    {#if registeredInGroup < groupMemberCount}
-      <button onclick={() => onRegisterGroupMembers(filterGroup)} class="btn-sm primary">
-        Register Entire Group
-      </button>
-    {/if}
-  </div>
-{/if}
-
-<!-- Data Table Card -->
-<div class="table-card -mt-1" bind:this={listContainer}>
   <!-- Table -->
   <div class="overflow-x-auto">
     <table class="data-table">
