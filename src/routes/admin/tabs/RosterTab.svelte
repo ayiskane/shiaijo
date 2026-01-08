@@ -40,6 +40,9 @@
   export let onAddAllParticipants: () => void;
   export let onClearAllParticipants: () => void;
   export let onRegisterSelectedMembers: () => void;
+  export let onUnregisterSelectedMembers: () => void;
+  export let onArchiveSelectedMembers: () => void;
+  export let onDeleteSelectedMembers: () => void;
   export let onRegisterGroupMembers: (groupId: string) => void;
   export let onToggleMemberSelection: (id: string) => void;
   export let onClearSelection: () => void;
@@ -293,17 +296,33 @@
       <div class="px-4 py-2 border-b border-border/50 flex items-center justify-between bg-muted/10">
         <div class="flex items-center gap-2">
           {#if selectedMemberIds.size > 0}
-            <Badge variant="secondary">{selectedMemberIds.size} selected</Badge>
-            <Button variant="ghost" size="sm" onclick={onClearSelection}>
-              <X class="w-3.5 h-3.5 mr-1" />
+            <span class="text-sm font-medium">Selected {selectedMemberIds.size}</span>
+            <Button variant="ghost" size="sm" class="h-7 px-2 text-muted-foreground" onclick={onClearSelection}>
               Clear
             </Button>
-            {#if selectedTournament}
-              <Button variant="outline" size="sm" onclick={onRegisterSelectedMembers}>
+            <Separator orientation="vertical" class="h-5" />
+            {#if selectedTournament && selectedTournament.status !== 'completed'}
+              <Button variant="outline" size="sm" class="h-7" onclick={onRegisterSelectedMembers}>
                 <UserPlus class="w-3.5 h-3.5 mr-1" />
-                Register Selected
+                Register All
+              </Button>
+              <Button variant="outline" size="sm" class="h-7" onclick={onUnregisterSelectedMembers}>
+                <X class="w-3.5 h-3.5 mr-1" />
+                Unregister All
               </Button>
             {/if}
+            <Button variant="outline" size="sm" class="h-7" onclick={onOpenMassEdit}>
+              <Pencil class="w-3.5 h-3.5 mr-1" />
+              Edit All
+            </Button>
+            <Button variant="outline" size="sm" class="h-7" onclick={onArchiveSelectedMembers}>
+              <Archive class="w-3.5 h-3.5 mr-1" />
+              Archive All
+            </Button>
+            <Button variant="outline" size="sm" class="h-7 text-destructive border-destructive/50 hover:bg-destructive/10" onclick={onDeleteSelectedMembers}>
+              <Trash2 class="w-3.5 h-3.5 mr-1" />
+              Delete All
+            </Button>
           {:else}
             <span class="text-sm text-muted-foreground">
               {selectedGroupIdForFilter ? getGroupName(selectedGroupIdForFilter) : 'All Members'}
@@ -730,6 +749,7 @@
     border-collapse: collapse;
   }
 </style>
+
 
 
 
