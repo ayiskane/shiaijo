@@ -1358,12 +1358,12 @@ function selectAllFiltered() {
   
   <!-- Mobile Sidebar using Sheet -->
   <Sheet.Root bind:open={sidebarOpen}>
-    <Sheet.Content side="left" class="w-64 p-0 bg-sidebar border-r border-sidebar-border">
+    <Sheet.Content side="left" class="w-64 p-0 bg-sidebar border-r border-sidebar-border [&>[data-slot=sheet-close]]:hidden">
       <div class="flex h-14 items-center gap-3 border-b border-sidebar-border px-4">
         <img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 object-contain" />
         <span class="font-jp text-xl">試合場</span>
       </div>
-      <nav class="p-2">
+      <nav class="p-2 mt-1">
         {#each [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
           { id: 'roster', label: 'Roster', icon: Users },
@@ -1387,7 +1387,7 @@ function selectAllFiltered() {
   <main class={cn("flex-1 pt-14 transition-all duration-300 md:pt-0 w-full min-w-0 overflow-x-hidden h-[calc(100vh-56px)] md:h-screen", sidebarCollapsed ? "md:ml-16" : "md:ml-[220px]")}>
     {#if activeTab === 'roster'}
       <!-- Roster tab uses full width without padding constraints -->
-      <div class="h-full w-full">
+      <div class="h-full w-full relative">
         <RosterTab
           {members}
           {groups}
@@ -1874,6 +1874,7 @@ function selectAllFiltered() {
 </Dialog.Root>
 
 {/if}
+
 
 
 
