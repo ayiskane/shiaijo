@@ -846,6 +846,13 @@ function selectAllFiltered() {
     } catch (e) { toast.error('Failed to delete member'); }
   }
   
+  async function archiveMember(id: any, archived: boolean) {
+    try {
+      await client.mutation(api.members.update, { id, archived });
+      toast.success(archived ? 'Member archived' : 'Member unarchived');
+    } catch (e) { toast.error('Failed to update member'); }
+  }
+  
   function openEditMember(member: any) {
     editingMember = { ...member };
     showEditMember = true;
@@ -1410,10 +1417,11 @@ function selectAllFiltered() {
           onToggleMemberRegistration={toggleMemberRegistration}
           onOpenEditMember={(member) => { editingMember = { ...member }; showEditMember = true; }}
           onDeleteMember={deleteMember}
+          onArchiveMember={archiveMember}
           {getGroupName}
           resetMassMembers={resetMassMembers}
           onOpenAddGroup={() => showAddGroup = true}
-          onEditGroup={(g) => { editingGroup = g; showEditGroup = true; }}
+          onOpenEditGroup={(g) => { editingGroup = g; showEditGroup = true; }}
           onDeleteGroup={deleteGroup}
           onAddMemberToGroup={(groupId) => { newMember.groupId = groupId; showAddMember = true; }}
         />
@@ -1865,5 +1873,6 @@ function selectAllFiltered() {
 </Dialog.Root>
 
 {/if}
+
 
 
