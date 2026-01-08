@@ -14,7 +14,7 @@
   
   import { 
     Users, FolderOpen, Search, Plus, Pencil, Trash2, 
-    Check, X, ChevronDown, ChevronLeft, ChevronRight, UserPlus, RefreshCw, Archive
+    Check, X, ChevronDown, ChevronLeft, ChevronRight, UserPlus, RefreshCw, Archive, SlidersHorizontal
   } from '@lucide/svelte';
   
   export let members: any[] = [];
@@ -64,6 +64,7 @@
   let selectedGroupIdForFilter: string | null = null;
   let mobileTab = 'members';
   let groupsEditMode = false;
+  let showMobileFilters = false;
   
   $: listContainer && autoAnimate(listContainer);
   
@@ -518,40 +519,55 @@
     {#if mobileTab === 'members'}
       <div class="h-full flex flex-col">
         <!-- Search and filters -->
-        <div class="shrink-0 px-4 py-3 space-y-2 border-b bg-background">
-          <div class="relative">
-            <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input 
-              type="text" 
-              placeholder="Search members..." 
-              class="pl-9"
-              value={searchQuery}
-              oninput={(e) => onSearchChange(e.currentTarget.value)}
-            />
-          </div>
-          <div class="flex gap-2 overflow-x-auto pb-1">
+        <div class="shrink-0 px-4 py-2 border-b bg-background">
+          <div class="flex items-center gap-2">
+            <div class="relative flex-1">
+              <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input 
+                type="text" 
+                placeholder="Search members..." 
+                class="pl-9 h-9"
+                value={searchQuery}
+                oninput={(e) => onSearchChange(e.currentTarget.value)}
+              />
+            </div>
             <Button 
-              variant={registrationFilter === 'all' ? "default" : "outline"}
+              variant={showMobileFilters ? "default" : "outline"}
               size="sm"
-              onclick={() => onRegistrationFilterChange('all')}
+              class="h-9 w-9 p-0 shrink-0"
+              onclick={() => showMobileFilters = !showMobileFilters}
             >
-              All
-            </Button>
-            <Button 
-              variant={registrationFilter === 'registered' ? "default" : "outline"}
-              size="sm"
-              onclick={() => onRegistrationFilterChange('registered')}
-            >
-              Registered
-            </Button>
-            <Button 
-              variant={registrationFilter === 'unregistered' ? "default" : "outline"}
-              size="sm"
-              onclick={() => onRegistrationFilterChange('unregistered')}
-            >
-              Unregistered
+              <SlidersHorizontal class="w-4 h-4" />
             </Button>
           </div>
+          {#if showMobileFilters}
+            <div class="flex gap-2 mt-2 overflow-x-auto">
+              <Button 
+                variant={registrationFilter === 'all' ? "default" : "outline"}
+                size="sm"
+                class="h-8 text-xs"
+                onclick={() => onRegistrationFilterChange('all')}
+              >
+                All
+              </Button>
+              <Button 
+                variant={registrationFilter === 'registered' ? "default" : "outline"}
+                size="sm"
+                class="h-8 text-xs"
+                onclick={() => onRegistrationFilterChange('registered')}
+              >
+                Registered
+              </Button>
+              <Button 
+                variant={registrationFilter === 'unregistered' ? "default" : "outline"}
+                size="sm"
+                class="h-8 text-xs"
+                onclick={() => onRegistrationFilterChange('unregistered')}
+              >
+                Unregistered
+              </Button>
+            </div>
+          {/if}
         </div>
         
         <!-- Member Cards -->
@@ -655,29 +671,29 @@
   </div>
   
   <!-- Bottom stats bar -->
-  <div class="shrink-0 flex items-center justify-around py-3 px-4 bg-background border-t">
+  <div class="shrink-0 flex items-center justify-around py-2 px-4 bg-background border-t">
     <div class="text-center">
-      <div class="text-lg font-bold">{members.length}</div>
-      <div class="text-[10px] uppercase tracking-wide text-muted-foreground">Members</div>
+      <div class="text-base font-bold">{members.length}</div>
+      <div class="text-[9px] uppercase tracking-wide text-muted-foreground">Members</div>
     </div>
     {#if selectedTournament}
       <div class="text-center">
-        <div class="text-lg font-bold">{totalRegistered}</div>
-        <div class="text-[10px] uppercase tracking-wide text-muted-foreground">Registered</div>
+        <div class="text-base font-bold">{totalRegistered}</div>
+        <div class="text-[9px] uppercase tracking-wide text-muted-foreground">Registered</div>
       </div>
     {/if}
     <div class="text-center">
-      <div class="text-lg font-bold">{groups.length}</div>
-      <div class="text-[10px] uppercase tracking-wide text-muted-foreground">Groups</div>
+      <div class="text-base font-bold">{groups.length}</div>
+      <div class="text-[9px] uppercase tracking-wide text-muted-foreground">Groups</div>
     </div>
   </div>
   
   <!-- FAB -->
   <Button 
-    class="absolute bottom-20 right-4 h-14 w-14 rounded-full shadow-lg z-20"
+    class="absolute bottom-16 right-4 h-12 w-12 rounded-full shadow-lg z-20"
     onclick={() => mobileTab === 'members' ? onOpenAddMember() : onOpenAddGroup()}
   >
-    <Plus class="w-6 h-6" />
+    <Plus class="w-5 h-5" />
   </Button>
 </div>
 {/if}
@@ -687,3 +703,4 @@
     border-collapse: collapse;
   }
 </style>
+
