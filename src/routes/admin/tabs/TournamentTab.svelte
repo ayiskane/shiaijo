@@ -56,12 +56,29 @@
   export let adminPasscode: string | null = null;
   export let courtkeeperPasscode: string | null = null;
 
+  // Local state for sheet - synced with prop
+  let localSheetOpen = $state(false);
+  
+  // Sync local state with prop
+  $effect(() => {
+    localSheetOpen = settingsSheetOpen;
+  });
+  
+  // Callback when sheet closes
+  function handleSheetOpenChange(open: boolean) {
+    localSheetOpen = open;
+    if (!open && settingsSheetOpen) {
+      onCloseSettings?.();
+    }
+  }
+
   export let onOpenCreateTournament: () => void;
   export let onAddAllParticipants: () => void;
   export let onGenerateMatches: () => void;
   export let onStartTournament: () => void;
   export let onCompleteTournament: () => void;
   export let onOpenSettings: () => void;
+  export let onCloseSettings: (() => void) | undefined = undefined;
   export let onResetTournament: () => void;
   export let onDeleteTournament: () => void;
   export let onSetGroupCourt: (groupId: string, court: 'A' | 'B' | 'A+B') => void;
@@ -92,7 +109,7 @@
 
   let listEl: HTMLElement;
   $: listEl && autoAnimate(listEl);
-  $: console.debug('[admin][tournament] settingsSheetOpen', settingsSheetOpen, 'tournament', selectedTournamentId, 'status', selectedTournament?.status);
+  $: console.debug('[admin][tournament] localSheetOpen', localSheetOpen, 'settingsSheetOpen prop', settingsSheetOpen, 'tournament', selectedTournamentId);
   // mark externally-provided props as used to satisfy runes a11y checks
   const _keepProps = [groups, pendingMatches, SCORE_LABELS];
 
@@ -460,7 +477,7 @@
   {/if}
 {/if}
 
-<Sheet.Root bind:open={settingsSheetOpen}>
+<Sheet.Root open={localSheetOpen} onOpenChange={handleSheetOpenChange}>
   <Sheet.Portal>
     <Sheet.Overlay class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[120]" />
     <Sheet.Content
@@ -746,4 +763,5 @@
     </Sheet.Content>
   </Sheet.Portal>
 </Sheet.Root>
+
 
