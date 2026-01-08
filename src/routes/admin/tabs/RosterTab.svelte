@@ -487,7 +487,7 @@
 
 {:else}
 <!-- Mobile: Tabbed Interface -->
-<div class="absolute inset-0 flex flex-col">
+<div class="absolute inset-0 flex flex-col" style="padding-bottom: env(safe-area-inset-bottom, 0px);">
   <!-- Tab Header -->
   <div class="shrink-0 bg-background border-b px-4 py-2">
     <div class="grid grid-cols-2 bg-muted rounded-lg p-1">
@@ -676,7 +676,8 @@
   
   <!-- FAB -->
   <Button 
-    class="absolute bottom-4 right-4 h-12 w-12 rounded-full shadow-lg z-20"
+    class="absolute right-4 h-12 w-12 rounded-full shadow-lg z-20"
+    style="bottom: max(1rem, env(safe-area-inset-bottom, 1rem));"
     onclick={() => mobileTab === 'members' ? onOpenAddMember() : onOpenAddGroup()}
   >
     <Plus class="w-5 h-5" />
@@ -689,6 +690,7 @@
     border-collapse: collapse;
   }
 </style>
+
 
 
 
