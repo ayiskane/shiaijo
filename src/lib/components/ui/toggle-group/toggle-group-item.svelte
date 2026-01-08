@@ -15,9 +15,15 @@
 
 	const ctx = getToggleGroupCtx();
 
-	$: mergedVariant = (ctx?.variant ?? variant ?? "default");
-	$: mergedSize = (ctx?.size ?? size ?? "default");
-	$: mergedSpacing = (ctx?.spacing ?? 0);
+	let mergedVariant: ToggleVariants["variant"] = ctx?.variant ?? variant ?? "default";
+	let mergedSize: ToggleVariants["size"] = ctx?.size ?? size ?? "default";
+	let mergedSpacing = ctx?.spacing ?? 0;
+
+	$effect(() => {
+		mergedVariant = ctx?.variant ?? variant ?? "default";
+		mergedSize = ctx?.size ?? size ?? "default";
+		mergedSpacing = ctx?.spacing ?? 0;
+	});
 </script>
 
 <ToggleGroupPrimitive.Item
