@@ -1349,22 +1349,20 @@ function selectAllFiltered() {
   <!-- Mobile Header -->
   <header class="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-border bg-background px-4 md:hidden">
     <button onclick={() => sidebarOpen = true} class="rounded-lg p-2 hover:bg-accent"><Menu class="h-5 w-5" /></button>
-    <div class="flex items-center gap-2"><img src="/shiaijologo.png" alt="Shiaijo" class="h-8 w-8 object-contain logo-bob" /><span class="font-jp">試合場</span></div>
+    <div class="flex items-center gap-2">
+      <img src="/shiaijologo.png" alt="Shiaijo" class="h-8 w-8 object-contain" />
+      <span class="font-jp text-lg">試合場</span>
+    </div>
     <div class="w-10"></div>
   </header>
   
-  <!-- Mobile Sidebar Overlay -->
-  {#if sidebarOpen}
-    <div
-      class="fixed inset-0 z-40 bg-black/50 md:hidden"
-      role="button"
-      tabindex="0"
-      onclick={() => sidebarOpen = false}
-      onkeydown={(e) => (e.key === 'Escape' || e.key === 'Enter' || e.key === ' ') && (sidebarOpen = false)}
-      transition:fade
-    ></div>
-    <aside class="fixed inset-y-0 left-0 z-50 w-64 border-r border-sidebar-border bg-sidebar md:hidden" transition:slide={{ axis: 'x' }}>
-      <div class="flex h-14 items-center gap-3 border-b border-sidebar-border px-4"><img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 object-contain logo-bob" /><span class="font-jp text-xl">試合場</span></div>
+  <!-- Mobile Sidebar using Sheet -->
+  <Sheet.Root bind:open={sidebarOpen}>
+    <Sheet.Content side="left" class="w-64 p-0 bg-sidebar border-r border-sidebar-border">
+      <div class="flex h-14 items-center gap-3 border-b border-sidebar-border px-4">
+        <img src="/shiaijologo.png" alt="Shiaijo" class="h-10 w-10 object-contain" />
+        <span class="font-jp text-xl">試合場</span>
+      </div>
       <nav class="p-2">
         {#each [
           { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
@@ -1375,15 +1373,15 @@ function selectAllFiltered() {
           { id: 'settings', label: 'Settings', icon: Settings },
         ] as tab (tab.id)}
           {@const Icon = tab.icon}
-          <button onclick={() => { activeTab = tab.id; sidebarOpen = false; }} class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm", activeTab === tab.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}><Icon class="h-4 w-4" />{tab.label}</button>
+          <button onclick={() => { activeTab = tab.id; sidebarOpen = false; }} class={cn("flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors", activeTab === tab.id ? "bg-sidebar-accent text-sidebar-primary" : "text-sidebar-foreground hover:bg-sidebar-accent")}><Icon class="h-4 w-4" />{tab.label}</button>
         {/each}
       </nav>
       <div class="absolute inset-x-4 bottom-4 flex flex-col gap-2">
-        <a href="/courtkeeper" class="flex items-center justify-center gap-2 rounded-lg bg-sky-900/50 py-2 text-sm text-sky-300"><Swords class="h-4 w-4" /> Courtkeeper</a>
-        <a href="/spectator" class="flex items-center justify-center gap-2 rounded-lg bg-emerald-900/50 py-2 text-sm text-emerald-300"><Eye class="h-4 w-4" /> Spectator</a>
+        <a href="/courtkeeper" class="flex items-center justify-center gap-2 rounded-lg bg-sky-900/50 py-2 text-sm text-sky-300 transition-colors hover:bg-sky-900/70"><Swords class="h-4 w-4" /> Courtkeeper</a>
+        <a href="/spectator" class="flex items-center justify-center gap-2 rounded-lg bg-emerald-900/50 py-2 text-sm text-emerald-300 transition-colors hover:bg-emerald-900/70"><Eye class="h-4 w-4" /> Spectator</a>
       </div>
-    </aside>
-  {/if}
+    </Sheet.Content>
+  </Sheet.Root>
   
   <!-- Main Content -->
   <main class={cn("flex-1 pt-14 transition-all duration-300 md:pt-0 w-full min-w-0 overflow-x-hidden h-[calc(100vh-56px)] md:h-screen", sidebarCollapsed ? "md:ml-16" : "md:ml-[220px]")}>
@@ -1876,6 +1874,7 @@ function selectAllFiltered() {
 </Dialog.Root>
 
 {/if}
+
 
 
 
