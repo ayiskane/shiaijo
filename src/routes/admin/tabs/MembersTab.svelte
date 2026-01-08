@@ -189,32 +189,34 @@
 
     <div class="flex items-center gap-2">
       <Select.Root value={filterGroup} onValueChange={(v) => onFilterGroupChange(v)}>
-        <Select.Trigger class="glass-input h-11 min-w-[150px] rounded-xl pl-4 pr-10 text-[15px] font-medium">
+        <Select.Trigger class="glass-input h-11 min-w-[150px] rounded-xl pl-4 pr-8 text-[15px] font-medium">
           <Select.Value placeholder="All groups" />
-          <Select.Icon class="absolute right-3">
-            <ChevronDown class="h-4 w-4 text-muted-foreground" />
-          </Select.Icon>
         </Select.Trigger>
-        <Select.Content class="z-30">
-          <Select.Item value="all">All groups</Select.Item>
-          {#each groups as g}
-            <Select.Item value={g.groupId}>{g.name}</Select.Item>
-          {/each}
+        <Select.Content class="z-40 min-w-[200px]">
+          <Select.Group>
+            <Select.Label class="px-3 py-1 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Groups</Select.Label>
+            <Select.Item value="all">All groups</Select.Item>
+            {#each groups as g (g.groupId)}
+              {#if g.groupId}
+                <Select.Item value={g.groupId}>{g.name}</Select.Item>
+              {/if}
+            {/each}
+          </Select.Group>
         </Select.Content>
       </Select.Root>
 
       {#if selectedTournament}
         <Select.Root value={registrationFilter} onValueChange={(v) => onRegistrationFilterChange(v as any)}>
-          <Select.Trigger class="glass-input h-11 min-w-[130px] rounded-xl pl-4 pr-10 text-[15px] font-medium">
+          <Select.Trigger class="glass-input h-11 min-w-[130px] rounded-xl pl-4 pr-8 text-[15px] font-medium">
             <Select.Value placeholder="All" />
-            <Select.Icon class="absolute right-3">
-              <ChevronDown class="h-4 w-4 text-muted-foreground" />
-            </Select.Icon>
           </Select.Trigger>
-          <Select.Content class="z-30">
-            <Select.Item value="all">All</Select.Item>
-            <Select.Item value="registered">Registered</Select.Item>
-            <Select.Item value="unregistered">Not registered</Select.Item>
+          <Select.Content class="z-40 min-w-[160px]">
+            <Select.Group>
+              <Select.Label class="px-3 py-1 text-[11px] uppercase tracking-[0.08em] text-muted-foreground">Registration</Select.Label>
+              <Select.Item value="all">All</Select.Item>
+              <Select.Item value="registered">Registered</Select.Item>
+              <Select.Item value="unregistered">Not registered</Select.Item>
+            </Select.Group>
           </Select.Content>
         </Select.Root>
       {/if}
