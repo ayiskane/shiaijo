@@ -18,43 +18,140 @@
     Check, Timer, Lock, RotateCcw, Trash2, UserPlus, KeyRound, RefreshCw, Plus
   } from '@lucide/svelte';
 
-  export let tournaments: any[] = [];
-  export let selectedTournamentId: string | null = null;
-  export let selectedTournament: any;
-  export let tournamentSelectorLabel = 'Select tournament';
-  export let setupStep = 1;
-  export let participants: any[] = [];
-  export let matches: any[] = [];
-  export let groupOrder: string[] = [];
-  export let groups: any[] = [];
-  export let membersByGroupId: Map<string, any[]> = new Map();
-  export let matchesByGroupId: Map<string, any[]> = new Map();
-  export let matchStatsByGroup: Map<string, any> = new Map();
-  export let collapsedGroups: Set<string> = new Set();
-  export let courtAMatches: any[] = [];
-  export let courtBMatches: any[] = [];
-  export let courtACompletedCount = 0;
-  export let courtBCompletedCount = 0;
-  export let currentCourtAMatch: any = null;
-  export let currentCourtBMatch: any = null;
-  export let pendingMatches: any[] = [];
-  export let inProgressMatches: any[] = [];
-  export let completedMatches: any[] = [];
-  export let progressPercent = 0;
-  export let isComplete = false;
-  export let boguTimerDuration = 180;
-  export let boguMatchType: 'sanbon' | 'ippon' = 'sanbon';
-  export let timerDisplayMode: 'up' | 'down' = 'up';
-  export let hanteiRound1: string[] = ['K', 'M'];
-  export let hanteiRound2: string[] = ['M', 'K', 'D'];
-  export let KIHON_WAZA_OPTIONS: { id: string; short: string }[] = [];
-  export let TIMER_OPTIONS: number[] = [];
-  export let SCORE_LABELS: Record<number, string> = {};
-  export let settingsSheetOpen = false;
-  export let adminPasscodeInput = '';
-  export let courtkeeperPasscodeInput = '';
-  export let adminPasscode: string | null = null;
-  export let courtkeeperPasscode: string | null = null;
+  // Props using Svelte 5 runes
+  let {
+    tournaments = [],
+    selectedTournamentId = $bindable(null),
+    selectedTournament,
+    tournamentSelectorLabel = 'Select tournament',
+    setupStep = 1,
+    participants = [],
+    matches = [],
+    groupOrder = [],
+    groups = [],
+    membersByGroupId = new Map(),
+    matchesByGroupId = new Map(),
+    matchStatsByGroup = new Map(),
+    collapsedGroups = new Set(),
+    courtAMatches = [],
+    courtBMatches = [],
+    courtACompletedCount = 0,
+    courtBCompletedCount = 0,
+    currentCourtAMatch = null,
+    currentCourtBMatch = null,
+    pendingMatches = [],
+    inProgressMatches = [],
+    completedMatches = [],
+    progressPercent = 0,
+    isComplete = false,
+    boguTimerDuration = $bindable(180),
+    boguMatchType = $bindable<'sanbon' | 'ippon'>('sanbon'),
+    timerDisplayMode = $bindable<'up' | 'down'>('up'),
+    hanteiRound1 = $bindable(['K', 'M']),
+    hanteiRound2 = $bindable(['M', 'K', 'D']),
+    KIHON_WAZA_OPTIONS = [],
+    TIMER_OPTIONS = [],
+    SCORE_LABELS = {},
+    settingsSheetOpen = $bindable(false),
+    adminPasscodeInput = $bindable(''),
+    courtkeeperPasscodeInput = $bindable(''),
+    adminPasscode = null,
+    courtkeeperPasscode = null,
+    onOpenCreateTournament,
+    onAddAllParticipants,
+    onGenerateMatches,
+    onStartTournament,
+    onCompleteTournament,
+    onOpenSettings,
+    onCloseSettings = undefined,
+    onResetTournament,
+    onDeleteTournament,
+    onSetGroupCourt,
+    onToggleGroupCollapse,
+    onDragStart,
+    onDragOver,
+    onDragLeave,
+    onDrop,
+    onDragEnd,
+    onApplyBoguSettings,
+    onApplyTimerDisplayMode,
+    onApplyHanteiSettings,
+    onSaveAdminPasscode,
+    onSaveCourtkeeperPasscode,
+    onLockAdmin,
+    onRefreshParticipants,
+    getGroupById,
+    getEffectiveCourt,
+    getMemberById,
+    formatTimer,
+    buildScoreTimeline
+  }: {
+    tournaments?: any[];
+    selectedTournamentId?: string | null;
+    selectedTournament?: any;
+    tournamentSelectorLabel?: string;
+    setupStep?: number;
+    participants?: any[];
+    matches?: any[];
+    groupOrder?: string[];
+    groups?: any[];
+    membersByGroupId?: Map<string, any[]>;
+    matchesByGroupId?: Map<string, any[]>;
+    matchStatsByGroup?: Map<string, any>;
+    collapsedGroups?: Set<string>;
+    courtAMatches?: any[];
+    courtBMatches?: any[];
+    courtACompletedCount?: number;
+    courtBCompletedCount?: number;
+    currentCourtAMatch?: any;
+    currentCourtBMatch?: any;
+    pendingMatches?: any[];
+    inProgressMatches?: any[];
+    completedMatches?: any[];
+    progressPercent?: number;
+    isComplete?: boolean;
+    boguTimerDuration?: number;
+    boguMatchType?: 'sanbon' | 'ippon';
+    timerDisplayMode?: 'up' | 'down';
+    hanteiRound1?: string[];
+    hanteiRound2?: string[];
+    KIHON_WAZA_OPTIONS?: { id: string; short: string }[];
+    TIMER_OPTIONS?: number[];
+    SCORE_LABELS?: Record<number, string>;
+    settingsSheetOpen?: boolean;
+    adminPasscodeInput?: string;
+    courtkeeperPasscodeInput?: string;
+    adminPasscode?: string | null;
+    courtkeeperPasscode?: string | null;
+    onOpenCreateTournament: () => void;
+    onAddAllParticipants: () => void;
+    onGenerateMatches: () => void;
+    onStartTournament: () => void;
+    onCompleteTournament: () => void;
+    onOpenSettings: () => void;
+    onCloseSettings?: () => void;
+    onResetTournament: () => void;
+    onDeleteTournament: () => void;
+    onSetGroupCourt: (groupId: string, court: 'A' | 'B' | 'A+B') => void;
+    onToggleGroupCollapse: (groupId: string) => void;
+    onDragStart: (e: DragEvent, groupId: string) => void;
+    onDragOver: (e: DragEvent, groupId: string) => void;
+    onDragLeave: (e: DragEvent) => void;
+    onDrop: (e: DragEvent, groupId: string) => void;
+    onDragEnd: () => void;
+    onApplyBoguSettings: () => void;
+    onApplyTimerDisplayMode: () => void;
+    onApplyHanteiSettings: () => void;
+    onSaveAdminPasscode: () => void;
+    onSaveCourtkeeperPasscode: () => void;
+    onLockAdmin: () => void;
+    onRefreshParticipants: () => void;
+    getGroupById: (groupId: string) => any;
+    getEffectiveCourt: (groupId: string) => 'A' | 'B' | 'A+B';
+    getMemberById: (id: string) => any;
+    formatTimer: (secs: number) => string;
+    buildScoreTimeline?: (match: any) => any[];
+  } = $props();
 
   // Local state for sheet - synced with prop
   let localSheetOpen = $state(false);
@@ -72,44 +169,23 @@
     }
   }
 
-  export let onOpenCreateTournament: () => void;
-  export let onAddAllParticipants: () => void;
-  export let onGenerateMatches: () => void;
-  export let onStartTournament: () => void;
-  export let onCompleteTournament: () => void;
-  export let onOpenSettings: () => void;
-  export let onCloseSettings: (() => void) | undefined = undefined;
-  export let onResetTournament: () => void;
-  export let onDeleteTournament: () => void;
-  export let onSetGroupCourt: (groupId: string, court: 'A' | 'B' | 'A+B') => void;
-  export let onToggleGroupCollapse: (groupId: string) => void;
-  export let onDragStart: (e: DragEvent, groupId: string) => void;
-  export let onDragOver: (e: DragEvent, groupId: string) => void;
-  export let onDragLeave: (e: DragEvent) => void;
-  export let onDrop: (e: DragEvent, groupId: string) => void;
-  export let onDragEnd: () => void;
-  export let onApplyBoguSettings: () => void;
-  export let onApplyTimerDisplayMode: () => void;
-  export let onApplyHanteiSettings: () => void;
-  export let onSaveAdminPasscode: () => void;
-  export let onSaveCourtkeeperPasscode: () => void;
-  export let onLockAdmin: () => void;
-  export let onRefreshParticipants: () => void;
-  export let getGroupById: (groupId: string) => any;
-  export let getEffectiveCourt: (groupId: string) => 'A' | 'B' | 'A+B';
-  export let getMemberById: (id: string) => any;
-  export let formatTimer: (secs: number) => string;
-
-  const BUILD_TAG = 'tournament-settings-optim-v4'; // helps verify deploy on Vercel
+  const BUILD_TAG = 'tournament-settings-optim-v5'; // helps verify deploy on Vercel
 
   function openSettings() {
     console.debug('[admin][tournament] settings gear clicked', { selectedTournamentId, status: selectedTournament?.status, build: BUILD_TAG });
     onOpenSettings();
   }
 
-  let listEl: HTMLElement;
-  $: listEl && autoAnimate(listEl);
-  $: console.debug('[admin][tournament] localSheetOpen', localSheetOpen, 'settingsSheetOpen prop', settingsSheetOpen, 'tournament', selectedTournamentId);
+  let listEl: HTMLElement | undefined = $state(undefined);
+  
+  $effect(() => {
+    if (listEl) autoAnimate(listEl);
+  });
+  
+  $effect(() => {
+    console.debug('[admin][tournament] localSheetOpen', localSheetOpen, 'settingsSheetOpen prop', settingsSheetOpen, 'tournament', selectedTournamentId);
+  });
+  
   // mark externally-provided props as used to satisfy runes a11y checks
   const _keepProps = [groups, pendingMatches, SCORE_LABELS];
 
@@ -763,5 +839,6 @@
     </Sheet.Content>
   </Sheet.Portal>
 </Sheet.Root>
+
 
 
