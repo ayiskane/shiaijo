@@ -170,14 +170,14 @@
   
   <div class="flex-1 flex overflow-hidden">
     <!-- Groups Panel (Left) -->
-    <div class="w-[260px] border-r border-border/50 flex flex-col bg-muted/20">
-      <div class="p-3 border-b border-border/50 flex items-center justify-between">
-        <span class="text-sm font-medium text-muted-foreground">Groups</span>
+    <div class="groups-panel">
+      <div class="groups-panel-header">
+        <span class="groups-panel-title">Groups</span>
         <Button variant="ghost" size="sm" class="h-7 w-7 p-0" onclick={onOpenAddGroup}>
           <Plus class="w-4 h-4" />
         </Button>
       </div>
-      <div class="flex-1 overflow-y-auto p-2 space-y-1">
+      <div class="groups-panel-list">
         <!-- All Members option -->
         <div 
           role="button"
@@ -202,24 +202,27 @@
             role="button"
             tabindex="0"
             class={cn(
-              "group flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors",
-              selectedGroupIdForFilter === group._id ? "bg-primary/10 text-primary" : "hover:bg-muted",
-              group.hantei && "border-l-2 border-orange-500"
+              "group-item group",
+              selectedGroupIdForFilter === group._id && "active",
+              group.hantei && "hantei"
             )}
             onclick={() => selectGroup(group._id)}
             onkeydown={(e) => e.key === 'Enter' && selectGroup(group._id)}
           >
-            <FolderOpen class="w-4 h-4 shrink-0" />
-            <div class="flex-1 min-w-0">
-              <div class="text-sm font-medium truncate">{group.name}</div>
-              <div class="text-xs text-muted-foreground">
+            <div class="group-item-icon">
+              <FolderOpen class="w-4 h-4" />
+            </div>
+            <div class="group-item-info">
+              <div class="group-item-name">{group.name}</div>
+              <div class="group-item-meta">
                 {getGroupMemberCount(group._id)} members
                 {#if group.hantei}
-                  <span class="text-orange-500 ml-1">• Hantei</span>
+                  <span class="text-[var(--accent-fire)] ml-1">• Hantei</span>
                 {/if}
               </div>
             </div>
-            <div class="hidden group-hover:flex items-center gap-1">
+            <span class="group-item-count">{getGroupMemberCount(group._id)}</span>
+            <div class="group-item-actions">
               <Button 
                 variant="ghost" 
                 size="sm" 
@@ -340,7 +343,7 @@
                 </td>
                 <td class="px-3 py-2">
                   <div class="flex items-center gap-2">
-                    <div class="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-xs font-medium text-primary">
+                    <div class="cell-avatar-gradient">
                       {getInitials(member.firstName, member.lastName)}
                     </div>
                     <div>
@@ -520,7 +523,7 @@
                 onchange={() => onToggleMemberSelection(member._id)}
                 class="rounded border-input"
               />
-              <div class="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-medium text-primary">
+              <div class="cell-avatar-gradient" style="width: 40px; height: 40px; font-size: 14px;">
                 {getInitials(member.firstName, member.lastName)}
               </div>
               <div class="flex-1 min-w-0">
@@ -618,20 +621,20 @@
   </Tabs.Root>
   
   <!-- Bottom stats bar -->
-  <div class="sticky bottom-0 px-4 py-2 border-t bg-muted/50 flex items-center justify-around text-center">
-    <div>
-      <div class="text-lg font-semibold">{members.length}</div>
-      <div class="text-xs text-muted-foreground">Members</div>
+  <div class="mobile-stats-bar">
+    <div class="mobile-stat">
+      <div class="mobile-stat-value">{members.length}</div>
+      <div class="mobile-stat-label">Members</div>
     </div>
     {#if selectedTournament}
-      <div>
-        <div class="text-lg font-semibold">{totalRegistered}</div>
-        <div class="text-xs text-muted-foreground">Registered</div>
+      <div class="mobile-stat">
+        <div class="mobile-stat-value">{totalRegistered}</div>
+        <div class="mobile-stat-label">Registered</div>
       </div>
     {/if}
-    <div>
-      <div class="text-lg font-semibold">{groups.length}</div>
-      <div class="text-xs text-muted-foreground">Groups</div>
+    <div class="mobile-stat">
+      <div class="mobile-stat-value">{groups.length}</div>
+      <div class="mobile-stat-label">Groups</div>
     </div>
   </div>
 </div>
