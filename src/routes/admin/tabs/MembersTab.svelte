@@ -153,9 +153,7 @@
   </div>
 {/if}
 
-  </div>
-</div>
-
+  
 <!-- Data Table Card -->
 <div class="table-card" bind:this={listContainer}>
   <div class="table-hero flex flex-wrap items-center gap-3 px-4 sm:px-5 pt-4 pb-3 border-b border-border/70">
