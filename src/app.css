@@ -360,25 +360,25 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-default);
-    font-size: 1.0625rem; /* 17px base for better readability */
+    font-size: 1.125rem; /* 18px base for better readability */
     line-height: 1.6;
   }
   
   /* Accessibility: Larger text for better readability */
   .text-sm {
-    font-size: 0.9375rem !important; /* 15px instead of 14px */
+    font-size: 1rem !important; /* 16px instead of 14px */
   }
   
   .text-xs {
-    font-size: 0.8125rem !important; /* 13px instead of 12px */
+    font-size: 0.875rem !important; /* 14px instead of 12px */
   }
   
   .text-base {
-    font-size: 1.0625rem !important; /* 17px */
+    font-size: 1.125rem !important; /* 18px */
   }
   
   .text-lg {
-    font-size: 1.1875rem !important; /* 19px */
+    font-size: 1.25rem !important; /* 20px */
   }
 }
 
@@ -448,13 +448,13 @@
   }
   
   .footer-label {
-    @apply text-[11px] uppercase tracking-[0.12em];
+    @apply text-[13px] uppercase tracking-[0.12em];
     color: var(--text-faint);
   }
   
   /* Portal links */
   .portal-link {
-    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-semibold transition;
+    @apply flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-semibold transition;
     border: 1px solid var(--border-subtle);
     color: var(--text-muted);
     box-shadow: 0 10px 24px rgba(0, 0, 0, 0.2);
@@ -533,7 +533,7 @@
     border: 1px solid var(--border-default);
     padding: 6px 12px;
     border-radius: 6px;
-    font-size: 0.7rem;
+    font-size: 0.85rem;
     white-space: nowrap;
     opacity: 0;
     pointer-events: none;
@@ -595,7 +595,7 @@
   
   .nav-item-text {
     flex: 1;
-    font-size: 0.8rem;
+    font-size: 1rem;
   }
   
   /* Nav sections */
@@ -604,8 +604,8 @@
   }
   
   .nav-section-title {
-    font-size: 0.55rem;
-    letter-spacing: 0.2em;
+    font-size: 0.75rem;
+    letter-spacing: 0.15em;
     text-transform: uppercase;
     color: var(--text-faint);
     padding: 0 12px;
@@ -624,7 +624,7 @@
   .nav-badge {
     background: var(--accent-fire);
     color: white;
-    font-size: 0.55rem;
+    font-size: 0.7rem;
     padding: 3px 8px;
     border-radius: 8px;
     font-weight: 700;
@@ -635,14 +635,14 @@
   .nav-badge-count {
     background: var(--surface-elevated);
     color: var(--text-muted);
-    font-size: 0.6rem;
+    font-size: 0.75rem;
     padding: 2px 8px;
     border-radius: 6px;
     font-weight: 600;
   }
   
   .live-pill {
-    @apply ml-2 rounded-full bg-emerald-600/80 px-2 py-0.5 text-[10px] uppercase text-white;
+    @apply ml-2 rounded-full bg-emerald-600/80 px-2 py-0.5 text-[12px] uppercase text-white;
   }
   
   /* ---------------------------------------------------------------------------
@@ -1565,7 +1565,7 @@
   }
   
   .groups-panel-title {
-    font-size: 13px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-secondary);
     text-transform: uppercase;
@@ -1615,7 +1615,7 @@
     align-items: center;
     justify-content: center;
     color: var(--text-muted);
-    font-size: 14px;
+    font-size: 1rem;
     flex-shrink: 0;
   }
   
@@ -1625,7 +1625,7 @@
   }
   
   .group-item-name {
-    font-size: 13px;
+    font-size: 1rem;
     font-weight: 500;
     color: var(--text-primary);
     white-space: nowrap;
@@ -1634,12 +1634,12 @@
   }
   
   .group-item-meta {
-    font-size: 11px;
+    font-size: 0.875rem;
     color: var(--text-muted);
   }
   
   .group-item-count {
-    font-size: 11px;
+    font-size: 0.875rem;
     font-weight: 600;
     color: var(--text-secondary);
     background: var(--surface-elevated);
@@ -2141,6 +2141,7 @@
     --border: oklch(1 0 0 / 25%);
   }
 }
+
 
 
 
