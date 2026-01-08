@@ -112,6 +112,11 @@ import {
   let csvText = $state('');
   let newTournament = $state({ name: '', date: '', month: '', year: new Date().getFullYear() });
   let tournamentDateValue = $state(null as import('@internationalized/date').DateValue | null);
+
+  $effect(() => {
+    // keep calendar value in sync when dialog resets
+    tournamentDateValue = newTournament.date ? parseDate(newTournament.date) : null;
+  });
   let selectedTournamentId = $state<string | null>(null);
   
   // Tournament-specific queries
@@ -1729,15 +1734,3 @@ import {
 
 {/if}
 
-
-
-
-
-
-
-
-
-  $effect(() => {
-    // keep calendar value in sync when dialog resets
-    tournamentDateValue = newTournament.date ? parseDate(newTournament.date) : null;
-  });
