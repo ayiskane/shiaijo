@@ -129,8 +129,14 @@ import {
     () => selectedTournamentId ? { tournamentId: selectedTournamentId } : 'skip'
   );
   
+  // History tab queries - all matches and participants for completed tournaments
+  const allParticipantsQuery = useQuery(api.participants.listAll, () => ({}));
+  const allMatchesQuery = useQuery(api.matches.listAll, () => ({}));
+  
   let participants = $derived(participantsQuery.data ?? []);
   let matches = $derived(matchesQuery.data ?? []);
+  let allParticipants = $derived(allParticipantsQuery.data ?? []);
+  let allMatches = $derived(allMatchesQuery.data ?? []);
   
   // Precomputed lookup maps for faster render paths
   let membersById = $derived.by(() => {
@@ -151,6 +157,27 @@ import {
       const list = map.get(m.groupId);
       if (list) list.push(m);
       else map.set(m.groupId, [m]);
+    }
+    return map;
+  });
+
+  // History tab: matches and participants grouped by tournament
+  let matchesByTournamentId = $derived.by(() => {
+    const map = new Map<string, typeof allMatches>();
+    for (const m of allMatches) {
+      const list = map.get(m.tournamentId);
+      if (list) list.push(m);
+      else map.set(m.tournamentId, [m]);
+    }
+    return map;
+  });
+  
+  let participantsByTournamentId = $derived.by(() => {
+    const map = new Map<string, typeof allParticipants>();
+    for (const p of allParticipants) {
+      const list = map.get(p.tournamentId);
+      if (list) list.push(p);
+      else map.set(p.tournamentId, [p]);
     }
     return map;
   });
@@ -1478,6 +1505,10 @@ function selectAllFiltered() {
           {@const Tab = Module.default}
           <Tab
             {tournaments}
+            {groups}
+            {members}
+            {matchesByTournamentId}
+            {participantsByTournamentId}
           />
         {:catch error}
           <div class="text-destructive text-sm">Failed to load history</div>
