@@ -360,6 +360,25 @@
   body {
     @apply bg-background text-foreground;
     font-family: var(--font-default);
+    font-size: 1.0625rem; /* 17px base for better readability */
+    line-height: 1.6;
+  }
+  
+  /* Accessibility: Larger text for better readability */
+  .text-sm {
+    font-size: 0.9375rem !important; /* 15px instead of 14px */
+  }
+  
+  .text-xs {
+    font-size: 0.8125rem !important; /* 13px instead of 12px */
+  }
+  
+  .text-base {
+    font-size: 1.0625rem !important; /* 17px */
+  }
+  
+  .text-lg {
+    font-size: 1.1875rem !important; /* 19px */
   }
 }
 
@@ -2122,5 +2141,6 @@
     --border: oklch(1 0 0 / 25%);
   }
 }
+
 
 
