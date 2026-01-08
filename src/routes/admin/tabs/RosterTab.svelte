@@ -385,6 +385,21 @@
                 </td>
                 <td class="px-3 py-2">
                   <div class="flex items-center justify-end gap-1">
+                    {#if selectedTournament && !member.archived}
+                      <Button 
+                        variant={registeredMemberIds.has(member._id) ? "default" : "ghost"}
+                        size="sm"
+                        class={cn("h-7 w-7 p-0", registeredMemberIds.has(member._id) && "bg-green-600 hover:bg-green-700")}
+                        onclick={() => onToggleMemberRegistration(member._id)}
+                        title={registeredMemberIds.has(member._id) ? "Unregister" : "Register for tournament"}
+                      >
+                        {#if registeredMemberIds.has(member._id)}
+                          <Check class="w-3.5 h-3.5" />
+                        {:else}
+                          <UserPlus class="w-3.5 h-3.5" />
+                        {/if}
+                      </Button>
+                    {/if}
                     <Button 
                       variant="ghost" 
                       size="sm" 
