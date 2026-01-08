@@ -33,7 +33,7 @@
       </div>
       
       <div class="brand-name">S H I A I J O</div>
-      <div class="subtitle">Tournament Manager</div>
+      <div class="subtitle">TOURNAMENT MANAGER</div>
     </div>
 
     <!-- Divider -->
@@ -41,8 +41,7 @@
 
     <!-- Right side - Portals -->
     <div class="portals-section">
-      <div class="section-label">PORTALS</div>
-      
+     
       <!-- Spectator - Full width, highlighted -->
       <a
         href={hasLiveTournament ? spectator.href : undefined}
@@ -73,9 +72,9 @@
   <!-- Footer -->
   <footer class="footer">
     <a href="https://renbudojo.com" target="_blank" rel="noopener noreferrer" class="footer-link">
-      <span class="footer-jp">練武道場</span>
-      <img src="/renbu-logo.png" alt="Renbu logo" class="footer-logo" />
       <span class="footer-en">RENBU DOJO</span>
+      <img src="/renbu-logo.png" alt="Renbu logo" class="footer-logo" />
+      <span class="footer-jp">練武道場</span>
     </a>
   </footer>
 </div>
