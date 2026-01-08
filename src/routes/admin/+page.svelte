@@ -1703,7 +1703,7 @@ function selectAllFiltered() {
               <Select.Value placeholder="Select Group" />
               <Select.Icon class="ml-auto"><ChevronDown class="h-4 w-4" /></Select.Icon>
             </Select.Trigger>
-            <Select.Content class="z-40">
+            <Select.Content class="z-[60]">
               <Select.Item value="">Select Group</Select.Item>
               {#each groups as g}
                 <Select.Item value={g.groupId}>{g.name}</Select.Item>
@@ -1874,6 +1874,7 @@ function selectAllFiltered() {
 </Dialog.Root>
 
 {/if}
+
 
 
 
