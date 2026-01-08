@@ -91,6 +91,13 @@ export const getByTournament = query({
   },
 });
 
+export const listAll = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("matches").collect();
+  },
+});
+
 export const getByCourt = query({
   args: { 
     tournamentId: v.id("tournaments"),
