@@ -1626,17 +1626,30 @@
     background: var(--surface-elevated);
     padding: 2px 8px;
     border-radius: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
   }
   
   .group-item-actions {
-    display: flex;
+    display: none;
     gap: 4px;
-    opacity: 0;
-    transition: opacity 0.15s;
+    flex-shrink: 0;
   }
   
-  .group-item:hover .group-item-actions {
-    opacity: 1;
+  .group-item-actions.visible {
+    display: flex;
+  }
+  
+  .group-item.editing {
+    cursor: default;
+  }
+  
+  .group-item.editing:hover {
+    background: transparent;
+  }
+  
+  .group-item.editing.active {
+    background: transparent;
   }
   
   /* ---------------------------------------------------------------------------
@@ -2109,4 +2122,5 @@
     --border: oklch(1 0 0 / 25%);
   }
 }
+
 
