@@ -18,16 +18,7 @@ export default defineConfig({
     // Minimize output
     minify: 'esbuild',
     // Enable CSS code splitting
-    cssCodeSplit: true,
-    // Chunk splitting for better caching
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Separate vendor chunks for better caching
-          'convex': ['convex', 'convex-svelte'],
-        }
-      }
-    }
+    cssCodeSplit: true
   },
   
   // Dev server optimizations
