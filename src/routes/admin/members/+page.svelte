@@ -769,10 +769,6 @@
     gap: 2px;
   }
 
-  .breadcrumb {
-    font-size: 14px;
-    color: #71717a;
-  }
 
   .page-title {
     font-size: 18px;
