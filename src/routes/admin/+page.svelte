@@ -28,7 +28,6 @@
   let tournaments = $derived(tournamentsQuery.data ?? []);
   let members = $derived(membersQuery.data ?? []);
   let activeTournament = $derived(tournaments.find(t => t.status === 'in_progress'));
-  let memberCount = $derived(members.length);
 
   // Breadcrumb
   const breadcrumbMap: Record<string, string[]> = {
@@ -85,9 +84,6 @@
         <button class="nav-item" class:active={activeTab === 'members'} onclick={() => activeTab = 'members'}>
           <Users size={20} />
           <span class="nav-text">Members</span>
-          {#if memberCount > 0}
-            <span class="nav-badge">{memberCount}</span>
-          {/if}
         </button>
         <button class="nav-item" class:active={activeTab === 'guests'} onclick={() => activeTab = 'guests'}>
           <Globe size={20} />
