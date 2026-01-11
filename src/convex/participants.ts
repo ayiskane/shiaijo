@@ -203,3 +203,36 @@ export const clearAll = mutation({
     return { removedCount: participants.length };
   },
 });
+
+export const registerGroupMembers = mutation({
+  args: { 
+    tournamentId: v.id("tournaments"),
+    groupId: v.string(),
+  },
+  handler: async (ctx, { tournamentId, groupId }) => {
+    // Get all non-archived members in this group
+    const members = await ctx.db.query("members").collect();
+    const groupMembers = members.filter(m => m.groupId === groupId && !m.archived);
+    
+    // Get existing participants
+    const existing = await ctx.db
+      .query("participants")
+      .withIndex("by_tournament", (q) => q.eq("tournamentId", tournamentId))
+      .collect();
+    const existingMemberIds = new Set(existing.map(p => p.memberId));
+    
+    let addedCount = 0;
+    for (const member of groupMembers) {
+      if (!existingMemberIds.has(member._id)) {
+        await ctx.db.insert("participants", {
+          tournamentId,
+          memberId: member._id,
+          groupId: member.groupId,
+        });
+        addedCount++;
+      }
+    }
+    
+    return { addedCount, totalInGroup: groupMembers.length };
+  },
+});
