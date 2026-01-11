@@ -116,7 +116,7 @@
               class:active={isActive(item.href)}
               class:live={item.live}
             >
-              <span class="nav-icon"><item.icon size={20} /></span>
+              {@const Icon = item.icon}<span class="nav-icon"><Icon size={20} /></span>
               <span class="nav-text">{item.label}</span>
               {#if item.live}
                 <span class="live-dot"></span>
@@ -131,7 +131,7 @@
       <div class="nav-label">Portals</div>
       {#each portalLinks as portal}
         <a href={portal.href} class="portal-link {portal.accent}">
-          <span class="nav-icon"><portal.icon size={20} /></span>
+          {@const Icon = portal.icon}<span class="nav-icon"><Icon size={20} /></span>
           <span class="nav-text">{portal.label}</span>
         </a>
       {/each}
@@ -446,3 +446,4 @@
     .edge-toggle { display: none; }
   }
 </style>
+
