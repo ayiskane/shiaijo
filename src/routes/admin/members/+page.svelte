@@ -245,7 +245,7 @@
         onclick={() => selectedGroupId = null}
       >
         <div class="group-icon" style="background: rgba(59, 130, 246, 0.15);">
-          <Users size={18} />
+          <Users size={16} />
         </div>
         <div class="group-info">
           <div class="group-name">All Members</div>
@@ -276,15 +276,14 @@
                 <span class="badge badge-hantei">H</span>
               {/if}
             </div>
-            <div class="group-meta">{group.groupId}</div>
           </div>
           {#if groupsEditMode}
             <div class="group-actions">
               <button class="group-action-btn" onclick={(e) => { e.stopPropagation(); }}>
-                <Pencil size={14} />
+                <Pencil size={12} />
               </button>
               <button class="group-action-btn danger" onclick={(e) => { e.stopPropagation(); showDeleteGroupConfirm = group._id; }}>
-                <Trash2 size={14} />
+                <Trash2 size={12} />
               </button>
             </div>
           {:else}
@@ -408,10 +407,10 @@
               <td>
                 <div class="action-buttons">
                   <button class="action-btn" onclick={() => openEditModal(member)}>
-                    <Pencil size={14} />
+                    <Pencil size={12} />
                   </button>
                   <button class="action-btn danger" onclick={() => showDeleteConfirm = member._id}>
-                    <Trash2 size={14} />
+                    <Trash2 size={12} />
                   </button>
                 </div>
               </td>
@@ -561,7 +560,7 @@
 
   /* ===== GROUPS PANEL ===== */
   .groups-panel {
-    width: 300px;
+    width: 240px;
     background: #0f0e0c;
     border-right: 1px solid rgba(92, 99, 112, 0.2);
     display: flex;
@@ -570,7 +569,7 @@
   }
 
   .groups-header {
-    padding: 12px;
+    padding: 10px 12px;
     border-bottom: 1px solid rgba(92, 99, 112, 0.2);
   }
 
@@ -581,7 +580,7 @@
   }
 
   .groups-title {
-    font-size: 16px;
+    font-size: 14px;
     font-weight: 700;
     color: #eaeaec;
     margin: 0;
@@ -590,20 +589,20 @@
   .groups-list {
     flex: 1;
     overflow-y: auto;
-    padding: 8px;
+    padding: 6px;
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 1px;
   }
 
   .group-card {
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 12px;
+    gap: 8px;
+    padding: 6px 10px;
     background: transparent;
     border: 1px solid transparent;
-    border-radius: 8px;
+    border-radius: 6px;
     cursor: pointer;
     transition: all 0.15s;
     text-align: left;
@@ -628,9 +627,9 @@
   }
 
   .group-icon {
-    width: 34px;
-    height: 34px;
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -639,7 +638,7 @@
   }
 
   .group-emoji {
-    font-size: 16px;
+    font-size: 14px;
   }
 
   .group-info {
@@ -654,15 +653,18 @@
   }
 
   .group-name {
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 600;
     color: #eaeaec;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   .group-meta {
-    font-size: 13px;
+    font-size: 11px;
     color: #71717a;
-    margin-top: 1px;
+    margin-top: 0;
   }
 
 
@@ -674,16 +676,16 @@
   }
 
   .group-count-box {
-    min-width: 32px;
-    height: 28px;
-    padding: 0 8px;
+    min-width: 28px;
+    height: 24px;
+    padding: 0 6px;
     background: rgba(59, 130, 246, 0.15);
     border: 1px solid rgba(59, 130, 246, 0.3);
-    border-radius: 6px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     color: #60a5fa;
     flex-shrink: 0;
@@ -704,9 +706,9 @@
   }
 
   .group-action-btn {
-    width: 32px;
-    height: 32px;
-    border-radius: 8px;
+    width: 26px;
+    height: 26px;
+    border-radius: 6px;
     background: rgba(92, 99, 112, 0.1);
     border: none;
     color: #9ca0ad;
@@ -757,7 +759,7 @@
   }
 
   .breadcrumb {
-    font-size: 13px;
+    font-size: 14px;
     color: #71717a;
   }
 
@@ -1315,6 +1317,7 @@
     }
   }
 </style>
+
 
 
 
