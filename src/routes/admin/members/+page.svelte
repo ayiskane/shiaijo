@@ -67,6 +67,13 @@
   let editingMember = $state<Doc<'members'> | null>(null);
   let showDeleteConfirm = $state<Id<'members'> | null>(null);
   
+  // Group modal state
+  let showGroupModal = $state(false);
+  let editingGroup = $state<Doc<'groups'> | null>(null);
+  let groupFormId = $state('');
+  let groupFormName = $state('');
+  let groupFormIsHantei = $state(false);
+  
   // CSV Import state
   let showImportModal = $state(false);
   let importTab = $state('upload');
@@ -81,7 +88,6 @@
   let formFirstName = $state('');
   let formLastName = $state('');
   let formGroupId = $state('');
-  let formIsGuest = $state(false);
 
   // Get member count by group
   function getMemberCount(groupId: string | null) {
@@ -185,7 +191,6 @@
     formFirstName = '';
     formLastName = '';
     formGroupId = groups[0]?.groupId || '';
-    formIsGuest = false;
     editingMember = null;
     showAddModal = true;
   }
@@ -194,7 +199,6 @@
     formFirstName = member.firstName;
     formLastName = member.lastName;
     formGroupId = member.groupId;
-    formIsGuest = member.isGuest;
     editingMember = member;
     showAddModal = true;
   }
@@ -219,7 +223,7 @@
         firstName: formFirstName.trim(),
         lastName: formLastName.trim(),
         groupId: formGroupId,
-        isGuest: formIsGuest,
+        isGuest: false,
       });
     }
     closeModal();
@@ -233,6 +237,48 @@
   async function deleteGroup(id: Id<'groups'>) {
     await client.mutation(api.groups.remove, { id });
     showDeleteGroupConfirm = null;
+  }
+
+  // Group modal handlers
+  function openAddGroupModal() {
+    groupFormId = '';
+    groupFormName = '';
+    groupFormIsHantei = false;
+    editingGroup = null;
+    showGroupModal = true;
+  }
+
+  function openEditGroupModal(group: Doc<'groups'>) {
+    groupFormId = group.groupId;
+    groupFormName = group.name;
+    groupFormIsHantei = group.isHantei;
+    editingGroup = group;
+    showGroupModal = true;
+  }
+
+  function closeGroupModal() {
+    showGroupModal = false;
+    editingGroup = null;
+  }
+
+  async function saveGroup() {
+    if (!groupFormId.trim() || !groupFormName.trim()) return;
+    
+    if (editingGroup) {
+      await client.mutation(api.groups.update, {
+        id: editingGroup._id,
+        groupId: groupFormId.trim(),
+        name: groupFormName.trim(),
+        isHantei: groupFormIsHantei,
+      });
+    } else {
+      await client.mutation(api.groups.create, {
+        groupId: groupFormId.trim(),
+        name: groupFormName.trim(),
+        isHantei: groupFormIsHantei,
+      });
+    }
+    closeGroupModal();
   }
 
   // ===== CSV IMPORT FUNCTIONS =====
@@ -276,7 +322,6 @@
     const firstNameIdx = header.findIndex(h => h.includes('first') || h === 'firstname');
     const lastNameIdx = header.findIndex(h => h.includes('last') || h === 'lastname');
     const groupIdx = header.findIndex(h => h.includes('group') || h === 'groupid' || h === 'division');
-    const guestIdx = header.findIndex(h => h.includes('guest'));
 
     if (firstNameIdx === -1 || lastNameIdx === -1) {
       parseError = 'CSV must have "First Name" and "Last Name" columns';
@@ -301,11 +346,7 @@
         groupId = groups[0]?.groupId || '';
       }
       
-      const isGuest = guestIdx !== -1 ? 
-        ['true', 'yes', '1', 'y'].includes(row[guestIdx]?.toLowerCase().trim() || '') : 
-        false;
-      
-      results.push({ firstName, lastName, groupId, isGuest });
+      results.push({ firstName, lastName, groupId, isGuest: false });
     }
 
     if (results.length === 0) {
@@ -442,7 +483,7 @@
             <button class="btn btn-ghost btn-sm" onclick={() => groupsEditMode = true}>
               Edit
             </button>
-            <button class="btn btn-primary btn-sm">
+            <button class="btn btn-primary btn-sm" onclick={openAddGroupModal}>
               <Plus size={14} />
             </button>
           {/if}
@@ -486,13 +527,13 @@
             <div class="group-name-row">
               <span class="group-name">{group.name}</span>
               {#if group.isHantei}
-                <span class="badge badge-hantei">H</span>
+                <span class="badge-hantei-small">H</span>
               {/if}
             </div>
           </div>
           {#if groupsEditMode}
             <div class="group-actions">
-              <button class="group-action-btn" onclick={(e) => { e.stopPropagation(); }}>
+              <button class="group-action-btn" onclick={(e) => { e.stopPropagation(); openEditGroupModal(group); }}>
                 <Pencil size={12} />
               </button>
               <button class="group-action-btn danger" onclick={(e) => { e.stopPropagation(); showDeleteGroupConfirm = group._id; }}>
@@ -576,116 +617,118 @@
       <div class="toolbar-spacer"></div>
     </div>
 
-    <!-- Table -->
-    <div class="table-container">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th style="width: 44px;">
-              <input type="checkbox" class="checkbox" />
-            </th>
-            <th style="width: 200px;">Member</th>
-            <th style="width: 140px;">Group</th>
-            <th style="width: 120px;">Status</th>
-            <th style="width: 80px;">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {#each paginatedMembers() as member}
+    <!-- Table Container with internal scroll -->
+    <div class="table-wrapper">
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
             <tr>
-              <td>
+              <th style="width: 44px;">
                 <input type="checkbox" class="checkbox" />
-              </td>
-              <td>
-                <div class="cell-member">
-                  <div class="avatar" style="background: {getAvatarColor(member.lastName + member.firstName)};">
-                    {getInitials(member.firstName, member.lastName)}
+              </th>
+              <th style="width: 200px;">Member</th>
+              <th style="width: 140px;">Group</th>
+              <th style="width: 120px;">Status</th>
+              <th style="width: 80px;">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {#each paginatedMembers() as member}
+              <tr>
+                <td>
+                  <input type="checkbox" class="checkbox" />
+                </td>
+                <td>
+                  <div class="cell-member">
+                    <div class="avatar" style="background: {getAvatarColor(member.lastName + member.firstName)};">
+                      {getInitials(member.firstName, member.lastName)}
+                    </div>
+                    <span class="member-name">{member.lastName}, {member.firstName}</span>
                   </div>
-                  <span class="member-name">{member.lastName}, {member.firstName}</span>
-                </div>
-              </td>
-              <td>
-                {#if getGroup(member.groupId)}
-                  {@const group = getGroup(member.groupId)}
-                  <span class="badge badge-group" class:badge-hantei={group?.isHantei}>
-                    {group?.name}
-                  </span>
-                {:else}
-                  <span class="text-muted">{member.groupId}</span>
-                {/if}
-              </td>
-              <td>
-                {#if isRegistered(member._id)}
-                  <span class="badge badge-registered">✓ Registered</span>
-                {:else}
-                  <span class="status-unregistered">+ Register</span>
-                {/if}
-              </td>
-              <td>
-                <div class="action-buttons">
-                  <button class="action-btn" onclick={() => openEditModal(member)}>
-                    <Pencil size={12} />
-                  </button>
-                  <button class="action-btn danger" onclick={() => showDeleteConfirm = member._id}>
-                    <Trash2 size={12} />
-                  </button>
-                </div>
-              </td>
-            </tr>
-          {/each}
-          {#if paginatedMembers().length === 0}
-            <tr>
-              <td colspan="5" class="empty-state">
-                No members found
-              </td>
-            </tr>
-          {/if}
-        </tbody>
-      </table>
-    </div>
-
-    <!-- Pagination -->
-    <div class="table-footer">
-      <div class="pagination-info">
-        <span>Rows:</span>
-        <select class="rows-select" bind:value={rowsPerPage}>
-          <option value={10}>10</option>
-          <option value={25}>25</option>
-          <option value={50}>50</option>
-        </select>
-        <span class="showing">
-          Showing {Math.min((currentPage - 1) * rowsPerPage + 1, filteredMembers().length)}-{Math.min(currentPage * rowsPerPage, filteredMembers().length)} of {filteredMembers().length}
-        </span>
+                </td>
+                <td>
+                  {#if getGroup(member.groupId)}
+                    {@const group = getGroup(member.groupId)}
+                    <span class="badge badge-group" class:badge-hantei={group?.isHantei}>
+                      {group?.name}
+                    </span>
+                  {:else}
+                    <span class="text-muted">{member.groupId}</span>
+                  {/if}
+                </td>
+                <td>
+                  {#if isRegistered(member._id)}
+                    <span class="badge badge-registered">✓ Registered</span>
+                  {:else}
+                    <span class="status-unregistered">+ Register</span>
+                  {/if}
+                </td>
+                <td>
+                  <div class="action-buttons">
+                    <button class="action-btn" onclick={() => openEditModal(member)}>
+                      <Pencil size={12} />
+                    </button>
+                    <button class="action-btn danger" onclick={() => showDeleteConfirm = member._id}>
+                      <Trash2 size={12} />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            {/each}
+            {#if paginatedMembers().length === 0}
+              <tr>
+                <td colspan="5" class="empty-state">
+                  No members found
+                </td>
+              </tr>
+            {/if}
+          </tbody>
+        </table>
       </div>
-      <div class="pagination">
-        <button 
-          class="pagination-btn" 
-          disabled={currentPage === 1}
-          onclick={() => currentPage--}
-        >
-          <ChevronLeft size={14} />
-        </button>
-        {#each Array(Math.min(5, totalPages)) as _, i}
-          {@const page = i + 1}
+
+      <!-- Pagination -->
+      <div class="table-footer">
+        <div class="pagination-info">
+          <span>Rows:</span>
+          <select class="rows-select" bind:value={rowsPerPage}>
+            <option value={10}>10</option>
+            <option value={25}>25</option>
+            <option value={50}>50</option>
+          </select>
+          <span class="showing">
+            Showing {Math.min((currentPage - 1) * rowsPerPage + 1, filteredMembers().length)}-{Math.min(currentPage * rowsPerPage, filteredMembers().length)} of {filteredMembers().length}
+          </span>
+        </div>
+        <div class="pagination">
+          <button 
+            class="pagination-btn" 
+            disabled={currentPage === 1}
+            onclick={() => currentPage--}
+          >
+            <ChevronLeft size={14} />
+          </button>
+          {#each Array(Math.min(5, totalPages)) as _, i}
+            {@const page = i + 1}
+            <button 
+              class="pagination-btn"
+              class:active={currentPage === page}
+              onclick={() => currentPage = page}
+            >{page}</button>
+          {/each}
           <button 
             class="pagination-btn"
-            class:active={currentPage === page}
-            onclick={() => currentPage = page}
-          >{page}</button>
-        {/each}
-        <button 
-          class="pagination-btn"
-          disabled={currentPage === totalPages || totalPages === 0}
-          onclick={() => currentPage++}
-        >
-          <ChevronRight size={14} />
-        </button>
+            disabled={currentPage === totalPages || totalPages === 0}
+            onclick={() => currentPage++}
+          >
+            <ChevronRight size={14} />
+          </button>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
-<!-- Add/Edit Modal -->
+<!-- Add/Edit Member Modal -->
 {#if showAddModal}
   <div class="modal-overlay" onclick={closeModal}>
     <div class="modal" onclick={(e) => e.stopPropagation()}>
@@ -712,14 +755,6 @@
             {/each}
           </select>
         </div>
-        {#if !editingMember}
-          <div class="form-group">
-            <label class="form-checkbox">
-              <input type="checkbox" bind:checked={formIsGuest} />
-              <span>Guest (not a dojo member)</span>
-            </label>
-          </div>
-        {/if}
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" onclick={closeModal}>Cancel</button>
@@ -731,7 +766,54 @@
   </div>
 {/if}
 
-<!-- Delete Confirmation -->
+<!-- Add/Edit Group Modal -->
+{#if showGroupModal}
+  <div class="modal-overlay" onclick={closeGroupModal}>
+    <div class="modal" onclick={(e) => e.stopPropagation()}>
+      <div class="modal-header">
+        <h3 class="modal-title">{editingGroup ? 'Edit Group' : 'Add Group'}</h3>
+        <button class="modal-close" onclick={closeGroupModal}>
+          <X size={20} />
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">Group ID</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            bind:value={groupFormId} 
+            placeholder="e.g., YUD, MUD, YTH"
+          />
+          <span class="form-hint">Short identifier used internally</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Display Name</label>
+          <input 
+            type="text" 
+            class="form-input" 
+            bind:value={groupFormName} 
+            placeholder="e.g., Yudansha, Mudansha, Youth"
+          />
+        </div>
+        <div class="form-group">
+          <label class="form-checkbox">
+            <input type="checkbox" bind:checked={groupFormIsHantei} />
+            <span>Hantei Group (uses different judging criteria)</span>
+          </label>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick={closeGroupModal}>Cancel</button>
+        <button class="btn btn-primary" onclick={saveGroup}>
+          {editingGroup ? 'Save Changes' : 'Add Group'}
+        </button>
+      </div>
+    </div>
+  </div>
+{/if}
+
+<!-- Delete Member Confirmation -->
 {#if showDeleteConfirm}
   <div class="modal-overlay" onclick={() => showDeleteConfirm = null}>
     <div class="modal modal-sm" onclick={(e) => e.stopPropagation()}>
@@ -773,7 +855,7 @@
     <Dialog.Header>
       <Dialog.Title>Import Members</Dialog.Title>
       <Dialog.Description>
-        Upload a CSV file or paste data directly. Required columns: First Name, Last Name. Optional: Group, Guest.
+        Upload a CSV file or paste data directly. Required columns: First Name, Last Name. Optional: Group.
       </Dialog.Description>
     </Dialog.Header>
     
@@ -845,7 +927,6 @@
               <tr>
                 <th>Name</th>
                 <th>Group</th>
-                <th>Guest</th>
               </tr>
             </thead>
             <tbody>
@@ -853,12 +934,11 @@
                 <tr>
                   <td>{row.lastName}, {row.firstName}</td>
                   <td>{getGroup(row.groupId)?.name || row.groupId}</td>
-                  <td>{row.isGuest ? 'Yes' : 'No'}</td>
                 </tr>
               {/each}
               {#if parsedData.length > 5}
                 <tr class="more-rows">
-                  <td colspan="3">... and {parsedData.length - 5} more</td>
+                  <td colspan="2">... and {parsedData.length - 5} more</td>
                 </tr>
               {/if}
             </tbody>
@@ -895,9 +975,9 @@
 <style>
   .members-page {
     display: flex;
-    height: 100%;
-    min-height: calc(100vh - 64px);
+    height: calc(100vh - 64px);
     margin: -24px;
+    overflow: hidden;
   }
 
   /* ===== GROUPS PANEL ===== */
@@ -908,11 +988,13 @@
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+    overflow: hidden;
   }
 
   .groups-header {
     padding: 10px 12px;
     border-bottom: 1px solid rgba(92, 99, 112, 0.2);
+    flex-shrink: 0;
   }
 
   .groups-header-top {
@@ -964,10 +1046,6 @@
     box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.2);
   }
 
-  .group-card.hantei {
-    border-color: rgba(232, 111, 58, 0.3);
-  }
-
   .group-icon {
     width: 28px;
     height: 28px;
@@ -991,7 +1069,7 @@
   .group-name-row {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 6px;
   }
 
   .group-name {
@@ -1003,10 +1081,16 @@
     text-overflow: ellipsis;
   }
 
-  .group-meta {
-    font-size: 11px;
-    color: #71717a;
-    margin-top: 0;
+  /* Small H badge for hantei groups - subtle, no border */
+  .badge-hantei-small {
+    font-size: 9px;
+    font-weight: 700;
+    color: #e86f3a;
+    background: rgba(232, 111, 58, 0.2);
+    padding: 1px 4px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
   }
 
   .groups-header-actions {
@@ -1020,7 +1104,6 @@
     height: 24px;
     padding: 0 6px;
     background: rgba(59, 130, 246, 0.15);
-    border: 1px solid rgba(59, 130, 246, 0.3);
     border-radius: 4px;
     display: flex;
     align-items: center;
@@ -1034,7 +1117,6 @@
 
   .group-count-box.hantei {
     background: rgba(232, 111, 58, 0.15);
-    border-color: rgba(232, 111, 58, 0.3);
     color: #e86f3a;
   }
 
@@ -1080,6 +1162,7 @@
     flex-direction: column;
     min-width: 0;
     background: #0c0b09;
+    overflow: hidden;
   }
 
   .top-bar {
@@ -1090,6 +1173,7 @@
     background: #0f0e0c;
     border-bottom: 1px solid rgba(92, 99, 112, 0.2);
     min-height: 64px;
+    flex-shrink: 0;
   }
 
   .top-bar-left {
@@ -1150,6 +1234,7 @@
     padding: 12px 24px;
     background: #0f0e0c;
     border-bottom: 1px solid rgba(92, 99, 112, 0.2);
+    flex-shrink: 0;
   }
 
   .toolbar-search {
@@ -1225,7 +1310,15 @@
     color: #60a5fa;
   }
 
-  /* ===== DATA TABLE ===== */
+  /* ===== TABLE WRAPPER - Internal scroll ===== */
+  .table-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .table-container {
     flex: 1;
     overflow: auto;
@@ -1312,19 +1405,16 @@
   .badge-group {
     background: rgba(59, 130, 246, 0.15);
     color: #60a5fa;
-    border: 1px solid rgba(59, 130, 246, 0.3);
   }
 
   .badge-hantei {
     background: rgba(232, 111, 58, 0.15);
     color: #e86f3a;
-    border: 1px solid rgba(232, 111, 58, 0.3);
   }
 
   .badge-registered {
     background: rgba(74, 222, 128, 0.12);
     color: #4ade80;
-    border: 1px solid rgba(74, 222, 128, 0.3);
   }
 
   .status-unregistered {
@@ -1380,6 +1470,7 @@
     padding: 12px 16px;
     background: #0f0e0c;
     border-top: 1px solid rgba(92, 99, 112, 0.2);
+    flex-shrink: 0;
   }
 
   .pagination-info {
@@ -1610,6 +1701,13 @@
   .form-input:focus {
     outline: none;
     border-color: #3b82f6;
+  }
+
+  .form-hint {
+    display: block;
+    font-size: 12px;
+    color: #71717a;
+    margin-top: 4px;
   }
 
   .form-checkbox {
