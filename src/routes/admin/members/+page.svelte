@@ -50,6 +50,8 @@
   let filterStatus = $state<'all' | 'registered' | 'unregistered'>('all');
   let currentPage = $state(1);
   let rowsPerPage = $state(10);
+  let groupsEditMode = $state(false);
+  let showDeleteGroupConfirm = $state<Id<'groups'> | null>(null);
   
   // Modal state
   let showAddModal = $state(false);
@@ -201,6 +203,11 @@
     await client.mutation(api.members.remove, { id });
     showDeleteConfirm = null;
   }
+
+  async function deleteGroup(id: Id<'groups'>) {
+    await client.mutation(api.groups.remove, { id });
+    showDeleteGroupConfirm = null;
+  }
 </script>
 
 <svelte:head>
@@ -213,14 +220,20 @@
     <div class="groups-header">
       <div class="groups-header-top">
         <h2 class="groups-title">Groups</h2>
-        <button class="btn btn-primary btn-sm">
-          <Plus size={14} />
-          <span>Add</span>
-        </button>
-      </div>
-      <div class="search-box">
-        <Search size={16} class="search-icon" />
-        <input type="text" placeholder="Search groups..." class="search-input" />
+        <div class="groups-header-actions">
+          {#if groupsEditMode}
+            <button class="btn btn-ghost btn-sm" onclick={() => groupsEditMode = false}>
+              Done
+            </button>
+          {:else}
+            <button class="btn btn-ghost btn-sm" onclick={() => groupsEditMode = true}>
+              Edit
+            </button>
+            <button class="btn btn-primary btn-sm">
+              <Plus size={14} />
+            </button>
+          {/if}
+        </div>
       </div>
     </div>
 
@@ -237,7 +250,7 @@
         <div class="group-info">
           <div class="group-name">All Members</div>
         </div>
-        <div class="group-count">{getMemberCount(null)}</div>
+        <div class="group-count-box">{getMemberCount(null)}</div>
       </button>
 
       <!-- Individual Groups -->
@@ -247,8 +260,9 @@
           class="group-card"
           class:selected={selectedGroupId === group.groupId}
           class:hantei={group.isHantei}
-          onclick={() => selectedGroupId = group.groupId}
-          onkeydown={(e) => e.key === 'Enter' && (selectedGroupId = group.groupId)}
+          class:editing={groupsEditMode}
+          onclick={() => !groupsEditMode && (selectedGroupId = group.groupId)}
+          onkeydown={(e) => e.key === 'Enter' && !groupsEditMode && (selectedGroupId = group.groupId)}
           role="button"
           tabindex="0"
         >
@@ -264,24 +278,22 @@
             </div>
             <div class="group-meta">{group.groupId}</div>
           </div>
-          <div class="group-count">{getMemberCount(group.groupId)}</div>
-          <button class="group-edit-btn" onclick={(e) => { e.stopPropagation(); }}>
-            <Pencil size={12} />
-          </button>
+          {#if groupsEditMode}
+            <div class="group-actions">
+              <button class="group-action-btn" onclick={(e) => { e.stopPropagation(); }}>
+                <Pencil size={14} />
+              </button>
+              <button class="group-action-btn danger" onclick={(e) => { e.stopPropagation(); showDeleteGroupConfirm = group._id; }}>
+                <Trash2 size={14} />
+              </button>
+            </div>
+          {:else}
+            <div class="group-count-box" class:hantei={group.isHantei}>{getMemberCount(group.groupId)}</div>
+          {/if}
         </div>
       {/each}
     </div>
 
-    <div class="groups-footer">
-      <div class="groups-stat">
-        <div class="groups-stat-value">{groups.filter(g => !g.isHantei).length}</div>
-        <div class="groups-stat-label">Bogu</div>
-      </div>
-      <div class="groups-stat">
-        <div class="groups-stat-value hantei">{groups.filter(g => g.isHantei).length}</div>
-        <div class="groups-stat-label">Hantei</div>
-      </div>
-    </div>
   </aside>
 
   <!-- MEMBERS PANEL (Detail) -->
@@ -521,6 +533,24 @@
   </div>
 {/if}
 
+<!-- Delete Group Confirmation -->
+{#if showDeleteGroupConfirm}
+  <div class="modal-overlay" onclick={() => showDeleteGroupConfirm = null}>
+    <div class="modal modal-sm" onclick={(e) => e.stopPropagation()}>
+      <div class="modal-header">
+        <h3 class="modal-title">Delete Group</h3>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to delete this group? Members in this group will need to be reassigned.</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick={() => showDeleteGroupConfirm = null}>Cancel</button>
+        <button class="btn btn-danger" onclick={() => deleteGroup(showDeleteGroupConfirm!)}>Delete</button>
+      </div>
+    </div>
+  </div>
+{/if}
+
 <style>
   .members-page {
     display: flex;
@@ -636,78 +666,69 @@
     margin-top: 2px;
   }
 
-  .group-edit-btn {
-    width: 28px;
-    height: 28px;
-    border-radius: 6px;
-    background: transparent;
+
+
+  .groups-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .group-count-box {
+    min-width: 36px;
+    height: 36px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 700;
+    color: #60a5fa;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .group-count-box.hantei {
+    background: rgba(232, 111, 58, 0.15);
+    border-color: rgba(232, 111, 58, 0.3);
+    color: #e86f3a;
+  }
+
+  .group-actions {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-left: auto;
+  }
+
+  .group-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    background: rgba(92, 99, 112, 0.1);
     border: none;
-    color: #5c6370;
+    color: #9ca0ad;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    opacity: 0;
     transition: all 0.15s;
   }
 
-  .group-card:hover .group-edit-btn {
-    opacity: 1;
-  }
-
-  .group-edit-btn:hover {
+  .group-action-btn:hover {
     background: rgba(92, 99, 112, 0.2);
     color: #eaeaec;
   }
 
-  .group-count {
-    font-size: 18px;
-    font-weight: 700;
-    color: #60a5fa;
-    margin-left: auto;
-    padding-right: 8px;
-    flex-shrink: 0;
+  .group-action-btn.danger:hover {
+    background: rgba(248, 113, 113, 0.15);
+    color: #f87171;
   }
 
-  .group-card.selected .group-count {
-    color: #60a5fa;
-  }
-
-  .group-card.hantei .group-count {
-    color: #e86f3a;
-  }
-
-  .groups-footer {
-    padding: 12px;
-    border-top: 1px solid rgba(92, 99, 112, 0.2);
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
-
-  .groups-stat {
-    text-align: center;
-    padding: 10px;
-    background: #1a1916;
-    border-radius: 8px;
-  }
-
-  .groups-stat-value {
-    font-size: 18px;
-    font-weight: 700;
-    color: #60a5fa;
-  }
-
-  .groups-stat-value.hantei {
-    color: #e86f3a;
-  }
-
-  .groups-stat-label {
-    font-size: 9px;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    color: #5c6370;
-    margin-top: 2px;
+  .group-card.editing {
+    cursor: default;
   }
 
   /* ===== MEMBERS PANEL ===== */
@@ -1136,6 +1157,17 @@
     border-color: rgba(156, 160, 173, 0.4);
   }
 
+  .btn-ghost {
+    background: transparent;
+    color: #9ca0ad;
+    border: none;
+  }
+
+  .btn-ghost:hover {
+    color: #eaeaec;
+    background: rgba(92, 99, 112, 0.15);
+  }
+
   .btn-danger {
     background: #f87171;
     color: white;
@@ -1283,5 +1315,6 @@
     }
   }
 </style>
+
 
 
