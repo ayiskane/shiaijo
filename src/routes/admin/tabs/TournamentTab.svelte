@@ -18,7 +18,7 @@
   import {
     Trophy, Users, Swords, Play, Archive, ChevronDown, GripVertical,
     Check, RefreshCw, Plus, Search, X, ChevronRight, CheckCircle2, 
-    Sparkles, FolderOpen, Settings
+    Sparkles, FolderOpen, Settings, Trash2
   } from '@lucide/svelte';
   
   const isMobile = new IsMobile();
@@ -46,6 +46,7 @@
     isComplete = false,
     registeredMemberIds = new Set<string>(),
     onOpenCreateTournament,
+    onDeleteTournament,
     onAddAllParticipants,
     onClearAllParticipants,
     onRegisterMember,
@@ -87,6 +88,7 @@
     isComplete?: boolean;
     registeredMemberIds?: Set<string>;
     onOpenCreateTournament: () => void;
+    onDeleteTournament: () => void;
     onAddAllParticipants: () => void;
     onClearAllParticipants?: () => void;
     onRegisterMember?: (memberId: string) => void;
@@ -324,6 +326,16 @@
           </Select.Content>
         </Select.Root>
       </div>
+      {#if selectedTournament}
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          class="text-destructive hover:text-destructive hover:bg-destructive/10"
+          onclick={onDeleteTournament}
+        >
+          <Trash2 class="w-5 h-5" />
+        </Button>
+      {/if}
     </div>
   </div>
 
