@@ -338,13 +338,14 @@
   <!-- Tournament Selector with Label -->
   <div class="mb-4">
     <Label class="text-xs text-muted-foreground uppercase tracking-wide mb-1.5 block">Currently Editing Tournament</Label>
-    <Select.Root type="single" bind:value={selectedTournamentId}>
-      <Select.Trigger class="w-full rounded-xl h-12 border-2 border-primary/50">
-        <div class="flex items-center gap-2">
-          <Trophy class="w-4 h-4 text-primary" />
-          <span>{tournamentSelectorLabel}</span>
-        </div>
-      </Select.Trigger>
+    <div class="flex items-center gap-2">
+      <Select.Root type="single" bind:value={selectedTournamentId}>
+        <Select.Trigger class="flex-1 rounded-xl h-12 border-2 border-primary/50">
+          <div class="flex items-center gap-2">
+            <Trophy class="w-4 h-4 text-primary" />
+            <span>{tournamentSelectorLabel}</span>
+          </div>
+        </Select.Trigger>
       <Select.Content>
         {#each tournaments as t (t._id)}
           <Select.Item value={t._id} label={`${t.name} - ${t.status}`}>
@@ -365,6 +366,17 @@
         {/each}
       </Select.Content>
     </Select.Root>
+    <!-- Delete Tournament Button -->
+    <Button 
+      variant="outline" 
+      size="icon" 
+      class="h-12 w-12 rounded-xl border-2 border-red-500/50 hover:bg-red-500/20 hover:border-red-500 shrink-0" 
+      onclick={onDeleteTournament}
+      title="Delete Tournament"
+    >
+      <Trash2 class="w-5 h-5 text-red-400" />
+    </Button>
+    </div>
   </div>
 
   {#if selectedTournament}
