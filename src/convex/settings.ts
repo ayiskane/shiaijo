@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { TableNames } from "./_generated/dataModel";
 
 export const get = query({
   args: { key: v.string() },
@@ -53,7 +54,7 @@ export const resetAllData = mutation({
   args: {},
   handler: async (ctx) => {
     // Order matters because of references
-    const tables: Array<keyof typeof ctx.db.tables> = [
+    const tables: TableNames[] = [
       "matches",
       "participants",
       "courtState",

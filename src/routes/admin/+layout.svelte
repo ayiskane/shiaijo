@@ -33,7 +33,15 @@
   let currentPath = $derived($page.url.pathname);
 
   // Navigation items
-  const navItems = [
+  type NavItem = {
+    href: string;
+    label: string;
+    icon: any;
+    group: string | null;
+    live?: boolean;
+  };
+
+  const navItems: NavItem[] = [
     { href: '/admin', label: 'Dashboard', icon: LayoutDashboard, group: null },
     { href: '/admin/members', label: 'Members', icon: Users, group: 'Roster' },
     { href: '/admin/guests', label: 'Guests', icon: Globe, group: 'Roster' },

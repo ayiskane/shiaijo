@@ -9,7 +9,9 @@
 		import.meta.env.PUBLIC_CONVEX_URL ||
 		import.meta.env.CONVEX_URL ||
 		// SSR safety for Vercel injected env at runtime
-		(process.env?.CONVEX_URL as string | undefined) ||
+		(typeof globalThis !== 'undefined' && 'process' in globalThis
+			? (globalThis as any).process?.env?.CONVEX_URL
+			: undefined) ||
 		'https://rare-panther-467.convex.cloud';
 	setupConvex(CONVEX_URL);
 

@@ -1,11 +1,7 @@
 <script lang="ts">
-  import { Select as SelectPrimitive } from "bits-ui";
-  import type { ComponentProps } from "svelte";
-
-  let {
-    class: className,
-    ...restProps
-  }: ComponentProps<typeof SelectPrimitive.Value> = $props();
+  let { class: className = "", children } = $props();
 </script>
 
-<SelectPrimitive.Value data-slot="select-value" class={className} {...restProps} />
+<span data-slot="select-value" class={className}>
+  {@render children?.()}
+</span>

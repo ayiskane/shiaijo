@@ -7,16 +7,13 @@ export const list = query({
   args: {},
   handler: async (ctx) => {
     const volunteers = await ctx.db.query("volunteers").collect();
-    return volunteers.sort((a, b) =>
-      `${a.lastName}${a.firstName}`.localeCompare(`${b.lastName}${b.firstName}`)
-    );
+    return volunteers.sort((a, b) => a.name.localeCompare(b.name));
   },
 });
 
 export const create = mutation({
   args: {
-    firstName: v.string(),
-    lastName: v.string(),
+    name: v.string(),
     relatedMemberIds: v.optional(v.array(v.id("members"))),
     phone: v.optional(v.string()),
   },

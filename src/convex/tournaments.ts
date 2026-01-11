@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
 
 export const list = query({
   args: {},
@@ -172,11 +173,15 @@ export const generateMatches = mutation({
       const matchPairs = generateRoundRobinWithRest(playerIds);
       
       for (const pair of matchPairs) {
+        // Skip byes generated for odd counts
+        if (pair[0] === "BYE" || pair[1] === "BYE") continue;
+        const player1Id = pair[0] as Id<"members">;
+        const player2Id = pair[1] as Id<"members">;
         await ctx.db.insert("matches", {
           tournamentId,
           groupId,
-          player1Id: pair[0],
-          player2Id: pair[1],
+          player1Id,
+          player2Id,
           court: court as "A" | "B",
           status: "pending",
           player1Score: [],
@@ -200,20 +205,22 @@ export const generateMatches = mutation({
 });
 
 // Generate round-robin with rest optimization
-function generateRoundRobinWithRest(playerIds: string[]): [string, string][] {
+type PlayerId = Id<"members"> | "BYE";
+
+function generateRoundRobinWithRest(playerIds: Id<"members">[]): [PlayerId, PlayerId][] {
   if (playerIds.length < 2) return [];
   
-  const players = [...playerIds];
+  const players: PlayerId[] = [...playerIds];
   if (players.length % 2 !== 0) {
     players.push("BYE");
   }
   
   const n = players.length;
-  const rounds: [string, string][][] = [];
+  const rounds: [PlayerId, PlayerId][][] = [];
   
   // Standard round-robin generation
   for (let round = 0; round < n - 1; round++) {
-    const roundMatches: [string, string][] = [];
+    const roundMatches: [PlayerId, PlayerId][] = [];
     for (let i = 0; i < n / 2; i++) {
       const p1 = players[i];
       const p2 = players[n - 1 - i];
@@ -227,9 +234,9 @@ function generateRoundRobinWithRest(playerIds: string[]): [string, string][] {
   }
   
   // Flatten and reorder for rest optimization
-  const allMatches: [string, string][] = [];
-  const lastPlayed: Map<string, number> = new Map();
-  const flatMatches = rounds.flat();
+  const allMatches: [PlayerId, PlayerId][] = [];
+  const lastPlayed: Map<PlayerId, number> = new Map();
+  const flatMatches: [PlayerId, PlayerId][] = rounds.flat();
   const used = new Set<number>();
   
   while (allMatches.length < flatMatches.length) {

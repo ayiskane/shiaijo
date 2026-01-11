@@ -15,23 +15,17 @@
 
 	const ctx = getToggleGroupCtx();
 
-	let mergedVariant: ToggleVariants["variant"] = ctx?.variant ?? variant ?? "default";
-	let mergedSize: ToggleVariants["size"] = ctx?.size ?? size ?? "default";
-	let mergedSpacing = ctx?.spacing ?? 0;
-
-	$effect(() => {
-		mergedVariant = ctx?.variant ?? variant ?? "default";
-		mergedSize = ctx?.size ?? size ?? "default";
-		mergedSpacing = ctx?.spacing ?? 0;
-	});
+	const mergedVariant = $derived(ctx?.variant ?? variant ?? "default");
+	const mergedSize = $derived(ctx?.size ?? size ?? "default");
+	const mergedSpacing = $derived(ctx?.spacing ?? 0);
 </script>
 
 <ToggleGroupPrimitive.Item
 	bind:ref
 	data-slot="toggle-group-item"
-	data-variant={ctx.variant || variant}
-	data-size={ctx.size || size}
-	data-spacing={ctx.spacing}
+	data-variant={ctx?.variant ?? variant}
+	data-size={ctx?.size ?? size}
+	data-spacing={ctx?.spacing}
 	class={cn(
 		toggleVariants({
 			variant: mergedVariant as ToggleVariants["variant"],

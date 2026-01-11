@@ -2,7 +2,9 @@
 const CONVEX_URL =
   import.meta.env.PUBLIC_CONVEX_URL ||
   import.meta.env.CONVEX_URL ||
-  (typeof process !== 'undefined' ? process.env.CONVEX_URL : undefined) ||
+  (typeof globalThis !== 'undefined' && 'process' in globalThis
+    ? (globalThis as any).process?.env?.CONVEX_URL
+    : undefined) ||
   'https://rare-panther-467.convex.cloud';
 
 export async function convexQuery<T = unknown>(
