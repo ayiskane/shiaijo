@@ -1,23 +1,20 @@
 <script lang="ts">
-  import { useMutation } from 'convex-svelte';
+  import { useConvexClient } from 'convex-svelte';
   import { api } from '../../../convex/_generated/api';
   
+  const client = useConvexClient();
+
   // Form state
   let adminPassword = $state('');
   let courtkeeperPassword = $state('');
   let saving = $state<string | null>(null);
   let confirmClear = $state<string | null>(null);
 
-  // Mutations
-  const setSettings = useMutation(api.settings.set);
-  const clearTournaments = useMutation(api.tournaments.clearAll);
-  const clearMembers = useMutation(api.members.clearAll);
-
   async function saveAdminPassword() {
     if (!adminPassword.trim()) return;
     saving = 'admin';
     try {
-      await setSettings.mutate({ key: 'adminPassword', value: adminPassword });
+      await client.mutation(api.settings.set, { key: 'adminPassword', value: adminPassword });
       adminPassword = '';
     } catch (e) {
       console.error('Failed to save admin password:', e);
@@ -29,7 +26,7 @@
     if (!courtkeeperPassword.trim()) return;
     saving = 'courtkeeper';
     try {
-      await setSettings.mutate({ key: 'courtkeeperPassword', value: courtkeeperPassword });
+      await client.mutation(api.settings.set, { key: 'courtkeeperPassword', value: courtkeeperPassword });
       courtkeeperPassword = '';
     } catch (e) {
       console.error('Failed to save courtkeeper password:', e);
@@ -43,7 +40,7 @@
       return;
     }
     try {
-      await clearTournaments.mutate({});
+      await client.mutation(api.tournaments.clearAll, {});
       confirmClear = null;
     } catch (e) {
       console.error('Failed to clear tournaments:', e);
@@ -56,7 +53,7 @@
       return;
     }
     try {
-      await clearMembers.mutate({});
+      await client.mutation(api.members.clearAll, {});
       confirmClear = null;
     } catch (e) {
       console.error('Failed to clear members:', e);
@@ -126,19 +123,6 @@
     </div>
   </section>
 
-  <!-- PORTAL SETTINGS - Placeholder for future expansion -->
-  <!-- 
-  <section class="section">
-    <h2 class="section-title">Spectator Portal</h2>
-    ...
-  </section>
-
-  <section class="section">
-    <h2 class="section-title">Volunteer Portal</h2>
-    ...
-  </section>
-  -->
-
   <!-- DEBUG SECTION -->
   <section class="section danger">
     <h2 class="section-title">⚠️ Debug Actions</h2>
@@ -190,7 +174,6 @@
     margin-bottom: 32px;
   }
 
-  /* Section */
   .section {
     margin-bottom: 40px;
   }
@@ -206,7 +189,6 @@
     border-bottom: 1px solid #27272a;
   }
 
-  /* Setting Row */
   .setting-row {
     display: flex;
     align-items: center;
@@ -244,7 +226,6 @@
     flex-shrink: 0;
   }
 
-  /* Form */
   .form-input {
     width: 200px;
     padding: 12px 14px;
@@ -272,7 +253,6 @@
     cursor: not-allowed;
   }
 
-  /* Buttons */
   .btn {
     padding: 12px 20px;
     border-radius: 8px;
@@ -329,7 +309,6 @@
     background: #dc2626;
   }
 
-  /* Danger Section */
   .section.danger .section-title {
     color: #ef4444;
   }
@@ -351,13 +330,11 @@
     border: none;
   }
 
-  /* Focus */
   .btn:focus-visible, .form-input:focus-visible {
     outline: 3px solid #818cf8;
     outline-offset: 2px;
   }
 
-  /* Responsive */
   @media (max-width: 640px) {
     .setting-row {
       flex-direction: column;
