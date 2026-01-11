@@ -110,13 +110,14 @@
             <div class="nav-label">{group.label}</div>
           {/if}
           {#each group.items as item}
+            {@const Icon = item.icon}
             <a 
               href={item.href} 
               class="nav-item" 
               class:active={isActive(item.href)}
               class:live={item.live}
             >
-              {@const Icon = item.icon}<span class="nav-icon"><Icon size={20} /></span>
+              <span class="nav-icon"><Icon size={20} /></span>
               <span class="nav-text">{item.label}</span>
               {#if item.live}
                 <span class="live-dot"></span>
@@ -130,8 +131,9 @@
     <div class="sidebar-footer">
       <div class="nav-label">Portals</div>
       {#each portalLinks as portal}
+        {@const Icon = portal.icon}
         <a href={portal.href} class="portal-link {portal.accent}">
-          {@const Icon = portal.icon}<span class="nav-icon"><Icon size={20} /></span>
+          <span class="nav-icon"><Icon size={20} /></span>
           <span class="nav-text">{portal.label}</span>
         </a>
       {/each}
@@ -446,4 +448,5 @@
     .edge-toggle { display: none; }
   }
 </style>
+
 
