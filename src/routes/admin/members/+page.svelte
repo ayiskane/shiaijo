@@ -224,11 +224,14 @@
       <!-- Individual Groups -->
       {#each groups as group}
         {@const Icon = group.isHantei ? UserCheck : Users}
-        <button 
+        <div 
           class="group-card"
           class:selected={selectedGroupId === group.groupId}
           class:hantei={group.isHantei}
           onclick={() => selectedGroupId = group.groupId}
+          onkeydown={(e) => e.key === 'Enter' && (selectedGroupId = group.groupId)}
+          role="button"
+          tabindex="0"
         >
           <div class="group-icon" style="background: {getGroupIconBg(group)};">
             <span class="group-emoji">{getGroupIcon(group)}</span>
@@ -245,7 +248,7 @@
           <button class="group-edit-btn" onclick={(e) => { e.stopPropagation(); }}>
             <Pencil size={12} />
           </button>
-        </button>
+        </div>
       {/each}
     </div>
 
@@ -1225,3 +1228,4 @@
     }
   }
 </style>
+
