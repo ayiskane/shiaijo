@@ -3,6 +3,11 @@
   import { api } from '../../../convex/_generated/api';
   import type { Doc, Id } from '../../../convex/_generated/dataModel';
   
+  // shadcn components
+  import * as Dialog from '$lib/components/ui/dialog';
+  import * as Tabs from '$lib/components/ui/tabs';
+  import { Button } from '$lib/components/ui/button';
+  
   // Icons
   import Search from '@lucide/svelte/icons/search';
   import Plus from '@lucide/svelte/icons/plus';
@@ -14,6 +19,10 @@
   import Users from '@lucide/svelte/icons/users';
   import UserCheck from '@lucide/svelte/icons/user-check';
   import X from '@lucide/svelte/icons/x';
+  import FileSpreadsheet from '@lucide/svelte/icons/file-spreadsheet';
+  import ClipboardPaste from '@lucide/svelte/icons/clipboard-paste';
+  import AlertCircle from '@lucide/svelte/icons/alert-circle';
+  import Check from '@lucide/svelte/icons/check';
 
   const client = useConvexClient();
 
@@ -57,6 +66,16 @@
   let showAddModal = $state(false);
   let editingMember = $state<Doc<'members'> | null>(null);
   let showDeleteConfirm = $state<Id<'members'> | null>(null);
+  
+  // CSV Import state
+  let showImportModal = $state(false);
+  let importTab = $state('upload');
+  let isDragging = $state(false);
+  let csvText = $state('');
+  let parsedData = $state<Array<{firstName: string; lastName: string; groupId: string; isGuest: boolean}>>([]);
+  let parseError = $state('');
+  let isImporting = $state(false);
+  let importSuccess = $state(false);
 
   // Form state
   let formFirstName = $state('');
@@ -215,6 +234,193 @@
     await client.mutation(api.groups.remove, { id });
     showDeleteGroupConfirm = null;
   }
+
+  // ===== CSV IMPORT FUNCTIONS =====
+  
+  function openImportModal() {
+    showImportModal = true;
+    importTab = 'upload';
+    csvText = '';
+    parsedData = [];
+    parseError = '';
+    isImporting = false;
+    importSuccess = false;
+  }
+
+  function closeImportModal() {
+    showImportModal = false;
+    csvText = '';
+    parsedData = [];
+    parseError = '';
+  }
+
+  function parseCSV(text: string) {
+    parseError = '';
+    parsedData = [];
+    
+    if (!text.trim()) {
+      parseError = 'No data provided';
+      return;
+    }
+
+    const lines = text.trim().split(/\r?\n/);
+    if (lines.length < 2) {
+      parseError = 'CSV must have a header row and at least one data row';
+      return;
+    }
+
+    // Parse header
+    const header = parseCSVLine(lines[0]).map(h => h.toLowerCase().trim());
+    
+    // Find column indices
+    const firstNameIdx = header.findIndex(h => h.includes('first') || h === 'firstname');
+    const lastNameIdx = header.findIndex(h => h.includes('last') || h === 'lastname');
+    const groupIdx = header.findIndex(h => h.includes('group') || h === 'groupid' || h === 'division');
+    const guestIdx = header.findIndex(h => h.includes('guest'));
+
+    if (firstNameIdx === -1 || lastNameIdx === -1) {
+      parseError = 'CSV must have "First Name" and "Last Name" columns';
+      return;
+    }
+
+    // Parse data rows
+    const results: Array<{firstName: string; lastName: string; groupId: string; isGuest: boolean}> = [];
+    
+    for (let i = 1; i < lines.length; i++) {
+      const row = parseCSVLine(lines[i]);
+      if (row.length === 0 || row.every(cell => !cell.trim())) continue;
+      
+      const firstName = row[firstNameIdx]?.trim() || '';
+      const lastName = row[lastNameIdx]?.trim() || '';
+      
+      if (!firstName || !lastName) continue;
+      
+      let groupId = groupIdx !== -1 ? row[groupIdx]?.trim() || '' : '';
+      // If groupId doesn't match any existing group, use the first group
+      if (!groups.some(g => g.groupId === groupId)) {
+        groupId = groups[0]?.groupId || '';
+      }
+      
+      const isGuest = guestIdx !== -1 ? 
+        ['true', 'yes', '1', 'y'].includes(row[guestIdx]?.toLowerCase().trim() || '') : 
+        false;
+      
+      results.push({ firstName, lastName, groupId, isGuest });
+    }
+
+    if (results.length === 0) {
+      parseError = 'No valid data rows found';
+      return;
+    }
+
+    parsedData = results;
+  }
+
+  function parseCSVLine(line: string): string[] {
+    const result: string[] = [];
+    let current = '';
+    let inQuotes = false;
+    
+    for (let i = 0; i < line.length; i++) {
+      const char = line[i];
+      
+      if (char === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (char === ',' && !inQuotes) {
+        result.push(current);
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    result.push(current);
+    
+    return result;
+  }
+
+  function handleFileDrop(e: DragEvent) {
+    e.preventDefault();
+    isDragging = false;
+    
+    const file = e.dataTransfer?.files[0];
+    if (file) {
+      readFile(file);
+    }
+  }
+
+  function handleFileSelect(e: Event) {
+    const input = e.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (file) {
+      readFile(file);
+    }
+  }
+
+  function readFile(file: File) {
+    if (!file.name.endsWith('.csv') && !file.type.includes('csv')) {
+      parseError = 'Please upload a CSV file';
+      return;
+    }
+    
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const text = e.target?.result as string;
+      csvText = text;
+      parseCSV(text);
+    };
+    reader.onerror = () => {
+      parseError = 'Error reading file';
+    };
+    reader.readAsText(file);
+  }
+
+  function handlePaste(e: ClipboardEvent) {
+    const text = e.clipboardData?.getData('text') || '';
+    if (text) {
+      csvText = text;
+      parseCSV(text);
+    }
+  }
+
+  function handleTextareaChange() {
+    if (csvText.trim()) {
+      parseCSV(csvText);
+    } else {
+      parsedData = [];
+      parseError = '';
+    }
+  }
+
+  async function importMembers() {
+    if (parsedData.length === 0) return;
+    
+    isImporting = true;
+    
+    try {
+      await client.mutation(api.members.bulkCreate, {
+        members: parsedData.map(m => ({
+          firstName: m.firstName,
+          lastName: m.lastName,
+          groupId: m.groupId,
+          isGuest: m.isGuest,
+        }))
+      });
+      
+      importSuccess = true;
+      setTimeout(() => {
+        closeImportModal();
+      }, 1500);
+    } catch (error) {
+      parseError = 'Error importing members. Please try again.';
+    } finally {
+      isImporting = false;
+    }
+  }
 </script>
 
 <svelte:head>
@@ -326,7 +532,7 @@
         </div>
       </div>
       <div class="top-bar-actions">
-        <button class="btn btn-secondary btn-sm">
+        <button class="btn btn-secondary btn-sm" onclick={openImportModal}>
           <Upload size={14} />
           <span>Import CSV</span>
         </button>
@@ -561,6 +767,131 @@
   </div>
 {/if}
 
+<!-- CSV Import Modal -->
+<Dialog.Root bind:open={showImportModal}>
+  <Dialog.Content class="import-dialog">
+    <Dialog.Header>
+      <Dialog.Title>Import Members</Dialog.Title>
+      <Dialog.Description>
+        Upload a CSV file or paste data directly. Required columns: First Name, Last Name. Optional: Group, Guest.
+      </Dialog.Description>
+    </Dialog.Header>
+    
+    <Tabs.Root bind:value={importTab} class="import-tabs">
+      <Tabs.List class="import-tabs-list">
+        <Tabs.Trigger value="upload" class="import-tab-trigger">
+          <FileSpreadsheet size={16} />
+          <span>Upload File</span>
+        </Tabs.Trigger>
+        <Tabs.Trigger value="paste" class="import-tab-trigger">
+          <ClipboardPaste size={16} />
+          <span>Paste Data</span>
+        </Tabs.Trigger>
+      </Tabs.List>
+      
+      <Tabs.Content value="upload" class="import-tab-content">
+        <div 
+          class="dropzone"
+          class:dragging={isDragging}
+          ondragover={(e) => { e.preventDefault(); isDragging = true; }}
+          ondragleave={() => isDragging = false}
+          ondrop={handleFileDrop}
+        >
+          <input 
+            type="file" 
+            accept=".csv" 
+            class="file-input" 
+            id="csv-file-input"
+            onchange={handleFileSelect}
+          />
+          <label for="csv-file-input" class="dropzone-content">
+            <div class="dropzone-icon">
+              <FileSpreadsheet size={32} />
+            </div>
+            <div class="dropzone-text">
+              <p class="dropzone-title">Drop your CSV file here</p>
+              <p class="dropzone-subtitle">or <span class="dropzone-link">browse</span> to choose a file</p>
+            </div>
+          </label>
+        </div>
+      </Tabs.Content>
+      
+      <Tabs.Content value="paste" class="import-tab-content">
+        <textarea 
+          class="paste-textarea"
+          placeholder="Paste CSV data here...&#10;&#10;Example:&#10;First Name,Last Name,Group&#10;John,Doe,YUD&#10;Jane,Smith,MUD"
+          bind:value={csvText}
+          oninput={handleTextareaChange}
+          onpaste={handlePaste}
+        ></textarea>
+      </Tabs.Content>
+    </Tabs.Root>
+
+    {#if parseError}
+      <div class="import-error">
+        <AlertCircle size={16} />
+        <span>{parseError}</span>
+      </div>
+    {/if}
+
+    {#if parsedData.length > 0}
+      <div class="import-preview">
+        <div class="import-preview-header">
+          <span class="import-preview-title">Preview ({parsedData.length} members)</span>
+        </div>
+        <div class="import-preview-table">
+          <table>
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Group</th>
+                <th>Guest</th>
+              </tr>
+            </thead>
+            <tbody>
+              {#each parsedData.slice(0, 5) as row}
+                <tr>
+                  <td>{row.lastName}, {row.firstName}</td>
+                  <td>{getGroup(row.groupId)?.name || row.groupId}</td>
+                  <td>{row.isGuest ? 'Yes' : 'No'}</td>
+                </tr>
+              {/each}
+              {#if parsedData.length > 5}
+                <tr class="more-rows">
+                  <td colspan="3">... and {parsedData.length - 5} more</td>
+                </tr>
+              {/if}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {/if}
+
+    {#if importSuccess}
+      <div class="import-success">
+        <Check size={16} />
+        <span>Successfully imported {parsedData.length} members!</span>
+      </div>
+    {/if}
+
+    <Dialog.Footer>
+      <Button variant="outline" onclick={closeImportModal}>Cancel</Button>
+      <Button 
+        onclick={importMembers} 
+        disabled={parsedData.length === 0 || isImporting || importSuccess}
+      >
+        {#if isImporting}
+          Importing...
+        {:else if importSuccess}
+          Done!
+        {:else}
+          Import {parsedData.length} Members
+        {/if}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
+
 <style>
   .members-page {
     display: flex;
@@ -678,8 +1009,6 @@
     margin-top: 0;
   }
 
-
-
   .groups-header-actions {
     display: flex;
     align-items: center;
@@ -768,7 +1097,6 @@
     flex-direction: column;
     gap: 2px;
   }
-
 
   .page-title {
     font-size: 18px;
@@ -991,18 +1319,6 @@
     background: rgba(232, 111, 58, 0.15);
     color: #e86f3a;
     border: 1px solid rgba(232, 111, 58, 0.3);
-  }
-
-  .badge-member {
-    background: rgba(74, 222, 128, 0.12);
-    color: #4ade80;
-    border: 1px solid rgba(74, 222, 128, 0.3);
-  }
-
-  .badge-guest {
-    background: rgba(156, 160, 173, 0.12);
-    color: #9ca0ad;
-    border: 1px solid rgba(156, 160, 173, 0.3);
   }
 
   .badge-registered {
@@ -1309,6 +1625,207 @@
     accent-color: #3b82f6;
   }
 
+  /* ===== CSV IMPORT MODAL ===== */
+  :global(.import-dialog) {
+    max-width: 600px !important;
+    background: #141310 !important;
+    border: 1px solid rgba(92, 99, 112, 0.35) !important;
+  }
+
+  :global(.import-tabs) {
+    margin-top: 16px;
+  }
+
+  :global(.import-tabs-list) {
+    display: flex;
+    gap: 4px;
+    background: #0c0b09;
+    padding: 4px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+  }
+
+  :global(.import-tab-trigger) {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #9ca0ad;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  :global(.import-tab-trigger:hover) {
+    color: #eaeaec;
+  }
+
+  :global(.import-tab-trigger[data-state="active"]) {
+    background: rgba(59, 130, 246, 0.15);
+    color: #60a5fa;
+  }
+
+  :global(.import-tab-content) {
+    min-height: 200px;
+  }
+
+  .dropzone {
+    border: 2px dashed rgba(92, 99, 112, 0.4);
+    border-radius: 12px;
+    padding: 40px 24px;
+    text-align: center;
+    transition: all 0.2s;
+    cursor: pointer;
+  }
+
+  .dropzone:hover,
+  .dropzone.dragging {
+    border-color: #3b82f6;
+    background: rgba(59, 130, 246, 0.05);
+  }
+
+  .file-input {
+    display: none;
+  }
+
+  .dropzone-content {
+    cursor: pointer;
+  }
+
+  .dropzone-icon {
+    color: #5c6370;
+    margin-bottom: 16px;
+  }
+
+  .dropzone-title {
+    font-size: 16px;
+    font-weight: 600;
+    color: #eaeaec;
+    margin: 0 0 8px;
+  }
+
+  .dropzone-subtitle {
+    font-size: 14px;
+    color: #71717a;
+    margin: 0;
+  }
+
+  .dropzone-link {
+    color: #60a5fa;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .paste-textarea {
+    width: 100%;
+    min-height: 200px;
+    background: #0c0b09;
+    border: 1px solid rgba(92, 99, 112, 0.35);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 14px;
+    font-family: 'SF Mono', Monaco, 'Consolas', monospace;
+    color: #eaeaec;
+    resize: vertical;
+    line-height: 1.5;
+  }
+
+  .paste-textarea:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+
+  .paste-textarea::placeholder {
+    color: #5c6370;
+  }
+
+  .import-error {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    border-radius: 8px;
+    color: #f87171;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+
+  .import-success {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 16px;
+    background: rgba(74, 222, 128, 0.1);
+    border: 1px solid rgba(74, 222, 128, 0.3);
+    border-radius: 8px;
+    color: #4ade80;
+    font-size: 14px;
+    margin-top: 16px;
+  }
+
+  .import-preview {
+    margin-top: 16px;
+    border: 1px solid rgba(92, 99, 112, 0.2);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .import-preview-header {
+    padding: 12px 16px;
+    background: #0f0e0c;
+    border-bottom: 1px solid rgba(92, 99, 112, 0.2);
+  }
+
+  .import-preview-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #eaeaec;
+  }
+
+  .import-preview-table {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .import-preview-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .import-preview-table th {
+    text-align: left;
+    padding: 10px 16px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: #71717a;
+    background: #0c0b09;
+    position: sticky;
+    top: 0;
+  }
+
+  .import-preview-table td {
+    padding: 10px 16px;
+    font-size: 14px;
+    color: #eaeaec;
+    border-top: 1px solid rgba(92, 99, 112, 0.15);
+  }
+
+  .import-preview-table .more-rows td {
+    color: #71717a;
+    font-style: italic;
+    text-align: center;
+  }
+
   /* ===== RESPONSIVE ===== */
   @media (max-width: 900px) {
     .groups-panel {
@@ -1324,9 +1841,3 @@
     }
   }
 </style>
-
-
-
-
-
-
