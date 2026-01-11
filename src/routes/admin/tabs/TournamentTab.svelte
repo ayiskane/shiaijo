@@ -17,7 +17,7 @@
   import {
     Trophy, Users, Swords, Play, Settings, Archive, ChevronDown, GripVertical,
     Check, Timer, Lock, RotateCcw, Trash2, UserPlus, KeyRound, RefreshCw, Plus,
-    Search, X, ChevronRight
+    Search, X, ChevronRight, CheckCircle2, Circle, ArrowRight
   } from '@lucide/svelte';
   
   const isMobile = new IsMobile();
@@ -173,30 +173,25 @@
     buildScoreTimeline?: (match: any) => any[];
   } = $props();
 
-  // Callback when sheet closes
-  function handleSheetOpenChange(open: boolean) {
-    settingsSheetOpen = open;
-  }
-
-  const BUILD_TAG = 'tournament-v2-participants';
-
-  function openSettings() {
-    console.debug('[admin][tournament] settings gear clicked', { selectedTournamentId, status: selectedTournament?.status, build: BUILD_TAG });
-    settingsSheetOpen = true;
-  }
-
-  // Local state for participant management
+  // Local state
   let registeredSearchQuery = $state('');
   let availableSearchQuery = $state('');
   let mobileParticipantTab = $state<'registered' | 'available'>('registered');
+  let registeredListEl: HTMLElement | null = $state(null);
+  let availableListEl: HTMLElement | null = $state(null);
 
-  let listEl: HTMLElement | undefined = $state(undefined);
-  let registeredListEl: HTMLElement | undefined = $state(undefined);
-  let availableListEl: HTMLElement | undefined = $state(undefined);
-  
-  $effect(() => {
-    if (listEl) autoAnimate(listEl);
-  });
+  // Callback when sheet closes
+  function handleSheetOpenChange(open: boolean) {
+    if (!open && onCloseSettings) {
+      onCloseSettings();
+    }
+    settingsSheetOpen = open;
+  }
+
+  function openSettings() {
+    settingsSheetOpen = true;
+    if (onOpenSettings) onOpenSettings();
+  }
 
   $effect(() => {
     if (registeredListEl) autoAnimate(registeredListEl, { duration: 150 });
@@ -205,9 +200,12 @@
   $effect(() => {
     if (availableListEl) autoAnimate(availableListEl, { duration: 150 });
   });
-  
-  $effect(() => {
-    console.debug('[admin][tournament] settingsSheetOpen', settingsSheetOpen, 'tournament', selectedTournamentId);
+
+  // Compute current step (1-based)
+  let currentStep = $derived.by(() => {
+    if (participants.length === 0) return 1;
+    if (matches.length === 0) return 2;
+    return 3;
   });
 
   // Compute registered and available members
@@ -273,9 +271,24 @@
   function handleUnregisterGroup(groupId: string) {
     if (onUnregisterGroupMembers) onUnregisterGroupMembers(groupId);
   }
-  
-  // mark externally-provided props as used to satisfy runes a11y checks
-  const _keepProps = [groups, pendingMatches, SCORE_LABELS, getGroupName, buildScoreTimeline];
+
+  // Step descriptions
+  function getStepDescription(stepNum: number): string {
+    if (stepNum === 1) {
+      return participants.length > 0 ? `${participants.length} members added` : 'Add tournament members';
+    }
+    if (stepNum === 2) {
+      return matches.length > 0 ? `${matches.length} matches configured` : 'Assign courts & order';
+    }
+    return 'Review & begin';
+  }
+
+  // Next step label
+  let nextStepLabel = $derived.by(() => {
+    if (currentStep === 1) return 'Next: Courts';
+    if (currentStep === 2) return 'Next: Start';
+    return 'Start Tournament';
+  });
 
   onMount(() => {
     console.debug('[admin] TournamentTab mounted', {
@@ -298,958 +311,773 @@
       {/if}
     </span>
   </div>
-  {#if selectedTournament}
-    <div class="top-bar-center">
-      <div class="top-bar-stats">
-        <div class="top-bar-progress">
-          <div class="top-bar-progress-header">
-            <span class="top-bar-progress-label">Progress</span>
-            <span class="top-bar-progress-value">{progressPercent}%</span>
-          </div>
-          <div class="top-bar-progress-track">
-            <div class="top-bar-progress-fill" style="width: {progressPercent}%;"></div>
-          </div>
-        </div>
-        <div class="top-bar-divider"></div>
-        <div class="top-bar-stat">
-          <div class="top-bar-stat-value">{matches.length - completedMatches.length}</div>
-          <div class="top-bar-stat-label">Matches Left</div>
-        </div>
-      </div>
-    </div>
-  {/if}
   <div class="top-bar-right">
-    {#if selectedTournament}
-      <button class="btn-sm ghost" onclick={openSettings}>⚙ Settings</button>
-    {/if}
     <button class="btn-sm primary" onclick={onOpenCreateTournament}>+ New Tournament</button>
   </div>
 </div>
 
 {#if tournaments.length === 0}
-  <Card.Root class="border-dashed">
-    <Card.Content class="flex flex-col items-center justify-center py-12">
-      <Trophy class="mb-4 h-12 w-12 text-muted-foreground/50" />
-      <p class="mb-4 text-muted-foreground">No tournaments yet</p>
-      <Button onclick={onOpenCreateTournament}>Create Your First Tournament</Button>
+  <!-- Empty State -->
+  <Card.Root class="border-dashed border-2 border-border/50">
+    <Card.Content class="flex flex-col items-center justify-center py-16">
+      <div class="w-20 h-20 rounded-full bg-muted/50 flex items-center justify-center mb-6">
+        <Trophy class="h-10 w-10 text-muted-foreground/50" />
+      </div>
+      <h3 class="text-xl font-semibold mb-2">No tournaments yet</h3>
+      <p class="text-muted-foreground mb-6 text-center max-w-sm">Create your first tournament to start managing matches and tracking results.</p>
+      <Button size="lg" onclick={onOpenCreateTournament} class="gap-2">
+        <Plus class="w-5 h-5" />
+        Create Your First Tournament
+      </Button>
     </Card.Content>
   </Card.Root>
 {:else}
-  <!-- Tournament Selector with Label -->
-  <div class="mb-4">
-    <Label class="text-xs text-muted-foreground uppercase tracking-wide mb-1.5 block">Currently Editing Tournament</Label>
-    <div class="flex items-center gap-2">
+  <!-- Tournament Selector -->
+  <div class="mb-6">
+    <Label class="text-xs text-muted-foreground uppercase tracking-wide mb-2 block">Currently Editing Tournament</Label>
+    <div class="flex items-center gap-3">
       <Select.Root type="single" bind:value={selectedTournamentId}>
-        <Select.Trigger class="flex-1 rounded-xl h-12 border-2 border-primary/50">
-          <div class="flex items-center gap-2">
-            <Trophy class="w-4 h-4 text-primary" />
-            <span>{tournamentSelectorLabel}</span>
+        <Select.Trigger class="flex-1 rounded-xl h-14 border-2 border-primary/40 bg-card hover:border-primary/60 transition-colors">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Trophy class="w-5 h-5 text-primary" />
+            </div>
+            <div class="text-left">
+              <div class="font-medium">{selectedTournament?.name || 'Select tournament'}</div>
+              {#if selectedTournament}
+                <div class="text-xs text-muted-foreground">
+                  {selectedTournament.status === 'setup' ? 'Setting up' : selectedTournament.status === 'in_progress' ? 'In progress' : 'Completed'}
+                </div>
+              {/if}
+            </div>
           </div>
         </Select.Trigger>
-      <Select.Content>
-        {#each tournaments as t (t._id)}
-          <Select.Item value={t._id} label={`${t.name} - ${t.status}`}>
-            <div class="flex items-center justify-between w-full">
-              <span>{t.name}</span>
-              <Badge variant="outline" class={cn(
-                'ml-2 text-[10px]',
-                t.status === 'in_progress'
-                  ? 'border-amber-500 text-amber-400'
-                  : t.status === 'setup'
-                  ? 'border-yellow-500 text-yellow-400'
-                  : 'border-emerald-500 text-emerald-400'
-              )}>
-                {t.status === 'setup' ? 'Setup' : t.status === 'in_progress' ? 'Live' : 'Done'}
-              </Badge>
-            </div>
-          </Select.Item>
-        {/each}
-      </Select.Content>
-    </Select.Root>
-    <!-- Delete Tournament Button -->
-    <Button 
-      variant="outline" 
-      size="icon" 
-      class="h-12 w-12 rounded-xl border-2 border-red-500/50 hover:bg-red-500/20 hover:border-red-500 shrink-0" 
-      onclick={onDeleteTournament}
-      title="Delete Tournament"
-    >
-      <Trash2 class="w-5 h-5 text-red-400" />
-    </Button>
+        <Select.Content>
+          {#each tournaments as t (t._id)}
+            <Select.Item value={t._id} label={t.name}>
+              <div class="flex items-center justify-between w-full py-1">
+                <span>{t.name}</span>
+                <Badge variant="outline" class={cn(
+                  'ml-3 text-[10px]',
+                  t.status === 'in_progress'
+                    ? 'border-amber-500 text-amber-400'
+                    : t.status === 'setup'
+                    ? 'border-blue-500 text-blue-400'
+                    : 'border-emerald-500 text-emerald-400'
+                )}>
+                  {t.status === 'setup' ? 'Setup' : t.status === 'in_progress' ? 'Live' : 'Done'}
+                </Badge>
+              </div>
+            </Select.Item>
+          {/each}
+        </Select.Content>
+      </Select.Root>
+      
+      <!-- Delete Button -->
+      <Button 
+        variant="outline" 
+        size="icon" 
+        class="h-14 w-14 rounded-xl border-2 border-destructive/30 hover:bg-destructive/10 hover:border-destructive/60 shrink-0 transition-colors" 
+        onclick={onDeleteTournament}
+        title="Delete Tournament"
+      >
+        <Trash2 class="w-5 h-5 text-destructive" />
+      </Button>
     </div>
   </div>
 
   {#if selectedTournament}
     {#if selectedTournament.status === 'setup'}
-      <!-- 3-Step Stepper -->
-      <div class="flex items-center justify-center gap-2 mb-6">
-        {#each [
-          { num: 1, name: 'Participants', icon: Users },
-          { num: 2, name: 'Courts', icon: Settings },
-          { num: 3, name: 'Start', icon: Swords }
-        ] as step}
-          {@const StepIcon = step.icon}
-          {@const isActive = (step.num === 1 && participants.length === 0) || (step.num === 2 && participants.length > 0 && matches.length === 0) || (step.num === 3 && matches.length > 0)}
-          {@const isCompleteStep = (step.num === 1 && participants.length > 0) || (step.num === 2 && matches.length > 0)}
-          <div class="flex items-center gap-2">
-            <div class={cn(
-              'w-9 h-9 rounded-full flex items-center justify-center transition-all',
-              isCompleteStep
-                ? 'bg-emerald-500 text-white'
-                : isActive
-                ? 'bg-primary ring-4 ring-primary/20 text-primary-foreground'
-                : 'bg-muted text-muted-foreground'
-            )}>
-              {#if isCompleteStep}
-                <Check class="w-4 h-4" />
-              {:else}
-                <StepIcon class="w-4 h-4" />
-              {/if}
+      <!-- SETUP MODE: Sidebar Stepper Layout -->
+      <div class="flex gap-6 min-h-[600px]">
+        <!-- Sidebar Stepper -->
+        <div class="w-64 shrink-0 hidden lg:block">
+          <div class="rounded-2xl border border-border bg-card p-4 sticky top-4">
+            <div class="space-y-1 mb-6">
+              {#each [
+                { num: 1, name: 'Participants', desc: getStepDescription(1), icon: Users },
+                { num: 2, name: 'Courts', desc: getStepDescription(2), icon: Settings },
+                { num: 3, name: 'Start', desc: getStepDescription(3), icon: Play }
+              ] as step}
+                {@const isComplete = (step.num === 1 && participants.length > 0) || (step.num === 2 && matches.length > 0)}
+                {@const isActive = currentStep === step.num}
+                {@const StepIcon = step.icon}
+                <button
+                  class={cn(
+                    'w-full flex items-start gap-3 p-3 rounded-xl text-left transition-all',
+                    isActive ? 'bg-primary/10 border border-primary/30' : 'hover:bg-muted/50'
+                  )}
+                >
+                  <div class={cn(
+                    'w-8 h-8 rounded-full flex items-center justify-center shrink-0 mt-0.5',
+                    isComplete ? 'bg-emerald-500 text-white' : isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  )}>
+                    {#if isComplete}
+                      <Check class="w-4 h-4" />
+                    {:else}
+                      <StepIcon class="w-4 h-4" />
+                    {/if}
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <div class={cn(
+                      'font-medium text-sm',
+                      isActive ? 'text-primary' : isComplete ? 'text-emerald-400' : 'text-foreground'
+                    )}>{step.name}</div>
+                    <div class="text-xs text-muted-foreground truncate">{step.desc}</div>
+                  </div>
+                </button>
+              {/each}
             </div>
-            <span class={cn('text-sm font-medium hidden sm:inline', isActive ? 'text-primary' : isCompleteStep ? 'text-emerald-400' : 'text-muted-foreground')}>
-              {step.name}
-            </span>
-          </div>
-          {#if step.num < 3}
-            <div class={cn('w-8 h-0.5', isCompleteStep ? 'bg-emerald-500' : 'bg-muted')}></div>
-          {/if}
-        {/each}
-      </div>
 
-      <!-- Step 1: Participants (when no participants OR can always edit) -->
-      {#if participants.length === 0 || matches.length === 0}
-        <!-- Summary Bar -->
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl bg-card border border-border mb-4 gap-3">
-          <div class="flex items-center gap-4 sm:gap-6">
-            <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-bold text-emerald-400">{participants.length}</span>
-              <span class="text-sm text-muted-foreground">registered</span>
+            <!-- Progress -->
+            <div class="pt-4 border-t border-border">
+              <div class="flex items-center justify-between text-xs mb-2">
+                <span class="text-muted-foreground">Progress</span>
+                <span class="font-medium">{currentStep - 1} of 3</span>
+              </div>
+              <Progress value={(currentStep - 1) / 3 * 100} class="h-2" />
             </div>
-            <Separator orientation="vertical" class="h-6 hidden sm:block" />
-            <div class="flex items-baseline gap-2">
-              <span class="text-2xl font-bold text-blue-400">{availableMembers.length}</span>
-              <span class="text-sm text-muted-foreground">available</span>
-            </div>
-          </div>
-          <div class="flex items-center gap-2 flex-wrap">
-            {#each groupsWithRegistered as group}
-              <Badge variant="secondary" class="text-xs">
-                <span class="font-semibold mr-1">{registeredByGroup.get(group.groupId)?.length || 0}</span>
-                {group.name}
-              </Badge>
-            {/each}
+
+            <!-- Settings Button -->
+            <Button variant="ghost" size="sm" class="w-full mt-4 justify-start" onclick={openSettings}>
+              <Settings class="w-4 h-4 mr-2" />
+              Tournament Settings
+            </Button>
           </div>
         </div>
 
-        <!-- Dual Panel (Desktop) / Tabs (Mobile) -->
-        {#if !isMobile.current}
-          <div class="grid grid-cols-2 gap-4 mb-4">
-            <!-- Registered Panel (Left) -->
-            <div class="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
-              <div class="px-4 py-3 border-b border-border bg-emerald-500/10 flex items-center justify-between">
-                <h3 class="font-semibold text-emerald-400 flex items-center gap-2">
-                  <Check class="w-4 h-4" />
-                  Registered
-                  <Badge variant="secondary" class="bg-emerald-500/20 text-emerald-400">{registeredMembers.length}</Badge>
-                </h3>
-                {#if onClearAllParticipants && participants.length > 0}
-                  <Button variant="ghost" size="sm" class="h-7 text-xs text-destructive hover:text-destructive" onclick={onClearAllParticipants}>
-                    Clear All
-                  </Button>
+        <!-- Main Content Area -->
+        <div class="flex-1 min-w-0">
+          <!-- Mobile Stepper (horizontal) -->
+          <div class="lg:hidden mb-6">
+            <div class="flex items-center justify-between p-3 rounded-xl bg-card border border-border">
+              {#each [1, 2, 3] as stepNum}
+                {@const isComplete = (stepNum === 1 && participants.length > 0) || (stepNum === 2 && matches.length > 0)}
+                {@const isActive = currentStep === stepNum}
+                <div class="flex items-center gap-2">
+                  <div class={cn(
+                    'w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium',
+                    isComplete ? 'bg-emerald-500 text-white' : isActive ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                  )}>
+                    {#if isComplete}
+                      <Check class="w-4 h-4" />
+                    {:else}
+                      {stepNum}
+                    {/if}
+                  </div>
+                </div>
+                {#if stepNum < 3}
+                  <div class={cn('flex-1 h-0.5 mx-2', isComplete ? 'bg-emerald-500' : 'bg-muted')}></div>
                 {/if}
-              </div>
-              <div class="px-3 py-2 border-b border-border">
-                <div class="relative">
-                  <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    type="text" 
-                    placeholder="Search registered..." 
-                    class="pl-8 h-9"
-                    bind:value={registeredSearchQuery}
-                  />
-                </div>
-              </div>
-              <div class="flex-1 overflow-y-auto max-h-[380px]" bind:this={registeredListEl}>
-                {#each groupsWithRegistered as group (group._id)}
-                  {@const groupMembers = registeredByGroup.get(group.groupId) || []}
-                  <div class="sticky top-0 z-10 px-3 py-2 bg-muted/80 backdrop-blur-sm border-b border-border flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</span>
-                      <Badge variant="outline" class="text-xs">{groupMembers.length}</Badge>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      class="h-6 px-2 text-xs text-destructive hover:text-destructive opacity-70 hover:opacity-100"
-                      onclick={() => handleUnregisterGroup(group.groupId)}
-                    >
-                      Remove All
-                    </Button>
-                  </div>
-                  {#each groupMembers as member (member._id)}
-                    <div class="flex items-center gap-3 px-3 py-2.5 border-b border-border hover:bg-muted/30 transition-colors group">
-                      <div class="cell-avatar-gradient shrink-0" style="width: 32px; height: 32px; font-size: 11px;">
-                        {getInitials(member.firstName, member.lastName)}
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium truncate">{member.firstName} {member.lastName}</div>
-                        <div class="text-xs text-muted-foreground">{member.rank || 'No rank'}</div>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        class="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10"
-                        onclick={() => handleUnregisterMember(member._id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  {/each}
-                {:else}
-                  <div class="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Users class="w-10 h-10 mb-2 opacity-50" />
-                    <p class="text-sm">No participants registered</p>
-                    <p class="text-xs mt-1">Add members from the right panel</p>
-                  </div>
-                {/each}
-              </div>
-            </div>
-
-            <!-- Available Panel (Right) -->
-            <div class="rounded-xl border border-border bg-card overflow-hidden flex flex-col">
-              <div class="px-4 py-3 border-b border-border bg-blue-500/10 flex items-center justify-between">
-                <h3 class="font-semibold text-blue-400 flex items-center gap-2">
-                  Available
-                  <Badge variant="secondary" class="bg-blue-500/20 text-blue-400">{availableMembers.length}</Badge>
-                </h3>
-                <Button size="sm" class="h-7" onclick={onAddAllParticipants}>
-                  <Plus class="w-3 h-3 mr-1" />
-                  Add All
-                </Button>
-              </div>
-              <div class="px-3 py-2 border-b border-border">
-                <div class="relative">
-                  <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    type="text" 
-                    placeholder="Search available..." 
-                    class="pl-8 h-9"
-                    bind:value={availableSearchQuery}
-                  />
-                </div>
-              </div>
-              <div class="flex-1 overflow-y-auto max-h-[380px]" bind:this={availableListEl}>
-                {#each groupsWithAvailable as group (group._id)}
-                  {@const groupMembers = availableByGroup.get(group.groupId) || []}
-                  <div class="sticky top-0 z-10 px-3 py-2 bg-muted/80 backdrop-blur-sm border-b border-border flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</span>
-                      <Badge variant="outline" class="text-xs">{groupMembers.length}</Badge>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      class="h-6 px-2 text-xs text-blue-400 hover:text-blue-300 opacity-70 hover:opacity-100"
-                      onclick={() => handleRegisterGroup(group.groupId)}
-                    >
-                      + Add All
-                    </Button>
-                  </div>
-                  {#each groupMembers as member (member._id)}
-                    <div class="flex items-center gap-3 px-3 py-2.5 border-b border-border hover:bg-muted/30 transition-colors group">
-                      <div class="cell-avatar-gradient shrink-0" style="width: 32px; height: 32px; font-size: 11px;">
-                        {getInitials(member.firstName, member.lastName)}
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium truncate">{member.firstName} {member.lastName}</div>
-                        <div class="text-xs text-muted-foreground">{member.rank || 'No rank'}</div>
-                      </div>
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        class="h-7 px-2 text-xs opacity-0 group-hover:opacity-100 text-primary hover:text-primary hover:bg-primary/10"
-                        onclick={() => handleRegisterMember(member._id)}
-                      >
-                        + Add
-                      </Button>
-                    </div>
-                  {/each}
-                {:else}
-                  <div class="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Check class="w-10 h-10 mb-2 opacity-50" />
-                    <p class="text-sm">All members registered!</p>
-                  </div>
-                {/each}
-              </div>
+              {/each}
             </div>
           </div>
-        {:else}
-          <!-- Mobile: Tab-based -->
-          <div class="rounded-xl border border-border bg-card overflow-hidden mb-4">
-            <div class="flex border-b border-border">
-              <button 
-                class={cn(
-                  "flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2",
-                  mobileParticipantTab === 'registered' 
-                    ? "bg-emerald-500/10 text-emerald-400 border-b-2 border-emerald-500" 
-                    : "text-muted-foreground"
-                )}
-                onclick={() => mobileParticipantTab = 'registered'}
-              >
-                Registered
-                <Badge variant="secondary" class="text-xs">{registeredMembers.length}</Badge>
-              </button>
-              <button 
-                class={cn(
-                  "flex-1 px-4 py-3 text-sm font-medium transition-colors flex items-center justify-center gap-2",
-                  mobileParticipantTab === 'available' 
-                    ? "bg-blue-500/10 text-blue-400 border-b-2 border-blue-500" 
-                    : "text-muted-foreground"
-                )}
-                onclick={() => mobileParticipantTab = 'available'}
-              >
-                Available
-                <Badge variant="secondary" class="text-xs">{availableMembers.length}</Badge>
-              </button>
-            </div>
-            
-            {#if mobileParticipantTab === 'registered'}
-              <div class="px-3 py-2 border-b border-border">
-                <div class="relative">
-                  <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    type="text" 
-                    placeholder="Search registered..." 
-                    class="pl-8 h-10"
-                    bind:value={registeredSearchQuery}
-                  />
-                </div>
-              </div>
-              <div class="max-h-[350px] overflow-y-auto">
-                {#each groupsWithRegistered as group (group._id)}
-                  {@const groupMembers = registeredByGroup.get(group.groupId) || []}
-                  <div class="sticky top-0 z-10 px-3 py-2 bg-muted/90 backdrop-blur-sm border-b border-border flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</span>
-                      <Badge variant="outline" class="text-xs">{groupMembers.length}</Badge>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      class="h-8 px-3 text-xs text-destructive"
-                      onclick={() => handleUnregisterGroup(group.groupId)}
-                    >
-                      Remove All
-                    </Button>
-                  </div>
-                  {#each groupMembers as member (member._id)}
-                    <div class="flex items-center gap-3 px-3 py-3 border-b border-border">
-                      <div class="cell-avatar-gradient shrink-0" style="width: 36px; height: 36px; font-size: 12px;">
-                        {getInitials(member.firstName, member.lastName)}
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium truncate">{member.firstName} {member.lastName}</div>
-                        <div class="text-xs text-muted-foreground">{member.rank || 'No rank'}</div>
-                      </div>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        class="h-9 px-3 text-xs text-destructive border-destructive/30"
-                        onclick={() => handleUnregisterMember(member._id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  {/each}
-                {:else}
-                  <div class="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Users class="w-10 h-10 mb-2 opacity-50" />
-                    <p class="text-sm">No participants registered</p>
-                  </div>
-                {/each}
-              </div>
-            {:else}
-              <div class="px-3 py-2 border-b border-border flex items-center gap-2">
-                <div class="relative flex-1">
-                  <Search class="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input 
-                    type="text" 
-                    placeholder="Search available..." 
-                    class="pl-8 h-10"
-                    bind:value={availableSearchQuery}
-                  />
-                </div>
-                <Button size="sm" class="h-10" onclick={onAddAllParticipants}>
-                  <Plus class="w-3 h-3 mr-1" />
-                  Add All
-                </Button>
-              </div>
-              <div class="max-h-[350px] overflow-y-auto">
-                {#each groupsWithAvailable as group (group._id)}
-                  {@const groupMembers = availableByGroup.get(group.groupId) || []}
-                  <div class="sticky top-0 z-10 px-3 py-2 bg-muted/90 backdrop-blur-sm border-b border-border flex items-center justify-between">
-                    <div class="flex items-center gap-2">
-                      <span class="text-xs font-semibold uppercase tracking-wide text-muted-foreground">{group.name}</span>
-                      <Badge variant="outline" class="text-xs">{groupMembers.length}</Badge>
-                    </div>
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      class="h-8 px-3 text-xs text-blue-400"
-                      onclick={() => handleRegisterGroup(group.groupId)}
-                    >
-                      + Add All
-                    </Button>
-                  </div>
-                  {#each groupMembers as member (member._id)}
-                    <div class="flex items-center gap-3 px-3 py-3 border-b border-border">
-                      <div class="cell-avatar-gradient shrink-0" style="width: 36px; height: 36px; font-size: 12px;">
-                        {getInitials(member.firstName, member.lastName)}
-                      </div>
-                      <div class="flex-1 min-w-0">
-                        <div class="text-sm font-medium truncate">{member.firstName} {member.lastName}</div>
-                        <div class="text-xs text-muted-foreground">{member.rank || 'No rank'}</div>
-                      </div>
-                      <Button 
-                        variant="default" 
-                        size="sm" 
-                        class="h-9 px-3 text-xs"
-                        onclick={() => handleRegisterMember(member._id)}
-                      >
-                        + Add
-                      </Button>
-                    </div>
-                  {/each}
-                {:else}
-                  <div class="flex flex-col items-center justify-center py-12 text-muted-foreground">
-                    <Check class="w-10 h-10 mb-2 opacity-50" />
-                    <p class="text-sm">All members registered!</p>
-                  </div>
-                {/each}
-              </div>
-            {/if}
-          </div>
-        {/if}
 
-        <!-- Step 2: Courts (only show if we have participants) -->
-        {#if participants.length > 0}
-          <Card.Root class="mb-4">
-            <Card.Content class="pt-6 space-y-4">
+          <!-- Step Content Card -->
+          <Card.Root class="border-2">
+            <Card.Header class="border-b border-border bg-muted/30">
               <div class="flex items-center justify-between">
                 <div>
-                  <h3 class="font-bold text-lg">Configure Courts</h3>
-                  <p class="text-sm text-muted-foreground">{participants.length} participants ready</p>
+                  <Badge variant="secondary" class="mb-2">Step {currentStep} of 3</Badge>
+                  <Card.Title class="text-xl">
+                    {#if currentStep === 1}
+                      Participants
+                    {:else if currentStep === 2}
+                      Court Assignment
+                    {:else}
+                      Ready to Start
+                    {/if}
+                  </Card.Title>
+                  <Card.Description>
+                    {#if currentStep === 1}
+                      Add members who will participate in this tournament
+                    {:else if currentStep === 2}
+                      Assign groups to courts and set the match order
+                    {:else}
+                      Review your setup and start the tournament
+                    {/if}
+                  </Card.Description>
                 </div>
-                <Badge class="bg-emerald-500/20 text-emerald-400 border-emerald-500/30">{participants.length} ready</Badge>
+                <Button variant="ghost" size="icon" onclick={openSettings} class="lg:hidden">
+                  <Settings class="w-5 h-5" />
+                </Button>
               </div>
+            </Card.Header>
 
-              {#if groupOrder.length > 0}
-                <div class="space-y-2">
-                  <p class="text-xs text-muted-foreground">Drag to reorder • Tap court to change</p>
-                  <div class="rounded-xl border border-border overflow-hidden" bind:this={listEl}>
-                    {#each groupOrder as groupId, idx (groupId)}
-                      {@const group = getGroupById(groupId)}
-                      {@const court = getEffectiveCourt(groupId)}
-                      {@const groupMembers = membersByGroupId.get(groupId) ?? []}
+            <Card.Content class="p-6">
+              <!-- STEP 1: Participants -->
+              {#if currentStep === 1 || (currentStep === 2 && matches.length === 0)}
+                <!-- Summary Stats -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+                  <div class="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/20">
+                    <div class="text-2xl font-bold text-emerald-400">{participants.length}</div>
+                    <div class="text-xs text-muted-foreground">Registered</div>
+                  </div>
+                  <div class="p-4 rounded-xl bg-blue-500/10 border border-blue-500/20">
+                    <div class="text-2xl font-bold text-blue-400">{availableMembers.length}</div>
+                    <div class="text-xs text-muted-foreground">Available</div>
+                  </div>
+                  {#each groupsWithRegistered.slice(0, 2) as group}
+                    <div class="p-4 rounded-xl bg-muted/50 border border-border">
+                      <div class="text-2xl font-bold">{registeredByGroup.get(group.groupId)?.length || 0}</div>
+                      <div class="text-xs text-muted-foreground truncate">{group.name}</div>
+                    </div>
+                  {/each}
+                </div>
+
+                <!-- Dual Panel Layout -->
+                {#if !isMobile.current}
+                  <div class="grid grid-cols-2 gap-4">
+                    <!-- Registered Panel (Left) -->
+                    <div class="rounded-xl border-2 border-emerald-500/30 bg-emerald-500/5 overflow-hidden flex flex-col max-h-[500px]">
+                      <div class="px-4 py-3 border-b border-emerald-500/20 bg-emerald-500/10 flex items-center justify-between">
+                        <h3 class="font-semibold text-emerald-400 flex items-center gap-2">
+                          <Check class="w-4 h-4" />
+                          Registered
+                          <Badge variant="secondary" class="bg-emerald-500/20 text-emerald-400">{registeredMembers.length}</Badge>
+                        </h3>
+                        {#if onClearAllParticipants && participants.length > 0}
+                          <Button variant="ghost" size="sm" class="h-7 text-xs text-destructive hover:text-destructive" onclick={onClearAllParticipants}>
+                            Clear All
+                          </Button>
+                        {/if}
+                      </div>
+                      <div class="px-3 py-2 border-b border-emerald-500/20">
+                        <div class="relative">
+                          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            type="text" 
+                            placeholder="Search registered..." 
+                            bind:value={registeredSearchQuery}
+                            class="pl-9 h-9 text-sm bg-background/50"
+                          />
+                        </div>
+                      </div>
+                      <div class="flex-1 overflow-y-auto p-2" bind:this={registeredListEl}>
+                        {#each groupsWithRegistered as group (group.groupId)}
+                          {@const groupMembers = registeredByGroup.get(group.groupId) || []}
+                          <div class="mb-3">
+                            <div class="flex items-center justify-between px-2 py-1.5 sticky top-0 bg-emerald-500/10 rounded-lg mb-1">
+                              <span class="text-xs font-medium text-emerald-400">{group.name} ({groupMembers.length})</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                class="h-6 text-[10px] text-destructive/70 hover:text-destructive px-2"
+                                onclick={() => handleUnregisterGroup(group.groupId)}
+                              >
+                                Remove All
+                              </Button>
+                            </div>
+                            {#each groupMembers as member (member._id)}
+                              <div class="flex items-center justify-between p-2 rounded-lg hover:bg-emerald-500/10 group">
+                                <div class="flex items-center gap-2">
+                                  <div class="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-xs font-medium text-emerald-400">
+                                    {getInitials(member.firstName, member.lastName)}
+                                  </div>
+                                  <span class="text-sm">{member.firstName} {member.lastName}</span>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  class="h-7 w-7 opacity-0 group-hover:opacity-100 text-destructive hover:text-destructive hover:bg-destructive/10"
+                                  onclick={() => handleUnregisterMember(member._id)}
+                                >
+                                  <X class="w-4 h-4" />
+                                </Button>
+                              </div>
+                            {/each}
+                          </div>
+                        {:else}
+                          <div class="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                            <Users class="w-8 h-8 mb-2 opacity-50" />
+                            <p class="text-sm">No participants yet</p>
+                          </div>
+                        {/each}
+                      </div>
+                    </div>
+
+                    <!-- Available Panel (Right) -->
+                    <div class="rounded-xl border-2 border-blue-500/30 bg-blue-500/5 overflow-hidden flex flex-col max-h-[500px]">
+                      <div class="px-4 py-3 border-b border-blue-500/20 bg-blue-500/10 flex items-center justify-between">
+                        <h3 class="font-semibold text-blue-400 flex items-center gap-2">
+                          <UserPlus class="w-4 h-4" />
+                          Available
+                          <Badge variant="secondary" class="bg-blue-500/20 text-blue-400">{availableMembers.length}</Badge>
+                        </h3>
+                        {#if availableMembers.length > 0}
+                          <Button variant="ghost" size="sm" class="h-7 text-xs text-blue-400 hover:text-blue-300" onclick={onAddAllParticipants}>
+                            + Add All
+                          </Button>
+                        {/if}
+                      </div>
+                      <div class="px-3 py-2 border-b border-blue-500/20">
+                        <div class="relative">
+                          <Search class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                          <Input 
+                            type="text" 
+                            placeholder="Search available..." 
+                            bind:value={availableSearchQuery}
+                            class="pl-9 h-9 text-sm bg-background/50"
+                          />
+                        </div>
+                      </div>
+                      <div class="flex-1 overflow-y-auto p-2" bind:this={availableListEl}>
+                        {#each groupsWithAvailable as group (group.groupId)}
+                          {@const groupMembers = availableByGroup.get(group.groupId) || []}
+                          <div class="mb-3">
+                            <div class="flex items-center justify-between px-2 py-1.5 sticky top-0 bg-blue-500/10 rounded-lg mb-1">
+                              <span class="text-xs font-medium text-blue-400">{group.name} ({groupMembers.length})</span>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                class="h-6 text-[10px] text-blue-400/70 hover:text-blue-300 px-2"
+                                onclick={() => handleRegisterGroup(group.groupId)}
+                              >
+                                + Add All
+                              </Button>
+                            </div>
+                            {#each groupMembers as member (member._id)}
+                              <div class="flex items-center justify-between p-2 rounded-lg hover:bg-blue-500/10 group">
+                                <div class="flex items-center gap-2">
+                                  <div class="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-xs font-medium text-blue-400">
+                                    {getInitials(member.firstName, member.lastName)}
+                                  </div>
+                                  <span class="text-sm">{member.firstName} {member.lastName}</span>
+                                </div>
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  class="h-7 w-7 opacity-0 group-hover:opacity-100 text-blue-400 hover:text-blue-300 hover:bg-blue-500/10"
+                                  onclick={() => handleRegisterMember(member._id)}
+                                >
+                                  <Plus class="w-4 h-4" />
+                                </Button>
+                              </div>
+                            {/each}
+                          </div>
+                        {:else}
+                          <div class="flex flex-col items-center justify-center py-8 text-muted-foreground">
+                            <Check class="w-8 h-8 mb-2 opacity-50" />
+                            <p class="text-sm">All members registered!</p>
+                          </div>
+                        {/each}
+                      </div>
+                    </div>
+                  </div>
+                {:else}
+                  <!-- Mobile: Tab View -->
+                  <div class="rounded-xl border border-border overflow-hidden">
+                    <div class="flex border-b border-border">
+                      <button
+                        class={cn(
+                          'flex-1 px-4 py-3 text-sm font-medium transition-colors',
+                          mobileParticipantTab === 'registered' ? 'bg-emerald-500/10 text-emerald-400 border-b-2 border-emerald-500' : 'text-muted-foreground'
+                        )}
+                        onclick={() => mobileParticipantTab = 'registered'}
+                      >
+                        Registered ({registeredMembers.length})
+                      </button>
+                      <button
+                        class={cn(
+                          'flex-1 px-4 py-3 text-sm font-medium transition-colors',
+                          mobileParticipantTab === 'available' ? 'bg-blue-500/10 text-blue-400 border-b-2 border-blue-500' : 'text-muted-foreground'
+                        )}
+                        onclick={() => mobileParticipantTab = 'available'}
+                      >
+                        Available ({availableMembers.length})
+                      </button>
+                    </div>
+                    <div class="p-3 max-h-[400px] overflow-y-auto">
+                      {#if mobileParticipantTab === 'registered'}
+                        {#each groupsWithRegistered as group (group.groupId)}
+                          {@const groupMembers = registeredByGroup.get(group.groupId) || []}
+                          <div class="mb-3">
+                            <div class="flex items-center justify-between px-2 py-1.5 bg-emerald-500/10 rounded-lg mb-1">
+                              <span class="text-xs font-medium text-emerald-400">{group.name}</span>
+                              <Button variant="ghost" size="sm" class="h-6 text-[10px]" onclick={() => handleUnregisterGroup(group.groupId)}>Remove All</Button>
+                            </div>
+                            {#each groupMembers as member (member._id)}
+                              <div class="flex items-center justify-between p-2">
+                                <span class="text-sm">{member.firstName} {member.lastName}</span>
+                                <Button variant="ghost" size="sm" class="h-7 text-destructive" onclick={() => handleUnregisterMember(member._id)}>Remove</Button>
+                              </div>
+                            {/each}
+                          </div>
+                        {:else}
+                          <p class="text-center text-muted-foreground py-8">No participants yet</p>
+                        {/each}
+                      {:else}
+                        {#each groupsWithAvailable as group (group.groupId)}
+                          {@const groupMembers = availableByGroup.get(group.groupId) || []}
+                          <div class="mb-3">
+                            <div class="flex items-center justify-between px-2 py-1.5 bg-blue-500/10 rounded-lg mb-1">
+                              <span class="text-xs font-medium text-blue-400">{group.name}</span>
+                              <Button variant="ghost" size="sm" class="h-6 text-[10px]" onclick={() => handleRegisterGroup(group.groupId)}>+ Add All</Button>
+                            </div>
+                            {#each groupMembers as member (member._id)}
+                              <div class="flex items-center justify-between p-2">
+                                <span class="text-sm">{member.firstName} {member.lastName}</span>
+                                <Button variant="ghost" size="sm" class="h-7 text-blue-400" onclick={() => handleRegisterMember(member._id)}>+ Add</Button>
+                              </div>
+                            {/each}
+                          </div>
+                        {:else}
+                          <p class="text-center text-muted-foreground py-8">All members registered!</p>
+                        {/each}
+                      {/if}
+                    </div>
+                  </div>
+                {/if}
+              {/if}
+
+              <!-- STEP 2: Courts (only when participants > 0 and matches === 0) -->
+              {#if currentStep === 2 && participants.length > 0 && matches.length === 0}
+                <div class="space-y-4">
+                  <p class="text-sm text-muted-foreground mb-4">
+                    Drag groups to reorder. Tap A, A+B, or B to assign courts.
+                  </p>
+                  
+                  {#each groupOrder as groupId, idx (groupId)}
+                    {@const group = getGroupById(groupId)}
+                    {@const court = getEffectiveCourt(groupId)}
+                    {#if group}
                       <div
+                        class="flex items-center gap-4 p-4 rounded-xl border border-border bg-card hover:bg-muted/30 transition-colors cursor-grab"
                         draggable="true"
-                        role="listitem"
                         ondragstart={(e) => onDragStart(e, groupId)}
                         ondragover={(e) => onDragOver(e, groupId)}
                         ondragleave={onDragLeave}
                         ondrop={(e) => onDrop(e, groupId)}
                         ondragend={onDragEnd}
-                        class="flex items-center gap-2 px-3 py-3 border-b border-border last:border-b-0 transition-all min-h-[56px]"
                       >
-                        <button class="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing touch-none shrink-0">
-                          <GripVertical class="h-5 w-5" />
-                        </button>
-                        <span class="w-6 text-center text-sm font-mono text-muted-foreground shrink-0">{idx + 1}</span>
+                        <div class="text-muted-foreground cursor-grab">
+                          <GripVertical class="w-5 h-5" />
+                        </div>
                         <div class="flex-1 min-w-0">
-                          <div class="flex items-center gap-2">
-                            <span class="font-medium truncate">{group?.name || groupId}</span>
-                            {#if group?.isHantei}
-                              <Badge variant="outline" class="text-[10px] border-orange-500 text-orange-400 px-1">H</Badge>
+                          <div class="font-medium">{group.name}</div>
+                          <div class="text-xs text-muted-foreground">
+                            {membersByGroupId.get(groupId)?.filter(m => registeredMemberIds.has(m._id)).length || 0} participants
+                            {#if group.isHantei}
+                              <Badge variant="outline" class="ml-2 text-[10px]">Hantei</Badge>
                             {/if}
                           </div>
-                          <span class="text-xs text-muted-foreground">{groupMembers.length} members</span>
                         </div>
-                        <ToggleGroup.Root type="single" value={court} onValueChange={(value) => value && onSetGroupCourt(groupId, value)} class="court-toggle-root">
-                          <ToggleGroup.Item value="A" aria-label="Court A" class="court-toggle-item">A</ToggleGroup.Item>
-                          <ToggleGroup.Item value="A+B" aria-label="Both Courts" class="court-toggle-item">+</ToggleGroup.Item>
-                          <ToggleGroup.Item value="B" aria-label="Court B" class="court-toggle-item">B</ToggleGroup.Item>
+                        <ToggleGroup.Root
+                          type="single"
+                          value={court}
+                          onValueChange={(val) => val && onSetGroupCourt(groupId, val as 'A' | 'B' | 'A+B')}
+                          class="bg-muted rounded-lg p-1"
+                        >
+                          <ToggleGroup.Item value="A" class={cn('px-3 py-1.5 text-xs rounded-md', court === 'A' && 'bg-amber-500 text-white')}>A</ToggleGroup.Item>
+                          <ToggleGroup.Item value="A+B" class={cn('px-3 py-1.5 text-xs rounded-md', court === 'A+B' && 'bg-emerald-500 text-white')}>A+B</ToggleGroup.Item>
+                          <ToggleGroup.Item value="B" class={cn('px-3 py-1.5 text-xs rounded-md', court === 'B' && 'bg-sky-500 text-white')}>B</ToggleGroup.Item>
                         </ToggleGroup.Root>
                       </div>
-                    {/each}
-                  </div>
+                    {/if}
+                  {/each}
+
+                  <Button onclick={onGenerateMatches} class="w-full mt-6" size="lg">
+                    <Swords class="w-5 h-5 mr-2" />
+                    Generate Matches
+                  </Button>
                 </div>
               {/if}
 
-              <Button onclick={onGenerateMatches} class="w-full bg-amber-500 hover:bg-amber-600 text-black">
-                <Trophy class="mr-2 h-4 w-4" /> Generate Matches
-              </Button>
+              <!-- STEP 3: Ready to Start (matches generated) -->
+              {#if currentStep === 3 && matches.length > 0}
+                <div class="space-y-6">
+                  <!-- Summary Cards -->
+                  <div class="grid grid-cols-3 gap-4">
+                    <div class="p-6 rounded-xl bg-primary/10 border border-primary/20 text-center">
+                      <div class="text-3xl font-bold text-primary">{participants.length}</div>
+                      <div class="text-sm text-muted-foreground">Participants</div>
+                    </div>
+                    <div class="p-6 rounded-xl bg-amber-500/10 border border-amber-500/20 text-center">
+                      <div class="text-3xl font-bold text-amber-400">{groupOrder.length}</div>
+                      <div class="text-sm text-muted-foreground">Groups</div>
+                    </div>
+                    <div class="p-6 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-center">
+                      <div class="text-3xl font-bold text-emerald-400">{matches.length}</div>
+                      <div class="text-sm text-muted-foreground">Matches</div>
+                    </div>
+                  </div>
+
+                  <!-- Review Checklist -->
+                  <div class="rounded-xl border border-border p-4">
+                    <h4 class="font-medium mb-3">Review Checklist</h4>
+                    <div class="space-y-2">
+                      {#each groupOrder as groupId}
+                        {@const group = getGroupById(groupId)}
+                        {@const court = getEffectiveCourt(groupId)}
+                        {@const stats = matchStatsByGroup.get(groupId)}
+                        {#if group}
+                          <div class="flex items-center gap-3 p-2 rounded-lg bg-muted/30">
+                            <CheckCircle2 class="w-5 h-5 text-emerald-500" />
+                            <span class="flex-1">{group.name}</span>
+                            <Badge variant="outline" class={cn(
+                              'text-xs',
+                              court === 'A' ? 'border-amber-500 text-amber-400' : 
+                              court === 'B' ? 'border-sky-500 text-sky-400' : 
+                              'border-emerald-500 text-emerald-400'
+                            )}>
+                              Court {court}
+                            </Badge>
+                            <span class="text-xs text-muted-foreground">{stats?.total || 0} matches</span>
+                          </div>
+                        {/if}
+                      {/each}
+                    </div>
+                  </div>
+
+                  <!-- Start Button -->
+                  <Button onclick={onStartTournament} size="lg" class="w-full bg-emerald-600 hover:bg-emerald-700">
+                    <Play class="w-5 h-5 mr-2" />
+                    Start Tournament
+                  </Button>
+                </div>
+              {/if}
+            </Card.Content>
+
+            <!-- Footer with Navigation -->
+            {#if currentStep < 3 || (currentStep === 2 && matches.length === 0)}
+              <Card.Footer class="border-t border-border bg-muted/30 flex items-center justify-between">
+                <div class="text-sm text-muted-foreground">
+                  {#if currentStep === 1}
+                    {participants.length} participants added
+                  {:else if currentStep === 2}
+                    {groupOrder.length} groups configured
+                  {/if}
+                </div>
+                <div class="flex items-center gap-2 text-sm text-muted-foreground">
+                  <span>Up next:</span>
+                  <span class="font-medium text-foreground">{currentStep === 1 ? 'Courts' : 'Start'}</span>
+                  <ChevronRight class="w-4 h-4" />
+                </div>
+              </Card.Footer>
+            {/if}
+          </Card.Root>
+        </div>
+      </div>
+
+    {:else if selectedTournament.status === 'in_progress'}
+      <!-- IN PROGRESS VIEW -->
+      <div class="space-y-6">
+        <!-- Progress Overview -->
+        <Card.Root>
+          <Card.Content class="p-6">
+            <div class="flex items-center justify-between mb-4">
+              <div>
+                <h3 class="text-lg font-semibold">Tournament Progress</h3>
+                <p class="text-sm text-muted-foreground">{completedMatches.length} of {matches.length} matches completed</p>
+              </div>
+              <div class="text-3xl font-bold text-primary">{progressPercent}%</div>
+            </div>
+            <Progress value={progressPercent} class="h-3" />
+          </Card.Content>
+        </Card.Root>
+
+        <!-- Court Status -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Court A -->
+          <Card.Root class="border-amber-500/30">
+            <Card.Header class="pb-2">
+              <Card.Title class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white font-bold">A</div>
+                Court A
+              </Card.Title>
+            </Card.Header>
+            <Card.Content>
+              {#if currentCourtAMatch}
+                {@const p1 = getMemberById(currentCourtAMatch.player1Id)}
+                {@const p2 = getMemberById(currentCourtAMatch.player2Id)}
+                <div class="p-4 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                  <div class="text-xs text-amber-400 mb-1">Now Playing</div>
+                  <div class="font-medium">{p1?.firstName} {p1?.lastName?.charAt(0)}. vs {p2?.firstName} {p2?.lastName?.charAt(0)}.</div>
+                </div>
+              {:else}
+                <div class="p-4 rounded-lg bg-muted text-center text-muted-foreground">
+                  No active match
+                </div>
+              {/if}
+              <div class="mt-3 text-sm text-muted-foreground">
+                {courtACompletedCount} / {courtAMatches.length} matches done
+              </div>
             </Card.Content>
           </Card.Root>
-        {/if}
 
-      <!-- Step 3: Ready to Start (matches generated) -->
-      {:else}
-        <Card.Root class="mb-4">
-          <Card.Content class="pt-6">
-            <div class="text-center py-6">
-              <div class="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                <Swords class="h-8 w-8 text-emerald-400" />
+          <!-- Court B -->
+          <Card.Root class="border-sky-500/30">
+            <Card.Header class="pb-2">
+              <Card.Title class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold">B</div>
+                Court B
+              </Card.Title>
+            </Card.Header>
+            <Card.Content>
+              {#if currentCourtBMatch}
+                {@const p1 = getMemberById(currentCourtBMatch.player1Id)}
+                {@const p2 = getMemberById(currentCourtBMatch.player2Id)}
+                <div class="p-4 rounded-lg bg-sky-500/10 border border-sky-500/30">
+                  <div class="text-xs text-sky-400 mb-1">Now Playing</div>
+                  <div class="font-medium">{p1?.firstName} {p1?.lastName?.charAt(0)}. vs {p2?.firstName} {p2?.lastName?.charAt(0)}.</div>
+                </div>
+              {:else}
+                <div class="p-4 rounded-lg bg-muted text-center text-muted-foreground">
+                  No active match
+                </div>
+              {/if}
+              <div class="mt-3 text-sm text-muted-foreground">
+                {courtBCompletedCount} / {courtBMatches.length} matches done
               </div>
-              <h3 class="font-bold text-lg mb-2">Ready to Begin!</h3>
-              <p class="text-sm text-muted-foreground mb-2">{matches.length} matches generated</p>
-              <div class="flex justify-center gap-4 text-sm text-muted-foreground mb-6">
-                <span class="text-amber-400">{courtAMatches.length} Court A</span>
-                <span class="text-sky-400">{courtBMatches.length} Court B</span>
-              </div>
-              <div class="flex flex-col sm:flex-row gap-2 justify-center">
-                <Button onclick={onStartTournament} class="bg-emerald-500 hover:bg-emerald-600">
-                  <Play class="mr-2 h-4 w-4" /> Start Tournament
-                </Button>
-                <Button onclick={openSettings} variant="outline">
-                  <Settings class="mr-2 h-4 w-4" /> Configure
-                </Button>
-              </div>
-            </div>
-          </Card.Content>
-        </Card.Root>
-      {/if}
-    {:else if selectedTournament.status === 'in_progress'}}
-      <div class="flex items-center justify-between mb-4">
-        <div>
-          <h2 class="font-bold text-xl">{selectedTournament.name}</h2>
-          <p class="text-xs text-muted-foreground">📅 {selectedTournament.date}</p>
+            </Card.Content>
+          </Card.Root>
         </div>
-        <div class="flex items-center gap-2">
-          <Badge class={cn('px-3 py-1', isComplete ? 'bg-emerald-500' : 'bg-amber-500 animate-pulse')}>
-            {isComplete ? '✓ Done' : '● Live'}
-          </Badge>
-          <Button onclick={openSettings} variant="outline" size="icon" class="h-10 w-10">
-            <Settings class="h-5 w-5" />
+
+        <!-- Actions -->
+        <div class="flex gap-3">
+          <Button variant="outline" onclick={openSettings} class="flex-1">
+            <Settings class="w-4 h-4 mr-2" />
+            Settings
           </Button>
-        </div>
-      </div>
-
-      <Card.Root class="mb-4">
-        <Card.Content class="py-4">
-          <div class="flex items-center justify-between mb-2">
-            <span class="text-xs text-muted-foreground">Tournament Progress</span>
-            <span class="text-sm font-bold text-amber-400">{progressPercent}%</span>
-          </div>
-          <Progress value={progressPercent} class="h-2" />
-          <div class="flex justify-between mt-2 text-xs text-muted-foreground">
-            <span>{completedMatches.length} completed</span>
-            <span>{matches.length - completedMatches.length} remaining</span>
-          </div>
-        </Card.Content>
-      </Card.Root>
-
-      <div class="grid grid-cols-2 gap-3 mb-4">
-        <div class="rounded-2xl p-3 border-2 bg-amber-950/20 border-amber-500/50">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-xl font-black text-amber-400">Court A</div>
-            <div class="text-xs text-muted-foreground">{courtACompletedCount}/{courtAMatches.length}</div>
-          </div>
-          <div class="h-1.5 bg-muted rounded-full overflow-hidden mb-3">
-            <div class="h-full bg-amber-500 rounded-full" style={`width: ${courtAMatches.length > 0 ? (courtACompletedCount / courtAMatches.length) * 100 : 0}%`}></div>
-          </div>
-          {#if currentCourtAMatch}
-            {@const p1 = getMemberById(currentCourtAMatch.player1Id)}
-            {@const p2 = getMemberById(currentCourtAMatch.player2Id)}
-            <div class="text-center">
-              <div class="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Now Playing</div>
-              <div class="text-sm font-medium">{p1?.firstName} {p1?.lastName?.charAt(0)}.</div>
-              <div class="text-xs text-muted-foreground my-0.5">vs</div>
-              <div class="text-sm font-medium">{p2?.firstName} {p2?.lastName?.charAt(0)}.</div>
-            </div>
-          {:else}
-            <div class="text-center text-xs text-muted-foreground py-2">No active match</div>
-          {/if}
-        </div>
-
-        <div class="rounded-2xl p-3 border-2 bg-sky-950/20 border-sky-500/50">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-xl font-black text-sky-400">Court B</div>
-            <div class="text-xs text-muted-foreground">{courtBCompletedCount}/{courtBMatches.length}</div>
-          </div>
-          <div class="h-1.5 bg-muted rounded-full overflow-hidden mb-3">
-            <div class="h-full bg-sky-500 rounded-full" style={`width: ${courtBMatches.length > 0 ? (courtBCompletedCount / courtBMatches.length) * 100 : 0}%`}></div>
-          </div>
-          {#if currentCourtBMatch}
-            {@const p1 = getMemberById(currentCourtBMatch.player1Id)}
-            {@const p2 = getMemberById(currentCourtBMatch.player2Id)}
-            <div class="text-center">
-              <div class="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Now Playing</div>
-              <div class="text-sm font-medium">{p1?.firstName} {p1?.lastName?.charAt(0)}.</div>
-              <div class="text-xs text-muted-foreground my-0.5">vs</div>
-              <div class="text-sm font-medium">{p2?.firstName} {p2?.lastName?.charAt(0)}.</div>
-            </div>
-          {:else}
-            <div class="text-center text-xs text-muted-foreground py-2">No active match</div>
-          {/if}
-        </div>
-      </div>
-
-      <div class="grid grid-cols-4 gap-2 mb-4">
-        <div class="rounded-xl bg-muted/50 p-2 text-center"><div class="text-lg font-bold text-primary">{participants.length}</div><div class="text-[10px] text-muted-foreground">Players</div></div>
-        <div class="rounded-xl bg-muted/50 p-2 text-center"><div class="text-lg font-bold text-blue-400">{matches.length}</div><div class="text-[10px] text-muted-foreground">Matches</div></div>
-        <div class="rounded-xl bg-emerald-500/10 border border-emerald-500/30 p-2 text-center"><div class="text-lg font-bold text-emerald-400">{completedMatches.length}</div><div class="text-[10px] text-muted-foreground">Done</div></div>
-        <div class="rounded-xl bg-amber-500/10 border border-amber-500/30 p-2 text-center"><div class="text-lg font-bold text-amber-400">{inProgressMatches.length}</div><div class="text-[10px] text-muted-foreground">Live</div></div>
-      </div>
-
-      {#if isComplete}
-        <Card.Root class="mb-4 bg-emerald-500/10 border-emerald-500/30">
-          <Card.Content class="py-4 text-center">
-            <p class="text-sm text-emerald-400 mb-3">🎉 All matches completed!</p>
-            <Button onclick={onCompleteTournament} class="bg-emerald-500 hover:bg-emerald-600">
-              <Archive class="mr-2 h-4 w-4" /> Archive Tournament
+          {#if isComplete}
+            <Button onclick={onCompleteTournament} class="flex-1 bg-emerald-600 hover:bg-emerald-700">
+              <Archive class="w-4 h-4 mr-2" />
+              Complete Tournament
             </Button>
-          </Card.Content>
-        </Card.Root>
-      {/if}
-
-      {#if groupOrder.length > 0 && matches.length > 0}
-        <div class="space-y-3">
-          <h3 class="text-sm font-semibold text-muted-foreground">Match Queue</h3>
-          <div class="space-y-2" bind:this={listEl}>
-            {#each groupOrder as groupId (groupId)}
-              {@const group = getGroupById(groupId)}
-              {@const groupMatches = matchesByGroupId.get(groupId) ?? []}
-              {@const groupStats = matchStatsByGroup.get(groupId) ?? { total: 0, completed: 0, inProgress: 0, pending: 0 }}
-              {@const court = getEffectiveCourt(groupId)}
-              {@const isCollapsed = collapsedGroups.has(groupId)}
-              <div class={cn('rounded-xl border bg-card overflow-hidden transition-all', court === 'A' ? 'border-amber-700/30' : court === 'B' ? 'border-sky-700/30' : 'border-emerald-700/30')}>
-                <button onclick={() => onToggleGroupCollapse(groupId)} class="w-full flex items-center gap-2 p-3 hover:bg-muted/30 transition-colors">
-                  <ChevronDown class={cn('h-4 w-4 text-muted-foreground transition-transform shrink-0', isCollapsed && '-rotate-90')} />
-                  <Badge class={cn('text-[10px] font-bold shrink-0', court === 'A' ? 'bg-amber-500 text-black' : court === 'B' ? 'bg-sky-500 text-white' : 'bg-emerald-500 text-white')}>
-                    {court === 'A+B' ? 'A+B' : court}
-                  </Badge>
-                  <span class="font-medium flex-1 text-left truncate min-w-0">{group?.name || groupId}</span>
-                  {#if group?.isHantei}<Badge variant="outline" class="text-[10px] border-orange-500 text-orange-400 shrink-0">H</Badge>{/if}
-                  <span class="text-xs text-muted-foreground shrink-0">{groupStats.completed}/{groupStats.total}</span>
-                </button>
-                {#if !isCollapsed}
-                  <div class="border-t border-border max-h-48 overflow-y-auto">
-                    {#each groupMatches as match, idx}
-                      {@const p1 = getMemberById(match.player1Id)}
-                      {@const p2 = getMemberById(match.player2Id)}
-                      {@const isWinner1 = match.winner === match.player1Id}
-                      {@const isWinner2 = match.winner === match.player2Id}
-                      <div class={cn('flex items-center gap-2 px-3 py-2 text-sm border-b border-border last:border-b-0', match.status === 'completed' ? 'bg-muted/30' : match.status === 'in_progress' ? 'bg-emerald-500/10' : 'bg-card')}>
-                        <span class={cn('truncate flex-1', isWinner1 && 'font-semibold text-green-400')}>{p1?.firstName} {p1?.lastName?.charAt(0)}.</span>
-                        <span class="text-xs text-muted-foreground">{match.player1Score.length} - {match.player2Score.length}</span>
-                        <span class={cn('truncate flex-1 text-right', isWinner2 && 'font-semibold text-green-400')}>{p2?.firstName} {p2?.lastName?.charAt(0)}.</span>
-                      </div>
-                    {:else}
-                      <p class="py-4 text-center text-sm text-muted-foreground">No matches</p>
-                    {/each}
-                  </div>
-                {/if}
-              </div>
-            {/each}
-          </div>
+          {/if}
         </div>
-      {/if}
+      </div>
+
     {:else}
-      <Card.Root class="mb-4">
-        <Card.Content class="py-8 text-center">
-          <Trophy class="h-12 w-12 text-amber-400 mx-auto mb-4" />
-          <h2 class="text-xl font-bold mb-2">Tournament Completed</h2>
-          <p class="text-muted-foreground mb-4">{selectedTournament.name}</p>
-          <div class="flex justify-center gap-4 text-sm">
-            <span>{participants.length} participants</span>
-            <span>{matches.length} matches</span>
+      <!-- COMPLETED -->
+      <Card.Root>
+        <Card.Content class="flex flex-col items-center justify-center py-12">
+          <div class="w-16 h-16 rounded-full bg-emerald-500/20 flex items-center justify-center mb-4">
+            <Trophy class="h-8 w-8 text-emerald-500" />
           </div>
+          <h3 class="text-xl font-semibold mb-2">Tournament Complete</h3>
+          <p class="text-muted-foreground mb-4">All {matches.length} matches have been completed.</p>
+          <Button variant="outline" onclick={() => {}}>View Results</Button>
         </Card.Content>
       </Card.Root>
     {/if}
   {/if}
 {/if}
 
-<Sheet.Root open={settingsSheetOpen} onOpenChange={handleSheetOpenChange}>
+<!-- Settings Sheet (same as before) -->
+<Sheet.Root bind:open={settingsSheetOpen} onOpenChange={handleSheetOpenChange}>
   <Sheet.Portal>
-    <Sheet.Overlay class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[120]" />
-    <Sheet.Content
-      side="bottom"
-      class="sheet-panel h-[85vh] rounded-t-3xl bg-background/98 border-t border-border z-[130] shadow-[0_-24px_60px_rgba(0,0,0,0.55)] text-foreground transition-transform duration-200 data-[state=closed]:translate-y-full data-[state=open]:translate-y-0 data-[state=closed]:opacity-0 data-[state=open]:opacity-100"
-    >
-      <div class="flex justify-center pt-2 pb-4"><div class="w-10 h-1 bg-muted-foreground/30 rounded-full"></div></div>
-      <Sheet.Header class="px-6 pb-4">
+    <Sheet.Overlay />
+    <Sheet.Content side="right" class="w-full sm:max-w-2xl overflow-y-auto">
+      <Sheet.Header>
         <Sheet.Title>Tournament Settings</Sheet.Title>
-        <Sheet.Description>Configure groups, courts, and match settings</Sheet.Description>
+        <Sheet.Description>Configure match settings and passcodes</Sheet.Description>
       </Sheet.Header>
+      
+      <div class="py-6 space-y-6">
+        <!-- Timer Settings -->
+        <div class="space-y-3">
+          <h4 class="text-sm font-semibold flex items-center gap-2">
+            <Timer class="h-4 w-4" />
+            Timer Settings
+          </h4>
+          <div class="space-y-2">
+            <Label class="text-xs text-muted-foreground">Match Duration</Label>
+            <ToggleGroup.Root
+              type="single"
+              value={boguTimerDuration.toString()}
+              onValueChange={(val) => { if (val) boguTimerDuration = parseInt(val); }}
+              class="justify-start"
+            >
+              {#each TIMER_OPTIONS as duration}
+                <ToggleGroup.Item value={duration.toString()} class="px-4">{duration / 60}m</ToggleGroup.Item>
+              {/each}
+            </ToggleGroup.Root>
+          </div>
+          <div class="space-y-2">
+            <Label class="text-xs text-muted-foreground">Timer Display</Label>
+            <ToggleGroup.Root
+              type="single"
+              value={timerDisplayMode}
+              onValueChange={(val) => { if (val) timerDisplayMode = val as 'up' | 'down'; }}
+              class="justify-start"
+            >
+              <ToggleGroup.Item value="up" class="px-4">Count Up</ToggleGroup.Item>
+              <ToggleGroup.Item value="down" class="px-4">Count Down</ToggleGroup.Item>
+            </ToggleGroup.Root>
+          </div>
+          <Button onclick={onApplyTimerDisplayMode} variant="secondary" size="sm">
+            <Check class="mr-2 h-4 w-4" /> Apply Timer Settings
+          </Button>
+        </div>
 
-      <div class="px-6 pb-6 max-h-[calc(85vh-120px)] overflow-y-auto">
-        <div class="flex flex-col lg:flex-row gap-5">
-          <!-- Left column -->
-          <div class="lg:w-[420px] flex-shrink-0 space-y-6">
-            <div class="space-y-3">
-              <h4 class="text-sm font-semibold flex items-center gap-2"><GripVertical class="h-4 w-4 text-muted-foreground" />Group Order & Courts</h4>
-              <p class="text-xs text-muted-foreground">Drag to reorder. Tap court badge to change.</p>
-              {#if groupOrder.length > 0}
-                <div class="rounded-xl border border-border overflow-hidden" bind:this={listEl}>
-                  {#each groupOrder as groupId, idx (groupId)}
-                    {@const group = getGroupById(groupId)}
-                    {@const court = getEffectiveCourt(groupId)}
-                    {@const groupStats = matchStatsByGroup.get(groupId) ?? { total: 0, completed: 0, inProgress: 0, pending: 0 }}
-                    <div
-                      draggable="true"
-                      role="listitem"
-                      ondragstart={(e) => onDragStart(e, groupId)}
-                      ondragover={(e) => onDragOver(e, groupId)}
-                      ondragleave={onDragLeave}
-                      ondrop={(e) => onDrop(e, groupId)}
-                      ondragend={onDragEnd}
-                      class="flex items-center gap-2 px-3 py-3 border-b border-border last:border-b-0 transition-all min-h-[56px]"
-                    >
-                      <button class="cursor-grab text-muted-foreground hover:text-foreground active:cursor-grabbing touch-none shrink-0"><GripVertical class="h-5 w-5" /></button>
-                      <span class="w-6 text-center text-sm font-mono text-muted-foreground shrink-0">{idx + 1}</span>
-                      <div class="flex-1 min-w-0">
-                        <div class="font-medium truncate">{group?.name || groupId}</div>
-                        <span class="text-xs text-muted-foreground">{groupStats.completed}/{groupStats.total} matches</span>
-                      </div>
-                      <ToggleGroup.Root type="single" value={court} onValueChange={(value) => value && onSetGroupCourt(groupId, value)} class="court-toggle-root">
-                        <ToggleGroup.Item value="A" aria-label="Court A" class="court-toggle-item">A</ToggleGroup.Item>
-                        <ToggleGroup.Item value="A+B" aria-label="Both Courts" class="court-toggle-item">+</ToggleGroup.Item>
-                        <ToggleGroup.Item value="B" aria-label="Court B" class="court-toggle-item">B</ToggleGroup.Item>
-                      </ToggleGroup.Root>
-                    </div>
-                  {/each}
-                </div>
-              {:else}
-                <p class="text-sm text-muted-foreground py-4 text-center">No groups yet.</p>
-              {/if}
-            </div>
+        <Separator />
 
-            <Separator />
+        <!-- Match Type -->
+        <div class="space-y-3">
+          <h4 class="text-sm font-semibold flex items-center gap-2">
+            <Swords class="h-4 w-4" />
+            Match Type
+          </h4>
+          <ToggleGroup.Root
+            type="single"
+            value={boguMatchType}
+            onValueChange={(val) => { if (val) boguMatchType = val as 'sanbon' | 'ippon'; }}
+            class="justify-start"
+          >
+            <ToggleGroup.Item value="sanbon" class="px-4">Sanbon</ToggleGroup.Item>
+            <ToggleGroup.Item value="ippon" class="px-4">Ippon</ToggleGroup.Item>
+          </ToggleGroup.Root>
+          <Button onclick={onApplyBoguSettings} variant="secondary" size="sm">
+            <Check class="mr-2 h-4 w-4" /> Apply Match Settings
+          </Button>
+        </div>
 
-            <div class="space-y-3">
-              <h4 class="text-sm font-semibold flex items-center gap-2"><Swords class="h-4 w-4 text-blue-400" />Bogu Matches</h4>
-              <div class="space-y-3">
-                <div class="space-y-2">
-                  <Label class="text-xs text-muted-foreground">Timer</Label>
-                  <div class="flex gap-2">
-                    {#each TIMER_OPTIONS as secs}
-                      <button
-                        onclick={() => (boguTimerDuration = secs)}
-                        class={cn('flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border', boguTimerDuration === secs ? 'bg-blue-600 text-white border-blue-600' : 'bg-background text-muted-foreground border-input hover:bg-muted')}
-                      >
-                        {formatTimer(secs)}
-                      </button>
-                    {/each}
-                  </div>
-                </div>
+        <Separator />
 
-                <div class="space-y-2">
-                  <Label class="text-xs text-muted-foreground">Match Type</Label>
-                  <div class="flex gap-2">
-                    <button onclick={() => (boguMatchType = 'sanbon')} class={cn('flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border', boguMatchType === 'sanbon' ? 'bg-blue-600 text-white border-blue-600' : 'bg-background text-muted-foreground border-input hover:bg-muted')}>Sanbon</button>
-                    <button onclick={() => (boguMatchType = 'ippon')} class={cn('flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border', boguMatchType === 'ippon' ? 'bg-blue-600 text-white border-blue-600' : 'bg-background text-muted-foreground border-input hover:bg-muted')}>Ippon</button>
-                  </div>
-                </div>
-
-                <div class="space-y-2">
-                  <Label class="text-xs text-muted-foreground">Timer Display</Label>
-                  <div class="flex gap-2">
-                    <button onclick={() => (timerDisplayMode = 'up')} class={cn('flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border', timerDisplayMode === 'up' ? 'bg-blue-600 text-white border-blue-600' : 'bg-background text-muted-foreground border-input hover:bg-muted')}>Count Up</button>
-                    <button onclick={() => (timerDisplayMode = 'down')} class={cn('flex-1 px-3 py-2 rounded-lg text-sm font-medium transition-all border', timerDisplayMode === 'down' ? 'bg-blue-600 text-white border-blue-600' : 'bg-background text-muted-foreground border-input hover:bg-muted')}>Count Down</button>
-                  </div>
-                </div>
-
-                <Button onclick={onApplyBoguSettings} variant="secondary" size="sm" class="w-full"><Check class="mr-2 h-4 w-4" /> Apply to Bogu</Button>
-                <Button onclick={onApplyTimerDisplayMode} variant="outline" size="sm" class="w-full"><Timer class="mr-2 h-4 w-4" /> Apply Timer Display</Button>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div class="space-y-3">
-              <h4 class="text-sm font-semibold flex items-center gap-2"><Users class="h-4 w-4 text-orange-400" />Non-Bogu (Hantei)</h4>
-              <p class="text-xs text-muted-foreground">Kihon-waza for each round.</p>
-              <div class="space-y-3">
-                <div class="space-y-2">
-                  <Label class="text-xs text-muted-foreground">Round 1 (2 waza)</Label>
-                  <div class="grid grid-cols-2 gap-2">
-                    {#each [0, 1] as i}
-                      <Select.Root
-                        value={hanteiRound1[i] || ''}
-                        onValueChange={(v) => {
-                          const newVal = [...hanteiRound1];
-                          newVal[i] = v;
-                          hanteiRound1 = newVal;
-                        }}
-                      >
-                        <Select.Trigger class="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
-                          <Select.Value placeholder="Select" />
-                          <Select.Icon class="ml-auto">
-                            <ChevronDown class="h-4 w-4 text-muted-foreground" />
-                          </Select.Icon>
-                        </Select.Trigger>
-                        <Select.Content class="z-40">
-                          {#each KIHON_WAZA_OPTIONS as opt}
-                            <Select.Item value={opt.id}>{opt.short}</Select.Item>
-                          {/each}
-                        </Select.Content>
-                      </Select.Root>
-                    {/each}
-                  </div>
-                </div>
-                <div class="space-y-2">
-                  <Label class="text-xs text-muted-foreground">Round 2 (3 waza)</Label>
-                  <div class="grid grid-cols-3 gap-2">
-                    {#each [0, 1, 2] as i}
-                      <Select.Root
-                        value={hanteiRound2[i] || ''}
-                        onValueChange={(v) => {
-                          const newVal = [...hanteiRound2];
-                          newVal[i] = v;
-                          hanteiRound2 = newVal;
-                        }}
-                      >
-                        <Select.Trigger class="w-full h-10 rounded-lg border border-input bg-background px-3 text-sm">
-                          <Select.Value placeholder="Select" />
-                          <Select.Icon class="ml-auto">
-                            <ChevronDown class="h-4 w-4 text-muted-foreground" />
-                          </Select.Icon>
-                        </Select.Trigger>
-                        <Select.Content class="z-40">
-                          {#each KIHON_WAZA_OPTIONS as opt}
-                            <Select.Item value={opt.id}>{opt.short}</Select.Item>
-                          {/each}
-                        </Select.Content>
-                      </Select.Root>
-                    {/each}
-                  </div>
-                </div>
-                <Button onclick={onApplyHanteiSettings} variant="secondary" size="sm" class="w-full"><Check class="mr-2 h-4 w-4" /> Apply Hantei</Button>
-              </div>
-            </div>
-
-            <Separator />
-
-            <div class="space-y-3">
-              <h4 class="text-sm font-semibold flex items-center gap-2"><Lock class="h-4 w-4 text-red-400" />Security</h4>
-              <p class="text-xs text-muted-foreground">Set portal passcodes. Leave blank to clear.</p>
-              <div class="space-y-3">
-                <div class="space-y-2">
-                  <Label class="text-xs text-muted-foreground">Admin Passcode</Label>
-                  <div class="flex gap-2">
-                    <Input type="password" bind:value={adminPasscodeInput} placeholder={adminPasscode ? "????????" : "Set admin passcode"} class="text-sm" />
-                    <Button onclick={onSaveAdminPasscode} variant="secondary" size="sm">
-                      <KeyRound class="mr-2 h-4 w-4" /> Save
-                    </Button>
-                  </div>
-                  <p class="text-[10px] text-muted-foreground">Status: {adminPasscode ? 'Set' : 'Not set'}</p>
-                </div>
-                <div class="space-y-2">
-                  <Label class="text-xs text-muted-foreground">Courtkeeper Passcode</Label>
-                  <div class="flex gap-2">
-                    <Input type="password" bind:value={courtkeeperPasscodeInput} placeholder={courtkeeperPasscode ? "????????" : "Set courtkeeper passcode"} class="text-sm" />
-                    <Button onclick={onSaveCourtkeeperPasscode} variant="secondary" size="sm">
-                      <KeyRound class="mr-2 h-4 w-4" /> Save
-                    </Button>
-                  </div>
-                  <p class="text-[10px] text-muted-foreground">Status: {courtkeeperPasscode ? 'Set' : 'Not set'}</p>
-                </div>
-                <Button onclick={onLockAdmin} variant="outline" size="sm" class="w-full">
-                  <Lock class="mr-2 h-4 w-4" /> Lock Admin
+        <!-- Security -->
+        <div class="space-y-3">
+          <h4 class="text-sm font-semibold flex items-center gap-2">
+            <Lock class="h-4 w-4 text-red-400" />
+            Security
+          </h4>
+          <div class="space-y-3">
+            <div class="space-y-2">
+              <Label class="text-xs text-muted-foreground">Admin Passcode</Label>
+              <div class="flex gap-2">
+                <Input type="password" bind:value={adminPasscodeInput} placeholder={adminPasscode ? "????????" : "Set passcode"} />
+                <Button onclick={onSaveAdminPasscode} variant="secondary" size="sm">
+                  <KeyRound class="mr-2 h-4 w-4" /> Save
                 </Button>
-
-                <Separator />
-
-                <div class="space-y-3">
-                  <h4 class="text-sm font-semibold flex items-center gap-2"><RefreshCw class="h-4 w-4 text-muted-foreground" /> Actions</h4>
-                  <div class="space-y-2">
-                    <Button onclick={onRefreshParticipants} variant="outline" size="sm" class="w-full justify-start">
-                      <RefreshCw class="mr-2 h-4 w-4" /> Update Participants
-                    </Button>
-                    <Button onclick={onResetTournament} variant="outline" size="sm" class="w-full justify-start border-amber-700/60 text-amber-400 hover:bg-amber-900/20">
-                      <RotateCcw class="mr-2 h-4 w-4" /> Reset All Scores
-                    </Button>
-                    <Button onclick={onDeleteTournament} variant="outline" size="sm" class="w-full justify-start border-red-700/60 text-red-400 hover:bg-red-900/20">
-                      <Trash2 class="mr-2 h-4 w-4" /> Delete Tournament
-                    </Button>
-                  </div>
-                </div>
+              </div>
+            </div>
+            <div class="space-y-2">
+              <Label class="text-xs text-muted-foreground">Courtkeeper Passcode</Label>
+              <div class="flex gap-2">
+                <Input type="password" bind:value={courtkeeperPasscodeInput} placeholder={courtkeeperPasscode ? "????????" : "Set passcode"} />
+                <Button onclick={onSaveCourtkeeperPasscode} variant="secondary" size="sm">
+                  <KeyRound class="mr-2 h-4 w-4" /> Save
+                </Button>
               </div>
             </div>
           </div>
+        </div>
 
-          <!-- Right column -->
-          <div class="flex-1 min-w-0 space-y-4">
-            <div class="rounded-2xl border border-border bg-card/70 backdrop-blur-sm p-4 h-full flex flex-col">
-              <div class="flex items-center justify-between mb-3">
-                <div>
-                  <h3 class="font-semibold">Match Timeline</h3>
-                  <p class="text-xs text-muted-foreground">Live view of completed, in-progress, and pending matches</p>
-                </div>
-                <div class="text-xs text-muted-foreground flex items-center gap-2">
-                  <span>{matches.length} total</span>
-                  <span class="w-1 h-1 rounded-full bg-border"></span>
-                  <span class="text-emerald-400">{completedMatches.length} done</span>
-                </div>
-              </div>
+        <Separator />
 
-              <div class="relative flex-1 overflow-y-auto pr-2">
-                <div class="absolute left-4 top-0 bottom-0 w-0.5 bg-border/70"></div>
-                <div class="space-y-4 relative">
-                  {#each completedMatches as match (match._id)}
-                    {@const p1 = getMemberById(match.player1Id)}
-                    {@const p2 = getMemberById(match.player2Id)}
-                    <div class="flex gap-4 items-start">
-                      <div class="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-white z-10">
-                        <Check class="h-4 w-4" />
-                      </div>
-                      <div class="flex-1 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/30">
-                        <div class="flex items-center justify-between mb-1">
-                          <span class="text-sm font-medium">{p1?.firstName} {p1?.lastName?.charAt(0)}. vs {p2?.firstName} {p2?.lastName?.charAt(0)}.</span>
-                          <span class="text-xs text-emerald-400">{match.player1Score.length}-{match.player2Score.length}</span>
-                        </div>
-                        <div class="text-xs text-muted-foreground">Court {match.court ?? 'A/B'} ? Completed</div>
-                      </div>
-                    </div>
-                  {/each}
-
-                  {#each matches.filter((m) => m.status === 'in_progress') as match (match._id)}
-                    {@const p1 = getMemberById(match.player1Id)}
-                    {@const p2 = getMemberById(match.player2Id)}
-                    <div class="flex gap-4 items-start">
-                      <div class="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-white z-10 animate-pulse">
-                        <Play class="h-4 w-4" />
-                      </div>
-                      <div class="flex-1 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                        <div class="flex items-center justify-between mb-1">
-                          <span class="text-sm font-medium text-amber-100">{p1?.firstName} {p1?.lastName?.charAt(0)}. vs {p2?.firstName} {p2?.lastName?.charAt(0)}.</span>
-                          <span class="text-xs text-amber-400 font-mono">{match.timer ?? 'LIVE'}</span>
-                        </div>
-                        <div class="text-xs text-amber-300/80">Court {match.court ?? 'A/B'} ? In Progress</div>
-                      </div>
-                    </div>
-                  {/each}
-
-                  {#each matches.filter((m) => m.status !== 'completed' && m.status !== 'in_progress') as match, idx (match._id)}
-                    {@const p1 = getMemberById(match.player1Id)}
-                    {@const p2 = getMemberById(match.player2Id)}
-                    <div class="flex gap-4 items-start">
-                      <div class="w-8 h-8 rounded-full bg-border flex items-center justify-center text-zinc-200 z-10">
-                        <span class="text-xs font-medium">{idx + 1}</span>
-                      </div>
-                      <div class="flex-1 p-3 rounded-lg bg-card/60 border border-border/70 border-dashed">
-                        <div class="flex items=center justify-between mb-1">
-                          <span class="text-sm text-foreground/90">{p1?.firstName} {p1?.lastName?.charAt(0)}. vs {p2?.firstName} {p2?.lastName?.charAt(0)}.</span>
-                          <span class="text-xs text-muted-foreground">Pending</span>
-                        </div>
-                        <div class="text-xs text-muted-foreground">Court {match.court ?? '?'}</div>
-                      </div>
-                    </div>
-                  {/each}
-                </div>
-              </div>
-            </div>
+        <!-- Actions -->
+        <div class="space-y-3">
+          <h4 class="text-sm font-semibold flex items-center gap-2">
+            <RefreshCw class="h-4 w-4" />
+            Actions
+          </h4>
+          <div class="space-y-2">
+            <Button onclick={onResetTournament} variant="outline" size="sm" class="w-full justify-start border-amber-700/60 text-amber-400 hover:bg-amber-900/20">
+              <RotateCcw class="mr-2 h-4 w-4" /> Reset All Scores
+            </Button>
+            <Button onclick={onDeleteTournament} variant="outline" size="sm" class="w-full justify-start border-red-700/60 text-red-400 hover:bg-red-900/20">
+              <Trash2 class="mr-2 h-4 w-4" /> Delete Tournament
+            </Button>
           </div>
         </div>
       </div>
@@ -1257,6 +1085,90 @@
   </Sheet.Portal>
 </Sheet.Root>
 
+<style>
+  /* Top bar styles */
+  .top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1.5rem;
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    border-radius: 1rem;
+  }
+  
+  .top-bar-left {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  
+  .top-bar-breadcrumb {
+    font-size: 0.75rem;
+    color: hsl(var(--muted-foreground));
+  }
+  
+  .top-bar-title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .top-bar-badge {
+    font-size: 0.625rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+  
+  .top-bar-badge.live {
+    background: hsl(var(--destructive) / 0.2);
+    color: hsl(var(--destructive));
+    animation: pulse 2s infinite;
+  }
+  
+  .top-bar-right {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  
+  .btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    border: none;
+  }
+  
+  .btn-sm.primary {
+    background: hsl(var(--primary));
+    color: hsl(var(--primary-foreground));
+  }
+  
+  .btn-sm.primary:hover {
+    opacity: 0.9;
+  }
+  
+  .btn-sm.ghost {
+    background: transparent;
+    color: hsl(var(--muted-foreground));
+  }
+  
+  .btn-sm.ghost:hover {
+    background: hsl(var(--muted));
+    color: hsl(var(--foreground));
+  }
 
-
-
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+  }
+</style>
