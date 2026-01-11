@@ -20,10 +20,29 @@
   // Data queries
   const membersQuery = useQuery(api.members.list, () => ({}));
   const groupsQuery = useQuery(api.groups.list, () => ({}));
+  const tournamentsQuery = useQuery(api.tournaments.list, () => ({}));
+  const participantsQuery = useQuery(api.participants.listAll, () => ({}));
 
   // Derived data
   let members = $derived(membersQuery.data ?? []);
   let groups = $derived(groupsQuery.data ?? []);
+  let tournaments = $derived(tournamentsQuery.data ?? []);
+  let participants = $derived(participantsQuery.data ?? []);
+  
+  // Get active tournament
+  let activeTournament = $derived(tournaments.find(t => t.status === 'in_progress' || t.status === 'setup'));
+  
+  // Check if member is registered for active tournament
+  function isRegistered(memberId: Id<'members'>) {
+    if (!activeTournament) return false;
+    return participants.some(p => p.memberId === memberId && p.tournamentId === activeTournament._id);
+  }
+  
+  // Get registered count
+  let registeredCount = $derived(() => {
+    if (!activeTournament) return 0;
+    return members.filter(m => !m.archived && isRegistered(m._id)).length;
+  });
 
   // UI State
   let selectedGroupId = $state<string | null>(null);
@@ -217,8 +236,8 @@
         </div>
         <div class="group-info">
           <div class="group-name">All Members</div>
-          <div class="group-meta">{getMemberCount(null)} members</div>
         </div>
+        <div class="group-count">{getMemberCount(null)}</div>
       </button>
 
       <!-- Individual Groups -->
@@ -243,8 +262,9 @@
                 <span class="badge badge-hantei">H</span>
               {/if}
             </div>
-            <div class="group-meta">{getMemberCount(group.groupId)} members · {group.groupId}</div>
+            <div class="group-meta">{group.groupId}</div>
           </div>
+          <div class="group-count">{getMemberCount(group.groupId)}</div>
           <button class="group-edit-btn" onclick={(e) => { e.stopPropagation(); }}>
             <Pencil size={12} />
           </button>
@@ -336,10 +356,10 @@
             <th style="width: 44px;">
               <input type="checkbox" class="checkbox" />
             </th>
-            <th>Member</th>
-            <th>Group</th>
-            <th>Type</th>
-            <th style="width: 100px;">Actions</th>
+            <th style="width: 200px;">Member</th>
+            <th style="width: 140px;">Group</th>
+            <th style="width: 120px;">Status</th>
+            <th style="width: 80px;">Actions</th>
           </tr>
         </thead>
         <tbody>
@@ -367,10 +387,10 @@
                 {/if}
               </td>
               <td>
-                {#if member.isGuest}
-                  <span class="badge badge-guest">Guest</span>
+                {#if isRegistered(member._id)}
+                  <span class="badge badge-registered">✓ Registered</span>
                 {:else}
-                  <span class="badge badge-member">Member</span>
+                  <span class="status-unregistered">+ Register</span>
                 {/if}
               </td>
               <td>
@@ -640,6 +660,23 @@
     color: #eaeaec;
   }
 
+  .group-count {
+    font-size: 18px;
+    font-weight: 700;
+    color: #60a5fa;
+    margin-left: auto;
+    padding-right: 8px;
+    flex-shrink: 0;
+  }
+
+  .group-card.selected .group-count {
+    color: #60a5fa;
+  }
+
+  .group-card.hantei .group-count {
+    color: #e86f3a;
+  }
+
   .groups-footer {
     padding: 12px;
     border-top: 1px solid rgba(92, 99, 112, 0.2);
@@ -839,6 +876,7 @@
   .data-table {
     width: 100%;
     border-collapse: collapse;
+    table-layout: fixed;
   }
 
   .data-table th {
@@ -935,6 +973,23 @@
     background: rgba(156, 160, 173, 0.12);
     color: #9ca0ad;
     border: 1px solid rgba(156, 160, 173, 0.3);
+  }
+
+  .badge-registered {
+    background: rgba(74, 222, 128, 0.12);
+    color: #4ade80;
+    border: 1px solid rgba(74, 222, 128, 0.3);
+  }
+
+  .status-unregistered {
+    color: #5c6370;
+    font-size: 12px;
+    cursor: pointer;
+    transition: color 0.15s;
+  }
+
+  .status-unregistered:hover {
+    color: #60a5fa;
   }
 
   .text-muted {
@@ -1228,4 +1283,5 @@
     }
   }
 </style>
+
 
