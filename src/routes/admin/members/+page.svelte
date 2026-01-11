@@ -564,7 +564,7 @@
       <div class="top-bar-stats">
         <div class="stat">
           <div class="stat-value">{filteredMembers().length}</div>
-          <div class="stat-label">Total</div>
+          <div class="stat-label">Members</div>
         </div>
         <div class="stat-divider"></div>
         <div class="stat">
