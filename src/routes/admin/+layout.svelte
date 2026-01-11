@@ -22,7 +22,7 @@
   let sidebarCollapsed = $state(false);
 
   // Data
-  const tournamentsQuery = useQuery(api.tournaments.list, {});
+  const tournamentsQuery = useQuery(api.tournaments.list, () => ({}));
   let tournaments = $derived(tournamentsQuery.data ?? []);
   let activeTournament = $derived(tournaments.find(t => t.status === 'in_progress'));
 
