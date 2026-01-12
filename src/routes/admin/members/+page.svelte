@@ -404,9 +404,27 @@
   .action-btn.archive:hover { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
   .action-btn.restore:hover { background: rgba(52, 211, 153, 0.15); color: #34d399; }
   
-  /* Top bar split button */
+  /* Top bar buttons */
+  :global(.btn-success) { background: #34d399 !important; color: #09090b !important; font-weight: 600; }
+  :global(.btn-success:hover) { background: #4ade80 !important; }
+  
+  /* Split button (Add Member with dropdown) */
   .add-split { display: flex; }
   .add-split :global(button:first-child) { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+  .add-split :global(.dropdown-toggle) { 
+    height: 36px; 
+    width: 32px; 
+    padding: 0; 
+    border-left: 1px solid rgba(255, 255, 255, 0.1);
+    border-top-left-radius: 0; 
+    border-bottom-left-radius: 0; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    background: var(--primary, #818cf8);
+    color: var(--primary-foreground, #fafafa);
+  }
+  .add-split :global(.dropdown-toggle:hover) { background: #a78bfa; }
   
   /* Forms */
   .form-stack { display: flex; flex-direction: column; gap: 16px; }
