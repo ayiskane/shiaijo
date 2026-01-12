@@ -5,8 +5,16 @@
   
   // shadcn components
   import * as Dialog from '$lib/components/ui/dialog';
+  import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
+  import * as Select from '$lib/components/ui/select';
   import * as Tabs from '$lib/components/ui/tabs';
+  import * as ToggleGroup from '$lib/components/ui/toggle-group';
   import { Button } from '$lib/components/ui/button';
+  import { Input } from '$lib/components/ui/input';
+  import { Badge } from '$lib/components/ui/badge';
+  import { Checkbox } from '$lib/components/ui/checkbox';
+  import { Label } from '$lib/components/ui/label';
+  import { Textarea } from '$lib/components/ui/textarea';
   
   // Icons
   import Search from '@lucide/svelte/icons/search';
@@ -92,9 +100,6 @@
   let formFirstName = $state('');
   let formLastName = $state('');
   let formGroupId = $state('');
-
-  // Add member dropdown state
-  let showAddDropdown = $state(false);
   
   // Bulk add state
   let showBulkAddModal = $state(false);
@@ -288,7 +293,6 @@
   function openBulkAddModal() {
     bulkRows = [{ firstName: '', lastName: '', groupId: groups[0]?.groupId || '' }];
     showBulkAddModal = true;
-    showAddDropdown = false;
   }
 
   function closeBulkAddModal() {
@@ -554,8 +558,6 @@
   <title>Members - Admin Portal</title>
 </svelte:head>
 
-<svelte:window onclick={() => showAddDropdown = false} />
-
 <div class="members-page">
   <!-- GROUPS PANEL (Master) -->
   <aside class="groups-panel" class:edit-mode={groupsEditMode}>
@@ -570,16 +572,16 @@
         </h2>
         <div class="groups-header-actions">
           {#if groupsEditMode}
-            <button class="btn btn-primary btn-sm" onclick={() => groupsEditMode = false}>
+            <Button variant="default" size="sm" onclick={() => groupsEditMode = false}>
               Done
-            </button>
+            </Button>
           {:else}
-            <button class="btn btn-ghost btn-sm" onclick={() => groupsEditMode = true}>
+            <Button variant="ghost" size="sm" onclick={() => groupsEditMode = true}>
               Edit
-            </button>
-            <button class="btn btn-primary btn-sm" onclick={openAddGroupModal}>
+            </Button>
+            <Button size="sm" onclick={openAddGroupModal}>
               <Plus size={14} />
-            </button>
+            </Button>
           {/if}
         </div>
       </div>
@@ -627,12 +629,12 @@
           </div>
           {#if groupsEditMode}
             <div class="group-actions">
-              <button class="group-action-btn" onclick={(e) => { e.stopPropagation(); openEditGroupModal(group); }}>
+              <Button variant="ghost" size="icon" class="group-action-btn" onclick={(e) => { e.stopPropagation(); openEditGroupModal(group); }}>
                 <Pencil size={12} />
-              </button>
-              <button class="group-action-btn danger" onclick={(e) => { e.stopPropagation(); showDeleteGroupConfirm = group._id; }}>
+              </Button>
+              <Button variant="ghost" size="icon" class="group-action-btn danger" onclick={(e) => { e.stopPropagation(); showDeleteGroupConfirm = group._id; }}>
                 <Trash2 size={12} />
-              </button>
+              </Button>
             </div>
           {:else}
             <div class="group-count-box" class:hantei={group.isHantei}>{getMemberCount(group.groupId)}</div>
@@ -673,38 +675,37 @@
       </div>
       <div class="top-bar-actions">
         {#if selectedGroupId && activeTournament}
-          <button class="btn btn-success btn-sm" onclick={registerAllGroupMembers}>
+          <Button variant="default" size="sm" class="btn-success" onclick={registerAllGroupMembers}>
             <UserCheck size={14} />
             <span>Register All</span>
-          </button>
+          </Button>
         {/if}
-        <button class="btn btn-secondary btn-sm" onclick={openImportModal}>
+        <Button variant="secondary" size="sm" onclick={openImportModal}>
           <Upload size={14} />
           <span>Import CSV</span>
-        </button>
-        <div class="add-member-dropdown" onclick={(e) => e.stopPropagation()}>
-          <button class="btn btn-primary btn-sm" onclick={openAddModal}>
+        </Button>
+        <div class="add-member-split">
+          <Button size="sm" onclick={openAddModal}>
             <Plus size={14} />
             <span>Add Member</span>
-          </button>
-          <button 
-            class="btn btn-primary btn-sm dropdown-toggle" 
-            onclick={() => showAddDropdown = !showAddDropdown}
-          >
-            <ChevronDown size={14} />
-          </button>
-          {#if showAddDropdown}
-            <div class="dropdown-menu">
-              <button class="dropdown-item" onclick={() => { openAddModal(); showAddDropdown = false; }}>
-                <UserPlus size={14} />
-                <span>Add Single Member</span>
-              </button>
-              <button class="dropdown-item" onclick={openBulkAddModal}>
-                <Users size={14} />
-                <span>Add Bulk Members</span>
-              </button>
-            </div>
-          {/if}
+          </Button>
+          <DropdownMenu.Root>
+            <DropdownMenu.Trigger asChild let:builder>
+              <Button builders={[builder]} size="sm" class="dropdown-toggle-btn">
+                <ChevronDown size={14} />
+              </Button>
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content align="end">
+              <DropdownMenu.Item onclick={openAddModal}>
+                <UserPlus size={14} class="mr-2" />
+                Add Single Member
+              </DropdownMenu.Item>
+              <DropdownMenu.Item onclick={openBulkAddModal}>
+                <Users size={14} class="mr-2" />
+                Add Bulk Members
+              </DropdownMenu.Item>
+            </DropdownMenu.Content>
+          </DropdownMenu.Root>
         </div>
       </div>
     </div>
@@ -713,7 +714,7 @@
     <div class="toolbar">
       <div class="search-box toolbar-search">
         <Search size={16} class="search-icon" />
-        <input 
+        <Input 
           type="text" 
           placeholder="Search members..." 
           class="search-input"
@@ -721,23 +722,11 @@
         />
       </div>
 
-      <div class="filter-toggle">
-        <button 
-          class="filter-btn" 
-          class:active={filterStatus === 'all'}
-          onclick={() => filterStatus = 'all'}
-        >All</button>
-        <button 
-          class="filter-btn"
-          class:active={filterStatus === 'registered'}
-          onclick={() => filterStatus = 'registered'}
-        >Registered</button>
-        <button 
-          class="filter-btn"
-          class:active={filterStatus === 'unregistered'}
-          onclick={() => filterStatus = 'unregistered'}
-        >Not Registered</button>
-      </div>
+      <ToggleGroup.Root type="single" value={filterStatus} onValueChange={(v) => { if (v) filterStatus = v as typeof filterStatus; }} class="filter-toggle">
+        <ToggleGroup.Item value="all">All</ToggleGroup.Item>
+        <ToggleGroup.Item value="registered">Registered</ToggleGroup.Item>
+        <ToggleGroup.Item value="unregistered">Not Registered</ToggleGroup.Item>
+      </ToggleGroup.Root>
 
       <div class="toolbar-spacer"></div>
     </div>
@@ -749,7 +738,7 @@
           <thead>
             <tr>
               <th style="width: 44px;">
-                <input type="checkbox" class="checkbox" />
+                <Checkbox />
               </th>
               <th style="width: 200px;">Member</th>
               <th style="width: 140px;">Group</th>
@@ -761,7 +750,7 @@
             {#each paginatedMembers() as member}
               <tr class:archived={member.archived}>
                 <td>
-                  <input type="checkbox" class="checkbox" />
+                  <Checkbox />
                 </td>
                 <td>
                   <div class="member-cell">
@@ -789,26 +778,26 @@
                   {:else if isRegistered(member._id)}
                     <span class="badge badge-registered">✓ Registered</span>
                   {:else}
-                    <button class="status-unregistered" onclick={() => handleRegisterClick(member)}>+ Register</button>
+                    <Button variant="ghost" size="sm" class="status-unregistered" onclick={() => handleRegisterClick(member)}>+ Register</Button>
                   {/if}
                 </td>
                 <td>
                   <div class="action-buttons">
-                    <button class="action-btn" onclick={() => openEditModal(member)}>
+                    <Button variant="ghost" size="icon" class="action-btn" onclick={() => openEditModal(member)}>
                       <Pencil size={12} />
-                    </button>
+                    </Button>
                     {#if member.archived}
-                      <button class="action-btn restore" onclick={() => unarchiveMember(member)} title="Unarchive">
+                      <Button variant="ghost" size="icon" class="action-btn restore" onclick={() => unarchiveMember(member)} title="Unarchive">
                         <ArchiveRestore size={12} />
-                      </button>
+                      </Button>
                     {:else}
-                      <button class="action-btn archive" onclick={() => showArchiveConfirm = member} title="Archive">
+                      <Button variant="ghost" size="icon" class="action-btn archive" onclick={() => showArchiveConfirm = member} title="Archive">
                         <Archive size={12} />
-                      </button>
+                      </Button>
                     {/if}
-                    <button class="action-btn danger" onclick={() => showDeleteConfirm = member._id}>
+                    <Button variant="ghost" size="icon" class="action-btn danger" onclick={() => showDeleteConfirm = member._id}>
                       <Trash2 size={12} />
-                    </button>
+                    </Button>
                   </div>
                 </td>
               </tr>
@@ -839,28 +828,33 @@
           </span>
         </div>
         <div class="pagination">
-          <button 
+          <Button 
+            variant="ghost"
+            size="icon"
             class="pagination-btn" 
             disabled={currentPage === 1}
             onclick={() => currentPage--}
           >
             <ChevronLeft size={14} />
-          </button>
+          </Button>
           {#each Array(Math.min(5, totalPages)) as _, i}
             {@const page = i + 1}
-            <button 
+            <Button 
+              variant={currentPage === page ? "default" : "ghost"}
+              size="sm"
               class="pagination-btn"
-              class:active={currentPage === page}
               onclick={() => currentPage = page}
-            >{page}</button>
+            >{page}</Button>
           {/each}
-          <button 
+          <Button 
+            variant="ghost"
+            size="icon"
             class="pagination-btn"
             disabled={currentPage === totalPages || totalPages === 0}
             onclick={() => currentPage++}
           >
             <ChevronRight size={14} />
-          </button>
+          </Button>
         </div>
       </div>
     </div>
@@ -868,232 +862,207 @@
 </div>
 
 <!-- Add/Edit Member Modal -->
-{#if showAddModal}
-  <div class="modal-overlay" onclick={closeModal}>
-    <div class="modal" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header">
-        <h3 class="modal-title">{editingMember ? 'Edit Member' : 'Add Member'}</h3>
-        <button class="modal-close" onclick={closeModal}>
-          <X size={20} />
-        </button>
+<Dialog.Root bind:open={showAddModal}>
+  <Dialog.Content class="sm:max-w-[440px]">
+    <Dialog.Header>
+      <Dialog.Title>{editingMember ? 'Edit Member' : 'Add Member'}</Dialog.Title>
+    </Dialog.Header>
+    <div class="dialog-form">
+      <div class="form-group">
+        <label class="form-label">First Name</label>
+        <Input bind:value={formFirstName} placeholder="First name" />
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">First Name</label>
-          <input type="text" class="form-input" bind:value={formFirstName} />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Last Name</label>
-          <input type="text" class="form-input" bind:value={formLastName} />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Group</label>
-          <select class="form-input" bind:value={formGroupId}>
+      <div class="form-group">
+        <label class="form-label">Last Name</label>
+        <Input bind:value={formLastName} placeholder="Last name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Group</label>
+        <Select.Root type="single" bind:value={formGroupId}>
+          <Select.Trigger class="w-full">
+            <Select.Value placeholder="Select group" />
+          </Select.Trigger>
+          <Select.Content>
             {#each groups as group}
-              <option value={group.groupId}>{group.name}</option>
+              <Select.Item value={group.groupId}>{group.name}</Select.Item>
             {/each}
-          </select>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick={closeModal}>Cancel</button>
-        <button class="btn btn-primary" onclick={saveMember}>
-          {editingMember ? 'Save Changes' : 'Add Member'}
-        </button>
+          </Select.Content>
+        </Select.Root>
       </div>
     </div>
-  </div>
-{/if}
+    <Dialog.Footer>
+      <Button variant="outline" onclick={closeModal}>Cancel</Button>
+      <Button onclick={saveMember}>
+        {editingMember ? 'Save Changes' : 'Add Member'}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <!-- Add/Edit Group Modal -->
-{#if showGroupModal}
-  <div class="modal-overlay" onclick={closeGroupModal}>
-    <div class="modal" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header">
-        <h3 class="modal-title">{editingGroup ? 'Edit Group' : 'Add Group'}</h3>
-        <button class="modal-close" onclick={closeGroupModal}>
-          <X size={20} />
-        </button>
+<Dialog.Root bind:open={showGroupModal}>
+  <Dialog.Content class="sm:max-w-[440px]">
+    <Dialog.Header>
+      <Dialog.Title>{editingGroup ? 'Edit Group' : 'Add Group'}</Dialog.Title>
+    </Dialog.Header>
+    <div class="dialog-form">
+      <div class="form-group">
+        <Label>Group ID</Label>
+        <Input bind:value={groupFormId} placeholder="e.g., YUD, MUD, YTH" />
+        <span class="form-hint">Short identifier used internally</span>
       </div>
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">Group ID</label>
-          <input 
-            type="text" 
-            class="form-input" 
-            bind:value={groupFormId} 
-            placeholder="e.g., YUD, MUD, YTH"
-          />
-          <span class="form-hint">Short identifier used internally</span>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Display Name</label>
-          <input 
-            type="text" 
-            class="form-input" 
-            bind:value={groupFormName} 
-            placeholder="e.g., Yudansha, Mudansha, Youth"
-          />
-        </div>
-        <div class="form-group">
-          <label class="form-checkbox">
-            <input type="checkbox" bind:checked={groupFormIsHantei} />
-            <span>Hantei</span>
-          </label>
-        </div>
+      <div class="form-group">
+        <Label>Display Name</Label>
+        <Input bind:value={groupFormName} placeholder="e.g., Yudansha, Mudansha, Youth" />
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick={closeGroupModal}>Cancel</button>
-        <button class="btn btn-primary" onclick={saveGroup}>
-          {editingGroup ? 'Save Changes' : 'Add Group'}
-        </button>
+      <div class="form-group">
+        <div class="flex items-center gap-2">
+          <Checkbox id="hantei" bind:checked={groupFormIsHantei} />
+          <Label for="hantei">Hantei</Label>
+        </div>
       </div>
     </div>
-  </div>
-{/if}
+    <Dialog.Footer>
+      <Button variant="outline" onclick={closeGroupModal}>Cancel</Button>
+      <Button onclick={saveGroup}>
+        {editingGroup ? 'Save Changes' : 'Add Group'}
+      </Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <!-- Archive Member Confirmation -->
-{#if showArchiveConfirm}
-  <div class="modal-overlay" onclick={() => showArchiveConfirm = null}>
-    <div class="modal modal-sm" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header">
-        <h3 class="modal-title">Archive Member</h3>
-      </div>
-      <div class="modal-body">
-        <p>Archive <strong>{showArchiveConfirm.firstName} {showArchiveConfirm.lastName}</strong>?</p>
-        <p class="modal-hint">Archived members cannot be registered for tournaments. You can unarchive them later.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick={() => showArchiveConfirm = null}>Cancel</button>
-        <button class="btn btn-warning" onclick={() => archiveMember(showArchiveConfirm!)}>Archive</button>
-      </div>
-    </div>
-  </div>
-{/if}
+<Dialog.Root open={showArchiveConfirm !== null} onOpenChange={(open) => { if (!open) showArchiveConfirm = null; }}>
+  <Dialog.Content class="sm:max-w-[400px]">
+    <Dialog.Header>
+      <Dialog.Title>Archive Member</Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Description>
+      {#if showArchiveConfirm}
+        Archive <strong>{showArchiveConfirm.firstName} {showArchiveConfirm.lastName}</strong>?
+        <br /><br />
+        <span class="text-muted-foreground text-sm">Archived members cannot be registered for tournaments. You can unarchive them later.</span>
+      {/if}
+    </Dialog.Description>
+    <Dialog.Footer>
+      <Button variant="outline" onclick={() => showArchiveConfirm = null}>Cancel</Button>
+      <Button variant="default" class="btn-warning" onclick={() => archiveMember(showArchiveConfirm!)}>Archive</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <!-- Unarchive Prompt (when trying to register archived member) -->
-{#if showUnarchivePrompt}
-  <div class="modal-overlay" onclick={() => { showUnarchivePrompt = null; pendingRegistration = null; }}>
-    <div class="modal modal-sm" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header">
-        <h3 class="modal-title">Member is Archived</h3>
-      </div>
-      <div class="modal-body">
-        <p><strong>{showUnarchivePrompt.firstName} {showUnarchivePrompt.lastName}</strong> is currently archived and cannot be registered.</p>
-        <p class="modal-hint">Would you like to unarchive this member and register them for the tournament?</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick={() => { showUnarchivePrompt = null; pendingRegistration = null; }}>Cancel</button>
-        <button class="btn btn-primary" onclick={() => unarchiveMember(showUnarchivePrompt!)}>Unarchive & Register</button>
-      </div>
-    </div>
-  </div>
-{/if}
+<Dialog.Root open={showUnarchivePrompt !== null} onOpenChange={(open) => { if (!open) { showUnarchivePrompt = null; pendingRegistration = null; } }}>
+  <Dialog.Content class="sm:max-w-[400px]">
+    <Dialog.Header>
+      <Dialog.Title>Member is Archived</Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Description>
+      {#if showUnarchivePrompt}
+        <strong>{showUnarchivePrompt.firstName} {showUnarchivePrompt.lastName}</strong> is currently archived and cannot be registered.
+        <br /><br />
+        <span class="text-muted-foreground text-sm">Would you like to unarchive this member and register them for the tournament?</span>
+      {/if}
+    </Dialog.Description>
+    <Dialog.Footer>
+      <Button variant="outline" onclick={() => { showUnarchivePrompt = null; pendingRegistration = null; }}>Cancel</Button>
+      <Button onclick={() => unarchiveMember(showUnarchivePrompt!)}>Unarchive & Register</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <!-- Delete Member Confirmation -->
-{#if showDeleteConfirm}
-  <div class="modal-overlay" onclick={() => showDeleteConfirm = null}>
-    <div class="modal modal-sm" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header">
-        <h3 class="modal-title">Delete Member</h3>
-      </div>
-      <div class="modal-body">
-        <p>Are you sure you want to delete this member? This action cannot be undone.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick={() => showDeleteConfirm = null}>Cancel</button>
-        <button class="btn btn-danger" onclick={() => deleteMember(showDeleteConfirm!)}>Delete</button>
-      </div>
-    </div>
-  </div>
-{/if}
+<Dialog.Root open={showDeleteConfirm !== null} onOpenChange={(open) => { if (!open) showDeleteConfirm = null; }}>
+  <Dialog.Content class="sm:max-w-[400px]">
+    <Dialog.Header>
+      <Dialog.Title>Delete Member</Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Description>
+      Are you sure you want to delete this member? This action cannot be undone.
+    </Dialog.Description>
+    <Dialog.Footer>
+      <Button variant="outline" onclick={() => showDeleteConfirm = null}>Cancel</Button>
+      <Button variant="destructive" onclick={() => deleteMember(showDeleteConfirm!)}>Delete</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <!-- Delete Group Confirmation -->
-{#if showDeleteGroupConfirm}
-  <div class="modal-overlay" onclick={() => showDeleteGroupConfirm = null}>
-    <div class="modal modal-sm" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header">
-        <h3 class="modal-title">Delete Group</h3>
-      </div>
-      <div class="modal-body">
-        <p>Are you sure you want to delete this group? Members in this group will need to be reassigned.</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" onclick={() => showDeleteGroupConfirm = null}>Cancel</button>
-        <button class="btn btn-danger" onclick={() => deleteGroup(showDeleteGroupConfirm!)}>Delete</button>
-      </div>
-    </div>
-  </div>
-{/if}
+<Dialog.Root open={showDeleteGroupConfirm !== null} onOpenChange={(open) => { if (!open) showDeleteGroupConfirm = null; }}>
+  <Dialog.Content class="sm:max-w-[400px]">
+    <Dialog.Header>
+      <Dialog.Title>Delete Group</Dialog.Title>
+    </Dialog.Header>
+    <Dialog.Description>
+      Are you sure you want to delete this group? Members in this group will need to be reassigned.
+    </Dialog.Description>
+    <Dialog.Footer>
+      <Button variant="outline" onclick={() => showDeleteGroupConfirm = null}>Cancel</Button>
+      <Button variant="destructive" onclick={() => deleteGroup(showDeleteGroupConfirm!)}>Delete</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <!-- Bulk Add Members Modal -->
-{#if showBulkAddModal}
-  <div class="modal-overlay" onclick={closeBulkAddModal}>
-    <div class="modal modal-bulk" onclick={(e) => e.stopPropagation()}>
-      <div class="modal-header">
-        <h3 class="modal-title">Add Multiple Members</h3>
-        <button class="modal-close" onclick={closeBulkAddModal}>
-          <X size={20} />
-        </button>
+<Dialog.Root bind:open={showBulkAddModal}>
+  <Dialog.Content class="sm:max-w-[560px]">
+    <Dialog.Header>
+      <Dialog.Title>Add Multiple Members</Dialog.Title>
+    </Dialog.Header>
+    <div class="bulk-body">
+      <div class="bulk-header-row">
+        <span class="bulk-col-label">First Name</span>
+        <span class="bulk-col-label">Last Name</span>
+        <span class="bulk-col-label">Group</span>
+        <span class="bulk-col-action"></span>
       </div>
-      <div class="modal-body bulk-body">
-        <div class="bulk-header-row">
-          <span class="bulk-col-label">First Name</span>
-          <span class="bulk-col-label">Last Name</span>
-          <span class="bulk-col-label">Group</span>
-          <span class="bulk-col-action"></span>
-        </div>
-        <div class="bulk-rows">
-          {#each bulkRows as row, index}
-            <div class="bulk-row">
-              <input 
-                type="text" 
-                class="bulk-input" 
-                placeholder="First"
-                value={row.firstName}
-                oninput={(e) => updateBulkRow(index, 'firstName', e.currentTarget.value)}
-              />
-              <input 
-                type="text" 
-                class="bulk-input" 
-                placeholder="Last"
-                value={row.lastName}
-                oninput={(e) => updateBulkRow(index, 'lastName', e.currentTarget.value)}
-              />
-              <select 
-                class="bulk-select"
-                value={row.groupId}
-                onchange={(e) => updateBulkRow(index, 'groupId', e.currentTarget.value)}
-              >
+      <div class="bulk-rows">
+        {#each bulkRows as row, index}
+          <div class="bulk-row">
+            <Input 
+              placeholder="First"
+              value={row.firstName}
+              oninput={(e) => updateBulkRow(index, 'firstName', e.currentTarget.value)}
+            />
+            <Input 
+              placeholder="Last"
+              value={row.lastName}
+              oninput={(e) => updateBulkRow(index, 'lastName', e.currentTarget.value)}
+            />
+            <Select.Root type="single" value={row.groupId} onValueChange={(v) => updateBulkRow(index, 'groupId', v)}>
+              <Select.Trigger class="bulk-select-trigger">
+                <Select.Value placeholder="Group" />
+              </Select.Trigger>
+              <Select.Content>
                 {#each groups as group}
-                  <option value={group.groupId}>{group.name}</option>
+                  <Select.Item value={group.groupId}>{group.name}</Select.Item>
                 {/each}
-              </select>
-              <button 
-                class="bulk-remove-btn" 
-                onclick={() => removeBulkRow(index)}
-                disabled={bulkRows.length === 1}
-              >
-                <X size={14} />
-              </button>
-            </div>
-          {/each}
-        </div>
-        <button class="btn btn-ghost add-row-btn" onclick={addBulkRow}>
-          <Plus size={14} />
-          <span>Add Row</span>
-        </button>
+              </Select.Content>
+            </Select.Root>
+            <Button 
+              variant="ghost" 
+              size="icon"
+              class="bulk-remove-btn"
+              onclick={() => removeBulkRow(index)}
+              disabled={bulkRows.length === 1}
+            >
+              <X size={14} />
+            </Button>
+          </div>
+        {/each}
       </div>
-      <div class="modal-footer">
-        <span class="bulk-count">{bulkRows.filter(r => r.firstName && r.lastName).length} members ready</span>
-        <button class="btn btn-secondary" onclick={closeBulkAddModal}>Cancel</button>
-        <button class="btn btn-primary" onclick={saveBulkMembers}>
-          Add Members
-        </button>
-      </div>
+      <Button variant="ghost" class="add-row-btn w-full" onclick={addBulkRow}>
+        <Plus size={14} />
+        <span>Add Row</span>
+      </Button>
     </div>
-  </div>
-{/if}
+    <Dialog.Footer class="flex items-center">
+      <span class="bulk-count mr-auto">{bulkRows.filter(r => r.firstName && r.lastName).length} members ready</span>
+      <Button variant="outline" onclick={closeBulkAddModal}>Cancel</Button>
+      <Button onclick={saveBulkMembers}>Add Members</Button>
+    </Dialog.Footer>
+  </Dialog.Content>
+</Dialog.Root>
 
 <!-- CSV Import Modal -->
 <Dialog.Root bind:open={showImportModal}>
@@ -1125,7 +1094,7 @@
           ondragleave={() => isDragging = false}
           ondrop={handleFileDrop}
         >
-          <input 
+          <Input 
             type="file" 
             accept=".csv" 
             class="file-input" 
@@ -1145,13 +1114,13 @@
       </Tabs.Content>
       
       <Tabs.Content value="paste" class="import-tab-content">
-        <textarea 
+        <Textarea 
           class="paste-textarea"
           placeholder="Paste CSV data here...&#10;&#10;Example:&#10;First Name,Last Name,Group&#10;John,Doe,YUD&#10;Jane,Smith,MUD"
           bind:value={csvText}
           oninput={handleTextareaChange}
           onpaste={handlePaste}
-        ></textarea>
+        />
       </Tabs.Content>
     </Tabs.Root>
 
