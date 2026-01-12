@@ -281,12 +281,12 @@
 
   .btn-ghost {
     background: transparent;
-    color: #b4b4bb;
+    color: #a1a1aa;
     border: 1px solid #27272a;
   }
 
   .btn-ghost:hover:not(:disabled) {
-    background: #1c1c20;
+    background: #18181b;
     color: #fafafa;
   }
 
@@ -352,3 +352,4 @@
     }
   }
 </style>
+
