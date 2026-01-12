@@ -2,18 +2,26 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  // Dojos/Clubs - for guest management
+  dojos: defineTable({
+    name: v.string(),
+    location: v.optional(v.string()),
+    createdAt: v.number(),
+  }).index("by_name", ["name"]),
+
   // Members - the dojo roster
   members: defineTable({
     firstName: v.string(),
     lastName: v.string(),
     groupId: v.string(), // Reference to group by custom ID (e.g., "YUD", "MUD")
-    dojo: v.optional(v.string()),
+    dojoId: v.optional(v.id("dojos")), // Reference to dojo for guests
     isGuest: v.boolean(),
     isAdmin: v.optional(v.boolean()),
     archived: v.optional(v.boolean()),
     createdAt: v.number(),
   }).index("by_lastName", ["lastName"])
-    .index("by_groupId", ["groupId"]),
+    .index("by_groupId", ["groupId"])
+    .index("by_dojoId", ["dojoId"]),
 
   // Groups - divisions for tournaments
   groups: defineTable({
@@ -143,4 +151,3 @@ export default defineSchema({
     value: v.string(),
   }).index("by_key", ["key"]),
 });
-
