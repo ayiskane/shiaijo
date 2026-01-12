@@ -690,10 +690,8 @@
             <span>Add Member</span>
           </Button>
           <DropdownMenu.Root>
-            <DropdownMenu.Trigger asChild let:builder>
-              <Button builders={[builder]} size="sm" class="dropdown-toggle-btn">
-                <ChevronDown size={14} />
-              </Button>
+            <DropdownMenu.Trigger class="dropdown-toggle-btn" aria-label="More add options">
+              <ChevronDown size={14} />
             </DropdownMenu.Trigger>
             <DropdownMenu.Content align="end">
               <DropdownMenu.Item onclick={openAddModal}>
@@ -869,17 +867,17 @@
     </Dialog.Header>
     <div class="dialog-form">
       <div class="form-group">
-        <label class="form-label">First Name</label>
-        <Input bind:value={formFirstName} placeholder="First name" />
+        <label class="form-label" for="first-name-input">First Name</label>
+        <Input id="first-name-input" bind:value={formFirstName} placeholder="First name" />
       </div>
       <div class="form-group">
-        <label class="form-label">Last Name</label>
-        <Input bind:value={formLastName} placeholder="Last name" />
+        <label class="form-label" for="last-name-input">Last Name</label>
+        <Input id="last-name-input" bind:value={formLastName} placeholder="Last name" />
       </div>
       <div class="form-group">
-        <label class="form-label">Group</label>
+        <label class="form-label" for="group-select">Group</label>
         <Select.Root type="single" bind:value={formGroupId}>
-          <Select.Trigger class="w-full">
+          <Select.Trigger class="w-full" id="group-select">
             <Select.Value placeholder="Select group" />
           </Select.Trigger>
           <Select.Content>
@@ -1090,6 +1088,7 @@
         <div 
           class="dropzone"
           class:dragging={isDragging}
+          role="group"
           ondragover={(e) => { e.preventDefault(); isDragging = true; }}
           ondragleave={() => isDragging = false}
           ondrop={handleFileDrop}
