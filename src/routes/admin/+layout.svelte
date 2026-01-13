@@ -18,6 +18,8 @@
   import Eye from '@lucide/svelte/icons/eye';
   import Heart from '@lucide/svelte/icons/heart';
 
+  import { Button } from '$lib/components/ui/button';
+
   // Slot content (runes mode prefers explicit render)
   let { children } = $props();
 
@@ -98,7 +100,10 @@
   <aside class="sidebar">
     <div class="sidebar-header">
       <a href="/" class="sidebar-logo">
-        <img src="/shiaijologo.png" alt="Shiaijo" class="logo-img" />
+        <picture>
+          <source srcset="/shiaijologo.webp" type="image/webp">
+          <img src="/shiaijologo.png" alt="Shiaijo" class="logo-img" />
+        </picture>
         <span class="logo-text">試合場</span>
       </a>
     </div>
@@ -142,13 +147,19 @@
   </aside>
 
   <!-- Edge Toggle -->
-  <button class="edge-toggle" onclick={() => sidebarCollapsed = !sidebarCollapsed} aria-label="Toggle sidebar">
+  <Button 
+    variant="outline" 
+    size="icon-sm" 
+    class="edge-toggle" 
+    onclick={() => sidebarCollapsed = !sidebarCollapsed} 
+    aria-label="Toggle sidebar"
+  >
     {#if sidebarCollapsed}
       <ChevronRight size={16} />
     {:else}
       <ChevronLeft size={16} />
     {/if}
-  </button>
+  </Button>
 
   <!-- MAIN -->
   <main class="main-area">
@@ -159,10 +170,10 @@
           <span class:active={i === breadcrumb().length - 1}>{crumb}</span>
         {/each}
       </nav>
-      <button class="user-btn">
+      <Button variant="ghost" class="user-btn">
         <span class="user-avatar">A</span>
         <span class="user-name">Admin</span>
-      </button>
+      </Button>
     </header>
 
     <div class="content">
@@ -250,32 +261,16 @@
 
   .collapsed .logo-text { opacity: 0; width: 0; }
 
-  .edge-toggle {
-    position: fixed;
+  :global(.edge-toggle) {
+    position: fixed !important;
     top: 72px;
     left: var(--sidebar-w);
     transform: translateX(-50%);
-    width: 24px;
-    height: 24px;
-    background: var(--bg-sidebar);
-    border: 1px solid var(--border);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: var(--text-muted);
     z-index: 150;
-    transition: all var(--transition);
+    transition: left var(--transition) !important;
   }
 
-  .edge-toggle:hover {
-    background: var(--bg-hover);
-    color: var(--text);
-    border-color: var(--accent);
-  }
-
-  .collapsed .edge-toggle { left: var(--sidebar-collapsed); }
+  .collapsed :global(.edge-toggle) { left: var(--sidebar-collapsed); }
 
   .sidebar-nav {
     flex: 1;
@@ -409,19 +404,12 @@
   .breadcrumb span.active { background: var(--bg-active); color: var(--text); font-weight: 600; }
   .breadcrumb .sep { color: var(--border); padding: 0; }
 
-  .user-btn {
-    display: flex;
+  :global(.user-btn) {
+    display: flex !important;
     align-items: center;
     gap: 10px;
-    padding: 6px 12px 6px 6px;
-    background: transparent;
-    border: 1px solid transparent;
-    border-radius: 10px;
-    cursor: pointer;
-    font: inherit;
+    padding: 6px 12px 6px 6px !important;
   }
-
-  .user-btn:hover { background: var(--bg-hover); border-color: var(--border); }
 
   .user-avatar {
     width: 34px;
