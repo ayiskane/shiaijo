@@ -9,6 +9,7 @@
   // shadcn components
   import * as Dialog from '$lib/components/ui/dialog';
   import * as Select from '$lib/components/ui/select';
+  import * as RadioGroup from '$lib/components/ui/radio-group';
   import * as ToggleGroup from '$lib/components/ui/toggle-group';
   import { Button } from '$lib/components/ui/button';
   import { Input } from '$lib/components/ui/input';
@@ -238,8 +239,8 @@
         <td><span class="name">{guest.firstName} {guest.lastName}</span></td>
         <td>{#if guestDojo}<span class="badge badge-default">{guestDojo.name}</span>{:else}<span class="text-muted">—</span>{/if}</td>
         <td>{#if registeredGroup}<span class="badge" class:badge-primary={!registeredGroup.isHantei} class:badge-hantei={registeredGroup.isHantei}>{registeredGroup.name}</span>{:else}<span class="text-muted">—</span>{/if}</td>
-        <td>{#if !activeTournament}<span class="status-inactive">No Shiai</span>{:else if isRegistered(guest._id)}<span class="badge badge-success">✓ Registered</span>{:else}<button class="status-link" onclick={() => openRegisterModal(guest)}>+ Register</button>{/if}</td>
-        <td><div class="action-buttons"><button class="action-btn" onclick={() => openEditGuestModal(guest)}><Pencil size={14} /></button><button class="action-btn danger" onclick={() => showDeleteGuestConfirm = guest._id}><Trash2 size={14} /></button></div></td>
+        <td>{#if !activeTournament}<span class="status-inactive">No Shiai</span>{:else if isRegistered(guest._id)}<span class="badge badge-success">✓ Registered</span>{:else}<Button variant="link" size="sm" class="p-0 h-auto" onclick={() => openRegisterModal(guest)}>+ Register</Button>{/if}</td>
+        <td><div class="action-buttons"><Button variant="ghost" size="icon-sm" onclick={() => openEditGuestModal(guest)}><Pencil size={14} /></Button><Button variant="ghost" size="icon-sm" class="text-red-500 hover:text-red-400 hover:bg-red-500/10" onclick={() => showDeleteGuestConfirm = guest._id}><Trash2 size={14} /></Button></div></td>
       {/snippet}
     </AdminDataTable>
   </main>
@@ -250,7 +251,7 @@
 
 <Dialog.Root bind:open={showDojoModal}><Dialog.Content><Dialog.Header><Dialog.Title>{editingDojo ? 'Edit Dojo' : 'Add Dojo'}</Dialog.Title></Dialog.Header><div class="form-stack"><div class="form-group"><Label for="dojoName">Dojo Name</Label><Input id="dojoName" bind:value={dojoFormName} placeholder="e.g. Seattle Kendo Kai" /></div><div class="form-group"><Label for="dojoLocation">Location (optional)</Label><Input id="dojoLocation" bind:value={dojoFormLocation} placeholder="e.g. Seattle, WA" /></div></div><Dialog.Footer><Button variant="ghost" onclick={() => showDojoModal = false}>Cancel</Button><Button onclick={saveDojo} disabled={!dojoFormName.trim()}>{editingDojo ? 'Save' : 'Add Dojo'}</Button></Dialog.Footer></Dialog.Content></Dialog.Root>
 
-<Dialog.Root bind:open={showRegisterModal}><Dialog.Content><Dialog.Header><Dialog.Title>Register Guest</Dialog.Title><Dialog.Description>{#if registeringGuest}{registeringGuest.firstName} {registeringGuest.lastName}{/if}</Dialog.Description></Dialog.Header><div class="form-group"><Label>Select Group</Label><div class="option-list">{#each groups as group}<button class="option" class:selected={selectedGroupId === group.groupId} onclick={() => selectedGroupId = group.groupId}><div class="option-radio"></div><span class="option-name">{group.name}</span>{#if group.isHantei}<span class="badge-hantei-sm">H</span>{/if}</button>{/each}</div></div><Dialog.Footer><Button variant="ghost" onclick={() => showRegisterModal = false}>Cancel</Button><Button onclick={registerGuest} disabled={!selectedGroupId}>Register</Button></Dialog.Footer></Dialog.Content></Dialog.Root>
+<Dialog.Root bind:open={showRegisterModal}><Dialog.Content><Dialog.Header><Dialog.Title>Register Guest</Dialog.Title><Dialog.Description>{#if registeringGuest}{registeringGuest.firstName} {registeringGuest.lastName}{/if}</Dialog.Description></Dialog.Header><div class="form-group"><Label>Select Group</Label><RadioGroup.Root bind:value={selectedGroupId} class="mt-2 space-y-2">{#each groups as group}<Label class="flex items-center gap-3 p-3 rounded-lg border border-border bg-card hover:bg-accent/50 cursor-pointer has-[[data-state=checked]]:border-primary has-[[data-state=checked]]:bg-primary/10"><RadioGroup.Item value={group.groupId} /><span class="font-medium">{group.name}</span>{#if group.isHantei}<span class="ml-auto text-xs font-bold text-amber-500 bg-amber-500/20 px-2 py-0.5 rounded">H</span>{/if}</Label>{/each}</RadioGroup.Root></div><Dialog.Footer><Button variant="ghost" onclick={() => showRegisterModal = false}>Cancel</Button><Button onclick={registerGuest} disabled={!selectedGroupId}>Register</Button></Dialog.Footer></Dialog.Content></Dialog.Root>
 
 <Dialog.Root open={showDeleteGuestConfirm !== null} onOpenChange={(open) => { if (!open) showDeleteGuestConfirm = null; }}><Dialog.Content><Dialog.Header><Dialog.Title>Delete Guest</Dialog.Title><Dialog.Description>Are you sure? This cannot be undone.</Dialog.Description></Dialog.Header><Dialog.Footer><Button variant="ghost" onclick={() => showDeleteGuestConfirm = null}>Cancel</Button><Button variant="destructive" onclick={() => showDeleteGuestConfirm && deleteGuest(showDeleteGuestConfirm)}>Delete</Button></Dialog.Footer></Dialog.Content></Dialog.Root>
 
@@ -270,32 +271,16 @@
   .badge-primary { background: rgba(129, 140, 248, 0.15); color: #a78bfa; }
   .badge-hantei { background: rgba(251, 191, 36, 0.15); color: #fbbf24; }
   .badge-success { background: rgba(52, 211, 153, 0.15); color: #34d399; }
-  .badge-hantei-sm { font-size: 9px; font-weight: 700; color: #fbbf24; background: rgba(251, 191, 36, 0.2); padding: 2px 6px; border-radius: 4px; margin-left: auto; }
   
   /* Status */
   .status-inactive { color: #71717a; font-size: 13px; font-style: italic; }
-  .status-link { background: none; border: none; color: #818cf8; font-size: 13px; cursor: pointer; font-family: inherit; padding: 0; }
-  .status-link:hover { color: #a78bfa; }
   
   /* Actions */
   .action-buttons { display: flex; gap: 4px; }
-  .action-btn { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; color: #71717a; background: transparent; border: none; cursor: pointer; transition: all 0.15s; }
-  .action-btn:hover { background: #27272a; color: #fafafa; }
-  .action-btn.danger:hover { background: rgba(248, 113, 113, 0.15); color: #f87171; }
   
   /* Forms */
   .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
   .form-grid .full-width { grid-column: 1 / -1; }
   .form-stack { display: flex; flex-direction: column; gap: 16px; }
   .form-group { display: flex; flex-direction: column; gap: 8px; }
-  
-  /* Option list (registration modal) */
-  .option-list { display: flex; flex-direction: column; gap: 8px; margin-top: 8px; }
-  .option { display: flex; align-items: center; gap: 12px; padding: 14px 16px; background: #18181b; border: 1px solid rgba(82, 82, 91, 0.4); border-radius: 10px; cursor: pointer; text-align: left; width: 100%; font: inherit; color: #fafafa; transition: all 0.15s; }
-  .option:hover { border-color: rgba(129, 140, 248, 0.5); }
-  .option.selected { background: rgba(129, 140, 248, 0.1); border-color: #818cf8; }
-  .option-radio { width: 18px; height: 18px; border: 2px solid #52525b; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-  .option.selected .option-radio { border-color: #818cf8; }
-  .option.selected .option-radio::after { content: ''; width: 10px; height: 10px; background: #818cf8; border-radius: 50%; }
-  .option-name { font-weight: 600; font-size: 14px; }
 </style>
