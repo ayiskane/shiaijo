@@ -1,2 +1,2 @@
-// Disable SSR - Convex useQuery only works in browser
-export const ssr = false;
+// Enable SSR with server-side data prefetching
+export const ssr = true;
