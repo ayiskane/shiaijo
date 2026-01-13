@@ -2,7 +2,8 @@
   import { useQuery } from 'convex-svelte';
   import { api } from '../convex/_generated/api';
 
-  const shiaijoLogo = '/shiaijologo.png';
+  const shiaijoLogoWebp = '/shiaijologo.webp';
+  const shiaijoLogoPng = '/shiaijologo.png';
   
   const spectator = { id: 'spectator', href: '/spectator', kanji: '観', label: 'SPECTATOR', desc: 'Watch live tournament matches' };
   
@@ -12,8 +13,14 @@
     { id: 'volunteer', href: '/volunteer', kanji: '奉', label: 'VOLUNTEER' },
   ];
 
+  // Get SSR prefetched data
+  let { data } = $props();
+  
+  // Use SSR data as initial value - eliminates loading flash
   const tournamentsQuery = useQuery(api.tournaments.list, () => ({}));
-  let tournaments = $derived(tournamentsQuery.data ?? []);
+  
+  // Use SSR data immediately, then reactively update from Convex
+  let tournaments = $derived(tournamentsQuery.data ?? data?.initialTournaments ?? []);
   let hasLiveTournament = $derived(tournaments.some(t => t.status === 'in_progress'));
 </script>
 
@@ -36,7 +43,10 @@
     <!-- Left side - Logo & Title -->
     <div class="title-section">
       <div class="logo-wrapper">
-        <img src={shiaijoLogo} alt="Shiaijo" class="logo" width="180" height="180" fetchpriority="high" />
+        <picture>
+          <source srcset={shiaijoLogoWebp} type="image/webp">
+          <img src={shiaijoLogoPng} alt="Shiaijo" class="logo" width="180" height="180" fetchpriority="high" />
+        </picture>
       </div>
       
       <div class="brand-name">S H I A I J O</div>
@@ -86,7 +96,10 @@
   <footer class="footer">
     <a href="https://renbudojo.com" target="_blank" rel="noopener noreferrer" class="footer-link" aria-label="Visit Renbu Dojo website">
       <span class="footer-en">RENBU DOJO</span>
-      <img src="/renbu-logo.png" alt="" class="footer-logo" loading="lazy" decoding="async" aria-hidden="true" />
+      <picture>
+        <source srcset="/renbu-logo.webp" type="image/webp">
+        <img src="/renbu-logo.png" alt="" class="footer-logo" loading="lazy" decoding="async" aria-hidden="true" />
+      </picture>
       <span class="footer-jp">練武道場</span>
     </a>
   </footer>
